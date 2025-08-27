@@ -173,8 +173,8 @@ namespace Acadv25JArch
     public class LayerStateControl
     {
         // 현재 레이어 상태를 저장하는 명령어
-        [CommandMethod("SAVELAYERSTATE")]
-        public void SaveCurrentLayerState()
+        [CommandMethod("La_Save")]
+        public void LayerState_SaveCurrent()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
@@ -237,15 +237,17 @@ namespace Acadv25JArch
                 // Step 5: 현재 레이어 상태 저장 (viewport ID를 ObjectId.Null로 설정)
                 layerStateManager.SaveLayerState(stateName, mask, ObjectId.Null);
 
+                // 저장된 레이어 개수 정보 표시
+                ArrayList layerList = layerStateManager.GetLayerStateLayers(stateName, false);
+
                 // Step 6: 설명 추가 (선택사항)
-                string description = "Date:"+DateTime.Now.ToString("yyyy/MM/dd HH:mm");
+                string description = "Date:"+ DateTime.Now.ToString("yyyy/MM/dd HH:mm") + $" : {layerList.Count} layer";
                 layerStateManager.SetLayerStateDescription(stateName, description);
 
                 // 성공 메시지
                 ed.WriteMessage($"\n레이어 상태 '{stateName}'이 성공적으로 저장되었습니다.");
 
-                // 저장된 레이어 개수 정보 표시
-                ArrayList layerList = layerStateManager.GetLayerStateLayers(stateName, false);
+                
                 ed.WriteMessage($"\n총 {layerList.Count}개의 레이어가 저장되었습니다.");
             }
             catch (System.Exception ex)
@@ -255,8 +257,8 @@ namespace Acadv25JArch
         }
 
         // 저장된 레이어 상태를 복원하는 명령어 - 번호 선택 방식으로 수정
-        [CommandMethod("RESTORELAYERSTATE")]
-        public void RestoreLayerState()
+        [CommandMethod("La_Restore")]
+        public void LayerState_Restore()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
@@ -286,16 +288,16 @@ namespace Acadv25JArch
                 {
                     string stateName = stateNames[i].ToString();
                     string description = layerStateManager.GetLayerStateDescription(stateName);
-                    ArrayList layerList = layerStateManager.GetLayerStateLayers(stateName, false);
+                    //ArrayList layerList = layerStateManager.GetLayerStateLayers(stateName, false);
 
                     ed.WriteMessage($"\n{i + 1}. {stateName}");
                     if (!string.IsNullOrEmpty(description))
                     {
-                        ed.WriteMessage($"   설명: {description}");
+                        ed.WriteMessage($" {description}");
                     }
-                    ed.WriteMessage($"   레이어 개수: {layerList.Count}");
-                    if (i < stateNames.Count - 1)
-                        ed.WriteMessage("");
+                    //ed.WriteMessage($"   레이어 개수: {layerList.Count}");
+                    //if (i < stateNames.Count - 1)
+                    //    ed.WriteMessage("");
                 }
                 ed.WriteMessage("\n" + new string('-', 60));
 
@@ -333,8 +335,8 @@ namespace Acadv25JArch
         }
 
         // 저장된 레이어 상태 목록을 보는 명령어
-        [CommandMethod("LISTLAYERSTATES")]
-        public void ListLayerStates()
+        [CommandMethod("La_List")]
+        public void LayerStates_List()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
@@ -364,9 +366,9 @@ namespace Acadv25JArch
                     LayerStateMasks mask = layerStateManager.GetLayerStateMask(stateName);
 
                     ed.WriteMessage($"\n{i + 1}. 이름: {stateName}");
-                    ed.WriteMessage($"\n   설명: {(string.IsNullOrEmpty(description) ? "(없음)" : description)}");
-                    ed.WriteMessage($"\n   레이어 개수: {layerList.Count}");
-                    ed.WriteMessage($"\n   저장된 속성: {GetMaskDescription(mask)}");
+                    ed.WriteMessage($"   설명: {(string.IsNullOrEmpty(description) ? "(없음)" : description)}");
+                    //ed.WriteMessage($"\n   레이어 개수: {layerList.Count}");
+                    //ed.WriteMessage($"\n   저장된 속성: {GetMaskDescription(mask)}");
 
                     if (i < stateNames.Count - 1)
                         ed.WriteMessage("\n");
@@ -381,8 +383,8 @@ namespace Acadv25JArch
         }
 
         // 저장된 레이어 상태를 삭제하는 명령어
-        [CommandMethod("DELETELAYERSTATE")]
-        public void DeleteLayerState()
+        [CommandMethod("La_Delete")]
+        public void LayerState_Delete()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
