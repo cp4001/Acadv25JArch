@@ -238,7 +238,7 @@ namespace Acadv25JArch
                 layerStateManager.SaveLayerState(stateName, mask, ObjectId.Null);
 
                 // Step 6: 설명 추가 (선택사항)
-                string description = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "에 저장된 레이어 상태";
+                string description = "Date:"+DateTime.Now.ToString("yyyy/MM/dd HH:mm");
                 layerStateManager.SetLayerStateDescription(stateName, description);
 
                 // 성공 메시지
@@ -254,7 +254,7 @@ namespace Acadv25JArch
             }
         }
 
-        // 저장된 레이어 상태를 복원하는 명령어
+        // 저장된 레이어 상태를 복원하는 명령어 - 번호 선택 방식으로 수정
         [CommandMethod("RESTORELAYERSTATE")]
         public void RestoreLayerState()
         {
@@ -278,52 +278,50 @@ namespace Acadv25JArch
                     return;
                 }
 
-                // Step 3: 저장된 레이어 상태 목록 표시
+                // Step 3: 저장된 레이어 상태 목록을 번호와 함께 표시
                 ed.WriteMessage("\n저장된 레이어 상태 목록:");
+                ed.WriteMessage("\n" + new string('-', 60));
+
                 for (int i = 0; i < stateNames.Count; i++)
                 {
-                    string stateName1 = stateNames[i].ToString();
-                    string description = layerStateManager.GetLayerStateDescription(stateName1);
-                    ed.WriteMessage($"\n  {i + 1}. {stateName1}");
+                    string stateName = stateNames[i].ToString();
+                    string description = layerStateManager.GetLayerStateDescription(stateName);
+                    ArrayList layerList = layerStateManager.GetLayerStateLayers(stateName, false);
+
+                    ed.WriteMessage($"\n{i + 1}. {stateName}");
                     if (!string.IsNullOrEmpty(description))
                     {
-                        ed.WriteMessage($" - {description}");
+                        ed.WriteMessage($"   설명: {description}");
                     }
+                    ed.WriteMessage($"   레이어 개수: {layerList.Count}");
+                    if (i < stateNames.Count - 1)
+                        ed.WriteMessage("");
                 }
+                ed.WriteMessage("\n" + new string('-', 60));
 
-                // Step 4: 복원할 레이어 상태 이름 입력 받기
-                PromptStringOptions pso = new PromptStringOptions("\n복원할 레이어 상태 이름을 입력하세요: ");
-                pso.AllowSpaces = true;
+                // Step 4: 번호 입력 받기
+                PromptIntegerOptions pio = new PromptIntegerOptions($"\n복원할 레이어 상태의 번호를 입력하세요 (1-{stateNames.Count}): ");
+                pio.LowerLimit = 1;
+                pio.UpperLimit = stateNames.Count;
+                pio.UseDefaultValue = false;
 
-                PromptResult pr = ed.GetString(pso);
-                if (pr.Status != PromptStatus.OK)
+                PromptIntegerResult pir = ed.GetInteger(pio);
+                if (pir.Status != PromptStatus.OK)
                 {
                     ed.WriteMessage("\n레이어 상태 복원이 취소되었습니다.");
                     return;
                 }
 
-                string stateName = pr.StringResult.Trim();
-                if (string.IsNullOrEmpty(stateName))
-                {
-                    ed.WriteMessage("\n유효한 레이어 상태 이름을 입력해야 합니다.");
-                    return;
-                }
-
-                // Step 5: 레이어 상태 존재 여부 확인
-                if (!layerStateManager.HasLayerState(stateName))
-                {
-                    ed.WriteMessage($"\n레이어 상태 '{stateName}'을 찾을 수 없습니다.");
-                    return;
-                }
+                // Step 5: 선택된 번호에 해당하는 레이어 상태 이름 가져오기
+                int selectedIndex = pir.Value - 1; // 0-based index로 변환
+                string selectedStateName = stateNames[selectedIndex].ToString();
 
                 // Step 6: 레이어 상태 복원
-                // RestoreLayerState(name, viewportId, undefinedLayerPolicy, mask)
-                // undefinedLayerPolicy: 0 = 무시, 1 = 켜기, 2 = 끄기
-                LayerStateMasks restoreMask = layerStateManager.GetLayerStateMask(stateName);
-                layerStateManager.RestoreLayerState(stateName, ObjectId.Null, 0, restoreMask);
+                LayerStateMasks restoreMask = layerStateManager.GetLayerStateMask(selectedStateName);
+                layerStateManager.RestoreLayerState(selectedStateName, ObjectId.Null, 0, restoreMask);
 
                 // 성공 메시지
-                ed.WriteMessage($"\n레이어 상태 '{stateName}'이 성공적으로 복원되었습니다.");
+                ed.WriteMessage($"\n레이어 상태 '{selectedStateName}'이 성공적으로 복원되었습니다.");
 
                 // 화면 재생성
                 ed.Regen();
