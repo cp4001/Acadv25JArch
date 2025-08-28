@@ -881,4 +881,976 @@ namespace Acadv25JArch
     }
 
 
+
+    //
+    public static class BlockUtilities
+    {
+        #region Block Size Functions
+
+        /// <summary>
+        /// BlockReference의 크기를 반환합니다 (변환이 적용된 실제 크기)
+        /// </summary>
+        /// <param name="blockRef">분석할 BlockReference</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <returns>크기 정보 (Width, Height, Depth)</returns>
+        public static BlockSize GetBlockSize(BlockReference blockRef, Transaction transaction)
+        {
+            if (blockRef == null || transaction == null)
+                throw new ArgumentNullException();
+
+            try
+            {
+                // BlockReference의 Bounds 사용 (변환이 적용된 실제 크기)
+                if (blockRef.Bounds.HasValue)
+                {
+                    var bounds = blockRef.Bounds.Value;
+                    return new BlockSize
+                    {
+                        Width = bounds.MaxPoint.X - bounds.MinPoint.X,
+                        Height = bounds.MaxPoint.Y - bounds.MinPoint.Y,
+                        Depth = bounds.MaxPoint.Z - bounds.MinPoint.Z,
+                        MinPoint = bounds.MinPoint,
+                        MaxPoint = bounds.MaxPoint
+                    };
+                }
+
+                // Bounds가 없는 경우 BlockTableRecord에서 계산
+                return GetBlockDefinitionSize(blockRef.BlockTableRecord, transaction);
+            }
+            catch (Exception)
+            {
+                return new BlockSize();
+            }
+        }
+
+        /// <summary>
+        /// BlockTableRecord의 정의 크기를 반환합니다 (원본 크기)
+        /// </summary>
+        /// <param name="blockTableRecordId">BlockTableRecord ObjectId</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <returns>크기 정보</returns>
+        public static BlockSize GetBlockDefinitionSize(ObjectId blockTableRecordId, Transaction transaction)
+        {
+            if (blockTableRecordId.IsNull || transaction == null)
+                throw new ArgumentNullException();
+
+            try
+            {
+                var btr = transaction.GetObject(blockTableRecordId, OpenMode.ForRead) as BlockTableRecord;
+                if (btr == null) return new BlockSize();
+
+                if (btr.Bounds.HasValue)
+                {
+                    var bounds = btr.Bounds.Value;
+                    return new BlockSize
+                    {
+                        Width = bounds.MaxPoint.X - bounds.MinPoint.X,
+                        Height = bounds.MaxPoint.Y - bounds.MinPoint.Y,
+                        Depth = bounds.MaxPoint.Z - bounds.MinPoint.Z,
+                        MinPoint = bounds.MinPoint,
+                        MaxPoint = bounds.MaxPoint
+                    };
+                }
+
+                return new BlockSize();
+            }
+            catch (Exception)
+            {
+                return new BlockSize();
+            }
+        }
+
+        /// <summary>
+        /// Explode 작업 결과를 담는 클래스
+        /// </summary>
+        public class ExplodeResults
+        {
+            public List<ObjectId> SuccessfulBlocks { get; set; }
+            public List<ObjectId> FailedBlocks { get; set; }
+            public List<ObjectId> CreatedEntities { get; set; }
+
+            public ExplodeResults()
+            {
+                SuccessfulBlocks = new List<ObjectId>();
+                FailedBlocks = new List<ObjectId>();
+                CreatedEntities = new List<ObjectId>();
+            }
+
+            public int SuccessCount => SuccessfulBlocks.Count;
+            public int FailureCount => FailedBlocks.Count;
+            public int CreatedEntityCount => CreatedEntities.Count;
+
+            public override string ToString()
+            {
+                return $"성공: {SuccessCount}, 실패: {FailureCount}, 생성된 Entity: {CreatedEntityCount}";
+            }
+        }
+
+        #endregion
+
+        #region Entity Count Functions
+
+        /// <summary>
+        /// Block에 포함된 전체 Entity 개수를 반환합니다
+        /// </summary>
+        /// <param name="blockRef">분석할 BlockReference</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <returns>Entity 개수</returns>
+        public static int GetEntityCount(BlockReference blockRef, Transaction transaction)
+        {
+            if (blockRef == null || transaction == null)
+                return 0;
+
+            return GetEntityCount(blockRef.BlockTableRecord, transaction);
+        }
+
+        /// <summary>
+        /// BlockTableRecord에 포함된 Entity 개수를 반환합니다
+        /// </summary>
+        /// <param name="blockTableRecordId">BlockTableRecord ObjectId</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <returns>Entity 개수</returns>
+        public static int GetEntityCount(ObjectId blockTableRecordId, Transaction transaction)
+        {
+            if (blockTableRecordId.IsNull || transaction == null)
+                return 0;
+
+            try
+            {
+                var btr = transaction.GetObject(blockTableRecordId, OpenMode.ForRead) as BlockTableRecord;
+                if (btr == null) return 0;
+
+                // LINQ를 사용하여 Entity 개수 계산
+                return btr.Cast<ObjectId>()
+                         .Count(id => IsEntity(id));
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Entity 타입별 개수를 반환합니다
+        /// </summary>
+        /// <param name="blockRef">분석할 BlockReference</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <returns>타입별 개수 딕셔너리</returns>
+        public static Dictionary<string, int> GetEntityCountByType(BlockReference blockRef, Transaction transaction)
+        {
+            if (blockRef == null || transaction == null)
+                return new Dictionary<string, int>();
+
+            return GetEntityCountByType(blockRef.BlockTableRecord, transaction);
+        }
+
+        /// <summary>
+        /// BlockTableRecord의 Entity 타입별 개수를 반환합니다
+        /// </summary>
+        /// <param name="blockTableRecordId">BlockTableRecord ObjectId</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <returns>타입별 개수 딕셔너리</returns>
+        public static Dictionary<string, int> GetEntityCountByType(ObjectId blockTableRecordId, Transaction transaction)
+        {
+            var result = new Dictionary<string, int>();
+
+            if (blockTableRecordId.IsNull || transaction == null)
+                return result;
+
+            try
+            {
+                var btr = transaction.GetObject(blockTableRecordId, OpenMode.ForRead) as BlockTableRecord;
+                if (btr == null) return result;
+
+                // LINQ를 사용하여 타입별 개수 계산
+                var typeGroups = btr.Cast<ObjectId>()
+                                   .Where(id => IsEntity(id))
+                                   .GroupBy(id => id.ObjectClass.Name);
+
+                foreach (var group in typeGroups)
+                {
+                    result[group.Key] = group.Count();
+                }
+
+                return result;
+            }
+            catch (Exception)
+            {
+                return result;
+            }
+        }
+
+        #endregion
+
+        #region Entity List Functions
+
+        /// <summary>
+        /// Block에 포함된 모든 Entity 목록을 반환합니다
+        /// </summary>
+        /// <param name="blockRef">분석할 BlockReference</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <returns>Entity 목록</returns>
+        public static List<Entity> GetEntityList(BlockReference blockRef, Transaction transaction)
+        {
+            if (blockRef == null || transaction == null)
+                return new List<Entity>();
+
+            return GetEntityList(blockRef.BlockTableRecord, transaction);
+        }
+
+        /// <summary>
+        /// BlockTableRecord에 포함된 모든 Entity 목록을 반환합니다
+        /// </summary>
+        /// <param name="blockTableRecordId">BlockTableRecord ObjectId</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <returns>Entity 목록</returns>
+        public static List<Entity> GetEntityList(ObjectId blockTableRecordId, Transaction transaction)
+        {
+            var entities = new List<Entity>();
+
+            if (blockTableRecordId.IsNull || transaction == null)
+                return entities;
+
+            try
+            {
+                var btr = transaction.GetObject(blockTableRecordId, OpenMode.ForRead) as BlockTableRecord;
+                if (btr == null) return entities;
+
+                foreach (ObjectId id in btr)
+                {
+                    if (IsEntity(id))
+                    {
+                        try
+                        {
+                            var entity = transaction.GetObject(id, OpenMode.ForRead) as Entity;
+                            if (entity != null)
+                            {
+                                entities.Add(entity);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            // 개별 Entity 로드 실패 시 계속 진행
+                            continue;
+                        }
+                    }
+                }
+
+                return entities;
+            }
+            catch (Exception)
+            {
+                return entities;
+            }
+        }
+
+        /// <summary>
+        /// 특정 타입의 Entity 목록을 반환합니다
+        /// </summary>
+        /// <typeparam name="T">Entity 타입</typeparam>
+        /// <param name="blockRef">분석할 BlockReference</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <returns>지정된 타입의 Entity 목록</returns>
+        public static List<T> GetEntityList<T>(BlockReference blockRef, Transaction transaction) where T : Entity
+        {
+            var entities = new List<T>();
+
+            if (blockRef == null || transaction == null)
+                return entities;
+
+            try
+            {
+                var allEntities = GetEntityList(blockRef, transaction);
+                entities.AddRange(allEntities.OfType<T>());
+                return entities;
+            }
+            catch (Exception)
+            {
+                return entities;
+            }
+        }
+
+        #endregion
+
+        #region Recursive Block Explode Functions
+
+        /// <summary>
+        /// Block을 재귀적으로 explode하여 모든 기본 Entity를 반환합니다
+        /// </summary>
+        /// <param name="blockRef">분석할 BlockReference</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <param name="transformMatrix">변환 매트릭스 (기본값: Identity)</param>
+        /// <returns>변환이 적용된 모든 기본 Entity 목록</returns>
+        public static List<Entity> ExplodeBlockRecursively(BlockReference blockRef, Transaction transaction, Matrix3d? transformMatrix = null)
+        {
+            var result = new List<Entity>();
+
+            if (blockRef == null || transaction == null)
+                return result;
+
+            try
+            {
+                // BlockReference의 변환 매트릭스 계산
+                var currentTransform = transformMatrix ?? Matrix3d.Identity;
+                var blockTransform = blockRef.BlockTransform;
+                var combinedTransform = blockTransform * currentTransform;
+
+                // Block 내부의 모든 Entity 처리
+                var entities = GetEntityList(blockRef, transaction);
+
+                foreach (var entity in entities)
+                {
+                    if (entity is BlockReference nestedBlockRef)
+                    {
+                        // 중첩된 Block을 재귀적으로 처리
+                        var explodedEntities = ExplodeBlockRecursively(nestedBlockRef, transaction, combinedTransform);
+                        result.AddRange(explodedEntities);
+                    }
+                    else
+                    {
+                        // 기본 Entity는 변환을 적용하여 결과에 추가
+                        var transformedEntity = ApplyTransformToEntity(entity, combinedTransform);
+                        if (transformedEntity != null)
+                        {
+                            result.Add(transformedEntity);
+                        }
+                    }
+                }
+
+                return result;
+            }
+            catch (Exception)
+            {
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Block을 재귀적으로 explode하여 모든 Entity 정보를 반환합니다 (변환 정보 포함)
+        /// </summary>
+        /// <param name="blockRef">분석할 BlockReference</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <param name="transformMatrix">변환 매트릭스</param>
+        /// <returns>Entity 정보 목록</returns>
+        public static List<ExplodedEntityInfo> ExplodeBlockWithInfo(BlockReference blockRef, Transaction transaction, Matrix3d? transformMatrix = null)
+        {
+            var result = new List<ExplodedEntityInfo>();
+
+            if (blockRef == null || transaction == null)
+                return result;
+
+            try
+            {
+                var currentTransform = transformMatrix ?? Matrix3d.Identity;
+                var blockTransform = blockRef.BlockTransform;
+                var combinedTransform = blockTransform * currentTransform;
+
+                var entities = GetEntityList(blockRef, transaction);
+
+                foreach (var entity in entities)
+                {
+                    if (entity is BlockReference nestedBlockRef)
+                    {
+                        var explodedEntities = ExplodeBlockWithInfo(nestedBlockRef, transaction, combinedTransform);
+                        result.AddRange(explodedEntities);
+                    }
+                    else
+                    {
+                        result.Add(new ExplodedEntityInfo
+                        {
+                            OriginalEntity = entity,
+                            TransformMatrix = combinedTransform,
+                            EntityType = entity.GetType().Name,
+                            Layer = entity.Layer,
+                            ObjectId = entity.ObjectId
+                        });
+                    }
+                }
+
+                return result;
+            }
+            catch (Exception)
+            {
+                return result;
+            }
+        }
+
+        #endregion
+
+        #region Actual Explode Functions
+
+        /// <summary>
+        /// BlockReference를 실제로 explode합니다 (1단계만)
+        /// </summary>
+        /// <param name="blockRef">explode할 BlockReference</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <param name="deleteOriginal">원본 Block 삭제 여부</param>
+        /// <returns>생성된 Entity들의 ObjectId 목록</returns>
+        public static List<ObjectId> ExplodeBlock(BlockReference blockRef, Transaction transaction, bool deleteOriginal = true)
+        {
+            var result = new List<ObjectId>();
+
+            if (blockRef == null || transaction == null)
+                return result;
+
+            try
+            {
+                // Explode할 Entity들을 수집
+                var explodeCollection = new DBObjectCollection();
+                blockRef.Explode(explodeCollection);
+
+                if (explodeCollection.Count == 0)
+                    return result;
+
+                // Model Space 또는 현재 공간 가져오기
+                var currentSpaceId = GetCurrentSpaceId(blockRef.Database);
+                var currentSpace = transaction.GetObject(currentSpaceId, OpenMode.ForWrite) as BlockTableRecord;
+
+                if (currentSpace == null)
+                    return result;
+
+                // Explode된 Entity들을 도면에 추가
+                foreach (Entity entity in explodeCollection)
+                {
+                    if (entity != null)
+                    {
+                        currentSpace.AppendEntity(entity);
+                        transaction.AddNewlyCreatedDBObject(entity, true);
+                        result.Add(entity.ObjectId);
+                    }
+                }
+
+                // 원본 BlockReference 삭제
+                if (deleteOriginal)
+                {
+                    blockRef.UpgradeOpen();
+                    blockRef.Erase();
+                }
+
+                return result;
+            }
+            catch (Exception)
+            {
+                // 오류 발생 시 생성된 Entity들 정리
+                foreach (var objId in result)
+                {
+                    try
+                    {
+                        if (!objId.IsNull && !objId.IsErased)
+                        {
+                            var obj = transaction.GetObject(objId, OpenMode.ForWrite);
+                            obj.Erase();
+                        }
+                    }
+                    catch { }
+                }
+                return new List<ObjectId>();
+            }
+        }
+
+        /// <summary>
+        /// BlockReference를 재귀적으로 완전히 explode합니다
+        /// </summary>
+        /// <param name="blockRef">explode할 BlockReference</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <param name="deleteOriginal">원본 Block 삭제 여부</param>
+        /// <returns>최종적으로 생성된 기본 Entity들의 ObjectId 목록</returns>
+        public static List<ObjectId> ExplodeBlockCompletely(BlockReference blockRef, Transaction transaction, bool deleteOriginal = true)
+        {
+            var finalResult = new List<ObjectId>();
+
+            if (blockRef == null || transaction == null)
+                return finalResult;
+
+            try
+            {
+                var toProcess = new Queue<ObjectId>();
+
+                // 첫 번째 explode 수행
+                var firstLevelEntities = ExplodeBlock(blockRef, transaction, deleteOriginal);
+
+                foreach (var entityId in firstLevelEntities)
+                {
+                    toProcess.Enqueue(entityId);
+                }
+
+                // 재귀적으로 모든 BlockReference를 explode
+                while (toProcess.Count > 0)
+                {
+                    var currentEntityId = toProcess.Dequeue();
+
+                    try
+                    {
+                        if (currentEntityId.IsNull || currentEntityId.IsErased)
+                            continue;
+
+                        var currentEntity = transaction.GetObject(currentEntityId, OpenMode.ForRead);
+
+                        if (currentEntity is BlockReference nestedBlockRef)
+                        {
+                            // 중첩된 BlockReference를 explode
+                            var explodedEntities = ExplodeBlock(nestedBlockRef, transaction, true);
+
+                            // explode된 Entity들을 처리 대기열에 추가
+                            foreach (var explodedId in explodedEntities)
+                            {
+                                toProcess.Enqueue(explodedId);
+                            }
+                        }
+                        else
+                        {
+                            // 기본 Entity는 최종 결과에 추가
+                            finalResult.Add(currentEntityId);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // 개별 Entity 처리 실패 시 계속 진행
+                        continue;
+                    }
+                }
+
+                return finalResult;
+            }
+            catch (Exception)
+            {
+                return finalResult;
+            }
+        }
+
+        /// <summary>
+        /// 선택된 여러 BlockReference들을 일괄 explode합니다
+        /// </summary>
+        /// <param name="blockRefIds">explode할 BlockReference ObjectId 목록</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <param name="recursive">재귀적 explode 여부</param>
+        /// <param name="deleteOriginals">원본 Block들 삭제 여부</param>
+        /// <returns>처리 결과 정보</returns>
+        public static ExplodeResults ExplodeMultipleBlocks(List<ObjectId> blockRefIds, Transaction transaction, bool recursive = false, bool deleteOriginals = true)
+        {
+            var results = new ExplodeResults();
+
+            if (blockRefIds == null || transaction == null)
+                return results;
+
+            foreach (var blockRefId in blockRefIds)
+            {
+                try
+                {
+                    if (blockRefId.IsNull || blockRefId.IsErased)
+                    {
+                        results.FailedBlocks.Add(blockRefId);
+                        continue;
+                    }
+
+                    var blockRef = transaction.GetObject(blockRefId, OpenMode.ForRead) as BlockReference;
+                    if (blockRef == null)
+                    {
+                        results.FailedBlocks.Add(blockRefId);
+                        continue;
+                    }
+
+                    List<ObjectId> explodedEntities;
+
+                    if (recursive)
+                    {
+                        explodedEntities = ExplodeBlockCompletely(blockRef, transaction, deleteOriginals);
+                    }
+                    else
+                    {
+                        explodedEntities = ExplodeBlock(blockRef, transaction, deleteOriginals);
+                    }
+
+                    results.SuccessfulBlocks.Add(blockRefId);
+                    results.CreatedEntities.AddRange(explodedEntities);
+                }
+                catch (Exception)
+                {
+                    results.FailedBlocks.Add(blockRefId);
+                }
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// 현재 공간의 모든 BlockReference를 찾아서 explode합니다
+        /// </summary>
+        /// <param name="database">Database</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <param name="recursive">재귀적 explode 여부</param>
+        /// <param name="blockNamePattern">Block 이름 패턴 (null이면 모든 Block)</param>
+        /// <returns>처리 결과 정보</returns>
+        public static ExplodeResults ExplodeAllBlocks(Database database, Transaction transaction, bool recursive = false, string blockNamePattern = null)
+        {
+            var results = new ExplodeResults();
+
+            if (database == null || transaction == null)
+                return results;
+
+            try
+            {
+                var currentSpaceId = GetCurrentSpaceId(database);
+                var currentSpace = transaction.GetObject(currentSpaceId, OpenMode.ForRead) as BlockTableRecord;
+
+                if (currentSpace == null)
+                    return results;
+
+                // BlockReference들을 찾기
+                var blockRefs = new List<ObjectId>();
+                var blockRefClass = RXObject.GetClass(typeof(BlockReference));
+
+                foreach (ObjectId id in currentSpace)
+                {
+                    if (id.ObjectClass == blockRefClass)
+                    {
+                        try
+                        {
+                            var blockRef = transaction.GetObject(id, OpenMode.ForRead) as BlockReference;
+                            if (blockRef != null)
+                            {
+                                // 패턴 검사
+                                if (string.IsNullOrEmpty(blockNamePattern) ||
+                                    blockRef.Name.Contains(blockNamePattern))
+                                {
+                                    blockRefs.Add(id);
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+                }
+
+                // 찾은 BlockReference들을 explode
+                results = ExplodeMultipleBlocks(blockRefs, transaction, recursive, true);
+
+                return results;
+            }
+            catch (Exception)
+            {
+                return results;
+            }
+        }
+
+        #endregion
+
+        #region Helper Functions
+
+        /// <summary>
+        /// ObjectId가 Entity인지 확인합니다
+        /// </summary>
+        /// <param name="id">확인할 ObjectId</param>
+        /// <returns>Entity 여부</returns>
+        private static bool IsEntity(ObjectId id)
+        {
+            if (id.IsNull || id.IsErased || id.IsEffectivelyErased)
+                return false;
+
+            try
+            {
+                var entityClass = RXObject.GetClass(typeof(Entity));
+                return id.ObjectClass.IsDerivedFrom(entityClass);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Entity에 변환 매트릭스를 적용하여 새로운 Entity를 생성합니다
+        /// </summary>
+        /// <param name="originalEntity">원본 Entity</param>
+        /// <param name="transformMatrix">변환 매트릭스</param>
+        /// <returns>변환된 Entity (복사본)</returns>
+        private static Entity ApplyTransformToEntity(Entity originalEntity, Matrix3d transformMatrix)
+        {
+            try
+            {
+                var clonedEntity = originalEntity.Clone() as Entity;
+                if (clonedEntity != null)
+                {
+                    clonedEntity.TransformBy(transformMatrix);
+                    return clonedEntity;
+                }
+                return null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 현재 공간의 ObjectId를 반환합니다 (Model Space 또는 현재 Paper Space)
+        /// </summary>
+        /// <param name="database">Database</param>
+        /// <returns>현재 공간의 ObjectId</returns>
+        private static ObjectId GetCurrentSpaceId(Database database)
+        {
+            if (database.TileMode)
+            {
+                // Model Space
+                return SymbolUtilityServices.GetBlockModelSpaceId(database);
+            }
+            else
+            {
+                // Paper Space
+                return SymbolUtilityServices.GetBlockPaperSpaceId(database);
+            }
+        }
+
+        #endregion
+    }
+
+    #region Data Structure Classes
+
+    /// <summary>
+    /// Block 크기 정보를 담는 클래스
+    /// </summary>
+    public class BlockSize
+    {
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public double Depth { get; set; }
+        /// <summary>
+        /// 면적 (제곱미터) - Width × Height로 자동 계산
+        /// </summary>
+        public double Area { get { return Width/1000 * Height/1000; } }
+
+        public Point3d MinPoint { get; set; }
+        public Point3d MaxPoint { get; set; }
+
+        public BlockSize()
+        {
+            Width = 0;
+            Height = 0;
+            Depth = 0;
+            MinPoint = Point3d.Origin;
+            MaxPoint = Point3d.Origin;
+        }
+
+        public override string ToString()
+        {
+            return $"Width: {Width:F2}, Height: {Height:F2}, Depth: {Depth:F2}, Area: {Area:F2}";
+        }
+    }
+
+    /// <summary>
+    /// Exploded Entity 정보를 담는 클래스
+    /// </summary>
+    public class ExplodedEntityInfo
+    {
+        public Entity OriginalEntity { get; set; }
+        public Matrix3d TransformMatrix { get; set; }
+        public string EntityType { get; set; }
+        public string Layer { get; set; }
+        public ObjectId ObjectId { get; set; }
+
+        public override string ToString()
+        {
+            return $"Type: {EntityType}, Layer: {Layer}";
+        }
+    }
+
+    #endregion
+
+    #region Command Examples
+
+    public class BlockAnalysisCommands
+    {
+        [CommandMethod("BLOCKINFO")]
+        public void GetBlockInfo()
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            var ed = doc.Editor;
+
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    // Block 선택
+                    var peo = new PromptEntityOptions("\nBlock을 선택하세요: ");
+                    peo.SetRejectMessage("\nBlockReference만 선택할 수 있습니다.");
+                    peo.AddAllowedClass(typeof(BlockReference), true);
+
+                    var per = ed.GetEntity(peo);
+                    if (per.Status != PromptStatus.OK)
+                        return;
+
+                    var blockRef = tr.GetObject(per.ObjectId, OpenMode.ForRead) as BlockReference;
+                    if (blockRef == null)
+                        return;
+
+                    // Block 정보 출력
+                    var size = BlockUtilities.GetBlockSize(blockRef, tr);
+                    var entityCount = BlockUtilities.GetEntityCount(blockRef, tr);
+                    var entityCountByType = BlockUtilities.GetEntityCountByType(blockRef, tr);
+
+                    ed.WriteMessage($"\n=== Block 정보 ===");
+                    ed.WriteMessage($"\n크기: {size}");
+                    ed.WriteMessage($"\n전체 Entity 개수: {entityCount}");
+                    ed.WriteMessage($"\n타입별 Entity 개수:");
+                    foreach (var kvp in entityCountByType)
+                    {
+                        ed.WriteMessage($"\n  {kvp.Key}: {kvp.Value}개");
+                    }
+
+                    tr.Commit();
+                }
+                catch (Exception ex)
+                {
+                    ed.WriteMessage($"\n오류: {ex.Message}");
+                }
+            }
+        }
+
+        [CommandMethod("EXPLODEBLOCKACTUAL")]
+        public void ExplodeBlockActual()
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            var ed = doc.Editor;
+
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    var peo = new PromptEntityOptions("\n실제로 explode할 Block을 선택하세요: ");
+                    peo.SetRejectMessage("\nBlockReference만 선택할 수 있습니다.");
+                    peo.AddAllowedClass(typeof(BlockReference), true);
+
+                    var per = ed.GetEntity(peo);
+                    if (per.Status != PromptStatus.OK)
+                        return;
+
+                    var blockRef = tr.GetObject(per.ObjectId, OpenMode.ForRead) as BlockReference;
+                    if (blockRef == null)
+                        return;
+
+                    // 재귀적 explode 여부 확인
+                    var pko = new PromptKeywordOptions("\n재귀적으로 explode하시겠습니까?");
+                    pko.Keywords.Add("Yes");
+                    pko.Keywords.Add("No");
+                    pko.Keywords.Default = "Yes";
+
+                    var pkr = ed.GetKeywords(pko);
+                    bool recursive = (pkr.Status == PromptStatus.OK && pkr.StringResult == "Yes");
+
+                    List<ObjectId> createdEntities;
+
+                    if (recursive)
+                    {
+                        createdEntities = BlockUtilities.ExplodeBlockCompletely(blockRef, tr, true);
+                        ed.WriteMessage($"\n재귀적 Explode 완료: {createdEntities.Count}개의 Entity가 생성되었습니다.");
+                    }
+                    else
+                    {
+                        createdEntities = BlockUtilities.ExplodeBlock(blockRef, tr, true);
+                        ed.WriteMessage($"\n1단계 Explode 완료: {createdEntities.Count}개의 Entity가 생성되었습니다.");
+                    }
+
+                    // 생성된 Entity 타입별 개수 출력
+                    if (createdEntities.Count > 0)
+                    {
+                        var typeGroups = createdEntities
+                            .Where(id => !id.IsNull && !id.IsErased)
+                            .Select(id =>
+                            {
+                                try
+                                {
+                                    return tr.GetObject(id, OpenMode.ForRead)?.GetType().Name ?? "Unknown";
+                                }
+                                catch
+                                {
+                                    return "Unknown";
+                                }
+                            })
+                            .GroupBy(x => x);
+
+                        ed.WriteMessage($"\n생성된 Entity 타입:");
+                        foreach (var group in typeGroups)
+                        {
+                            ed.WriteMessage($"\n  {group.Key}: {group.Count()}개");
+                        }
+                    }
+
+                    tr.Commit();
+                }
+                catch (Exception ex)
+                {
+                    ed.WriteMessage($"\n오류: {ex.Message}");
+                    tr.Abort();
+                }
+            }
+        }
+
+        [CommandMethod("EXPLODEALLBLOCKS")]
+        public void ExplodeAllBlocks()
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            var ed = doc.Editor;
+
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    // 재귀적 explode 여부 확인
+                    var pko1 = new PromptKeywordOptions("\n재귀적으로 explode하시겠습니까?");
+                    pko1.Keywords.Add("Yes");
+                    pko1.Keywords.Add("No");
+                    pko1.Keywords.Default = "Yes";
+
+                    var pkr1 = ed.GetKeywords(pko1);
+                    if (pkr1.Status != PromptStatus.OK) return;
+
+                    bool recursive = (pkr1.StringResult == "Yes");
+
+                    // Block 이름 패턴 입력
+                    var pso = new PromptStringOptions("\nBlock 이름 패턴을 입력하세요 (Enter=모든 Block): ");
+                    pso.AllowSpaces = true;
+                    var psr = ed.GetString(pso);
+
+                    string pattern = null;
+                    if (psr.Status == PromptStatus.OK && !string.IsNullOrWhiteSpace(psr.StringResult))
+                    {
+                        pattern = psr.StringResult;
+                    }
+
+                    // 확인 메시지
+                    var pko2 = new PromptKeywordOptions($"\n현재 공간의 {(string.IsNullOrEmpty(pattern) ? "모든" : pattern + " 패턴의")} Block을 {(recursive ? "재귀적으로" : "")} explode하시겠습니까?");
+                    pko2.Keywords.Add("Yes");
+                    pko2.Keywords.Add("No");
+                    pko2.Keywords.Default = "No";
+
+                    var pkr2 = ed.GetKeywords(pko2);
+                    if (pkr2.Status != PromptStatus.OK || pkr2.StringResult != "Yes")
+                        return;
+
+                    // 모든 Block explode 수행
+                    var results = BlockUtilities.ExplodeAllBlocks(db, tr, recursive, pattern);
+
+                    ed.WriteMessage($"\n=== Explode 결과 ===");
+                    ed.WriteMessage($"\n{results}");
+
+                    if (results.FailureCount > 0)
+                    {
+                        ed.WriteMessage($"\n실패한 Block들이 있습니다. 로그를 확인하세요.");
+                    }
+
+                    tr.Commit();
+                }
+                catch (Exception ex)
+                {
+                    ed.WriteMessage($"\n오류: {ex.Message}");
+                    tr.Abort();
+                }
+            }
+        }
+    }
+    #endregion
+
+
 }
