@@ -525,21 +525,29 @@ namespace Acadv25JArch
                 layersToCheck.Add(entity.LayerId);
             }
 
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
             // 각 레이어의 잠금 상태 확인 및 임시 해제
             foreach (ObjectId layerId in layersToCheck)
             {
                 LayerTableRecord ltr = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
-                if (ltr != null && ltr.IsLocked)
+                if (ltr != null)
                 {
-                    // 현재 잠금 상태 저장
-                    layerLockStates[layerId] = true;
+                    // 모든 레이어의 원래 상태를 저장 (잠긴 것과 잠기지 않은 것 모두)
+                    bool originalLockState = ltr.IsLocked;
+                    layerLockStates[layerId] = originalLockState;
 
-                    // 임시로 잠금 해제
-                    ltr.IsLocked = false;
-
-                    Document doc = Application.DocumentManager.MdiActiveDocument;
-                    Editor ed = doc.Editor;
-                    ed.WriteMessage($"\n레이어 '{ltr.Name}' 잠금을 임시 해제합니다.");
+                    if (originalLockState)
+                    {
+                        // 잠긴 레이어만 임시로 해제
+                        ltr.IsLocked = false;
+                        ed.WriteMessage($"\n레이어 '{ltr.Name}' 잠금을 임시 해제합니다. (원래 상태: 잠김)");
+                    }
+                    else
+                    {
+                        ed.WriteMessage($"\n레이어 '{ltr.Name}' 상태를 확인했습니다. (원래 상태: 잠기지 않음)");
+                    }
                 }
             }
         }
@@ -549,6 +557,9 @@ namespace Acadv25JArch
         /// </summary>
         private void RestoreLayerLockStates(Transaction tr, Dictionary<ObjectId, bool> layerLockStates)
         {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
             foreach (var kvp in layerLockStates)
             {
                 try
@@ -556,17 +567,25 @@ namespace Acadv25JArch
                     LayerTableRecord ltr = tr.GetObject(kvp.Key, OpenMode.ForWrite) as LayerTableRecord;
                     if (ltr != null)
                     {
-                        ltr.IsLocked = kvp.Value;
+                        bool originalState = kvp.Value;
+                        bool currentState = ltr.IsLocked;
 
-                        Document doc = Application.DocumentManager.MdiActiveDocument;
-                        Editor ed = doc.Editor;
-                        ed.WriteMessage($"\n레이어 '{ltr.Name}' 잠금 상태를 복원합니다.");
+                        // 원래 상태로 복원
+                        ltr.IsLocked = originalState;
+
+                        if (originalState != currentState)
+                        {
+                            string stateText = originalState ? "잠김" : "잠기지 않음";
+                            ed.WriteMessage($"\n레이어 '{ltr.Name}' 상태를 '{stateText}'으로 복원했습니다.");
+                        }
+                        else
+                        {
+                            ed.WriteMessage($"\n레이어 '{ltr.Name}' 상태 변경 없음 (원래대로 유지).");
+                        }
                     }
                 }
                 catch (System.Exception ex)
                 {
-                    Document doc = Application.DocumentManager.MdiActiveDocument;
-                    Editor ed = doc.Editor;
                     ed.WriteMessage($"\n레이어 잠금 상태 복원 실패: {ex.Message}");
                 }
             }

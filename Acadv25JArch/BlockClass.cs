@@ -21,7 +21,7 @@ namespace Acadv25JArch
     /// <summary>
     /// 선택된 블록의 PreviewIcon 이미지를 224x224 PNG로 추출하는 서브루틴
     /// </summary>
-    public class BlockIconExtractor
+    public class BlockIconExtractor_
     {
         /// <summary>
         /// 선택된 블록의 PreviewIcon을 224x224 PNG 파일로 추출
@@ -412,11 +412,11 @@ namespace Acadv25JArch
                         string outputPath = Path.Combine(outputFolder, $"{blockDef.Name}_224x224.png");
 
                         // PreviewIcon에서 이미지 추출
-                        Bitmap iconImage = BlockIconExtractor.ExtractFromPreviewIcon(blockDef);
+                        Bitmap iconImage = BlockIconExtractor_.ExtractFromPreviewIcon(blockDef);
 
                         if (iconImage != null)
                         {
-                            using (Bitmap resized = BlockIconExtractor.ResizeImage(iconImage, 224, 224))
+                            using (Bitmap resized = BlockIconExtractor_.ResizeImage(iconImage, 224, 224))
                             {
                                 resized.Save(outputPath, ImageFormat.Png);
                                 iconImage.Dispose();
@@ -563,10 +563,10 @@ namespace Acadv25JArch
 
                             string outputPath = Path.Combine(outputFolder, $"{blockDef.Name}_224x224.png");
 
-                            Bitmap iconImage = BlockIconExtractor.ExtractFromPreviewIcon(blockDef);
+                            Bitmap iconImage = BlockIconExtractor_.ExtractFromPreviewIcon(blockDef);
                             if (iconImage != null)
                             {
-                                using (Bitmap resized = BlockIconExtractor.ResizeImage(iconImage, 224, 224))
+                                using (Bitmap resized = BlockIconExtractor_.ResizeImage(iconImage, 224, 224))
                                 {
                                     resized.Save(outputPath, ImageFormat.Png);
                                     iconImage.Dispose();

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Acadv25JArch
 {
-    public class LayerControl
+    public class LayerControl_
     {
         [CommandMethod("LAYEROFF")]
         public void LayerDisplayOff()
@@ -170,7 +170,7 @@ namespace Acadv25JArch
         }
     }
 
-    public class LayerStateControl
+    public class LayerStateControl_
     {
         // 현재 레이어 상태를 저장하는 명령어
         [CommandMethod("La_Save")]
@@ -484,7 +484,7 @@ namespace Acadv25JArch
         }
     }
 
-    public class LayerLockControl
+    public class LayerLockControl_
     {
         [CommandMethod("UNLOCKALL")]
         public void UnlockAllLayers()
