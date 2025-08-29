@@ -39,7 +39,7 @@ namespace Acadv25JArch
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     // 블록 정의 가져오기
-                    BlockTableRecord blockDef = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
+                    BlockTableRecord blockDef = (BlockTableRecord)tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead);
 
                     if (blockDef == null)
                     {
@@ -654,7 +654,7 @@ namespace Acadv25JArch
                         string fullPath = Path.Combine(desktopPath, fileName);
 
                         // 이미지 저장
-                        blockImage.Save(fullPath, System.Drawing.Imaging.ImageFormat.Png);
+                        blockImage.Save(fullPath, ImageFormat.Png);
                         blockImage.Dispose();
 
                         ed.WriteMessage($"\n블록 이미지가 성공적으로 저장되었습니다: {fullPath}");
@@ -880,7 +880,542 @@ namespace Acadv25JArch
         }
     }
 
+    public class BlockCommands
 
+    {
+        const double rowHeight = 3.0, colWidth = 5.0;
+        const double textHeight = rowHeight * 0.25;
+
+        [CommandMethod("CBT")]
+
+        static public void CreateBlockTable()
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            if (doc == null)
+                return;
+
+            var db = doc.Database;
+            var ed = doc.Editor;
+
+            var pr = ed.GetPoint("\nEnter table insertion point");
+            if (pr.Status != PromptStatus.OK)
+
+                return;
+
+
+            using (var tr = doc.TransactionManager.StartTransaction())
+            {
+                var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+
+                // Create the table, set its style and default row/column size
+                var tb = new Table();
+                tb.TableStyle = db.Tablestyle;
+                tb.SetRowHeight(rowHeight);
+                tb.SetColumnWidth(colWidth);
+                tb.Position = pr.Value;
+
+                // Set the header cell
+                var head = tb.Cells[0, 0];
+                head.Value = "Blocks";
+                head.Alignment = CellAlignment.MiddleCenter;
+                head.TextHeight = textHeight;
+
+
+                // Insert an additional column
+                tb.InsertColumns(0, colWidth, 1);
+
+
+                // Loop through the blocks in the drawing, creating rows
+                foreach (var id in bt)
+                {
+                    var btr = (BlockTableRecord)tr.GetObject(id, OpenMode.ForRead);
+
+                    // Only care about user-insertable blocks
+                    if (!btr.IsLayout && !btr.IsAnonymous)
+                    {
+                        // Add a row
+                        tb.InsertRows(tb.Rows.Count, rowHeight, 1);
+                        var rowIdx = tb.Rows.Count - 1;
+
+                        // The first cell will hold the block name
+                        var first = tb.Cells[rowIdx, 0];
+                        first.Value = btr.Name;
+                        first.Alignment = CellAlignment.MiddleCenter;
+                        first.TextHeight = textHeight;
+
+
+                        // The second will contain a thumbnail of the block
+                        var second = tb.Cells[rowIdx, 1];
+                        second.BlockTableRecordId = id;
+
+                    }
+
+                }
+
+
+                // Now we add the table to the current space
+
+                var sp = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+
+                sp.AppendEntity(tb);
+
+
+                // And to the transaction, which we then commit
+                tr.AddNewlyCreatedDBObject(tb, true);
+                tr.Commit();
+
+            }
+
+        }
+
+
+        // Insert Block 
+        [CommandMethod("Insert_Block")]
+        public void InsertInCurrentUcs()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+            PromptResult pr = ed.GetString("\nEnter the block name: ");
+            if (pr.Status != PromptStatus.OK)
+                return;
+            string bName = pr.StringResult;
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                if (!bt.Has(bName))
+                {
+                    ed.WriteMessage("\nCan't find '{0}' block.", bName);
+                    return;
+                }
+
+                PromptPointResult ppr = ed.GetPoint("\nSpecify insertion point: ");
+                if (ppr.Status != PromptStatus.OK)
+                    return;
+
+                // Get the current UCS Z axis (extrusion direction)
+                Matrix3d ucsMat = ed.CurrentUserCoordinateSystem;
+                CoordinateSystem3d ucs = ucsMat.CoordinateSystem3d;
+                Vector3d zdir = ucsMat.CoordinateSystem3d.Zaxis;
+
+                // Get the OCS corresponding to UCS Z axis
+                Matrix3d ocsMat = MakeOcs(zdir);
+
+                // Transform the input point from UCS to OCS
+                Point3d pt = ppr.Value.TransformBy(ucsMat.PreMultiplyBy(ocsMat));
+
+                // Get the X axis of the OCS
+                Vector3d ocsXdir = ocsMat.CoordinateSystem3d.Xaxis;
+
+                // Get the UCS rotation (angle between the OCS X axis and the UCS X axis)
+                double rot = ocsXdir.GetAngleTo(ucs.Xaxis, zdir);
+
+                BlockTableRecord btr =
+                    (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+                BlockReference br = new BlockReference(pt, bt[bName]);
+                br.Position = pt;
+                br.Rotation = rot;
+                br.Normal = zdir;
+
+
+
+                // br.sc
+
+                //Check Br is Dynamic
+                //if (br.IsDynamicBlock)
+                //{
+                var props = br.DynamicBlockReferencePropertyCollection;
+
+                foreach (DynamicBlockReferenceProperty prop in props)
+                {
+                    if (prop.PropertyName.Equals("d1"))
+                    {
+                        try
+                        {
+                            prop.Value = 200.0;
+                        }
+                        catch (System.Exception ex)
+                        {
+                            ed.WriteMessage($"\n{ex.Message}");
+                        }
+                        break;
+                    }
+                }
+
+                // br attributs
+
+                foreach (ObjectId attId in br.AttributeCollection)
+                {
+                    var acAtt = tr.GetObject(attId, OpenMode.ForRead) as AttributeReference;
+                    if (acAtt == null) continue;
+
+                    if (!acAtt.Tag.Equals("d1", StringComparison.CurrentCultureIgnoreCase)) continue;
+
+                    acAtt.UpgradeOpen();
+                    acAtt.TextString = "200";
+                }
+
+
+                //}
+
+
+                btr.AppendEntity(br);
+                tr.AddNewlyCreatedDBObject(br, true);
+                tr.Commit();
+            }
+        }
+
+        // Return an OCS Matrix3d using the 'Arbitrary Axis Algoriythm'
+        private Matrix3d MakeOcs(Vector3d zdir)
+        {
+            double d = 1.0 / 64.0;
+            zdir = zdir.GetNormal();
+            Vector3d xdir = Math.Abs(zdir.X) < d && Math.Abs(zdir.Y) < d ?
+                Vector3d.YAxis.CrossProduct(zdir).GetNormal() :
+                Vector3d.ZAxis.CrossProduct(zdir).GetNormal();
+            Vector3d ydir = zdir.CrossProduct(xdir).GetNormal();
+            return new Matrix3d(new double[16]{
+                xdir.X, xdir.Y, xdir.Z, 0.0,
+                ydir.X, ydir.Y, ydir.Z, 0.0,
+                zdir.X, zdir.Y, zdir.Z, 0.0,
+                0.0, 0.0, 0.0, 1.0});
+        }
+
+
+        //List Attribute
+        [CommandMethod("LISTATT")]
+
+        public void ListAttributes()
+        {
+            Editor ed =
+              Application.DocumentManager.MdiActiveDocument.Editor;
+            Database db =
+              HostApplicationServices.WorkingDatabase;
+            Transaction tr =
+              db.TransactionManager.StartTransaction();
+
+            // Start the transaction
+            try
+            {
+                // Build a filter list so that only
+                // block references are selected
+                TypedValue[] filList = new TypedValue[1] { new TypedValue((int)DxfCode.Start, "INSERT") };
+                SelectionFilter filter = new SelectionFilter(filList);
+                PromptSelectionOptions opts = new PromptSelectionOptions();
+
+                opts.MessageForAdding = "Select block references: ";
+                PromptSelectionResult res = ed.GetSelection(opts, filter);
+
+
+                // Do nothing if selection is unsuccessful
+                if (res.Status != PromptStatus.OK)
+                    return;
+
+                SelectionSet selSet = res.Value;
+                ObjectId[] idArray = selSet.GetObjectIds();
+
+                foreach (ObjectId blkId in idArray)
+                {
+                    BlockReference blkRef =
+                      (BlockReference)tr.GetObject(blkId,
+                        OpenMode.ForRead);
+                    BlockTableRecord btr =
+                      (BlockTableRecord)tr.GetObject(
+                        blkRef.BlockTableRecord,
+                        OpenMode.ForRead
+                      );
+
+                    ed.WriteMessage("\nBlock: " + btr.Name);
+
+                    btr.Dispose();
+
+                    AttributeCollection attCol =
+
+                      blkRef.AttributeCollection;
+
+                    foreach (ObjectId attId in attCol)
+                    {
+                        AttributeReference attRef = (AttributeReference)tr.GetObject(attId, OpenMode.ForRead);
+
+
+                        string str = ("\n  Attribute Tag: "
+                            + attRef.Tag
+                            + "\n    Attribute String: "
+                            + attRef.TextString
+                          );
+                        ed.WriteMessage(str);
+                    }
+                }
+
+                tr.Commit();
+            }
+
+            catch (Exception ex)
+            {
+                ed.WriteMessage(("Exception: " + ex.Message));
+            }
+            finally
+            {
+                tr.Dispose();
+            }
+        }
+
+
+        // 선택된 BlcokReference의 기준 Block 내용 편집
+        [CommandMethod("K2")]
+        public void cmd_ChangeBlock()
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var ed = doc.Editor;
+            var db = HostApplicationServices.WorkingDatabase;
+
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                // Get block object from selection of user
+                PromptEntityOptions peo = new PromptEntityOptions("\nPlease select block\n");
+                peo.SetRejectMessage("Only block");
+                peo.AddAllowedClass(typeof(BlockReference), false);
+
+                var per = ed.GetEntity(peo);
+
+                // Check object is suitable ?
+                if (per.Status != PromptStatus.OK)
+                    return;
+
+                var blockref = (BlockReference)tr.GetObject(per.ObjectId, OpenMode.ForRead);
+
+                var block = (BlockTableRecord)tr.GetObject(blockref.BlockTableRecord, OpenMode.ForWrite);
+
+                // Check all objects in block (blocktablerecord)
+                foreach (ObjectId id in block)
+                {
+                    DBObject ent_obj = tr.GetObject(id, OpenMode.ForWrite);
+                    var ent = ent_obj as Entity;
+                    ent.LineWeight = LineWeight.ByBlock;
+                    //if (ent_obj is Line)
+                    //{
+                    //    var ln = ent_obj as Line;
+                    //    ln.StartPoint = new Point3d(0, -3, 0);
+                    //    ln.ColorIndex = 4;
+
+                    //    ed.Regen(); // Update block after modified
+                    //}
+                }
+                tr.Commit();
+            }
+        }
+
+        // Block Count
+        [CommandMethod("BB_Count")]
+        static public void BlockTableCounter()
+        {
+            const double rowHeight = 1000, colWidth = 2000.0;
+            const double textHeight = rowHeight * 0.25;
+
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            if (doc == null)
+                return;
+
+            var db = doc.Database;
+            var ed = doc.Editor;
+
+            var pr = ed.GetPoint("\nEnter table insertion point");
+            if (pr.Status != PromptStatus.OK)
+
+                return;
+
+            using (var tr = doc.TransactionManager.StartTransaction())
+            {
+
+                var blockRefs = JEntity.GetEntityAllByTpye<BlockReference>(JEntity.MakeSelFilter("INSERT"));
+                if (blockRefs == null) return;
+
+                var brGrps = blockRefs.GroupBy(x => JBlock.GetBtrFromBr(x).Name); // 종류별로 가져와서 이름 Sort
+
+
+                var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+
+                // Create the table, set its style and default row/column size
+                var tb = new Table();
+                tb.TableStyle = db.Tablestyle;
+                tb.SetRowHeight(rowHeight);
+                tb.SetColumnWidth(colWidth);
+                tb.Position = pr.Value;
+
+                // Set the header cell
+                var head = tb.Cells[0, 0];
+                head.Value = "Blocks";
+                head.Alignment = CellAlignment.MiddleCenter;
+                head.TextHeight = textHeight;
+
+
+                // Insert an additional column
+                tb.InsertColumns(1, colWidth + 50, 2);
+                //tb.InsertColumns(0, colWidth, 2);
+
+                // Loop through the blocks in the drawing, creating rows
+                //foreach (var id in bt)
+                //{
+                foreach (var brg in brGrps)
+                {
+                    ObjectId btrId = new ObjectId();
+                    BlockTableRecord btr = new BlockTableRecord();
+                    if (brg.First().IsDynamicBlock)
+                    {
+                        btrId = brg.First().DynamicBlockTableRecord;
+                        btr = tr.GetObject(brg.First().DynamicBlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
+                    }
+                    else
+                    {
+                        btrId = brg.First().BlockTableRecord;
+                        btr = tr.GetObject(brg.First().BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
+                    }
+
+                    // Add a row
+                    tb.InsertRows(tb.Rows.Count, rowHeight, 1);
+                    var rowIdx = tb.Rows.Count - 1;
+
+                    // The first cell will hold the block name                
+                    var c1 = tb.Cells[rowIdx, 0];
+                    c1.BlockTableRecordId = btr.Id;
+                    // The 2nd  will contain a thumbnail of the block
+                    var c2 = tb.Cells[rowIdx, 1];
+                    c2.Value = btr.Name;
+                    c2.Alignment = CellAlignment.MiddleCenter;
+                    c2.TextHeight = textHeight;
+
+                    // The 3nd cell will hold the block name
+                    var c3 = tb.Cells[rowIdx, 2];
+                    c3.Value = brg.Count();
+                    c3.Alignment = CellAlignment.MiddleCenter;
+                    c3.TextHeight = textHeight;
+
+
+                }
+
+                // Now we add the table to the current space
+
+                var sp = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+
+                sp.AppendEntity(tb);
+
+
+                // And to the transaction, which we then commit
+                tr.AddNewlyCreatedDBObject(tb, true);
+                tr.Commit();
+
+            }
+
+        }
+
+        // Selected Block Count
+        [CommandMethod("BB_Count1")]
+
+        static public void SleBlockCounter()
+        {
+            const double rowHeight = 1000, colWidth = 2000.0;
+            const double textHeight = rowHeight * 0.25;
+
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            if (doc == null)
+                return;
+
+            var db = doc.Database;
+            var ed = doc.Editor;
+
+
+
+            using (var tr = doc.TransactionManager.StartTransaction())
+            {
+
+                //var blockRefs = JEntity.GetEntityAllByTpye<BlockReference>(JEntity.MakeSelFilter("INSERT"));
+                List<BlockReference> blockRefs = JEntity.GetEntityByTpye<BlockReference>("대상을 선택 하세요?", JSelFilter.MakeFilterTypes("INSERT"));
+
+                if (blockRefs == null) return;
+
+                var pr = ed.GetPoint("\nEnter table insertion point");
+                if (pr.Status != PromptStatus.OK)
+                    return;
+
+                var brGrps = blockRefs.GroupBy(x => JBlock.GetBtrFromBr(x).Name); // 종류별로 가져와서 이름 Sort
+
+
+                var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+
+                // Create the table, set its style and default row/column size
+                var tb = new Table();
+                tb.TableStyle = db.Tablestyle;
+                tb.SetRowHeight(rowHeight);
+                tb.SetColumnWidth(colWidth);
+                tb.Position = pr.Value;
+
+                // Set the header cell
+                var head = tb.Cells[0, 0];
+                head.Value = "Blocks";
+                head.Alignment = CellAlignment.MiddleCenter;
+                head.TextHeight = textHeight;
+
+
+                // Insert an additional column
+                tb.InsertColumns(1, colWidth + 50, 2);
+                //tb.InsertColumns(0, colWidth, 2);
+
+                // Loop through the blocks in the drawing, creating rows
+                //foreach (var id in bt)
+                //{
+                foreach (var brg in brGrps)
+                {
+                    ObjectId btrId = new ObjectId();
+                    BlockTableRecord btr = new BlockTableRecord();
+                    if (brg.First().IsDynamicBlock)
+                    {
+                        btrId = brg.First().DynamicBlockTableRecord;
+                        btr = tr.GetObject(brg.First().DynamicBlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
+                    }
+                    else
+                    {
+                        btrId = brg.First().BlockTableRecord;
+                        btr = tr.GetObject(brg.First().BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
+                    }
+
+                    // Add a row
+                    tb.InsertRows(tb.Rows.Count, rowHeight, 1);
+                    var rowIdx = tb.Rows.Count - 1;
+
+                    // The first cell will hold the block name                
+                    var c1 = tb.Cells[rowIdx, 0];
+                    c1.BlockTableRecordId = btr.Id;
+                    // The 2nd  will contain a thumbnail of the block
+                    var c2 = tb.Cells[rowIdx, 1];
+                    c2.Value = btr.Name;
+                    c2.Alignment = CellAlignment.MiddleCenter;
+                    c2.TextHeight = textHeight;
+
+                    // The 3nd cell will hold the block name
+                    var c3 = tb.Cells[rowIdx, 2];
+                    c3.Value = brg.Count();
+                    c3.Alignment = CellAlignment.MiddleCenter;
+                    c3.TextHeight = textHeight;
+
+
+                }
+
+                // Now we add the table to the current space
+
+                var sp = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+
+                sp.AppendEntity(tb);
+
+
+                // And to the transaction, which we then commit
+                tr.AddNewlyCreatedDBObject(tb, true);
+                tr.Commit();
+
+            }
+
+        }
+
+    }
 
     //
     public static class BlockUtilities
@@ -1641,10 +2176,10 @@ namespace Acadv25JArch
     /// </summary>
     public class ExplodedEntityInfo
     {
-        public Entity OriginalEntity { get; set; }
+        public Entity? OriginalEntity { get; set; }
         public Matrix3d TransformMatrix { get; set; }
-        public string EntityType { get; set; }
-        public string Layer { get; set; }
+        public string? EntityType { get; set; }
+        public string? Layer { get; set; }
         public ObjectId ObjectId { get; set; }
 
         public override string ToString()

@@ -39,11 +39,11 @@ namespace Acadv25JArch
 
                     foreach (SelectedObject so in ss)
                     {
-                        Entity ent = tr.GetObject(so.ObjectId, OpenMode.ForRead) as Entity;
+                        Entity ent = (Entity)tr.GetObject(so.ObjectId, OpenMode.ForRead);
 
                         if (ent is BlockReference)
                         {
-                            BlockReference blkRef = ent as BlockReference;
+                            BlockReference blkRef = (BlockReference)ent;
 
                             // XCLIP 확인 및 처리
                             if (HasXClip(blkRef))
@@ -77,8 +77,8 @@ namespace Acadv25JArch
                     // 새로운 엔티티 추가
                     if (newEntities.Count > 0)
                     {
-                        BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                        BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                        BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                        BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
 
                         foreach (Entity newEnt in newEntities)
                         {
@@ -90,7 +90,7 @@ namespace Acadv25JArch
                     // 원본 객체 삭제
                     foreach (ObjectId id in objectsToDelete)
                     {
-                        Entity entToDelete = tr.GetObject(id, OpenMode.ForWrite) as Entity;
+                        Entity entToDelete = (Entity)tr.GetObject(id, OpenMode.ForWrite);
                         entToDelete.Erase();
                     }
 
