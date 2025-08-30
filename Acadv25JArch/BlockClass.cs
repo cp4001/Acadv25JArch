@@ -2715,8 +2715,9 @@ namespace Acadv25JArch
         }
 
         /// <summary>
-        /// 블록 내부의 가장 가까운 엔티티를 재귀적으로 찾기 (최적화된 버전)
+        /// 블록 내부의 가장 가까운 엔티티를 재귀적으로 찾기 (개선된 버전)
         /// 선택 지점 주변의 작은 영역만 검사하여 성능 향상
+        /// 중첩 블록의 경계 검사 개선
         /// </summary>
         private Entity FindClosestEntityInBlock(Transaction trans, BlockReference blockRef, Point3d selectionPoint)
         {
@@ -2754,11 +2755,11 @@ namespace Acadv25JArch
                     {
                         DBObject dbObj = trans.GetObject(entityId, OpenMode.ForRead);
 
-                        // 중첩된 블록 참조인 경우
+                        // 중첩된 블록 참조인 경우 - 개선된 검사 로직
                         if (dbObj is BlockReference nestedBlockRef)
                         {
-                            // 중첩 블록의 위치가 검색 반경 내에 있는지 먼저 확인
-                            if (IsWithinSearchRadius(nestedBlockRef.Position, localSelectionPoint, searchRadius))
+                            // 개선: 선택점이 블록 경계 내에 있는지 또는 검색 반경 내에 있는지 확인
+                            if (IsPointInsideNestedBlock(trans, nestedBlockRef, localSelectionPoint, searchRadius))
                             {
                                 checkedEntities++;
                                 Entity nestedResult = FindClosestEntityInNestedBlock(trans, nestedBlockRef, localSelectionPoint, blockTransform);
@@ -2822,6 +2823,214 @@ namespace Acadv25JArch
             }
 
             return closestEntity;
+        }
+
+        /// <summary>
+        /// 선택점이 중첩 블록의 경계 내에 있는지 확인하는 개선된 메서드
+        /// </summary>
+        private bool IsPointInsideNestedBlock(Transaction trans, BlockReference nestedBlockRef, Point3d localSelectionPoint, double searchRadius)
+        {
+            try
+            {
+                // 1. 먼저 중첩 블록의 바운딩 박스를 구해서 선택점이 내부에 있는지 확인
+                try
+                {
+                    Extents3d blockBounds = nestedBlockRef.GeometricExtents;
+
+                    // 선택점이 블록의 바운딩 박스 내부에 있는지 확인
+                    if (IsPointInsideBounds(localSelectionPoint, blockBounds))
+                    {
+                        return true; // 선택점이 블록 내부에 있으면 무조건 검사 대상
+                    }
+                }
+                catch
+                {
+                    // GeometricExtents를 구할 수 없는 경우, 블록 정의에서 바운딩 박스 계산
+                }
+
+                // 2. GeometricExtents를 구할 수 없는 경우, 블록 정의에서 바운딩 박스 직접 계산
+                try
+                {
+                    Extents3d calculatedBounds = CalculateNestedBlockBounds(trans, nestedBlockRef);
+                    if (calculatedBounds.MinPoint != calculatedBounds.MaxPoint) // 유효한 바운딩 박스인지 확인
+                    {
+                        if (IsPointInsideBounds(localSelectionPoint, calculatedBounds))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                catch
+                {
+                    // 바운딩 박스 계산도 실패한 경우
+                }
+
+                // 3. 바운딩 박스 방법이 모두 실패한 경우, 삽입점 기준으로 검색 반경 확인
+                return IsWithinSearchRadius(nestedBlockRef.Position, localSelectionPoint, searchRadius);
+            }
+            catch (Exception ex)
+            {
+                Application.DocumentManager.MdiActiveDocument?.Editor?.WriteMessage($"\nWarning in nested block check: {ex.Message}");
+                // 오류 발생시 안전하게 포함시킴
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// 점이 바운딩 박스 내부에 있는지 확인
+        /// </summary>
+        private bool IsPointInsideBounds(Point3d point, Extents3d bounds)
+        {
+            return point.X >= bounds.MinPoint.X && point.X <= bounds.MaxPoint.X &&
+                   point.Y >= bounds.MinPoint.Y && point.Y <= bounds.MaxPoint.Y &&
+                   point.Z >= bounds.MinPoint.Z && point.Z <= bounds.MaxPoint.Z;
+        }
+
+        /// <summary>
+        /// 중첩 블록의 바운딩 박스를 블록 정의에서 직접 계산
+        /// </summary>
+        private Extents3d CalculateNestedBlockBounds(Transaction trans, BlockReference nestedBlockRef)
+        {
+            try
+            {
+                // 블록 정의 가져오기
+                BlockTableRecord nestedBlockDef = trans.GetObject(nestedBlockRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
+                if (nestedBlockDef == null)
+                    throw new InvalidOperationException("Cannot get block definition");
+
+                Extents3d? combinedBounds = null;
+
+                // 블록 정의 내 모든 엔티티의 바운딩 박스 합산
+                foreach (ObjectId entityId in nestedBlockDef)
+                {
+                    if (entityId.IsErased || !entityId.IsValid) continue;
+
+                    try
+                    {
+                        Entity entity = trans.GetObject(entityId, OpenMode.ForRead) as Entity;
+                        if (entity != null)
+                        {
+                            Extents3d entityBounds = entity.GeometricExtents;
+
+                            if (combinedBounds == null)
+                            {
+                                combinedBounds = entityBounds;
+                            }
+                            else
+                            {
+                                // 바운딩 박스 확장
+                                Point3d minPt = combinedBounds.Value.MinPoint;
+                                Point3d maxPt = combinedBounds.Value.MaxPoint;
+
+                                double minX = Math.Min(minPt.X, entityBounds.MinPoint.X);
+                                double minY = Math.Min(minPt.Y, entityBounds.MinPoint.Y);
+                                double minZ = Math.Min(minPt.Z, entityBounds.MinPoint.Z);
+
+                                double maxX = Math.Max(maxPt.X, entityBounds.MaxPoint.X);
+                                double maxY = Math.Max(maxPt.Y, entityBounds.MaxPoint.Y);
+                                double maxZ = Math.Max(maxPt.Z, entityBounds.MaxPoint.Z);
+
+                                combinedBounds = new Extents3d(
+                                    new Point3d(minX, minY, minZ),
+                                    new Point3d(maxX, maxY, maxZ)
+                                );
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // 개별 엔티티 처리 실패시 무시하고 계속
+                        continue;
+                    }
+                }
+
+                if (combinedBounds.HasValue)
+                {
+                    // 블록의 변환 행렬 적용
+                    Extents3d transformedBounds = TransformBounds(combinedBounds.Value, nestedBlockRef.BlockTransform);
+                    return transformedBounds;
+                }
+                else
+                {
+                    // 엔티티가 없거나 바운딩 박스를 구할 수 없는 경우
+                    // 삽입점 기준의 작은 바운딩 박스 반환
+                    Point3d insertPt = nestedBlockRef.Position;
+                    double smallOffset = 0.1; // 매우 작은 오프셋
+                    return new Extents3d(
+                        new Point3d(insertPt.X - smallOffset, insertPt.Y - smallOffset, insertPt.Z - smallOffset),
+                        new Point3d(insertPt.X + smallOffset, insertPt.Y + smallOffset, insertPt.Z + smallOffset)
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                Application.DocumentManager.MdiActiveDocument?.Editor?.WriteMessage($"\nError calculating nested block bounds: {ex.Message}");
+                // 기본값으로 삽입점 기준의 작은 바운딩 박스 반환
+                Point3d insertPt = nestedBlockRef.Position;
+                double smallOffset = 1.0;
+                return new Extents3d(
+                    new Point3d(insertPt.X - smallOffset, insertPt.Y - smallOffset, insertPt.Z - smallOffset),
+                    new Point3d(insertPt.X + smallOffset, insertPt.Y + smallOffset, insertPt.Z + smallOffset)
+                );
+            }
+        }
+
+        /// <summary>
+        /// 바운딩 박스에 변환 행렬 적용
+        /// </summary>
+        private Extents3d TransformBounds(Extents3d bounds, Matrix3d transform)
+        {
+            try
+            {
+                // 바운딩 박스의 8개 모서리 점을 모두 변환
+                Point3d[] corners = new Point3d[]
+                {
+                bounds.MinPoint,
+                new Point3d(bounds.MaxPoint.X, bounds.MinPoint.Y, bounds.MinPoint.Z),
+                new Point3d(bounds.MinPoint.X, bounds.MaxPoint.Y, bounds.MinPoint.Z),
+                new Point3d(bounds.MinPoint.X, bounds.MinPoint.Y, bounds.MaxPoint.Z),
+                new Point3d(bounds.MaxPoint.X, bounds.MaxPoint.Y, bounds.MinPoint.Z),
+                new Point3d(bounds.MaxPoint.X, bounds.MinPoint.Y, bounds.MaxPoint.Z),
+                new Point3d(bounds.MinPoint.X, bounds.MaxPoint.Y, bounds.MaxPoint.Z),
+                bounds.MaxPoint
+                };
+
+                // 모든 모서리 점을 변환
+                Point3d[] transformedCorners = new Point3d[8];
+                for (int i = 0; i < 8; i++)
+                {
+                    transformedCorners[i] = corners[i].TransformBy(transform);
+                }
+
+                // 변환된 점들로부터 새로운 바운딩 박스 계산
+                double minX = transformedCorners[0].X;
+                double minY = transformedCorners[0].Y;
+                double minZ = transformedCorners[0].Z;
+                double maxX = transformedCorners[0].X;
+                double maxY = transformedCorners[0].Y;
+                double maxZ = transformedCorners[0].Z;
+
+                for (int i = 1; i < 8; i++)
+                {
+                    Point3d pt = transformedCorners[i];
+                    minX = Math.Min(minX, pt.X);
+                    minY = Math.Min(minY, pt.Y);
+                    minZ = Math.Min(minZ, pt.Z);
+                    maxX = Math.Max(maxX, pt.X);
+                    maxY = Math.Max(maxY, pt.Y);
+                    maxZ = Math.Max(maxZ, pt.Z);
+                }
+
+                return new Extents3d(
+                    new Point3d(minX, minY, minZ),
+                    new Point3d(maxX, maxY, maxZ)
+                );
+            }
+            catch
+            {
+                // 변환 실패시 원본 반환
+                return bounds;
+            }
         }
 
         /// <summary>
@@ -3056,7 +3265,7 @@ namespace Acadv25JArch
 
                         if (dbObj is BlockReference nestedBlockRef)
                         {
-                            if (IsWithinSearchRadius(nestedBlockRef.Position, localSelectionPoint, searchRadius))
+                            if (IsPointInsideNestedBlock(trans, nestedBlockRef, localSelectionPoint, searchRadius))
                             {
                                 checkedEntities++;
                                 Entity nestedResult = FindClosestEntityInNestedBlock(trans, nestedBlockRef, localSelectionPoint, blockTransform);
