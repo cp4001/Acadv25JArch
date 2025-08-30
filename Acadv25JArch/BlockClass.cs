@@ -1415,6 +1415,252 @@ namespace Acadv25JArch
 
         }
 
+
+
+        // block Explode based by Table
+        [CommandMethod("BB_Explode")]
+        public static void ExplodeBlockFromTable()
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            if (doc == null)
+                return;
+
+            var db = doc.Database;
+            var ed = doc.Editor;
+
+            using (var tr = doc.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    // Step 1: 사용자가 Table의 셀을 직접 클릭하도록 함
+                    var clickOptions = new PromptPointOptions("\nClick on table cell to explode blocks: ");
+                    var clickResult = ed.GetPoint(clickOptions);
+                    if (clickResult.Status != PromptStatus.OK)
+                        return;
+
+                    var clickPoint = clickResult.Value;
+
+                    // Step 2: 클릭한 지점에서 Table 찾기 (Model Space만 검사)
+                    Table table = null;
+                    // 기존 코드: TableHitTestInfo hitInfo = null;
+                    // 수정 코드: TableHitTestInfo는 struct이므로 null 할당 불가, 대신 default 값으로 초기화
+                    TableHitTestInfo hitInfo = default;
+
+                    // Model Space에서 Table 찾기
+                    var modelSpace = tr.GetObject(db.CurrentSpaceId, OpenMode.ForRead) as BlockTableRecord;
+
+                    foreach (ObjectId entityId in modelSpace)
+                    {
+                        var entity = tr.GetObject(entityId, OpenMode.ForRead);
+                        if (entity is Table tableEntity)
+                        {
+                            try
+                            {
+                                // 이 Table에서 HitTest 실행
+                                var testHit = tableEntity.HitTest(clickPoint, Vector3d.ZAxis);
+                                //if (testHit != null)
+                                //{
+                                    table = tableEntity;
+                                    hitInfo = testHit;
+                                    break;
+                                //}
+                            }
+                            catch
+                            {
+                                // HitTest 실패시 다음 Table 검사
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Step 3: Table이 클릭되었는지 확인
+                    if (table == null)
+                    {
+                        ed.WriteMessage("\nNo table cell found at the clicked point. Please click on a table cell.");
+                        return;
+                    }
+
+                    int row = hitInfo.Row;
+                    int column = hitInfo.Column;
+
+                    //// Step 4: 클릭한 row의 column 1에서 Block 이름 가져오기
+                    //int row1 = hitInfo.Row;
+                    //int column1 = hitInfo.Column;
+
+                    ed.WriteMessage($"\nClicked: Row {row}, Column {column}");
+
+                    // Block 이름은 항상 column 1에 있음
+                    if (table.Columns.Count <= 1)
+                    {
+                        ed.WriteMessage("\nTable does not have enough columns.");
+                        return;
+                    }
+
+                    string blockName = "";
+
+                    try
+                    {
+                        var nameCell = table.Cells[row, 1]; // column 1에서 Block 이름 가져오기
+
+                        if (nameCell.Value != null && nameCell.Value is string cellText)
+                        {
+                            blockName = cellText.Trim();
+                        }
+
+                        if (string.IsNullOrEmpty(blockName))
+                        {
+                            ed.WriteMessage($"\nNo block name found in row {row}, column 1.");
+                            return;
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        ed.WriteMessage($"\nError reading block name from row {row}, column 1: {ex.Message}");
+                        return;
+                    }
+
+                    ed.WriteMessage($"\nBlock name found: {blockName}");
+
+                    // Step 5: 해당 Block들을 찾아서 Explode 실행
+                    int explodedCount = ExplodeBlocksByName(tr, db, blockName);
+
+                    if (explodedCount > 0)
+                    {
+                        ed.WriteMessage($"\n{explodedCount} blocks of type '{blockName}' were exploded.");
+                        tr.Commit();
+                    }
+                    else
+                    {
+                        ed.WriteMessage($"\nNo blocks of type '{blockName}' found in the drawing.");
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    ed.WriteMessage($"\nError: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 지정된 이름의 모든 Block Reference를 Model Space에서 찾아서 Explode 실행
+        /// </summary>
+        /// <param name="tr">Transaction</param>
+        /// <param name="db">Database</param>
+        /// <param name="blockName">Block 이름</param>
+        /// <returns>Explode된 Block의 개수</returns>
+        private static int ExplodeBlocksByName(Transaction tr, Database db, string blockName)
+        {
+            int explodedCount = 0;
+
+            // Block Table에서 해당 이름의 Block이 있는지 확인
+            var bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+            if (!bt.Has(blockName))
+            {
+                return 0; // Block이 존재하지 않음
+            }
+
+            var btrId = bt[blockName];
+
+            // Model Space에서 해당 Block Reference들을 찾기
+            var modelSpace = tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite) as BlockTableRecord;
+
+            // 모든 Block Reference를 수집 (Explode 중에 컬렉션이 변경되는 것을 방지)
+            var blockRefsToExplode = new System.Collections.Generic.List<ObjectId>();
+
+            foreach (ObjectId id in modelSpace)
+            {
+                var ent = tr.GetObject(id, OpenMode.ForRead);
+                if (ent is BlockReference br)
+                {
+                    string refBlockName = "";
+
+                    // Dynamic Block인지 확인
+                    if (br.IsDynamicBlock)
+                    {
+                        var dynamicBtr = tr.GetObject(br.DynamicBlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
+                        if (dynamicBtr != null)
+                        {
+                            refBlockName = dynamicBtr.Name;
+                        }
+                    }
+                    else
+                    {
+                        var normalBtr = tr.GetObject(br.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
+                        if (normalBtr != null)
+                        {
+                            refBlockName = normalBtr.Name;
+                        }
+                    }
+
+                    // Block 이름이 일치하는 경우 리스트에 추가
+                    if (string.Equals(refBlockName, blockName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        blockRefsToExplode.Add(id);
+                    }
+                }
+            }
+
+            // 수집된 Block Reference들을 Explode
+            foreach (var brId in blockRefsToExplode)
+            {
+                try
+                {
+                    var blockRef = tr.GetObject(brId, OpenMode.ForWrite) as BlockReference;
+                    if (blockRef != null)
+                    {
+                        // Explode 실행
+                        var explodedEntities = new DBObjectCollection();
+                        blockRef.Explode(explodedEntities);
+
+                        // Explode된 Entity들을 현재 공간에 추가
+                        foreach (Entity explodedEnt in explodedEntities)
+                        {
+                            modelSpace.AppendEntity(explodedEnt);
+                            tr.AddNewlyCreatedDBObject(explodedEnt, true);
+                        }
+
+                        // 원래 Block Reference 삭제
+                        blockRef.Erase();
+                        explodedCount++;
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    // 개별 Block Explode 실패 시 계속 진행
+                    var ed = Application.DocumentManager.MdiActiveDocument.Editor;
+                    ed.WriteMessage($"\nFailed to explode block {brId}: {ex.Message}");
+                }
+            }
+
+            return explodedCount;
+        }
+
+        /// <summary>
+        /// Block Reference의 이름을 가져옵니다 (Dynamic Block 고려)
+        /// </summary>
+        /// <param name="tr">Transaction</param>
+        /// <param name="br">Block Reference</param>
+        /// <returns>Block 이름</returns>
+        private static string GetBlockReferenceName(Transaction tr, BlockReference br)
+        {
+            try
+            {
+                if (br.IsDynamicBlock)
+                {
+                    var dynamicBtr = tr.GetObject(br.DynamicBlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
+                    return dynamicBtr?.Name ?? "";
+                }
+                else
+                {
+                    var normalBtr = tr.GetObject(br.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
+                    return normalBtr?.Name ?? "";
+                }
+            }
+            catch
+            {
+                return "";
+            }
+        }
     }
 
     //
@@ -2386,6 +2632,9 @@ namespace Acadv25JArch
         }
     }
     #endregion
+
+
+
 
 
 }

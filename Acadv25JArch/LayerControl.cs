@@ -168,6 +168,8 @@ namespace Acadv25JArch
                 ed.WriteMessage($"\n오류가 발생했습니다: {ex.Message}");
             }
         }
+
+
     }
 
     public class LayerStateControl_
@@ -767,6 +769,162 @@ namespace Acadv25JArch
             catch (System.Exception ex)
             {
                 ed.WriteMessage($"\n오류가 발생했습니다: {ex.Message}");
+            }
+        }
+    }
+
+    namespace LayerCountTable
+    {
+        public class LayerCountTable_
+        {
+            [CommandMethod("ll_Count")]
+            public static void LayerCountTable()
+            {
+                // 테이블 설정값들
+                const double rowHeight = 1000.0;
+                const double colWidth = 2000.0;
+                const double textHeight = rowHeight * 0.25;
+
+                // 현재 도면 가져오기
+                var doc = Application.DocumentManager.MdiActiveDocument;
+                if (doc == null)
+                    return;
+
+                var db = doc.Database;
+                var ed = doc.Editor;
+
+                // 테이블 삽입점 선택
+                var pr = ed.GetPoint("\nEnter table insertion point: ");
+                if (pr.Status != PromptStatus.OK)
+                    return;
+
+                using (var tr = doc.TransactionManager.StartTransaction())
+                {
+                    try
+                    {
+                        // 1단계: 모든 레이어 정보 수집
+                        var layerInfos = GetLayerEntityCounts(tr, db);
+                        if (layerInfos == null || layerInfos.Count == 0)
+                        {
+                            ed.WriteMessage("\nNo layers found in the drawing.");
+                            return;
+                        }
+
+                        // 2단계: 테이블 생성 및 설정
+                        var table = new Table();
+                        table.TableStyle = db.Tablestyle;
+                        table.SetRowHeight(rowHeight);
+                        table.SetColumnWidth(colWidth);
+                        table.Position = pr.Value;
+
+                        // 3단계: 두 번째 컬럼 추가 (레이어명용)
+                        table.InsertColumns(1, colWidth, 1);
+
+                        // 4단계: 헤더 설정
+                        SetupTableHeaders(table, textHeight);
+
+                        // 5단계: 레이어별 데이터 행 추가
+                        AddLayerDataRows(table, layerInfos, rowHeight, textHeight);
+
+                        // 6단계: 테이블을 현재 공간에 추가
+                        var currentSpace = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+                        currentSpace.AppendEntity(table);
+                        tr.AddNewlyCreatedDBObject(table, true);
+
+                        tr.Commit();
+
+                        ed.WriteMessage($"\nLayer count table created successfully. Total layers: {layerInfos.Count}");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        ed.WriteMessage($"\nError creating layer count table: {ex.Message}");
+                        tr.Abort();
+                    }
+                }
+            }
+
+            /// <summary>
+            /// 레이어별 엔티티 수를 계산하여 반환
+            /// </summary>
+            private static Dictionary<string, int> GetLayerEntityCounts(Transaction tr, Database db)
+            {
+                var layerCounts = new Dictionary<string, int>();
+
+                try
+                {
+                    // 레이어 테이블에서 모든 레이어 이름 수집
+                    var layerTable = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
+                    foreach (ObjectId layerId in layerTable)
+                    {
+                        var layerRecord = (LayerTableRecord)tr.GetObject(layerId, OpenMode.ForRead);
+                        layerCounts[layerRecord.Name] = 0; // 초기값 0으로 설정
+                    }
+
+                    // 현재 공간의 모든 엔티티를 확인하여 레이어별 카운트
+                    var currentSpace = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForRead);
+                    foreach (ObjectId entityId in currentSpace)
+                    {
+                        var entity = (Entity)tr.GetObject(entityId, OpenMode.ForRead);
+                        var layerName = entity.Layer;
+
+                        if (layerCounts.ContainsKey(layerName))
+                        {
+                            layerCounts[layerName]++;
+                        }
+                    }
+                }
+                catch (System.Exception)
+                {
+                    return null;
+                }
+
+                return layerCounts;
+            }
+
+            /// <summary>
+            /// 테이블 헤더 설정
+            /// </summary>
+            private static void SetupTableHeaders(Table table, double textHeight)
+            {
+                // 첫 번째 컬럼 헤더 - Layer Name
+                var header1 = table.Cells[0, 0];
+                header1.Value = "Layer Name";
+                header1.Alignment = CellAlignment.MiddleCenter;
+                header1.TextHeight = textHeight;
+
+                // 두 번째 컬럼 헤더 - Entity Count
+                var header2 = table.Cells[0, 1];
+                header2.Value = "Entity Count";
+                header2.Alignment = CellAlignment.MiddleCenter;
+                header2.TextHeight = textHeight;
+            }
+
+            /// <summary>
+            /// 레이어 데이터 행들을 테이블에 추가
+            /// </summary>
+            private static void AddLayerDataRows(Table table, Dictionary<string, int> layerInfos, double rowHeight, double textHeight)
+            {
+                // 레이어명으로 정렬
+                var sortedLayers = layerInfos.OrderBy(x => x.Key).ToList();
+
+                foreach (var layerInfo in sortedLayers)
+                {
+                    // 새 행 추가
+                    table.InsertRows(table.Rows.Count, rowHeight, 1);
+                    var rowIndex = table.Rows.Count - 1;
+
+                    // 첫 번째 컬럼: 레이어명
+                    var layerNameCell = table.Cells[rowIndex, 0];
+                    layerNameCell.Value = layerInfo.Key;
+                    layerNameCell.Alignment = CellAlignment.MiddleLeft;
+                    layerNameCell.TextHeight = textHeight;
+
+                    // 두 번째 컬럼: 엔티티 수
+                    var entityCountCell = table.Cells[rowIndex, 1];
+                    entityCountCell.Value = layerInfo.Value;
+                    entityCountCell.Alignment = CellAlignment.MiddleCenter;
+                    entityCountCell.TextHeight = textHeight;
+                }
             }
         }
     }
