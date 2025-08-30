@@ -2634,6 +2634,678 @@ namespace Acadv25JArch
     #endregion
 
 
+    // <summary>
+    /// AutoCAD 2025 (.NET 8.0) 호환 블록 내부 엔티티 복사 클래스
+    /// 블록을 선택했을 때 선택 지점에서 가장 가까운 내부 Entity를 찾아
+    /// 현재 레이어에 복사하는 기능을 제공합니다.
+    /// 중첩된 블록도 재귀적으로 검색합니다.
+    /// </summary>
+    public class BlockEntityCopier
+    {
+        /// <summary>
+        /// 블록 내부의 가장 가까운 엔티티를 현재 레이어에 복사하는 명령어
+        /// 사용법: AutoCAD 명령줄에서 COPYBLOCKENTITY 입력
+        /// </summary>
+        [CommandMethod("COPYBLOCKENTITY")]
+        public void CopyClosestBlockEntity()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor editor = doc.Editor;
+            Database db = doc.Database;
+
+            try
+            {
+                using (Transaction trans = db.TransactionManager.StartTransaction())
+                {
+                    editor.WriteMessage("\n=== Block Entity Copier (AutoCAD 2025 / .NET 8.0) ===");
+
+                    // Step 1: 블록 선택
+                    PromptEntityOptions blockSelectionOptions = new PromptEntityOptions("\nSelect a block reference: ");
+                    blockSelectionOptions.SetRejectMessage("\nMust be a block reference!");
+                    blockSelectionOptions.AddAllowedClass(typeof(BlockReference), true);
+
+                    PromptEntityResult blockResult = editor.GetEntity(blockSelectionOptions);
+                    if (blockResult.Status != PromptStatus.OK)
+                    {
+                        editor.WriteMessage("\nBlock selection cancelled.");
+                        return;
+                    }
+
+                    // Step 2: 선택점 가져오기
+                    Point3d selectionPoint = blockResult.PickedPoint;
+                    editor.WriteMessage($"\nSelection point: X={selectionPoint.X:F3}, Y={selectionPoint.Y:F3}, Z={selectionPoint.Z:F3}");
+
+                    // Step 3: 블록 참조 객체 가져오기
+                    BlockReference blockRef = trans.GetObject(blockResult.ObjectId, OpenMode.ForRead) as BlockReference;
+                    if (blockRef == null)
+                    {
+                        editor.WriteMessage("\nInvalid block reference.");
+                        return;
+                    }
+
+                    // Step 4: 현재 레이어 정보 가져오기
+                    LayerTableRecord currentLayerRecord = trans.GetObject(db.Clayer, OpenMode.ForRead) as LayerTableRecord;
+                    string currentLayer = currentLayerRecord?.Name ?? "0";
+                    editor.WriteMessage($"\nTarget layer: {currentLayer}");
+
+                    // Step 5: 블록 내부에서 가장 가까운 엔티티 찾기 (재귀적)
+                    editor.WriteMessage("\nSearching for closest entity in block (including nested blocks)...");
+                    Entity closestEntity = FindClosestEntityInBlock(trans, blockRef, selectionPoint);
+
+                    if (closestEntity != null)
+                    {
+                        // Step 6: 엔티티를 현재 레이어에 복사
+                        CopyEntityToCurrentLayer(trans, db, closestEntity, currentLayer);
+                        editor.WriteMessage($"\n✓ Entity successfully copied to layer: {currentLayer}");
+                    }
+                    else
+                    {
+                        editor.WriteMessage("\n✗ No entity found in the selected block.");
+                    }
+
+                    trans.Commit();
+                    editor.WriteMessage("\n=== Operation completed ===");
+                }
+            }
+            catch (Exception ex)
+            {
+                editor.WriteMessage($"\n✗ Error: {ex.Message}");
+                editor.WriteMessage($"\nStack trace: {ex.StackTrace}");
+            }
+        }
+
+        /// <summary>
+        /// 블록 내부의 가장 가까운 엔티티를 재귀적으로 찾기 (최적화된 버전)
+        /// 선택 지점 주변의 작은 영역만 검사하여 성능 향상
+        /// </summary>
+        private Entity FindClosestEntityInBlock(Transaction trans, BlockReference blockRef, Point3d selectionPoint)
+        {
+            Entity closestEntity = null;
+            double minDistance = double.MaxValue;
+
+            try
+            {
+                // 블록의 변환 행렬 가져오기
+                Matrix3d blockTransform = blockRef.BlockTransform;
+
+                // 선택점을 블록의 로컬 좌표계로 변환
+                Point3d localSelectionPoint = selectionPoint.TransformBy(blockTransform.Inverse());
+
+                // 블록 테이블 레코드 열기
+                BlockTableRecord blockDef = trans.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
+                if (blockDef == null) return null;
+
+                // 성능 최적화: 선택 지점 주변의 검색 반경 설정 (사용자 단위 기준)
+                double searchRadius = GetOptimalSearchRadius(trans, blockRef);
+
+                Editor editor = Application.DocumentManager.MdiActiveDocument.Editor;
+                editor.WriteMessage($"\nOptimization: Using search radius {searchRadius:F2} units around selection point");
+
+                // 블록 내부의 엔티티를 공간적으로 필터링하여 검사
+                int totalEntities = 0;
+                int checkedEntities = 0;
+
+                foreach (ObjectId entityId in blockDef)
+                {
+                    totalEntities++;
+                    if (entityId.IsErased || !entityId.IsValid) continue;
+
+                    try
+                    {
+                        DBObject dbObj = trans.GetObject(entityId, OpenMode.ForRead);
+
+                        // 중첩된 블록 참조인 경우
+                        if (dbObj is BlockReference nestedBlockRef)
+                        {
+                            // 중첩 블록의 위치가 검색 반경 내에 있는지 먼저 확인
+                            if (IsWithinSearchRadius(nestedBlockRef.Position, localSelectionPoint, searchRadius))
+                            {
+                                checkedEntities++;
+                                Entity nestedResult = FindClosestEntityInNestedBlock(trans, nestedBlockRef, localSelectionPoint, blockTransform);
+                                if (nestedResult != null)
+                                {
+                                    double distance = CalculateEntityDistance(nestedResult, selectionPoint);
+                                    if (distance < minDistance)
+                                    {
+                                        minDistance = distance;
+                                        closestEntity?.Dispose();
+                                        closestEntity = nestedResult;
+                                    }
+                                    else
+                                    {
+                                        nestedResult.Dispose();
+                                    }
+                                }
+                            }
+                        }
+                        // 일반 엔티티인 경우
+                        else if (dbObj is Entity entity)
+                        {
+                            // 엔티티가 검색 영역 내에 있는지 먼저 확인 (최적화)
+                            if (!IsEntityInSearchArea(entity, localSelectionPoint, searchRadius))
+                                continue; // 검색 영역 밖의 엔티티는 건너뛰기
+
+                            checkedEntities++;
+                            // 엔티티의 월드 좌표를 계산
+                            Entity transformedEntity = entity.Clone() as Entity;
+                            if (transformedEntity != null)
+                            {
+                                transformedEntity.TransformBy(blockTransform);
+
+                                double distance = CalculateEntityDistance(transformedEntity, selectionPoint);
+                                if (distance < minDistance)
+                                {
+                                    minDistance = distance;
+                                    closestEntity?.Dispose();
+                                    closestEntity = transformedEntity;
+                                }
+                                else
+                                {
+                                    transformedEntity.Dispose();
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        editor.WriteMessage($"\nWarning processing entity {entityId}: {ex.Message}");
+                        continue;
+                    }
+                }
+
+                editor.WriteMessage($"\nPerformance: Checked {checkedEntities}/{totalEntities} entities ({(double)checkedEntities / totalEntities * 100:F1}% efficiency)");
+            }
+            catch (Exception ex)
+            {
+                Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage($"\nError in FindClosestEntityInBlock: {ex.Message}");
+                return null;
+            }
+
+            return closestEntity;
+        }
+
+        /// <summary>
+        /// 최적의 검색 반경을 동적으로 계산
+        /// 뷰포트 크기와 블록 크기를 고려하여 적응적으로 설정
+        /// </summary>
+        private double GetOptimalSearchRadius(Transaction trans, BlockReference blockRef)
+        {
+            try
+            {
+                // 기본 반경
+                double baseRadius = 10.0;
+
+                // 현재 뷰포트 크기 확인
+                Point3d minPt = (Point3d)Application.GetSystemVariable("VIEWMIN");
+                Point3d maxPt = (Point3d)Application.GetSystemVariable("VIEWMAX");
+                double viewWidth = maxPt.X - minPt.X;
+                double viewHeight = maxPt.Y - minPt.Y;
+                double viewSize = Math.Min(viewWidth, viewHeight);
+
+                // 뷰포트 크기의 5%를 검색 반경으로 설정 (최소 1, 최대 100)
+                double adaptiveRadius = Math.Max(1.0, Math.Min(100.0, viewSize * 0.05));
+
+                // 블록의 스케일 팩터 고려
+                Matrix3d transform = blockRef.BlockTransform;
+                Vector3d xVector = transform.CoordinateSystem3d.Xaxis;
+                Vector3d yVector = transform.CoordinateSystem3d.Yaxis;
+                double scaleX = xVector.Length;
+                double scaleY = yVector.Length;
+                double avgScale = (scaleX + scaleY) / 2.0;
+
+                // 최종 반경 계산
+                double finalRadius = Math.Max(baseRadius, adaptiveRadius / avgScale);
+
+                return finalRadius;
+            }
+            catch
+            {
+                return 50.0; // 기본값
+            }
+        }
+
+        /// <summary>
+        /// 점이 검색 반경 내에 있는지 확인 (단순 거리 체크)
+        /// </summary>
+        private bool IsWithinSearchRadius(Point3d entityPoint, Point3d searchPoint, double radius)
+        {
+            double distance = entityPoint.DistanceTo(searchPoint);
+            return distance <= radius;
+        }
+
+        /// <summary>
+        /// 엔티티가 검색 영역 내에 있는지 확인 (효율적인 공간 필터링)
+        /// 엔티티 타입별로 최적화된 검사 방법 사용
+        /// </summary>
+        private bool IsEntityInSearchArea(Entity entity, Point3d searchPoint, double radius)
+        {
+            try
+            {
+                // 1. 특정 엔티티 타입에 대한 빠른 검사
+                if (entity is BlockReference blockRef)
+                {
+                    return IsWithinSearchRadius(blockRef.Position, searchPoint, radius);
+                }
+                else if (entity is DBText dbText)
+                {
+                    return IsWithinSearchRadius(dbText.Position, searchPoint, radius);
+                }
+                else if (entity is MText mText)
+                {
+                    return IsWithinSearchRadius(mText.Location, searchPoint, radius);
+                }
+                else if (entity is Dimension dim)
+                {
+                    return IsWithinSearchRadius(dim.TextPosition, searchPoint, radius);
+                }
+
+                // 2. 바운딩 박스 기반 검사 (일반적인 기하학적 엔티티)
+                try
+                {
+                    Extents3d bounds = entity.GeometricExtents;
+
+                    // 바운딩 박스의 중심점
+                    Point3d center = new Point3d(
+                        (bounds.MinPoint.X + bounds.MaxPoint.X) / 2,
+                        (bounds.MinPoint.Y + bounds.MaxPoint.Y) / 2,
+                        (bounds.MinPoint.Z + bounds.MaxPoint.Z) / 2
+                    );
+
+                    // 바운딩 박스의 최대 반경 (대각선의 절반)
+                    double boundingRadius = bounds.MinPoint.DistanceTo(bounds.MaxPoint) / 2;
+
+                    // 검색 원과 바운딩 박스가 겹치는지 빠른 체크
+                    double centerDistance = center.DistanceTo(searchPoint);
+
+                    // 바운딩 박스가 검색 반경과 전혀 겹치지 않으면 제외
+                    if (centerDistance > radius + boundingRadius)
+                        return false;
+
+                    // 바운딩 박스가 완전히 검색 반경 내에 있으면 포함
+                    if (centerDistance + boundingRadius <= radius)
+                        return true;
+
+                    // 3. Curve 타입에 대한 정확한 검사 (필요한 경우에만)
+                    if (entity is Curve curve)
+                    {
+                        try
+                        {
+                            Point3d closestPoint = curve.GetClosestPointTo(searchPoint, false);
+                            return closestPoint.DistanceTo(searchPoint) <= radius;
+                        }
+                        catch
+                        {
+                            // GetClosestPointTo 실패 시 바운딩 박스 기준으로 판단
+                            return centerDistance <= radius + boundingRadius;
+                        }
+                    }
+                    else
+                    {
+                        // Curve가 아닌 경우 바운딩 박스 중심 거리로 판단
+                        return centerDistance <= radius + boundingRadius;
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    // GeometricExtents를 구할 수 없는 경우
+                    Application.DocumentManager.MdiActiveDocument?.Editor?.WriteMessage($"\nWarning: Could not get bounds for entity type {entity.GetType().Name}: {ex.Message}");
+                    // 안전하게 포함시킴 (false positive는 허용, false negative는 방지)
+                    return true;
+                }
+            }
+            catch
+            {
+                // 모든 검사 실패 시 안전하게 포함시킴
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// 사용자가 검색 반경을 수동으로 설정할 수 있는 명령어
+        /// </summary>
+        [CommandMethod("COPYBLOCKENTITY_CUSTOM")]
+        public void CopyClosestBlockEntityWithCustomRadius()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor editor = doc.Editor;
+            Database db = doc.Database;
+
+            try
+            {
+                // 검색 반경 입력 받기
+                PromptDoubleOptions radiusOptions = new PromptDoubleOptions("\nEnter search radius (current units): ");
+                radiusOptions.DefaultValue = 50.0;
+                radiusOptions.AllowNegative = false;
+                radiusOptions.AllowZero = false;
+
+                PromptDoubleResult radiusResult = editor.GetDouble(radiusOptions);
+                if (radiusResult.Status != PromptStatus.OK) return;
+
+                double customRadius = radiusResult.Value;
+
+                using (Transaction trans = db.TransactionManager.StartTransaction())
+                {
+                    editor.WriteMessage($"\n=== Block Entity Copier (Custom Radius: {customRadius:F2}) ===");
+
+                    // 블록 선택
+                    PromptEntityOptions blockOptions = new PromptEntityOptions("\nSelect a block reference: ");
+                    blockOptions.SetRejectMessage("\nMust be a block reference!");
+                    blockOptions.AddAllowedClass(typeof(BlockReference), true);
+
+                    PromptEntityResult blockResult = editor.GetEntity(blockOptions);
+                    if (blockResult.Status != PromptStatus.OK) return;
+
+                    Point3d selectionPoint = blockResult.PickedPoint;
+                    BlockReference blockRef = trans.GetObject(blockResult.ObjectId, OpenMode.ForRead) as BlockReference;
+                    if (blockRef == null) return;
+
+                    // 현재 레이어 정보 가져오기
+                    LayerTableRecord currentLayerRecord = trans.GetObject(db.Clayer, OpenMode.ForRead) as LayerTableRecord;
+                    string currentLayer = currentLayerRecord?.Name ?? "0";
+
+                    // 커스텀 반경으로 검색
+                    Entity closestEntity = FindClosestEntityInBlockWithRadius(trans, blockRef, selectionPoint, customRadius);
+
+                    if (closestEntity != null)
+                    {
+                        CopyEntityToCurrentLayer(trans, db, closestEntity, currentLayer);
+                        editor.WriteMessage($"\n✓ Entity found and copied to layer: {currentLayer}");
+                    }
+                    else
+                    {
+                        editor.WriteMessage($"\n✗ No entity found within {customRadius:F2} units of selection point.");
+                    }
+
+                    trans.Commit();
+                }
+            }
+            catch (Exception ex)
+            {
+                editor.WriteMessage($"\n✗ Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 지정된 반경으로 가장 가까운 엔티티 찾기
+        /// </summary>
+        private Entity FindClosestEntityInBlockWithRadius(Transaction trans, BlockReference blockRef, Point3d selectionPoint, double searchRadius)
+        {
+            Entity closestEntity = null;
+            double minDistance = double.MaxValue;
+
+            try
+            {
+                Matrix3d blockTransform = blockRef.BlockTransform;
+                Point3d localSelectionPoint = selectionPoint.TransformBy(blockTransform.Inverse());
+
+                BlockTableRecord blockDef = trans.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
+                if (blockDef == null) return null;
+
+                Editor editor = Application.DocumentManager.MdiActiveDocument.Editor;
+                int totalEntities = 0;
+                int checkedEntities = 0;
+
+                foreach (ObjectId entityId in blockDef)
+                {
+                    totalEntities++;
+                    if (entityId.IsErased || !entityId.IsValid) continue;
+
+                    try
+                    {
+                        DBObject dbObj = trans.GetObject(entityId, OpenMode.ForRead);
+
+                        if (dbObj is BlockReference nestedBlockRef)
+                        {
+                            if (IsWithinSearchRadius(nestedBlockRef.Position, localSelectionPoint, searchRadius))
+                            {
+                                checkedEntities++;
+                                Entity nestedResult = FindClosestEntityInNestedBlock(trans, nestedBlockRef, localSelectionPoint, blockTransform);
+                                if (nestedResult != null)
+                                {
+                                    double distance = CalculateEntityDistance(nestedResult, selectionPoint);
+                                    if (distance <= searchRadius && distance < minDistance)
+                                    {
+                                        minDistance = distance;
+                                        closestEntity?.Dispose();
+                                        closestEntity = nestedResult;
+                                    }
+                                    else
+                                    {
+                                        nestedResult.Dispose();
+                                    }
+                                }
+                            }
+                        }
+                        else if (dbObj is Entity entity)
+                        {
+                            if (IsEntityInSearchArea(entity, localSelectionPoint, searchRadius))
+                            {
+                                checkedEntities++;
+                                Entity transformedEntity = entity.Clone() as Entity;
+                                if (transformedEntity != null)
+                                {
+                                    transformedEntity.TransformBy(blockTransform);
+
+                                    double distance = CalculateEntityDistance(transformedEntity, selectionPoint);
+                                    if (distance <= searchRadius && distance < minDistance)
+                                    {
+                                        minDistance = distance;
+                                        closestEntity?.Dispose();
+                                        closestEntity = transformedEntity;
+                                    }
+                                    else
+                                    {
+                                        transformedEntity.Dispose();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        editor.WriteMessage($"\nWarning processing entity {entityId}: {ex.Message}");
+                        continue;
+                    }
+                }
+
+                editor.WriteMessage($"\nEfficiency: {checkedEntities}/{totalEntities} entities checked ({(double)checkedEntities / totalEntities * 100:F1}%)");
+                if (closestEntity != null)
+                {
+                    editor.WriteMessage($"\nClosest entity distance: {minDistance:F3} units");
+                }
+            }
+            catch (Exception ex)
+            {
+                Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage($"\nError: {ex.Message}");
+                return null;
+            }
+
+            return closestEntity;
+        }
+
+        /// <summary>
+        /// 중첩된 블록 내부의 엔티티를 찾기
+        /// </summary>
+        private Entity FindClosestEntityInNestedBlock(Transaction trans, BlockReference nestedBlockRef, Point3d localPoint, Matrix3d parentTransform)
+        {
+            try
+            {
+                // 중첩 블록의 변환 행렬 계산
+                Matrix3d nestedTransform = nestedBlockRef.BlockTransform;
+                Matrix3d combinedTransform = nestedTransform.PreMultiplyBy(parentTransform);
+
+                // 임시 블록 참조 생성하여 재귀 호출
+                using (BlockReference tempBlockRef = new BlockReference(nestedBlockRef.Position, nestedBlockRef.BlockTableRecord))
+                {
+                    tempBlockRef.BlockTransform = combinedTransform;
+                    Point3d transformedPoint = localPoint.TransformBy(parentTransform);
+                    return FindClosestEntityInBlock(trans, tempBlockRef, transformedPoint);
+                }
+            }
+            catch (Exception ex)
+            {
+                Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage($"\nError in nested block processing: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 엔티티와 점 사이의 거리 계산 - AutoCAD 2025 API 호환
+        /// Entity 타입에 따라 적절한 거리 계산 방법 사용
+        /// </summary>
+        private double CalculateEntityDistance(Entity entity, Point3d point)
+        {
+            try
+            {
+                // Curve 타입인 경우에만 GetClosestPointTo 사용
+                if (entity is Curve curve)
+                {
+                    Point3d closestPoint = curve.GetClosestPointTo(point, false);
+                    return point.DistanceTo(closestPoint);
+                }
+                // BlockReference의 경우 삽입점과의 거리
+                else if (entity is BlockReference blockRef)
+                {
+                    return point.DistanceTo(blockRef.Position);
+                }
+                // DBText, MText의 경우 삽입점과의 거리
+                else if (entity is DBText dbText)
+                {
+                    return point.DistanceTo(dbText.Position);
+                }
+                else if (entity is MText mText)
+                {
+                    return point.DistanceTo(mText.Location);
+                }
+                // Hatch의 경우 중심점과의 거리
+                else if (entity is Hatch hatch)
+                {
+                    try
+                    {
+                        Extents3d bounds = hatch.GeometricExtents;
+                        Point3d center = new Point3d(
+                            (bounds.MinPoint.X + bounds.MaxPoint.X) / 2,
+                            (bounds.MinPoint.Y + bounds.MaxPoint.Y) / 2,
+                            (bounds.MinPoint.Z + bounds.MaxPoint.Z) / 2
+                        );
+                        return point.DistanceTo(center);
+                    }
+                    catch
+                    {
+                        // Hatch가 비어있는 경우 등
+                        return double.MaxValue;
+                    }
+                }
+                // Dimension의 경우
+                else if (entity is Dimension dim)
+                {
+                    return point.DistanceTo(dim.TextPosition);
+                }
+                // 일반적인 기하학적 엔티티의 경우 바운딩 박스 중심과의 거리
+                else
+                {
+                    try
+                    {
+                        Extents3d bounds = entity.GeometricExtents;
+                        Point3d center = new Point3d(
+                            (bounds.MinPoint.X + bounds.MaxPoint.X) / 2,
+                            (bounds.MinPoint.Y + bounds.MaxPoint.Y) / 2,
+                            (bounds.MinPoint.Z + bounds.MaxPoint.Z) / 2
+                        );
+                        return point.DistanceTo(center);
+                    }
+                    catch
+                    {
+                        // GeometricExtents를 구할 수 없는 경우
+                        return double.MaxValue;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 모든 방법이 실패한 경우
+                Application.DocumentManager.MdiActiveDocument?.Editor?.WriteMessage($"\nWarning: Could not calculate distance for entity type {entity.GetType().Name}: {ex.Message}");
+                return double.MaxValue;
+            }
+        }
+
+        /// <summary>
+        /// 엔티티를 현재 레이어에 복사
+        /// </summary>
+        private void CopyEntityToCurrentLayer(Transaction trans, Database db, Entity entity, string layerName)
+        {
+            try
+            {
+                // 엔티티 복제
+                Entity copiedEntity = entity.Clone() as Entity;
+                if (copiedEntity == null) return;
+
+                // 레이어 설정
+                copiedEntity.Layer = layerName;
+
+                // 현재 스페이스에 추가 (모델 스페이스 또는 페이퍼 스페이스)
+                BlockTableRecord currentSpace = GetCurrentSpace(trans, db);
+                if (currentSpace == null)
+                {
+                    copiedEntity.Dispose();
+                    return;
+                }
+
+                // 엔티티를 현재 스페이스에 추가
+                currentSpace.UpgradeOpen();
+                ObjectId newEntityId = currentSpace.AppendEntity(copiedEntity);
+                trans.AddNewlyCreatedDBObject(copiedEntity, true);
+
+                Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage($"\nEntity copied successfully with ObjectId: {newEntityId}");
+            }
+            catch (Exception ex)
+            {
+                Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage($"\nError copying entity: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 현재 활성 스페이스 가져오기 - AutoCAD 2025 호환
+        /// </summary>
+        private BlockTableRecord GetCurrentSpace(Transaction trans, Database db)
+        {
+            try
+            {
+                BlockTable blockTable = trans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                if (blockTable == null) return null;
+
+                // 현재 스페이스 확인 (TILEMODE 변수로 확인)
+                object tileModeObj = Application.GetSystemVariable("TILEMODE");
+                bool isModelSpace = Convert.ToInt32(tileModeObj) != 0;
+
+                ObjectId spaceId;
+                if (isModelSpace)
+                {
+                    spaceId = blockTable[BlockTableRecord.ModelSpace];
+                }
+                else
+                {
+                    spaceId = blockTable[BlockTableRecord.PaperSpace];
+                }
+
+                return trans.GetObject(spaceId, OpenMode.ForWrite) as BlockTableRecord;
+            }
+            catch
+            {
+                // 기본값으로 모델 스페이스 반환
+                try
+                {
+                    BlockTable blockTable = trans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                    ObjectId modelSpaceId = blockTable[BlockTableRecord.ModelSpace];
+                    return trans.GetObject(modelSpaceId, OpenMode.ForWrite) as BlockTableRecord;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+    }
 
 
 
