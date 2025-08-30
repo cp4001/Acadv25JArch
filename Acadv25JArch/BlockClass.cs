@@ -2758,24 +2758,26 @@ namespace Acadv25JArch
                         // 중첩된 블록 참조인 경우 - 개선된 검사 로직
                         if (dbObj is BlockReference nestedBlockRef)
                         {
-                            // 개선: 선택점이 블록 경계 내에 있는지 또는 검색 반경 내에 있는지 확인
-                            if (IsPointInsideNestedBlock(trans, nestedBlockRef, localSelectionPoint, searchRadius))
+                            // 개선: 선택점이 블록 경계 내에 있는지 확인
+                            if (IsPointInsideNestedBlock(trans, nestedBlockRef, localSelectionPoint))
                             {
                                 checkedEntities++;
                                 Entity nestedResult = FindClosestEntityInNestedBlock(trans, nestedBlockRef, localSelectionPoint, blockTransform);
                                 if (nestedResult != null)
                                 {
-                                    double distance = CalculateEntityDistance(nestedResult, selectionPoint);
-                                    if (distance < minDistance)
-                                    {
-                                        minDistance = distance;
-                                        closestEntity?.Dispose();
-                                        closestEntity = nestedResult;
-                                    }
-                                    else
-                                    {
-                                        nestedResult.Dispose();
-                                    }
+                                    closestEntity?.Dispose();
+                                    closestEntity = nestedResult;                               
+                                    //double distance = CalculateEntityDistance(nestedResult, selectionPoint);
+                                    //if (distance < minDistance)
+                                    //{
+                                    //    minDistance = distance;
+                                    //    closestEntity?.Dispose();
+                                    //    closestEntity = nestedResult;
+                                    //}
+                                    //else
+                                    //{
+                                    //    nestedResult.Dispose();
+                                    //}
                                 }
                             }
                         }
@@ -2793,17 +2795,20 @@ namespace Acadv25JArch
                             {
                                 transformedEntity.TransformBy(blockTransform);
 
-                                double distance = CalculateEntityDistance(transformedEntity, selectionPoint);
-                                if (distance < minDistance)
-                                {
-                                    minDistance = distance;
-                                    closestEntity?.Dispose();
-                                    closestEntity = transformedEntity;
-                                }
-                                else
-                                {
-                                    transformedEntity.Dispose();
-                                }
+                                closestEntity?.Dispose();
+                                closestEntity = transformedEntity;
+
+                                //double distance = CalculateEntityDistance(transformedEntity, selectionPoint);
+                                //if (distance < minDistance)
+                                //{
+                                //    minDistance = distance;
+                                //    closestEntity?.Dispose();
+                                //    closestEntity = transformedEntity;
+                                //}
+                                //else
+                                //{
+                                //    transformedEntity.Dispose();
+                                //}
                             }
                         }
                     }
@@ -2828,7 +2833,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 선택점이 중첩 블록의 경계 내에 있는지 확인하는 개선된 메서드
         /// </summary>
-        private bool IsPointInsideNestedBlock(Transaction trans, BlockReference nestedBlockRef, Point3d localSelectionPoint, double searchRadius)
+        private bool IsPointInsideNestedBlock(Transaction trans, BlockReference nestedBlockRef, Point3d localSelectionPoint)
         {
             try
             {
@@ -2865,14 +2870,14 @@ namespace Acadv25JArch
                     // 바운딩 박스 계산도 실패한 경우
                 }
 
-                // 3. 바운딩 박스 방법이 모두 실패한 경우, 삽입점 기준으로 검색 반경 확인
-                return IsWithinSearchRadius(nestedBlockRef.Position, localSelectionPoint, searchRadius);
+                // 3. 바운딩 박스 방법이 모두 실패한 경우, 검사하지 않음 (안전하게 제외)
+                return false;
             }
             catch (Exception ex)
             {
                 Application.DocumentManager.MdiActiveDocument?.Editor?.WriteMessage($"\nWarning in nested block check: {ex.Message}");
-                // 오류 발생시 안전하게 포함시킴
-                return true;
+                // 오류 발생시 안전하게 제외 (선택점이 내부에 있는지 확실하지 않으므로)
+                return false;
             }
         }
 
@@ -2882,8 +2887,9 @@ namespace Acadv25JArch
         private bool IsPointInsideBounds(Point3d point, Extents3d bounds)
         {
             return point.X >= bounds.MinPoint.X && point.X <= bounds.MaxPoint.X &&
-                   point.Y >= bounds.MinPoint.Y && point.Y <= bounds.MaxPoint.Y &&
-                   point.Z >= bounds.MinPoint.Z && point.Z <= bounds.MaxPoint.Z;
+                   point.Y >= bounds.MinPoint.Y && point.Y <= bounds.MaxPoint.Y;
+                   //&&
+                   //point.Z >= bounds.MinPoint.Z && point.Z <= bounds.MaxPoint.Z;
         }
 
         /// <summary>
@@ -3090,49 +3096,49 @@ namespace Acadv25JArch
         {
             try
             {
-                // 1. 특정 엔티티 타입에 대한 빠른 검사
-                if (entity is BlockReference blockRef)
-                {
-                    return IsWithinSearchRadius(blockRef.Position, searchPoint, radius);
-                }
-                else if (entity is DBText dbText)
-                {
-                    return IsWithinSearchRadius(dbText.Position, searchPoint, radius);
-                }
-                else if (entity is MText mText)
-                {
-                    return IsWithinSearchRadius(mText.Location, searchPoint, radius);
-                }
-                else if (entity is Dimension dim)
-                {
-                    return IsWithinSearchRadius(dim.TextPosition, searchPoint, radius);
-                }
+                //// 1. 특정 엔티티 타입에 대한 빠른 검사
+                //if (entity is BlockReference blockRef)
+                //{
+                //    return IsWithinSearchRadius(blockRef.Position, searchPoint, radius);
+                //}
+                //else if (entity is DBText dbText)
+                //{
+                //    return IsWithinSearchRadius(dbText.Position, searchPoint, radius);
+                //}
+                //else if (entity is MText mText)
+                //{
+                //    return IsWithinSearchRadius(mText.Location, searchPoint, radius);
+                //}
+                //else if (entity is Dimension dim)
+                //{
+                //    return IsWithinSearchRadius(dim.TextPosition, searchPoint, radius);
+                //}
 
                 // 2. 바운딩 박스 기반 검사 (일반적인 기하학적 엔티티)
                 try
                 {
-                    Extents3d bounds = entity.GeometricExtents;
+                    //Extents3d bounds = entity.GeometricExtents;
 
-                    // 바운딩 박스의 중심점
-                    Point3d center = new Point3d(
-                        (bounds.MinPoint.X + bounds.MaxPoint.X) / 2,
-                        (bounds.MinPoint.Y + bounds.MaxPoint.Y) / 2,
-                        (bounds.MinPoint.Z + bounds.MaxPoint.Z) / 2
-                    );
+                    //// 바운딩 박스의 중심점
+                    //Point3d center = new Point3d(
+                    //    (bounds.MinPoint.X + bounds.MaxPoint.X) / 2,
+                    //    (bounds.MinPoint.Y + bounds.MaxPoint.Y) / 2,
+                    //    (bounds.MinPoint.Z + bounds.MaxPoint.Z) / 2
+                    //);
 
-                    // 바운딩 박스의 최대 반경 (대각선의 절반)
-                    double boundingRadius = bounds.MinPoint.DistanceTo(bounds.MaxPoint) / 2;
+                    //// 바운딩 박스의 최대 반경 (대각선의 절반)
+                    //double boundingRadius = bounds.MinPoint.DistanceTo(bounds.MaxPoint) / 2;
 
-                    // 검색 원과 바운딩 박스가 겹치는지 빠른 체크
-                    double centerDistance = center.DistanceTo(searchPoint);
+                    //// 검색 원과 바운딩 박스가 겹치는지 빠른 체크
+                    //double centerDistance = center.DistanceTo(searchPoint);
 
-                    // 바운딩 박스가 검색 반경과 전혀 겹치지 않으면 제외
-                    if (centerDistance > radius + boundingRadius)
-                        return false;
+                    //// 바운딩 박스가 검색 반경과 전혀 겹치지 않으면 제외
+                    //if (centerDistance > radius + boundingRadius)
+                    //    return false;
 
-                    // 바운딩 박스가 완전히 검색 반경 내에 있으면 포함
-                    if (centerDistance + boundingRadius <= radius)
-                        return true;
+                    //// 바운딩 박스가 완전히 검색 반경 내에 있으면 포함
+                    //if (centerDistance + boundingRadius <= radius)
+                    //    return true;
 
                     // 3. Curve 타입에 대한 정확한 검사 (필요한 경우에만)
                     if (entity is Curve curve)
@@ -3144,14 +3150,15 @@ namespace Acadv25JArch
                         }
                         catch
                         {
-                            // GetClosestPointTo 실패 시 바운딩 박스 기준으로 판단
-                            return centerDistance <= radius + boundingRadius;
+                            //// GetClosestPointTo 실패 시 바운딩 박스 기준으로 판단
+                            //return centerDistance <= radius + boundingRadius;
                         }
                     }
                     else
                     {
-                        // Curve가 아닌 경우 바운딩 박스 중심 거리로 판단
-                        return centerDistance <= radius + boundingRadius;
+                        //// Curve가 아닌 경우 바운딩 박스 중심 거리로 판단
+                        //return centerDistance <= radius + boundingRadius;
+                        return false;
                     }
                 }
                 catch (System.Exception ex)
@@ -3161,6 +3168,7 @@ namespace Acadv25JArch
                     // 안전하게 포함시킴 (false positive는 허용, false negative는 방지)
                     return true;
                 }
+                return false;
             }
             catch
             {
@@ -3265,7 +3273,7 @@ namespace Acadv25JArch
 
                         if (dbObj is BlockReference nestedBlockRef)
                         {
-                            if (IsPointInsideNestedBlock(trans, nestedBlockRef, localSelectionPoint, searchRadius))
+                            if (IsPointInsideNestedBlock(trans, nestedBlockRef, localSelectionPoint))
                             {
                                 checkedEntities++;
                                 Entity nestedResult = FindClosestEntityInNestedBlock(trans, nestedBlockRef, localSelectionPoint, blockTransform);
