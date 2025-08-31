@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.DatabaseServices.Filters;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Internal;
@@ -3712,6 +3713,246 @@ namespace Acadv25JArch
 
                 ed.WriteMessage("\n하이라이트가 해제되었습니다.");
                 tr.Commit();
+            }
+        }
+    }
+
+    public class XClipPolylineConverter
+    {
+        // 명령어 정의
+        [CommandMethod("CREATEXCLIPPOLYLINES", CommandFlags.Modal)]
+        public static void CreateXClipPolylines()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // Step 1: XClip된 Block 찾기
+                    List<BlockReference> xclippedBlocks = FindXClippedBlocks(tr, db);
+
+                    if (xclippedBlocks.Count == 0)
+                    {
+                        ed.WriteMessage("\nXClip된 Block이 없습니다.");
+                        return;
+                    }
+
+                    ed.WriteMessage($"\n{xclippedBlocks.Count}개의 XClip된 Block을 찾았습니다.");
+
+                    // Step 2: "!XClip" Layer 생성
+                    ObjectId xclipLayerId = CreateXClipLayer(tr, db);
+
+                    // Step 3: XClip 경계에 Polyline 생성
+                    int polylineCount = 0;
+                    foreach (BlockReference blkRef in xclippedBlocks)
+                    {
+                        if (CreatePolylineFromXClipBoundary(tr, db, blkRef, xclipLayerId))
+                        {
+                            polylineCount++;
+                        }
+                    }
+
+                    tr.Commit();
+                    ed.WriteMessage($"\n{polylineCount}개의 XClip 경계 Polyline을 생성했습니다.");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        // Step 1: XClip된 BlockReference 찾기
+        private static List<BlockReference> FindXClippedBlocks(Transaction tr, Database db)
+        {
+            List<BlockReference> xclippedBlocks = new List<BlockReference>();
+
+            // ModelSpace와 모든 PaperSpace Layout 검사
+            BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+
+            // ModelSpace 검사
+            CheckBlockTableRecordForXClippedBlocks(tr, bt[BlockTableRecord.ModelSpace], xclippedBlocks);
+
+            // PaperSpace Layout들 검사
+            foreach (ObjectId btrId in bt)
+            {
+                BlockTableRecord btr = (BlockTableRecord)tr.GetObject(btrId, OpenMode.ForRead);
+                if (btr.IsLayout && btr.Name != BlockTableRecord.ModelSpace)
+                {
+                    CheckBlockTableRecordForXClippedBlocks(tr, btrId, xclippedBlocks);
+                }
+                btr.Dispose();
+            }
+
+            return xclippedBlocks;
+        }
+
+        private static void CheckBlockTableRecordForXClippedBlocks(Transaction tr, ObjectId btrId, List<BlockReference> xclippedBlocks)
+        {
+            BlockTableRecord btr = (BlockTableRecord)tr.GetObject(btrId, OpenMode.ForRead);
+
+            foreach (ObjectId objId in btr)
+            {
+                Entity ent = tr.GetObject(objId, OpenMode.ForRead) as Entity;
+                if (ent is BlockReference blkRef)
+                {
+                    // XClip 여부 확인
+                    if (IsBlockXClipped(tr, blkRef))
+                    {
+                        xclippedBlocks.Add(blkRef);
+                    }
+                }
+            }
+        }
+
+        private static bool IsBlockXClipped(Transaction tr, BlockReference blkRef)
+        {
+            try
+            {
+                // ExtensionDictionary 확인
+                if (blkRef.ExtensionDictionary == ObjectId.Null)
+                    return false;
+
+                DBDictionary extDict = (DBDictionary)tr.GetObject(blkRef.ExtensionDictionary, OpenMode.ForRead);
+
+                // "ACAD_FILTER" 딕셔너리 확인
+                if (!extDict.Contains("ACAD_FILTER"))
+                    return false;
+
+                ObjectId filterDictId = extDict.GetAt("ACAD_FILTER");
+                DBDictionary filterDict = (DBDictionary)tr.GetObject(filterDictId, OpenMode.ForRead);
+
+                // "SPATIAL" SpatialFilter 확인
+                return filterDict.Contains("SPATIAL");
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Step 2: "!XClip" Layer 생성
+        private static ObjectId CreateXClipLayer(Transaction tr, Database db)
+        {
+            LayerTable lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
+
+            string layerName = "!XClip";
+
+            // Layer가 이미 존재하는지 확인
+            if (lt.Has(layerName))
+            {
+                return lt[layerName];
+            }
+
+            // 새 Layer 생성
+            lt.UpgradeOpen();
+            LayerTableRecord ltr = new LayerTableRecord();
+            ltr.Name = layerName;
+            ltr.Color = Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByColor, 1); // Red
+
+            ObjectId layerId = lt.Add(ltr);
+            tr.AddNewlyCreatedDBObject(ltr, true);
+
+            return layerId;
+        }
+
+        // Step 3: XClip 경계에 Polyline 생성
+        private static bool CreatePolylineFromXClipBoundary(Transaction tr, Database db, BlockReference blkRef, ObjectId layerId)
+        {
+            try
+            {
+                // SpatialFilter 가져오기
+                DBDictionary extDict = (DBDictionary)tr.GetObject(blkRef.ExtensionDictionary, OpenMode.ForRead);
+                ObjectId filterDictId = extDict.GetAt("ACAD_FILTER");
+                DBDictionary filterDict = (DBDictionary)tr.GetObject(filterDictId, OpenMode.ForRead);
+                ObjectId spatialFilterId = filterDict.GetAt("SPATIAL");
+
+                SpatialFilter spatialFilter = (SpatialFilter)tr.GetObject(spatialFilterId, OpenMode.ForRead);
+
+                // XClip 경계점 가져오기
+                Point2dCollection clipPoints = spatialFilter.Definition.GetPoints();
+                Matrix3d transform = spatialFilter.ClipSpaceToWorldCoordinateSystemTransform;
+
+                if (clipPoints.Count < 3)
+                {
+                    // Rectangle인 경우 2개 점만 반환되므로 4개 점으로 확장
+                    if (clipPoints.Count == 2)
+                    {
+                        clipPoints = ExpandRectanglePoints(clipPoints);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+                // Polyline 생성
+                using (Polyline pline = new Polyline())
+                {
+                    pline.SetDatabaseDefaults();
+                    pline.LayerId = layerId;
+
+                    // 점들을 Polyline에 추가
+                    for (int i = 0; i < clipPoints.Count; i++)
+                    {
+                        // 2D 점을 3D로 변환하고 변환 매트릭스 적용
+                        Point3d pt3d = new Point3d(clipPoints[i].X, clipPoints[i].Y, 0.0);
+                        pt3d = pt3d.TransformBy(transform);
+
+                        pline.AddVertexAt(i, new Point2d(pt3d.X, pt3d.Y), 0.0, 0.0, 0.0);
+                    }
+
+                    pline.Closed = true;
+
+                    // 도면에 추가
+                    BlockTableRecord space = GetCurrentSpace(tr, db);
+                    space.UpgradeOpen();
+                    ObjectId plineId = space.AppendEntity(pline);
+                    tr.AddNewlyCreatedDBObject(pline, true);
+
+                    return true;
+                }
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+
+        // Rectangle 경계를 4개 점으로 확장
+        private static Point2dCollection ExpandRectanglePoints(Point2dCollection clipPoints)
+        {
+            Point2dCollection expandedPoints = new Point2dCollection();
+
+            Point2d pt1 = clipPoints[0];  // 좌하단
+            Point2d pt2 = clipPoints[1];  // 우상단
+
+            // 4개 모서리 점 생성
+            expandedPoints.Add(new Point2d(pt1.X, pt1.Y)); // 좌하단
+            expandedPoints.Add(new Point2d(pt2.X, pt1.Y)); // 우하단
+            expandedPoints.Add(new Point2d(pt2.X, pt2.Y)); // 우상단
+            expandedPoints.Add(new Point2d(pt1.X, pt2.Y)); // 좌상단
+
+            return expandedPoints;
+        }
+
+        // 현재 공간(ModelSpace 또는 PaperSpace) 가져오기
+        private static BlockTableRecord GetCurrentSpace(Transaction tr, Database db)
+        {
+            BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+
+            if (db.TileMode)
+            {
+                // ModelSpace
+                return (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForRead);
+            }
+            else
+            {
+                // PaperSpace
+                return (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.PaperSpace], OpenMode.ForRead);
             }
         }
     }
