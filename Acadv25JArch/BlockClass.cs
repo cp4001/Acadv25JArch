@@ -625,7 +625,7 @@ namespace Acadv25JArch
 
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    BlockReference blockRef = tr.GetObject(blockId, OpenMode.ForRead) as BlockReference;
+                    BlockReference? blockRef = tr.GetObject(blockId, OpenMode.ForRead) as BlockReference;
                     if (blockRef == null)
                     {
                         ed.WriteMessage("\n선택된 객체가 블록이 아닙니다.");
@@ -633,8 +633,8 @@ namespace Acadv25JArch
                     }
 
                     // 블록 정의 가져오기
-                    BlockTableRecord blockDef = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
-                    string blockName = blockDef.Name;
+                    BlockTableRecord? blockDef = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
+                    string? blockName = blockDef?.Name;
 
                     // 이미지 크기 설정 (사용자 지정 가능)
                     int imgWidth = 224;//512
@@ -2262,7 +2262,7 @@ namespace Acadv25JArch
         /// <param name="recursive">재귀적 explode 여부</param>
         /// <param name="blockNamePattern">Block 이름 패턴 (null이면 모든 Block)</param>
         /// <returns>처리 결과 정보</returns>
-        public static ExplodeResults ExplodeAllBlocks(Database database, Transaction transaction, bool recursive = false, string blockNamePattern = null)
+        public static ExplodeResults ExplodeAllBlocks(Database database, Transaction transaction, bool recursive = false, string? blockNamePattern = null)
         {
             var results = new ExplodeResults();
 
@@ -2676,7 +2676,7 @@ namespace Acadv25JArch
                     editor.WriteMessage($"\nSelection point: X={selectionPoint.X:F3}, Y={selectionPoint.Y:F3}, Z={selectionPoint.Z:F3}");
 
                     // Step 3: 블록 참조 객체 가져오기
-                    BlockReference blockRef = trans.GetObject(blockResult.ObjectId, OpenMode.ForRead) as BlockReference;
+                    BlockReference? blockRef = trans.GetObject(blockResult.ObjectId, OpenMode.ForRead) as BlockReference;
                     if (blockRef == null)
                     {
                         editor.WriteMessage("\nInvalid block reference.");
@@ -2722,7 +2722,7 @@ namespace Acadv25JArch
         private Entity FindClosestEntityInBlock(Transaction trans, BlockReference blockRef, Point3d selectionPoint)
         {
             Entity closestEntity = null;
-            double minDistance = double.MaxValue;
+            //double minDistance = double.MaxValue;
 
             try
             {
@@ -3524,6 +3524,196 @@ namespace Acadv25JArch
         }
     }
 
+    public class BlockCurveSearcher
+    {
+        /// <summary>
+        /// 사용자가 블록을 선택하면 선택 포인트 기준 거리 10 이내의 Curve 엔티티를 찾는 명령
+        /// </summary>
+        [CommandMethod("FINDNESTEDCURVES")]
+        public void FindNestedCurves()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
 
+            try
+            {
+                // Step 1: 블록 선택
+                PromptEntityOptions peo = new PromptEntityOptions("\n블록을 선택하세요: ");
+                peo.SetRejectMessage("\n블록 참조만 선택할 수 있습니다.");
+                peo.AddAllowedClass(typeof(BlockReference), true);
+
+                PromptEntityResult per = ed.GetEntity(peo);
+                if (per.Status != PromptStatus.OK)
+                    return;
+
+                // 선택 포인트 저장
+                Point3d pickPoint = per.PickedPoint;
+
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    BlockReference? blockRef = tr.GetObject(per.ObjectId, OpenMode.ForRead) as BlockReference;
+                    if (blockRef == null)
+                    {
+                        ed.WriteMessage("\n유효한 블록 참조가 아닙니다.");
+                        return;
+                    }
+
+                    // Step 2: 거리 10 이내의 Curve 찾기
+                    double searchRadius = 100.0;
+                    List<Curve> foundCurves = new List<Curve>();
+
+                    // 블록 참조의 변환 매트릭스 가져오기
+                    Matrix3d transform = blockRef.BlockTransform;
+
+                    // 재귀적으로 중첩된 블록 내부의 Curve 검색
+                    SearchCurvesInBlock(blockRef, pickPoint, searchRadius, transform, foundCurves, tr);
+
+                    // 결과 출력
+                    ed.WriteMessage($"\n찾은 Curve 개수: {foundCurves.Count}");
+
+                    //// 찾은 Curve들 하이라이트
+                    //foreach (Curve curve in foundCurves)
+                    //{
+                    //    curve.Highlight();
+                    //}
+
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog($"오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 블록 내부의 Curve를 재귀적으로 검색하는 메서드
+        /// </summary>
+        private void SearchCurvesInBlock(BlockReference blockRef, Point3d pickPoint,
+            double searchRadius, Matrix3d parentTransform, List<Curve> foundCurves, Transaction tr)
+        {
+            // 블록 정의 가져오기
+            BlockTableRecord btr = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
+            if (btr == null)
+                return;
+
+            // 블록 내부의 모든 엔티티 검사
+            foreach (ObjectId entId in btr)
+            {
+                Entity ent = tr.GetObject(entId, OpenMode.ForRead) as Entity;
+                if (ent == null)
+                    continue;
+
+                // 엔티티의 실제 위치를 계산하기 위해 변환 적용
+                Entity transformedEnt = ent.Clone() as Entity;
+                transformedEnt.TransformBy(parentTransform);
+
+                // Case 1: Curve 타입인 경우
+                if (transformedEnt is Curve curve)
+                {
+                    // 선택 포인트와의 거리 확인
+                    if (IsWithinDistance(curve, pickPoint, searchRadius))
+                    {
+                        foundCurves.Add(curve);
+                    }
+                }
+                // Case 2: 중첩된 BlockReference인 경우
+                if (ent is BlockReference nestedBlockRef)
+                {
+                    // 중첩된 블록의 변환 매트릭스 계산
+                    Matrix3d nestedTransform = nestedBlockRef.BlockTransform * parentTransform;
+
+                    // 중첩된 블록의 GeometricExtents 가져오기
+                    BlockReference transformedBlockRef = transformedEnt as BlockReference;
+                    if (transformedBlockRef != null && IsPointInBlockExtents(transformedBlockRef, pickPoint, searchRadius))
+                    {
+                        // 재귀적으로 중첩된 블록 내부 검색
+                        SearchCurvesInBlock(nestedBlockRef, pickPoint, searchRadius,
+                            nestedTransform, foundCurves, tr);
+                    }
+                }
+
+                // transformedEnt가 Clone으로 생성된 경우 Dispose
+                if (transformedEnt != ent)
+                {
+                    transformedEnt.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 포인트가 블록의 GeometricExtents 내부에 있는지 확인
+        /// </summary>
+        private bool IsPointInBlockExtents(BlockReference blockRef, Point3d point,double rr)
+        {
+            try
+            {
+                Extents3d extents = blockRef.GeometricExtents;
+
+                // 포인트가 Extents 박스 내부에 있는지 확인
+                return point.X >= extents.MinPoint.X-rr && point.X <= extents.MaxPoint.X+rr &&
+                       point.Y >= extents.MinPoint.Y-rr && point.Y <= extents.MaxPoint.Y+rr; 
+                       // &&
+                       //point.Z >= extents.MinPoint.Z && point.Z <= extents.MaxPoint.Z;
+            }
+            catch
+            {
+                // GeometricExtents를 가져올 수 없는 경우 false 반환
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Curve가 지정된 포인트로부터 지정된 거리 이내에 있는지 확인
+        /// </summary>
+        private bool IsWithinDistance(Curve curve, Point3d point, double maxDistance)
+        {
+            try
+            {
+                // Curve 위의 가장 가까운 점 찾기
+                Point3d closestPoint = curve.GetClosestPointTo(point, false);
+
+                // 거리 계산
+                double distance = point.DistanceTo(closestPoint);
+
+                return distance <= maxDistance;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 선택한 Curve들의 하이라이트를 해제하는 명령
+        /// </summary>
+        [CommandMethod("CLEARHIGHLIGHT")]
+        public void ClearHighlight()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                // 모든 엔티티의 하이라이트 해제
+                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord ms = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
+
+                foreach (ObjectId id in ms)
+                {
+                    Entity ent = tr.GetObject(id, OpenMode.ForRead) as Entity;
+                    if (ent != null)
+                    {
+                        ent.Unhighlight();
+                    }
+                }
+
+                ed.WriteMessage("\n하이라이트가 해제되었습니다.");
+                tr.Commit();
+            }
+        }
+    }
 
 }

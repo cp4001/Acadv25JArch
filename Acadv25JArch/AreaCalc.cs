@@ -32,7 +32,7 @@ namespace Acadv25JArch
                 try
                 {
                     // Step 1: LayerTable 접근
-                    LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                    LayerTable? layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
                     if (layerTable == null)
                     {
                         ed.WriteMessage("\n오류: LayerTable에 접근할 수 없습니다.");
@@ -40,7 +40,7 @@ namespace Acadv25JArch
                     }
 
                     // Step 2: 현재 레이어 상태를 layer_org에 저장
-                    LayerTableRecord currentLayer = tr.GetObject(db.Clayer, OpenMode.ForRead) as LayerTableRecord;
+                    LayerTableRecord? currentLayer = tr.GetObject(db.Clayer, OpenMode.ForRead) as LayerTableRecord;
                     //if (currentLayer != null)
                     //{
                     //    layer_org = currentLayer.Name;
@@ -104,7 +104,7 @@ namespace Acadv25JArch
 
                     foreach (ObjectId layerId in layerTable)
                     {
-                        LayerTableRecord layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+                        LayerTableRecord? layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
                         if (layer != null && layer.Name != areaCalcLayerName)
                         {
                             processedLayers++;

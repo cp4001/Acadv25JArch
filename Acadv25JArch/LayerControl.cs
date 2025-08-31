@@ -42,7 +42,7 @@ namespace Acadv25JArch
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     // 선택된 엔티티 열기
-                    Entity selectedEntity = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Entity;
+                    Entity? selectedEntity = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Entity;
                     if (selectedEntity == null)
                     {
                         ed.WriteMessage("\n선택된 객체가 엔티티가 아닙니다.");
@@ -54,7 +54,7 @@ namespace Acadv25JArch
                     string layerName = selectedEntity.Layer;
 
                     // Step 4: LayerTable에서 해당 레이어의 LayerTableRecord 가져오기
-                    LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                    LayerTable? layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
                     if (layerTable == null)
                     {
                         ed.WriteMessage("\n레이어 테이블에 접근할 수 없습니다.");
@@ -69,7 +69,7 @@ namespace Acadv25JArch
                     }
 
                     // LayerTableRecord를 쓰기 모드로 열기
-                    LayerTableRecord layerRecord = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+                    LayerTableRecord? layerRecord = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
                     if (layerRecord == null)
                     {
                         ed.WriteMessage("\n레이어 레코드에 접근할 수 없습니다.");
@@ -78,7 +78,7 @@ namespace Acadv25JArch
 
                     // 현재 활성 레이어는 끌 수 없음 - AutoCAD 규칙
                     string currentLayer = db.Clayer.ToString();
-                    LayerTableRecord currentLayerRecord = tr.GetObject(db.Clayer, OpenMode.ForRead) as LayerTableRecord;
+                    LayerTableRecord? currentLayerRecord = tr.GetObject(db.Clayer, OpenMode.ForRead) as LayerTableRecord;
                     string currentLayerName = currentLayerRecord != null ? currentLayerRecord.Name : "";
 
                     if (layerName.Equals(currentLayerName, StringComparison.OrdinalIgnoreCase))
@@ -140,7 +140,7 @@ namespace Acadv25JArch
 
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                    LayerTable? layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
                     if (!layerTable.Has(layerName))
                     {
                         ed.WriteMessage($"\n레이어 '{layerName}'을 찾을 수 없습니다.");
@@ -148,7 +148,7 @@ namespace Acadv25JArch
                     }
 
                     ObjectId layerId = layerTable[layerName];
-                    LayerTableRecord layerRecord = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+                    LayerTableRecord? layerRecord = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
 
                     if (!layerRecord.IsOff)
                     {

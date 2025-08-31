@@ -52,12 +52,12 @@ namespace Acadv25JArch
                             );
 
                             // Find the largest boundary by calculating areas
-                            Entity largestBoundary = null;
+                            Entity? largestBoundary = null;
                             double maxArea = 0.0;
 
                             foreach (DBObject obj in objs)
                             {
-                                Entity ent = obj as Entity;
+                                Entity? ent = obj as Entity;
                                 if (ent != null)
                                 {
                                     double area = CalculateEntityArea(ent);
@@ -92,7 +92,7 @@ namespace Acadv25JArch
                             // Dispose other boundary objects that weren't added
                             foreach (DBObject obj in objs)
                             {
-                                Entity ent = obj as Entity;
+                                Entity? ent = obj as Entity;
                                 if (ent != null && ent != largestBoundary)
                                 {
                                     ent.Dispose();
@@ -246,8 +246,8 @@ namespace Acadv25JArch
 
                         // Step 6: 선택된 엔티티의 레이어 확인
                         ObjectId selectedId = selResult.Value.GetObjectIds()[0];
-                        Entity selectedEntity = tr.GetObject(selectedId, OpenMode.ForRead) as Entity;
-                        string sourceLayerName = selectedEntity.Layer;
+                        Entity? selectedEntity = tr.GetObject(selectedId, OpenMode.ForRead) as Entity;
+                        string? sourceLayerName = selectedEntity?.Layer;
 
                         ed.WriteMessage($"\n'{sourceLayerName}' 레이어에서 Line/Polyline을 찾는 중...");
 
@@ -258,7 +258,7 @@ namespace Acadv25JArch
                         HashSet<string> existingHandles = GetExistingHandlesInTargetLayer(tr, db, targetLayerId);
 
                         // Step 9: 지정된 레이어의 모든 Line/Polyline 엔티티 찾기
-                        List<ObjectId> sourceEntityIds = FindEntitiesInLayer(tr, db, sourceLayerName, filter);
+                        List<ObjectId> sourceEntityIds = FindEntitiesInLayer(tr, db, sourceLayerName??"", filter);
 
                         ed.WriteMessage($"\n'{sourceLayerName}' 레이어에서 {sourceEntityIds.Count}개의 Line/Polyline을 발견했습니다.");
 
@@ -266,10 +266,10 @@ namespace Acadv25JArch
                         List<ObjectId> entitiesToClone = new List<ObjectId>();
                         foreach (ObjectId entityId in sourceEntityIds)
                         {
-                            Entity entity = tr.GetObject(entityId, OpenMode.ForRead) as Entity;
-                            string handleValue = entity.Handle.ToString();
+                            Entity? entity = tr.GetObject(entityId, OpenMode.ForRead) as Entity;
+                            string? handleValue = entity?.Handle.ToString();
 
-                            if (!existingHandles.Contains(handleValue))
+                            if (!existingHandles.Contains(handleValue??""))
                             {
                                 entitiesToClone.Add(entityId);
                             }

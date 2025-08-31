@@ -444,14 +444,14 @@ namespace Acadv25JArch
                     if (result.Status != PromptStatus.OK)
                         return;
 
-                    Entity ent = tr.GetObject(result.ObjectId, OpenMode.ForRead) as Entity;
+                    Entity? ent = tr.GetObject(result.ObjectId, OpenMode.ForRead) as Entity;
                     if (!(ent is BlockReference))
                     {
                         ed.WriteMessage("\n선택한 객체가 블록 참조가 아닙니다.");
                         return;
                     }
 
-                    BlockReference blockRef = ent as BlockReference;
+                    BlockReference? blockRef = ent as BlockReference;
                     Point3d oldInsertionPoint = blockRef.Position;
 
                     oldOsmode = (int)Application.GetSystemVariable("OSMODE");  // Assign value here
@@ -483,11 +483,11 @@ namespace Acadv25JArch
                         displacement = displacement.RotateBy(rotation, Vector3d.ZAxis) / scale;
                     }
 
-                    BlockTableRecord btr = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
+                    BlockTableRecord? btr = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
                     btr.Origin += displacement;
 
-                    BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                    foreach (ObjectId brefId in bt)
+                    BlockTable? bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                    foreach (ObjectId brefId in bt!)
                     {
                         BlockTableRecord btrRef = tr.GetObject(brefId, OpenMode.ForWrite) as BlockTableRecord;
                         if (btrRef.Name == blockRef.Name)

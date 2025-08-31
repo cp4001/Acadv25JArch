@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows10.0.26100.0</TargetFramework>
+    <TargetFramework>net8.0-windows8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <BaseOutputPath>C:\Jarch25</BaseOutputPath>
@@ -14,24 +14,28 @@
     <Optimize>False</Optimize>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <DebugType>full</DebugType>
+    <NoWarn>1701;1702;8600;8602;8603;8604;MSB3277</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Optimize>False</Optimize>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <DebugType>full</DebugType>
+    <NoWarn>1701;1702;8600;8602;8603;8604;MSB3277</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>False</Optimize>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <DebugType>full</DebugType>
+    <NoWarn>1701;1702;8600;8602;8603;8604;MSB3277</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Optimize>False</Optimize>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <DebugType>full</DebugType>
+    <NoWarn>1701;1702;8600;8602;8603;8604;MSB3277</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
