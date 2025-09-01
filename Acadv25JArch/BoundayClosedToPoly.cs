@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
+﻿using AcadFunction;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
@@ -414,7 +415,541 @@ namespace Acadv25JArch
                 return 0.0;
             }
         }
+
+
+
+
     }
+
+
+    public class RoomPolyProcessor
+    {
+        static int _index = 1;
+
+        /// <summary>
+        /// Main function to process room polygon at specified point
+        /// </summary>
+        /// <param name="seedPoint">Point3d location to trace boundary</param>
+        /// <param name="tr">Active transaction</param>
+        /// <returns>True if successful, False if failed</returns>
+        public static bool ProcessRoomPoly(Point3d seedPoint, Transaction tr)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // Get the objects making up our boundary using TraceBoundary
+                DBObjectCollection objs = ed.TraceBoundary(seedPoint, true);
+
+                if (objs.Count == 0)
+                {
+                    ed.WriteMessage($"\nNo boundary found at point: {seedPoint.X:F2}, {seedPoint.Y:F2}");
+                    return false;
+                }
+
+                ed.WriteMessage($"\n{objs.Count} boundary objects found.");
+
+                // Get model space for adding entities
+                BlockTable bt = (BlockTable)tr.GetObject(
+                    db.BlockTableId,
+                    OpenMode.ForRead
+                );
+
+                BlockTableRecord btr = (BlockTableRecord)tr.GetObject(
+                    bt[BlockTableRecord.ModelSpace],
+                    OpenMode.ForWrite
+                );
+
+                // Find the largest boundary by calculating areas
+                Entity? largestBoundary = null;
+                double maxArea = 0.0;
+
+                foreach (DBObject obj in objs)
+                {
+                    Entity? ent = obj as Entity;
+                    if (ent != null)
+                    {
+                        double area = CalculateEntityArea(ent);
+                        if (area > maxArea)
+                        {
+                            maxArea = area;
+                            largestBoundary = ent;
+                        }
+                    }
+                }
+
+                // Process only the largest boundary object
+                if (largestBoundary != null && maxArea > 0)
+                {
+                    // Set boundary object properties
+                    largestBoundary.ColorIndex = _index;
+                    largestBoundary.LineWeight = LineWeight.LineWeight050;
+
+                    // Add the largest boundary object to the modelspace
+                    ObjectId id = btr.AppendEntity(largestBoundary);
+                    tr.AddNewlyCreatedDBObject(largestBoundary, true);
+
+                    // Create area text at the center of the boundary
+                    bool textCreated = CreateAreaText(tr, btr, largestBoundary, maxArea);
+
+                    ed.WriteMessage($"\nRoom polygon created with area: {maxArea:F2} mm²");
+                    if (textCreated)
+                    {
+                        ed.WriteMessage($" (Area text added)");
+                    }
+
+                    // Increment color index (reset if exceeds 255)
+                    _index++;
+                    if (_index > 255)
+                        _index = 1;
+                }
+                else
+                {
+                    ed.WriteMessage("\nNo valid boundary area calculated.");
+                    return false;
+                }
+
+                // Dispose other boundary objects that weren't added
+                foreach (DBObject obj in objs)
+                {
+                    Entity? ent = obj as Entity;
+                    if (ent != null && ent != largestBoundary)
+                    {
+                        ent.Dispose();
+                    }
+                }
+
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\nError in ProcessRoomPoly: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// TB1 Command - Process room polygon at user-selected point
+        /// </summary>
+        [CommandMethod("TB1")]
+        public void TraceRoomBoundary()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // Prompt user to select a point
+                PromptPointOptions ppo = new PromptPointOptions("\nSelect internal point for room boundary: ");
+                ppo.AllowNone = false;
+
+                PromptPointResult ppr = ed.GetPoint(ppo);
+                if (ppr.Status != PromptStatus.OK)
+                {
+                    ed.WriteMessage("\nCommand cancelled.");
+                    return;
+                }
+
+                Point3d selectedPoint = ppr.Value;
+                ed.WriteMessage($"\nProcessing boundary at point: {selectedPoint.X:F2}, {selectedPoint.Y:F2}");
+
+                // Start transaction and process the room polygon
+                using (Transaction tr = doc.TransactionManager.StartTransaction())
+                {
+                    try
+                    {
+                        bool success = ProcessRoomPoly(selectedPoint, tr);
+
+                        if (success)
+                        {
+                            tr.Commit();
+                            ed.WriteMessage($"\nRoom boundary processing completed successfully with color index {_index - 1}.");
+                        }
+                        else
+                        {
+                            tr.Abort();
+                            ed.WriteMessage("\nRoom boundary processing failed.");
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        ed.WriteMessage($"\nError during transaction: {ex.Message}");
+                        tr.Abort();
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\nError in TB1 command: {ex.Message}");
+            }
+        }
+
+        // <summary>
+        /// 도면의 모든 Text를 자동으로 선택하는 명령
+        /// </summary>
+        [CommandMethod("TB_rr")]
+        public void TraceRoomBoundary_From_RoomText()
+        {
+            try
+            {
+                // Step 1: 현재 문서의 Editor를 가져옴
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                Editor ed = doc.Editor;
+
+                // Step 2: Text 필터 생성
+                SelectionFilter textFilter = JSelFilter.MakeFilterTypesRegs("TEXT","Room");
+
+                // Step 3: 모든 Text를 자동 선택 (사용자 입력 없이)
+                PromptSelectionResult selectionResult = ed.SelectAll(textFilter);
+
+                // Step 4: 선택 결과 처리
+                if (selectionResult.Status == PromptStatus.OK)
+                {
+                    SelectionSet selectedObjects = selectionResult.Value;
+
+                    // 선택된 Text 엔티티 개수를 출력
+                    ed.WriteMessage($"\n도면에서 발견된 Text 엔티티 개수: {selectedObjects.Count}개");
+
+                    // 각 Text 엔티티의 정보를 출력 (선택사항)
+                    using (Transaction trans = doc.TransactionManager.StartTransaction())
+                    {
+                        foreach (ObjectId objId in selectedObjects.GetObjectIds())
+                        {
+                            if (trans.GetObject(objId, OpenMode.ForRead) is DBText textEntity)
+                            {
+                                ed.WriteMessage($"\nText 내용: \"{textEntity.TextString}\"");
+                                //Process Room Poly
+                                try
+                                {
+                                    bool success = ProcessRoomPoly(textEntity.Position, trans);
+
+                                    if (success)
+                                    {
+                                        //trans.Commit();
+                                        ed.WriteMessage($"\nRoom boundary processing completed successfully with color index {_index - 1}.");
+                                    }
+                                    else
+                                    {
+                                        //trans.Abort();
+                                        ed.WriteMessage("\nRoom boundary processing failed.");
+                                    }
+                                }
+                                catch (System.Exception ex)
+                                {
+                                    ed.WriteMessage($"\nError during transaction: {ex.Message}");
+                                    //trans.Abort();
+                                }
+
+
+                            }
+                            ed.WriteMessage("\n");
+                        }
+                        trans.Commit();
+                    }
+
+                    // 메모리 정리
+                    selectedObjects.Dispose();
+                }
+                else
+                {
+                    ed.WriteMessage("\n도면에 Text 엔티티가 없습니다.");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                // 예외 처리
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                Editor editor = doc.Editor;
+                editor.WriteMessage($"\n오류가 발생했습니다: {ex.Message}");
+            }
+        }
+
+
+        /// <summary>
+        /// Create area text at the center of the boundary entity
+        /// </summary>
+        /// <param name="tr">Current transaction</param>
+        /// <param name="btr">Block table record (model space)</param>
+        /// <param name="entity">The boundary entity</param>
+        /// <param name="area">The area value in mm²</param>
+        /// <returns>True if text created successfully</returns>
+        /// 
+        private static bool CreateAreaText(Transaction tr, BlockTableRecord btr, Entity entity, double area)
+        {
+            try
+            {
+                // Calculate the center point of the entity
+                Point3d centerPoint = CalculateEntityCenter(entity);
+
+                // Convert area from mm² to m²
+                double areaInM2 = area / 1000000.0;
+                string areaText = $"{areaInM2:F2} m²";
+
+                // Calculate text height
+                double textHeight = CalculateTextHeight(entity);
+
+                // Create DBText object
+                using (DBText text = new DBText())
+                {
+                    text.TextString = areaText;
+                    text.Height = textHeight;
+                    text.Position = centerPoint;
+
+                    // Set text alignment to middle center
+                    text.HorizontalMode = TextHorizontalMode.TextCenter;
+                    text.VerticalMode = TextVerticalMode.TextVerticalMid;
+                    text.AlignmentPoint = centerPoint;
+
+                    // Set text color to match the boundary
+                    text.ColorIndex = entity.ColorIndex;
+
+                    // Add text to model space
+                    ObjectId textId = btr.AppendEntity(text);
+                    tr.AddNewlyCreatedDBObject(text, true);
+                }
+
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                Editor ed = doc.Editor;
+                ed.WriteMessage($"\nError creating area text: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Calculate text height based on entity's dimensions
+        /// </summary>
+        /// <param name="entity">The entity to calculate text height for</param>
+        /// <returns>The calculated text height</returns>
+        private static double CalculateTextHeight(Entity entity)
+        {
+            try
+            {
+                // Get the geometric extents of the entity
+                Extents3d extents = entity.GeometricExtents;
+
+                // Calculate Y extent difference
+                double yExtent = extents.MaxPoint.Y - extents.MinPoint.Y;
+
+                // Text height is 1/8 of Y extent, with minimum of 10 units
+                double textHeight = Math.Max(yExtent / 8.0, 10.0);
+
+                return textHeight;
+            }
+            catch
+            {
+                // If geometric extents fail, use alternative calculation
+                return CalculateAlternativeTextHeight(entity);
+            }
+        }
+
+        /// <summary>
+        /// Alternative method to calculate text height
+        /// </summary>
+        /// <param name="entity">The entity to calculate text height for</param>
+        /// <returns>The calculated text height</returns>
+        private static double CalculateAlternativeTextHeight(Entity entity)
+        {
+            try
+            {
+                // For Circle objects, use diameter / 4
+                if (entity is Circle circle)
+                {
+                    return Math.Max(circle.Radius * 2.0 / 4.0, 10.0);
+                }
+
+                // For Polyline objects, try to calculate Y extent from vertices
+                if (entity is Polyline pline)
+                {
+                    double minY = double.MaxValue;
+                    double maxY = double.MinValue;
+
+                    for (int i = 0; i < pline.NumberOfVertices; i++)
+                    {
+                        Point3d vertex = pline.GetPoint3dAt(i);
+                        minY = Math.Min(minY, vertex.Y);
+                        maxY = Math.Max(maxY, vertex.Y);
+                    }
+
+                    if (minY != double.MaxValue && maxY != double.MinValue)
+                    {
+                        double yExtent = maxY - minY;
+                        return Math.Max(yExtent / 4.0, 10.0);
+                    }
+                }
+
+                // Default fallback height
+                return 100.0;
+            }
+            catch
+            {
+                // Final fallback
+                return 100.0;
+            }
+        }
+
+        /// <summary>
+        /// Calculate the center point of an entity
+        /// </summary>
+        /// <param name="entity">The entity to calculate center for</param>
+        /// <returns>The center point of the entity</returns>
+        private static Point3d CalculateEntityCenter(Entity entity)
+        {
+            try
+            {
+                // Get the geometric extents of the entity
+                Extents3d extents = entity.GeometricExtents;
+
+                // Calculate center point from min and max points
+                Point3d minPoint = extents.MinPoint;
+                Point3d maxPoint = extents.MaxPoint;
+
+                Point3d centerPoint = new Point3d(
+                    (minPoint.X + maxPoint.X) / 2.0,
+                    (minPoint.Y + maxPoint.Y) / 2.0,
+                    (minPoint.Z + maxPoint.Z) / 2.0
+                );
+
+                return centerPoint;
+            }
+            catch
+            {
+                // If geometric extents fail, try alternative methods
+                return CalculateAlternativeCenter(entity);
+            }
+        }
+
+        /// <summary>
+        /// Alternative method to calculate center for entities
+        /// </summary>
+        /// <param name="entity">The entity to calculate center for</param>
+        /// <returns>The center point of the entity</returns>
+        private static Point3d CalculateAlternativeCenter(Entity entity)
+        {
+            try
+            {
+                // For Polyline objects, calculate centroid
+                if (entity is Polyline pline)
+                {
+                    return CalculatePolylineCentroid(pline);
+                }
+
+                // For Circle objects, center is obvious
+                if (entity is Circle circle)
+                {
+                    return circle.Center;
+                }
+
+                // Default origin if all else fails
+                return new Point3d(0, 0, 0);
+            }
+            catch
+            {
+                return new Point3d(0, 0, 0);
+            }
+        }
+
+        /// <summary>
+        /// Calculate centroid of a polyline using vertex averaging
+        /// </summary>
+        /// <param name="pline">The polyline</param>
+        /// <returns>The centroid point</returns>
+        private static Point3d CalculatePolylineCentroid(Polyline pline)
+        {
+            try
+            {
+                double sumX = 0.0, sumY = 0.0, sumZ = 0.0;
+                int count = 0;
+
+                // Average all vertices
+                for (int i = 0; i < pline.NumberOfVertices; i++)
+                {
+                    Point3d vertex = pline.GetPoint3dAt(i);
+                    sumX += vertex.X;
+                    sumY += vertex.Y;
+                    sumZ += vertex.Z;
+                    count++;
+                }
+
+                if (count > 0)
+                {
+                    return new Point3d(sumX / count, sumY / count, sumZ / count);
+                }
+
+                return new Point3d(0, 0, 0);
+            }
+            catch
+            {
+                return new Point3d(0, 0, 0);
+            }
+        }
+
+        /// <summary>
+        /// Calculate the area of an entity
+        /// </summary>
+        /// <param name="entity">The entity to calculate area for</param>
+        /// <returns>The area of the entity in mm², or 0 if area cannot be calculated</returns>
+        private static double CalculateEntityArea(Entity entity)
+        {
+            try
+            {
+                // For Polyline objects
+                if (entity is Polyline pline)
+                {
+                    return Math.Abs(pline.Area);
+                }
+
+                // For Circle objects
+                if (entity is Circle circle)
+                {
+                    return Math.PI * circle.Radius * circle.Radius;
+                }
+
+                // For Region objects
+                if (entity is Region region)
+                {
+                    return Math.Abs(region.Area);
+                }
+
+                // For Hatch objects
+                if (entity is Hatch hatch)
+                {
+                    return Math.Abs(hatch.Area);
+                }
+
+                // For 2D Polyline
+                if (entity is Polyline2d pline2d)
+                {
+                    return Math.Abs(pline2d.Area);
+                }
+
+                // Try to get Area property through reflection for other entity types
+                var areaProperty = entity.GetType().GetProperty("Area");
+                if (areaProperty != null)
+                {
+                    var areaValue = areaProperty.GetValue(entity);
+                    if (areaValue is double area)
+                    {
+                        return Math.Abs(area);
+                    }
+                }
+
+                return 0.0;
+            }
+            catch
+            {
+                return 0.0;
+            }
+        }
+    }
+
+
 
     //
     public class EntityCloneCommands

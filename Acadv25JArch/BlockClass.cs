@@ -14,6 +14,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Exception = System.Exception;
 using Image = System.Drawing.Image;
+using AcadFunction;
 
 namespace Acadv25JArch
 {
@@ -1228,7 +1229,7 @@ namespace Acadv25JArch
             using (var tr = doc.TransactionManager.StartTransaction())
             {
 
-                var blockRefs = JEntity.GetEntityAllByTpye<BlockReference>(JEntity.MakeSelFilter("INSERT"));
+                var blockRefs = JEntityFunc.GetEntityAllByTpye<BlockReference>(JEntityFunc.MakeSelFilter("INSERT"));
                 if (blockRefs == null) return;
 
                 var brGrps = blockRefs.GroupBy(x => JBlock.GetBtrFromBr(x).Name); // 종류별로 가져와서 이름 Sort
@@ -1330,7 +1331,7 @@ namespace Acadv25JArch
             {
 
                 //var blockRefs = JEntity.GetEntityAllByTpye<BlockReference>(JEntity.MakeSelFilter("INSERT"));
-                List<BlockReference> blockRefs = JEntity.GetEntityByTpye<BlockReference>("대상을 선택 하세요?", JSelFilter.MakeFilterTypes("INSERT"));
+                List<BlockReference> blockRefs = JEntityFunc.GetEntityByTpye<BlockReference>("대상을 선택 하세요?", JSelFilter.MakeFilterTypes("INSERT"));
 
                 if (blockRefs == null) return;
 
