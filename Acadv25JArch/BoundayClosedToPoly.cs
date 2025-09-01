@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Acadv25JArch
 {
-    public class Commands
+    public class BoundaryClosedToPoly
     {
         static int _index = 1;
 
