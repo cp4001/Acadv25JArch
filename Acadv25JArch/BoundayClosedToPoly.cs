@@ -86,6 +86,9 @@ namespace Acadv25JArch
                                 ids.Add(id);
                                 tr.AddNewlyCreatedDBObject(largestBoundary, true);
 
+                                // Create area text at the center of the boundary
+                                CreateAreaText(tr, btr, largestBoundary, maxArea);
+
                                 ed.WriteMessage($"\nLargest boundary created with area: {maxArea:F2}");
                             }
 
@@ -107,7 +110,7 @@ namespace Acadv25JArch
                             // Commit the transaction
                             tr.Commit();
 
-                            ed.WriteMessage($"\nBoundary created with color index {_index - 1}.");
+                            ed.WriteMessage($"\nBoundary created with color index {_index - 1} and area text.");
                         }
                         catch (System.Exception ex)
                         {
@@ -124,6 +127,225 @@ namespace Acadv25JArch
             catch (System.Exception ex)
             {
                 ed.WriteMessage($"\nError in TraceBoundary command: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Create area text at the center of the boundary entity
+        /// </summary>
+        /// <param name="tr">Current transaction</param>
+        /// <param name="btr">Block table record (model space)</param>
+        /// <param name="entity">The boundary entity</param>
+        /// <param name="area">The area value</param>
+        private void CreateAreaText(Transaction tr, BlockTableRecord btr, Entity entity, double area)
+        {
+            try
+            {
+                // Calculate the center point of the entity
+                Point3d centerPoint = CalculateEntityCenter(entity);
+
+                // Create area text with m² unit
+                area = area/1000000.0; // Convert from mm² to m²
+                string areaText = $"{area:F2} m²";
+
+                // Calculate text height as 1/4 of the Y extent of the entity
+                double textHeight = CalculateTextHeight(entity);
+
+                // Create DBText object
+                using (DBText text = new DBText())
+                {
+                    text.TextString = areaText;
+                    text.Height = textHeight;
+                    text.Position = centerPoint;
+
+                    // Set text alignment to middle center
+                    text.HorizontalMode = TextHorizontalMode.TextCenter;
+                    text.VerticalMode = TextVerticalMode.TextVerticalMid;
+                    text.AlignmentPoint = centerPoint;
+
+                    // Set text color to match the boundary
+                    text.ColorIndex = entity.ColorIndex;
+
+                    // Add text to model space
+                    ObjectId textId = btr.AppendEntity(text);
+                    tr.AddNewlyCreatedDBObject(text, true);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                // Log error but don't stop the main operation
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                Editor ed = doc.Editor;
+                ed.WriteMessage($"\nError creating area text: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Calculate text height based on entity's Y extent (1/4 of Y difference)
+        /// </summary>
+        /// <param name="entity">The entity to calculate text height for</param>
+        /// <returns>The calculated text height</returns>
+        private double CalculateTextHeight(Entity entity)
+        {
+            try
+            {
+                // Get the geometric extents of the entity
+                Extents3d extents = entity.GeometricExtents;
+
+                // Calculate Y extent difference
+                double yExtent = extents.MaxPoint.Y - extents.MinPoint.Y;
+
+                // Text height is 1/4 of Y extent, with minimum of 0.1 units
+                double textHeight = Math.Max(yExtent / 8.0, 10);
+
+                return textHeight;
+            }
+            catch
+            {
+                // If geometric extents fail, use alternative calculation
+                return CalculateAlternativeTextHeight(entity);
+            }
+        }
+
+        /// <summary>
+        /// Alternative method to calculate text height for entities where GeometricExtents might fail
+        /// </summary>
+        /// <param name="entity">The entity to calculate text height for</param>
+        /// <returns>The calculated text height</returns>
+        private double CalculateAlternativeTextHeight(Entity entity)
+        {
+            try
+            {
+                // For Circle objects, use diameter / 4
+                if (entity is Circle circle)
+                {
+                    return Math.Max(circle.Radius * 2.0 / 4.0, 0.1);
+                }
+
+                // For Polyline objects, try to calculate Y extent from vertices
+                if (entity is Polyline pline)
+                {
+                    double minY = double.MaxValue;
+                    double maxY = double.MinValue;
+
+                    for (int i = 0; i < pline.NumberOfVertices; i++)
+                    {
+                        Point3d vertex = pline.GetPoint3dAt(i);
+                        minY = Math.Min(minY, vertex.Y);
+                        maxY = Math.Max(maxY, vertex.Y);
+                    }
+
+                    if (minY != double.MaxValue && maxY != double.MinValue)
+                    {
+                        double yExtent = maxY - minY;
+                        return Math.Max(yExtent / 4.0, 0.1);
+                    }
+                }
+
+                // Default fallback height
+                return 1.0;
+            }
+            catch
+            {
+                // Final fallback
+                return 1.0;
+            }
+        }
+
+        /// <summary>
+        /// Calculate the center point of an entity
+        /// </summary>
+        /// <param name="entity">The entity to calculate center for</param>
+        /// <returns>The center point of the entity</returns>
+        private Point3d CalculateEntityCenter(Entity entity)
+        {
+            try
+            {
+                // Get the geometric extents of the entity
+                Extents3d extents = entity.GeometricExtents;
+
+                // Calculate center point from min and max points
+                Point3d minPoint = extents.MinPoint;
+                Point3d maxPoint = extents.MaxPoint;
+
+                Point3d centerPoint = new Point3d(
+                    (minPoint.X + maxPoint.X) / 2.0,
+                    (minPoint.Y + maxPoint.Y) / 2.0,
+                    (minPoint.Z + maxPoint.Z) / 2.0
+                );
+
+                return centerPoint;
+            }
+            catch
+            {
+                // If geometric extents fail, try alternative methods
+                return CalculateAlternativeCenter(entity);
+            }
+        }
+
+        /// <summary>
+        /// Alternative method to calculate center for entities where GeometricExtents might fail
+        /// </summary>
+        /// <param name="entity">The entity to calculate center for</param>
+        /// <returns>The center point of the entity</returns>
+        private Point3d CalculateAlternativeCenter(Entity entity)
+        {
+            try
+            {
+                // For Polyline objects, calculate centroid
+                if (entity is Polyline pline)
+                {
+                    return CalculatePolylineCentroid(pline);
+                }
+
+                // For Circle objects, center is obvious
+                if (entity is Circle circle)
+                {
+                    return circle.Center;
+                }
+
+                // For other entities, try to use area-based centroid calculation
+                // This is a fallback method
+                return new Point3d(0, 0, 0); // Default origin if all else fails
+            }
+            catch
+            {
+                return new Point3d(0, 0, 0); // Default origin if all else fails
+            }
+        }
+
+        /// <summary>
+        /// Calculate centroid of a polyline using vertex averaging
+        /// </summary>
+        /// <param name="pline">The polyline</param>
+        /// <returns>The centroid point</returns>
+        private Point3d CalculatePolylineCentroid(Polyline pline)
+        {
+            try
+            {
+                double sumX = 0.0, sumY = 0.0, sumZ = 0.0;
+                int count = 0;
+
+                // Average all vertices
+                for (int i = 0; i < pline.NumberOfVertices; i++)
+                {
+                    Point3d vertex = pline.GetPoint3dAt(i);
+                    sumX += vertex.X;
+                    sumY += vertex.Y;
+                    sumZ += vertex.Z;
+                    count++;
+                }
+
+                if (count > 0)
+                {
+                    return new Point3d(sumX / count, sumY / count, sumZ / count);
+                }
+
+                return new Point3d(0, 0, 0);
+            }
+            catch
+            {
+                return new Point3d(0, 0, 0);
             }
         }
 
