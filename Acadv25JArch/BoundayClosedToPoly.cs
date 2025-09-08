@@ -197,7 +197,7 @@ namespace Acadv25JArch
                 double yExtent = extents.MaxPoint.Y - extents.MinPoint.Y;
 
                 // Text height is 1/4 of Y extent, with minimum of 0.1 units
-                double textHeight = Math.Max(yExtent / 8.0, 10);
+                double textHeight = Math.Max(yExtent / 12.0, 10);
 
                 return textHeight;
             }
