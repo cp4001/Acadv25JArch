@@ -376,4 +376,195 @@ namespace Acadv25JArch
             (StartPoint.Z + EndPoint.Z) / 2
         );
     }
+
+
+
+    public class CommandsCenterLine
+    {
+        //1. 가장 먼 2점 p1, p2 찾기 ✅ 
+        //2. p1 → 상대선에서 수직 투영점 np1 찾기(GetClosestPointTo) ✅
+        //3. p1과 np1의 중간점 pp1 계산 ✅
+        //4. p2 → 상대선에서 수직 투영점 np2 찾기 ✅
+        //5. p2와 np2의 중간점 pp2 계산 ✅  
+        //6. pp1과 pp2를 잇는 중간선 생성 ✅
+
+
+        [CommandMethod("CreateMiddleLine")]
+        public void CreateMiddleLine()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // Step 1: 두 개의 Line 객체를 선택
+                Line line1 = SelectLine(ed, "\n첫 번째 평행선을 선택하세요: ");
+                if (line1 == null) return;
+
+                Line line2 = SelectLine(ed, "\n두 번째 평행선을 선택하세요: ");
+                if (line2 == null) return;
+
+                // Step 2: 두 선이 평행한지 확인 (1도 이내)
+                double angle = GetAngleBetweenLines(line1, line2);
+                if (!AreNearlyParallel(line1, line2, 1.0))
+                {
+                    ed.WriteMessage($"\n선택한 두 선이 평행하지 않습니다. 현재 각도: {angle:F2}도 (1도 이내 허용)");
+                    return;
+                }
+                else
+                {
+                    ed.WriteMessage($"\n두 선의 각도: {angle:F2}도 - 평행 조건 만족");
+                }
+
+                // Step 3: 중간선 생성 (4개 점 중 가장 먼 2개 점 기준)
+                var result = CreateMiddleLineFromParallelsWithInfo(line1, line2);
+                Line middleLine = result.line;
+                double maxDistance = result.maxDistance;
+
+                // Step 4: 중간선을 데이터베이스에 추가
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                    BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],
+                        OpenMode.ForWrite) as BlockTableRecord;
+
+                    btr.AppendEntity(middleLine);
+                    tr.AddNewlyCreatedDBObject(middleLine, true);
+
+                    tr.Commit();
+                    ed.WriteMessage($"\n중간선이 생성되었습니다.");
+                    ed.WriteMessage($"\n - 중간선 길이: {middleLine.Length:F3}");
+                    ed.WriteMessage($"\n - 기준 거리 (가장 먼 두 점): {maxDistance:F3}");
+                    ed.WriteMessage($"\n - 두 선의 각도: {angle:F2}도");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        private Line SelectLine(Editor ed, string prompt)
+        {
+            PromptEntityOptions peo = new PromptEntityOptions(prompt);
+            peo.SetRejectMessage("\nLine 객체만 선택할 수 있습니다.");
+            peo.AddAllowedClass(typeof(Line), true);
+
+            PromptEntityResult per = ed.GetEntity(peo);
+            if (per.Status != PromptStatus.OK) return null;
+
+            using (Transaction tr = Application.DocumentManager.MdiActiveDocument.Database.TransactionManager.StartTransaction())
+            {
+                Line line = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Line;
+                tr.Commit();
+                return line;
+            }
+        }
+
+        private double GetAngleBetweenLines(Line line1, Line line2)
+        {
+            // 두 선의 방향 벡터 계산
+            Vector3d dir1 = line1.EndPoint - line1.StartPoint;
+            Vector3d dir2 = line2.EndPoint - line2.StartPoint;
+
+            // 벡터를 단위벡터로 정규화
+            dir1 = dir1.GetNormal();
+            dir2 = dir2.GetNormal();
+
+            // 두 벡터 사이의 각도 계산 (내적 사용)
+            double dotProduct = dir1.DotProduct(dir2);
+
+            // 내적의 절댓값을 사용 (방향이 반대일 수도 있음)
+            dotProduct = Math.Abs(dotProduct);
+
+            // 각도 계산 (라디안)
+            double angleRad = Math.Acos(Math.Min(1.0, dotProduct)); // Math.Min으로 부동소수점 오차 방지
+
+            // 라디안을 도로 변환
+            double angleDeg = angleRad * 180.0 / Math.PI;
+
+            return angleDeg;
+        }
+
+        private bool AreNearlyParallel(Line line1, Line line2, double toleranceDegrees = 1.0)
+        {
+            double angle = GetAngleBetweenLines(line1, line2);
+            return angle <= toleranceDegrees;
+        }
+
+        private (Line line, double maxDistance) CreateMiddleLineFromParallelsWithInfo(Line line1, Line line2)
+        {
+            // 두 선의 모든 점들을 배열로 정리
+            Point3d[] allPoints = {
+                line1.StartPoint,
+                line1.EndPoint,
+                line2.StartPoint,
+                line2.EndPoint
+            };
+
+            // 가장 먼 두 점을 찾기
+            var farthestPoints = FindFarthestTwoPoints(allPoints);
+            Point3d p1 = farthestPoints.point1;
+            Point3d p2 = farthestPoints.point2;
+            double maxDistance = farthestPoints.distance;
+
+            // p1이 어느 선에 속하는지 확인하고 상대 선 찾기
+            Line oppositeLine1 = IsPointOnLine(p1, line1) ? line2 : line1;
+            Point3d np1 = oppositeLine1.GetClosestPointTo(p1, true);
+            Point3d pp1 = GetMidpoint(p1, np1);
+
+            // p2가 어느 선에 속하는지 확인하고 상대 선 찾기  
+            Line oppositeLine2 = IsPointOnLine(p2, line1) ? line2 : line1;
+            Point3d np2 = oppositeLine2.GetClosestPointTo(p2, true);
+            Point3d pp2 = GetMidpoint(p2, np2);
+
+            // pp1과 pp2를 잇는 중간선 생성
+            Line middleLine = new Line(pp1, pp2);
+            return (middleLine, maxDistance);
+        }
+
+        private bool IsPointOnLine(Point3d point, Line line)
+        {
+            // 점이 선 위에 있는지 확인 (허용 오차 포함)
+            double tolerance = 1e-6;
+            Point3d closestPoint = line.GetClosestPointTo(point, true);
+            double distance = point.DistanceTo(closestPoint);
+            return distance < tolerance;
+        }
+
+        private (Point3d point1, Point3d point2, double distance) FindFarthestTwoPoints(Point3d[] points)
+        {
+            double maxDistance = 0.0;
+            Point3d farthestPoint1 = points[0];
+            Point3d farthestPoint2 = points[1];
+
+            // 모든 점들의 조합을 확인하여 가장 먼 거리 찾기
+            for (int i = 0; i < points.Length - 1; i++)
+            {
+                for (int j = i + 1; j < points.Length; j++)
+                {
+                    double distance = points[i].DistanceTo(points[j]);
+                    if (distance > maxDistance)
+                    {
+                        maxDistance = distance;
+                        farthestPoint1 = points[i];
+                        farthestPoint2 = points[j];
+                    }
+                }
+            }
+
+            return (farthestPoint1, farthestPoint2, maxDistance);
+        }
+
+        private Point3d GetMidpoint(Point3d point1, Point3d point2)
+        {
+            return new Point3d(
+                (point1.X + point2.X) / 2.0,
+                (point1.Y + point2.Y) / 2.0,
+                (point1.Z + point2.Z) / 2.0
+            );
+        }
+    }
+
 }
