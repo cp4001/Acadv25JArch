@@ -16,7 +16,7 @@ using Exception = System.Exception;
 
 namespace Acadv25JArch
 {
-    public class LineGroupingCommand
+    public class LineGrouping
     {
         // .NET 8.0 기능: 컴파일 타임 상수
         private const double DEFAULT_TOLERANCE = 1.0; // 기본 허용 각도 차이 (도)
