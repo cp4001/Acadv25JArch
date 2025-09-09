@@ -20,6 +20,7 @@ namespace Acadv25JArch
     {
         // .NET 8.0 기능: 컴파일 타임 상수
         private const double DEFAULT_TOLERANCE = 1.0; // 기본 허용 각도 차이 (도)
+        private const double MAX_DISTANCE = 100.0; // 같은 그룹으로 처리할 최대 거리
         private const string COMMAND_NAME = "GROUPLINES";
 
         // AutoCAD 표준 색상 인덱스 배열 (ACI Colors)
@@ -54,8 +55,8 @@ namespace Acadv25JArch
                     return;
                 }
 
-                // 3단계: 기울기별 그룹화
-                var groups = GroupLinesByAngle(lineInfos, DEFAULT_TOLERANCE);
+                // 3단계: 기울기별 그룹화 (각도 + 거리 조건)
+                var groups = GroupLinesByAngleAndDistance(lineInfos, DEFAULT_TOLERANCE, db);
 
                 // 4단계: 그룹별 색상 적용
                 ApplyColorsToGroups(groups, db);
@@ -104,7 +105,7 @@ namespace Acadv25JArch
                 }
 
                 var lineInfos = GetLineInformation(selectedLines, db);
-                var groups = GroupLinesByAngle(lineInfos, tolerance);
+                var groups = GroupLinesByAngleAndDistance(lineInfos, tolerance, db);
 
                 // 그룹별 색상 적용
                 ApplyColorsToGroups(groups, db);
@@ -232,9 +233,65 @@ namespace Acadv25JArch
         }
 
         /// <summary>
-        /// 라인들을 기울기별로 그룹화
+        /// 두 라인 사이의 최단거리를 계산 (GetClosestPointTo 사용)
         /// </summary>
-        private List<List<LineInfo>> GroupLinesByAngle(List<LineInfo> lineInfos, double tolerance)
+        private double CalculateMinimumDistanceBetweenLines(LineInfo line1Info, LineInfo line2Info, Database db)
+        {
+            using var tr = db.TransactionManager.StartTransaction();
+
+            try
+            {
+                var line1 = tr.GetObject(line1Info.ObjectId, OpenMode.ForRead) as Line;
+                var line2 = tr.GetObject(line2Info.ObjectId, OpenMode.ForRead) as Line;
+
+                if (line1 == null || line2 == null)
+                    return double.MaxValue;
+
+                // GetClosestPointTo를 사용하여 각 라인에서 상대방 라인의 양 끝점에 대한 최단점을 구하고 거리를 계산
+                var distances = new List<double>();
+
+                // line1에서 line2의 시작점과 끝점까지의 거리
+                var closestPoint1 = line1.GetClosestPointTo(line2.StartPoint, true);
+                distances.Add(closestPoint1.DistanceTo(line2.StartPoint));
+
+                var closestPoint2 = line1.GetClosestPointTo(line2.EndPoint, true);
+                distances.Add(closestPoint2.DistanceTo(line2.EndPoint));
+
+                // line2에서 line1의 시작점과 끝점까지의 거리
+                var closestPoint3 = line2.GetClosestPointTo(line1.StartPoint, true);
+                distances.Add(closestPoint3.DistanceTo(line1.StartPoint));
+
+                var closestPoint4 = line2.GetClosestPointTo(line1.EndPoint, true);
+                distances.Add(closestPoint4.DistanceTo(line1.EndPoint));
+
+                tr.Commit();
+                return distances.Min();
+            }
+            catch (System.Exception)
+            {
+                tr.Abort();
+                return double.MaxValue;
+            }
+        }
+
+        /// <summary>
+        /// 두 라인이 같은 그룹에 속할 수 있는지 판단 (각도 + 거리 조건)
+        /// </summary>
+        private bool AreLinesSameGroup(LineInfo line1, LineInfo line2, double angleTolerance, Database db)
+        {
+            // 1단계: 각도가 평행한지 확인
+            if (!AreAnglesParallel(line1.Angle, line2.Angle, angleTolerance))
+                return false;
+
+            // 2단계: 두 라인 사이의 최단거리가 100 이내인지 확인
+            double minDistance = CalculateMinimumDistanceBetweenLines(line1, line2, db);
+            return minDistance <= MAX_DISTANCE;
+        }
+
+        /// <summary>
+        /// 라인들을 기울기와 거리별로 그룹화 (각도 조건 + 거리 100 이내 조건)
+        /// </summary>
+        private List<List<LineInfo>> GroupLinesByAngleAndDistance(List<LineInfo> lineInfos, double tolerance, Database db)
         {
             var groups = new List<List<LineInfo>>();
             var remainingLines = new List<LineInfo>(lineInfos);
@@ -245,10 +302,11 @@ namespace Acadv25JArch
                 var currentGroup = new List<LineInfo> { currentLine };
                 remainingLines.RemoveAt(0);
 
-                // 현재 라인과 평행한 라인들을 찾아서 그룹에 추가
+                // 현재 라인과 평행하고 거리 조건(100mm 이내)을 만족하는 라인들을 찾아서 그룹에 추가
                 for (int i = remainingLines.Count - 1; i >= 0; i--)
                 {
-                    if (AreAnglesParallel(currentLine.Angle, remainingLines[i].Angle, tolerance))
+                    // 각도 조건 AND 거리 조건을 모두 만족해야 같은 그룹
+                    if (AreLinesSameGroup(currentLine, remainingLines[i], tolerance, db))
                     {
                         currentGroup.Add(remainingLines[i]);
                         remainingLines.RemoveAt(i);
