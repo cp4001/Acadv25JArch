@@ -379,7 +379,7 @@ namespace Acadv25JArch
 
 
 
-    public class CommandsCenterLine
+    public class CenterLine
     {
         //1. 가장 먼 2점 p1, p2 찾기 ✅ 
         //2. p1 → 상대선에서 수직 투영점 np1 찾기(GetClosestPointTo) ✅
