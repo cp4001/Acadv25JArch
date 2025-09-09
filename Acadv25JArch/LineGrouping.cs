@@ -20,7 +20,7 @@ namespace Acadv25JArch
     {
         // .NET 8.0 기능: 컴파일 타임 상수
         private const double DEFAULT_TOLERANCE = 1.0; // 기본 허용 각도 차이 (도)
-        private const double MAX_DISTANCE = 100.0; // 같은 그룹으로 처리할 최대 거리
+        private const double MAX_DISTANCE = 300.0; // 같은 그룹으로 처리할 최대 거리
         private const string COMMAND_NAME = "GROUPLINES";
 
         // AutoCAD 표준 색상 인덱스 배열 (ACI Colors)
@@ -40,29 +40,39 @@ namespace Acadv25JArch
             try
             {
                 // 1단계: 라인들 선택
-                var selectedLines = SelectLines(ed);
-                if (selectedLines.Count == 0)
+                var selectedLineIds = SelectLines(ed);
+                if (selectedLineIds.Count == 0)
                 {
                     ed.WriteMessage("\n선택된 라인이 없습니다.");
                     return;
                 }
 
-                // 2단계: 라인 정보 수집 (기울기 계산)
-                var lineInfos = GetLineInformation(selectedLines, db);
-                if (lineInfos.Count == 0)
+                // 2단계: 한 번의 Transaction으로 모든 Line 객체 로드 및 그룹화
+                using var tr = db.TransactionManager.StartTransaction();
+
+                // ObjectId에서 Line 객체로 직접 변환
+                var lines = selectedLineIds
+                    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Line)
+                    .Where(line => line != null)
+                    .ToList();
+
+                if (lines.Count == 0)
                 {
-                    ed.WriteMessage("\n유효한 라인 정보를 가져올 수 없습니다.");
+                    ed.WriteMessage("\n유효한 라인을 로드할 수 없습니다.");
+                    tr.Commit();
                     return;
                 }
 
-                // 3단계: 기울기별 그룹화 (각도 + 거리 조건)
-                var groups = GroupLinesByAngleAndDistance(lineInfos, DEFAULT_TOLERANCE, db);
+                // Line 객체들로 그룹화 수행
+                var lineGroups = GroupLinesByAngleAndDistance(lines, DEFAULT_TOLERANCE);
 
-                // 4단계: 그룹별 색상 적용
-                ApplyColorsToGroups(groups, db);
+                tr.Commit();
 
-                // 5단계: 간단한 결과 출력
-                ed.WriteMessage($"\n{groups.Count}개 그룹으로 분류 완료. 색상이 적용되었습니다.");
+                // 3단계: 그룹별 색상 적용 (Handle 기반 매칭)
+                ApplyColorsToGroups(lineGroups, selectedLineIds, db);
+
+                // 4단계: 결과 출력
+                ed.WriteMessage($"\n{lineGroups.Count}개 그룹으로 분류 완료. 색상이 적용되었습니다.");
             }
             catch (System.Exception ex)
             {
@@ -97,20 +107,37 @@ namespace Acadv25JArch
                 double tolerance = tolResult.Value;
 
                 // 라인 선택 및 그룹화
-                var selectedLines = SelectLines(ed);
-                if (selectedLines.Count == 0)
+                var selectedLineIds = SelectLines(ed);
+                if (selectedLineIds.Count == 0)
                 {
                     ed.WriteMessage("\n선택된 라인이 없습니다.");
                     return;
                 }
 
-                var lineInfos = GetLineInformation(selectedLines, db);
-                var groups = GroupLinesByAngleAndDistance(lineInfos, tolerance, db);
+                using var tr = db.TransactionManager.StartTransaction();
 
-                // 그룹별 색상 적용
-                ApplyColorsToGroups(groups, db);
+                var lines = selectedLineIds
+                    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Line)
+                    .Where(line => line != null)
+                    .ToList();
 
-                ed.WriteMessage($"\n{groups.Count}개 그룹으로 분류 완료. 색상이 적용되었습니다.");
+                if (lines.Count == 0)
+                {
+                    ed.WriteMessage("\n유효한 라인을 로드할 수 없습니다.");
+                    tr.Commit();
+                    return;
+                }
+
+                var lineGroups = GroupLinesByAngleAndDistance(lines, tolerance);
+
+                // 색상 적용 (같은 Transaction 내에서, UpgradeOpen 사용)
+                ApplyColorsDirectly(lineGroups);
+
+                tr.Commit();
+
+                //ApplyColorsToGroups(lineGroups, selectedLineIds, db);
+
+                ed.WriteMessage($"\n{lineGroups.Count}개 그룹으로 분류 완료. 색상이 적용되었습니다.");
             }
             catch (System.Exception ex)
             {
@@ -147,37 +174,6 @@ namespace Acadv25JArch
         }
 
         /// <summary>
-        /// 라인 정보 수집 (기울기 계산 포함)
-        /// </summary>
-        private List<LineInfo> GetLineInformation(List<ObjectId> lineIds, Database db)
-        {
-            var lineInfos = new List<LineInfo>();
-
-            using var tr = db.TransactionManager.StartTransaction();
-
-            foreach (var lineId in lineIds)
-            {
-                try
-                {
-                    if (tr.GetObject(lineId, OpenMode.ForRead) is Line line)
-                    {
-                        double angle = CalculateLineAngle(line);
-                        lineInfos.Add(new LineInfo(lineId, line.StartPoint, line.EndPoint, angle));
-                    }
-                }
-                catch (System.Exception ex)
-                {
-                    // 개별 라인 처리 실패 시 로그만 남기고 계속 진행
-                    Application.DocumentManager.MdiActiveDocument.Editor
-                        .WriteMessage($"\n라인 {lineId.Handle} 처리 중 오류: {ex.Message}");
-                }
-            }
-
-            tr.Commit();
-            return lineInfos;
-        }
-
-        /// <summary>
         /// 라인의 기울기를 도(degree) 단위로 계산
         /// </summary>
         private static double CalculateLineAngle(Line line)
@@ -198,7 +194,6 @@ namespace Acadv25JArch
 
         /// <summary>
         /// 두 각도가 평행한지 판단 (허용범위 포함)
-        /// 30도와 210도는 평행한 것으로 처리 (180도 차이)
         /// </summary>
         private static bool AreAnglesParallel(double angle1, double angle2, double tolerance)
         {
@@ -233,20 +228,12 @@ namespace Acadv25JArch
         }
 
         /// <summary>
-        /// 두 라인 사이의 최단거리를 계산 (GetClosestPointTo 사용)
+        /// 두 라인 사이의 최단거리를 계산 (Line 객체 직접 사용)
         /// </summary>
-        private double CalculateMinimumDistanceBetweenLines(LineInfo line1Info, LineInfo line2Info, Database db)
+        private static double CalculateMinimumDistanceBetweenLines(Line line1, Line line2)
         {
-            using var tr = db.TransactionManager.StartTransaction();
-
             try
             {
-                var line1 = tr.GetObject(line1Info.ObjectId, OpenMode.ForRead) as Line;
-                var line2 = tr.GetObject(line2Info.ObjectId, OpenMode.ForRead) as Line;
-
-                if (line1 == null || line2 == null)
-                    return double.MaxValue;
-
                 // GetClosestPointTo를 사용하여 각 라인에서 상대방 라인의 양 끝점에 대한 최단점을 구하고 거리를 계산
                 var distances = new List<double>();
 
@@ -264,57 +251,73 @@ namespace Acadv25JArch
                 var closestPoint4 = line2.GetClosestPointTo(line1.EndPoint, true);
                 distances.Add(closestPoint4.DistanceTo(line1.EndPoint));
 
-                tr.Commit();
                 return distances.Min();
             }
             catch (System.Exception)
             {
-                tr.Abort();
                 return double.MaxValue;
             }
         }
 
         /// <summary>
-        /// 두 라인이 같은 그룹에 속할 수 있는지 판단 (각도 + 거리 조건)
+        /// 두 라인이 같은 그룹에 속할 수 있는지 판단 (Line 객체 직접 사용)
         /// </summary>
-        private bool AreLinesSameGroup(LineInfo line1, LineInfo line2, double angleTolerance, Database db)
+        private static bool AreLinesSameGroup(Line line1, Line line2, double angleTolerance)
         {
-            // 1단계: 각도가 평행한지 확인
-            if (!AreAnglesParallel(line1.Angle, line2.Angle, angleTolerance))
-                return false;
+            try
+            {
+                // 1단계: 각도가 평행한지 확인 (빠른 필터링)
+                double angle1 = CalculateLineAngle(line1);
+                double angle2 = CalculateLineAngle(line2);
 
-            // 2단계: 두 라인 사이의 최단거리가 100 이내인지 확인
-            double minDistance = CalculateMinimumDistanceBetweenLines(line1, line2, db);
-            return minDistance <= MAX_DISTANCE;
+                if (!AreAnglesParallel(angle1, angle2, angleTolerance))
+                    return false;
+
+                // 2단계: 두 라인 사이의 최단거리가 100 이내인지 확인
+                double minDistance = CalculateMinimumDistanceBetweenLines(line1, line2);
+                return minDistance <= MAX_DISTANCE;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
         }
 
         /// <summary>
-        /// 라인들을 기울기와 거리별로 그룹화 (각도 조건 + 거리 100 이내 조건)
+        /// 라인들을 기울기와 거리별로 그룹화 (Line 객체 직접 사용)
         /// </summary>
-        private List<List<LineInfo>> GroupLinesByAngleAndDistance(List<LineInfo> lineInfos, double tolerance, Database db)
+        private List<List<Line>> GroupLinesByAngleAndDistance(List<Line> lines, double tolerance)
         {
-            var groups = new List<List<LineInfo>>();
-            var remainingLines = new List<LineInfo>(lineInfos);
+            var groups = new List<List<Line>>();
+            var remainingLines = new List<Line>(lines);
 
             while (remainingLines.Count > 0)
             {
                 var currentLine = remainingLines[0];
-                var currentGroup = new List<LineInfo> { currentLine };
+                var currentGroup = new List<Line> { currentLine };
                 remainingLines.RemoveAt(0);
 
                 // 현재 라인과 평행하고 거리 조건(100mm 이내)을 만족하는 라인들을 찾아서 그룹에 추가
                 for (int i = remainingLines.Count - 1; i >= 0; i--)
                 {
+                    var compareLine = remainingLines[i];
+
                     // 각도 조건 AND 거리 조건을 모두 만족해야 같은 그룹
-                    if (AreLinesSameGroup(currentLine, remainingLines[i], tolerance, db))
+                    if (AreLinesSameGroup(currentLine, compareLine, tolerance))
                     {
-                        currentGroup.Add(remainingLines[i]);
+                        currentGroup.Add(compareLine);
                         remainingLines.RemoveAt(i);
                     }
                 }
 
                 // 그룹을 각도순으로 정렬
-                currentGroup.Sort((a, b) => a.Angle.CompareTo(b.Angle));
+                currentGroup.Sort((line1, line2) =>
+                {
+                    double angle1 = CalculateLineAngle(line1);
+                    double angle2 = CalculateLineAngle(line2);
+                    return angle1.CompareTo(angle2);
+                });
+
                 groups.Add(currentGroup);
             }
 
@@ -324,25 +327,30 @@ namespace Acadv25JArch
         }
 
         /// <summary>
-        /// 그룹별로 라인에 색상을 적용
+        /// 그룹별로 라인에 색상을 적용 (Handle 기반 매칭)
         /// </summary>
-        private void ApplyColorsToGroups(List<List<LineInfo>> groups, Database db)
+        private void ApplyColorsToGroups(List<List<Line>> lineGroups, List<ObjectId> originalLineIds, Database db)
         {
             using var tr = db.TransactionManager.StartTransaction();
 
-            for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
+            for (int groupIndex = 0; groupIndex < lineGroups.Count; groupIndex++)
             {
-                var group = groups[groupIndex];
+                var lineGroup = lineGroups[groupIndex];
                 int colorIndex = GroupColors[groupIndex % GroupColors.Length];
                 var color = Color.FromColorIndex(ColorMethod.ByAci, (short)colorIndex);
 
-                foreach (var lineInfo in group)
+                foreach (var line in lineGroup)
                 {
                     try
                     {
-                        if (tr.GetObject(lineInfo.ObjectId, OpenMode.ForWrite) is Line line)
+                        // Line의 Handle로 원본 ObjectId 찾기
+                        var matchingId = originalLineIds.FirstOrDefault(id => id.Handle == line.Handle);
+                        if (matchingId != ObjectId.Null)
                         {
-                            line.Color = color;
+                            if (tr.GetObject(matchingId, OpenMode.ForWrite) is Line writableLine)
+                            {
+                                writableLine.Color = color;
+                            }
                         }
                     }
                     catch (System.Exception)
@@ -355,26 +363,85 @@ namespace Acadv25JArch
 
             tr.Commit();
         }
-    }
 
-    /// <summary>
-    /// 라인 정보를 저장하는 레코드 (.NET 8.0의 record 기능 사용)
-    /// </summary>
-    public record LineInfo(ObjectId ObjectId, Point3d StartPoint, Point3d EndPoint, double Angle)
-    {
-        /// <summary>
-        /// 라인의 길이 계산
-        /// </summary>
-        public double Length => StartPoint.DistanceTo(EndPoint);
+        private void ApplyColorsDirectly(List<List<Line>> lineGroups)
+        {
+            for (int i = 0; i < lineGroups.Count; i++)
+            {
+                var color = Color.FromColorIndex(ColorMethod.ByAci, (short)GroupColors[i % GroupColors.Length]);
+
+                foreach (var line in lineGroups[i])
+                {
+                    try
+                    {
+                        line.UpgradeOpen();  // ForRead → ForWrite 업그레이드
+                        line.Color = color;   // 직접 색상 수정!
+                    }
+                    catch (System.Exception)
+                    {
+                        continue; // 실패 시 무시하고 계속
+                    }
+                }
+            }
+        }
 
         /// <summary>
-        /// 라인의 중점 계산
+        /// 그룹별 통계 정보 출력 (Line 객체 직접 사용)
         /// </summary>
-        public Point3d MidPoint => new Point3d(
-            (StartPoint.X + EndPoint.X) / 2,
-            (StartPoint.Y + EndPoint.Y) / 2,
-            (StartPoint.Z + EndPoint.Z) / 2
-        );
+        [CommandMethod("GROUPLINES_STATS")]
+        public void ShowGroupStatistics()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                var selectedLineIds = SelectLines(ed);
+                if (selectedLineIds.Count == 0)
+                {
+                    ed.WriteMessage("\n선택된 라인이 없습니다.");
+                    return;
+                }
+
+                using var tr = db.TransactionManager.StartTransaction();
+
+                var lines = selectedLineIds
+                    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Line)
+                    .Where(line => line != null)
+                    .ToList();
+
+                var lineGroups = GroupLinesByAngleAndDistance(lines, DEFAULT_TOLERANCE);
+
+                tr.Commit();
+
+                ed.WriteMessage($"\n=== 그룹 통계 정보 ===");
+                ed.WriteMessage($"\n총 {lineGroups.Count}개 그룹이 생성되었습니다.");
+                ed.WriteMessage($"\n총 {selectedLineIds.Count}개의 라인이 처리되었습니다.\n");
+
+                for (int i = 0; i < lineGroups.Count; i++)
+                {
+                    var group = lineGroups[i];
+                    if (group.Count > 0)
+                    {
+                        var firstLine = group[0];
+                        double firstAngle = CalculateLineAngle(firstLine);
+
+                        // 그룹 내 평균 길이 계산 (Line 객체에서 직접)
+                        double avgLength = group.Average(line => line.StartPoint.DistanceTo(line.EndPoint));
+
+                        ed.WriteMessage($"\n그룹 {i + 1}: {group.Count}개 라인");
+                        ed.WriteMessage($"  - 각도: {firstAngle:F1}도");
+                        ed.WriteMessage($"  - 평균 길이: {avgLength:F2}");
+                        ed.WriteMessage($"  - 색상 인덱스: {GroupColors[i % GroupColors.Length]}");
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
     }
 
 
