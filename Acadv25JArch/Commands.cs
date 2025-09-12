@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Acadv25JArch
 {
-    class Commands
+    public class Commands
     {
 
         [CommandMethod("Show_BlockForm")]

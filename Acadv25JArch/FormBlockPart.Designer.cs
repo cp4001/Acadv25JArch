@@ -41,6 +41,7 @@
             btnAllBlocks.TabIndex = 0;
             btnAllBlocks.Text = "All Blocks";
             btnAllBlocks.UseVisualStyleBackColor = true;
+            btnAllBlocks.Click += this.btnAllBlocks_Click;
             // 
             // dgvBlock
             // 
