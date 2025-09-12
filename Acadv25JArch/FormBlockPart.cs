@@ -22,5 +22,10 @@ namespace Acadv25JArch
         {
             InitializeComponent();
         }
+
+        private void btnAllBlocks_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
