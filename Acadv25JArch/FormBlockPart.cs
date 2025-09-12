@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using Maroquio;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,7 +26,23 @@ namespace Acadv25JArch
 
         private void btnAllBlocks_Click(object sender, EventArgs e)
         {
+            //var entids = JEntity.GetEntityAllByTpye<Entity>(JEntity.MakeSelFilter("LINE,LWPOLYLINE,INSERT", "LightPart"));
+            selids.Clear();
+            //blockparts = BlockPart.GetSelectedBlockParts();
+            blockparts = BlockPart.GetAllBlockParts();
 
+            if (blockparts == null)
+            {
+                MessageBox.Show(" 대상을 선택 하세요");
+                return;
+            }
+            SortableBindingList <BlockPart>
+                      drbl = new SortableBindingList<BlockPart>(blockparts);
+            bs.DataSource = drbl;
+
+            dgvBlock.DataSource = bs;
         }
     }
+
+
 }

@@ -1316,7 +1316,7 @@ namespace Acadv25JArch
 
         static public void SleBlockCounter()
         {
-            const double rowHeight = 1000, colWidth = 2000.0;
+            const double rowHeight = 1000, colWidth = 1000.0;
             const double textHeight = rowHeight * 0.25;
 
             var doc = Application.DocumentManager.MdiActiveDocument;
@@ -1360,7 +1360,7 @@ namespace Acadv25JArch
 
 
                 // Insert an additional column
-                tb.InsertColumns(1, colWidth + 50, 2);
+                tb.InsertColumns(1, colWidth + 3000, 2);
                 //tb.InsertColumns(0, colWidth, 2);
 
                 // Loop through the blocks in the drawing, creating rows

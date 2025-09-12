@@ -14,7 +14,8 @@ namespace Acadv25JArch
         public void ShowMyForm()
         {
             FormBlockPart  form = new FormBlockPart();
-            Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(form);
+            //Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(form);
+            Autodesk.AutoCAD.ApplicationServices.Application.ShowModelessDialog(form);
             //form.ShowDialog();
         }
     }
