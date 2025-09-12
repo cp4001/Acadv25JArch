@@ -1313,27 +1313,22 @@ namespace Acadv25JArch
 
         // Selected Block Count
         [CommandMethod("BB_Count1")]
-
         static public void SleBlockCounter()
         {
             const double rowHeight = 1000, colWidth = 1000.0;
             const double textHeight = rowHeight * 0.25;
+            const double blockNameColumnWidth = colWidth * 10; // Block name 컬럼을 3배로 설정
 
             var doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null)
                 return;
-
             var db = doc.Database;
             var ed = doc.Editor;
 
-
-
             using (var tr = doc.TransactionManager.StartTransaction())
             {
-
                 //var blockRefs = JEntity.GetEntityAllByTpye<BlockReference>(JEntity.MakeSelFilter("INSERT"));
                 List<BlockReference> blockRefs = JEntityFunc.GetEntityByTpye<BlockReference>("대상을 선택 하세요?", JSelFilter.MakeFilterTypes("INSERT"));
-
                 if (blockRefs == null) return;
 
                 var pr = ed.GetPoint("\nEnter table insertion point");
@@ -1341,15 +1336,13 @@ namespace Acadv25JArch
                     return;
 
                 var brGrps = blockRefs.GroupBy(x => JBlock.GetBtrFromBr(x).Name); // 종류별로 가져와서 이름 Sort
-
-
                 var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
 
                 // Create the table, set its style and default row/column size
                 var tb = new Table();
                 tb.TableStyle = db.Tablestyle;
                 tb.SetRowHeight(rowHeight);
-                tb.SetColumnWidth(colWidth);
+                tb.SetColumnWidth(colWidth); // 기본 컬럼 width 설정
                 tb.Position = pr.Value;
 
                 // Set the header cell
@@ -1358,18 +1351,21 @@ namespace Acadv25JArch
                 head.Alignment = CellAlignment.MiddleCenter;
                 head.TextHeight = textHeight;
 
+                // Insert additional columns with specific widths
+                tb.InsertColumns(1, blockNameColumnWidth, 1); // Block name 컬럼 (3배 width)
+                tb.InsertColumns(2, colWidth, 1); // Count 컬럼 (기본 width)
 
-                // Insert an additional column
-                tb.InsertColumns(1, colWidth + 3000, 2);
-                //tb.InsertColumns(0, colWidth, 2);
+                // 개별 컬럼 width 설정 (AutoCAD 2025의 권장 방법)
+                // 0번 컬럼: Block 이미지 (기본 width 유지)
+                // 1번 컬럼: Block name (3배 width)
+                // 2번 컬럼: Count (기본 width)
 
                 // Loop through the blocks in the drawing, creating rows
-                //foreach (var id in bt)
-                //{
                 foreach (var brg in brGrps)
                 {
                     ObjectId btrId = new ObjectId();
                     BlockTableRecord btr = new BlockTableRecord();
+
                     if (brg.First().IsDynamicBlock)
                     {
                         btrId = brg.First().DynamicBlockTableRecord;
@@ -1385,37 +1381,47 @@ namespace Acadv25JArch
                     tb.InsertRows(tb.Rows.Count, rowHeight, 1);
                     var rowIdx = tb.Rows.Count - 1;
 
-                    // The first cell will hold the block name                
+                    // The first cell will hold the block thumbnail               
                     var c1 = tb.Cells[rowIdx, 0];
                     c1.BlockTableRecordId = btr.Id;
-                    // The 2nd  will contain a thumbnail of the block
+
+                    // The 2nd cell will contain the block name (3배 width)
                     var c2 = tb.Cells[rowIdx, 1];
                     c2.Value = btr.Name;
                     c2.Alignment = CellAlignment.MiddleCenter;
                     c2.TextHeight = textHeight;
 
-                    // The 3nd cell will hold the block name
+                    // The 3rd cell will hold the count
                     var c3 = tb.Cells[rowIdx, 2];
                     c3.Value = brg.Count();
                     c3.Alignment = CellAlignment.MiddleCenter;
                     c3.TextHeight = textHeight;
+                }
 
-
+                // 테이블 생성 후 개별 컬럼 width 최종 조정 (AutoCAD 2025 권장 방법)
+                try
+                {
+                    // Modern way: Table.Columns[index].Width 사용
+                    if (tb.Columns.Count > 1)
+                    {
+                        tb.Columns[1].Width = blockNameColumnWidth; // Block name 컬럼을 3배로 설정
+                    }
+                }
+                catch (System.Exception)
+                {
+                    // Fallback: Legacy method (deprecated but still functional)
+                    ed.WriteMessage("\n주의: 최신 컬럼 width 설정 방법을 사용할 수 없어 기본 설정을 사용합니다.");
                 }
 
                 // Now we add the table to the current space
-
                 var sp = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
-
                 sp.AppendEntity(tb);
-
-
                 // And to the transaction, which we then commit
                 tr.AddNewlyCreatedDBObject(tb, true);
                 tr.Commit();
 
+                ed.WriteMessage($"\n테이블이 생성되었습니다. Block name 컬럼 width: {blockNameColumnWidth}");
             }
-
         }
 
 
