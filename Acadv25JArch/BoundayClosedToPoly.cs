@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace Acadv25JArch
 {
@@ -380,7 +381,7 @@ namespace Acadv25JArch
                 }
 
                 // For Region objects
-                if (entity is Region region)
+                if (entity is Autodesk.AutoCAD.DatabaseServices.Region region)
                 {
                     return region.Area;
                 }
@@ -912,7 +913,7 @@ namespace Acadv25JArch
                 }
 
                 // For Region objects
-                if (entity is Region region)
+                if (entity is Autodesk.AutoCAD.DatabaseServices.Region region)
                 {
                     return Math.Abs(region.Area);
                 }

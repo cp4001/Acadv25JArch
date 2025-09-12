@@ -17,6 +17,7 @@ using Exception = System.Exception;
 using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 using AcadFunction;
 using Color = Autodesk.AutoCAD.Colors.Color;
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 //using Gile.AutoCAD.Extension;
 
 namespace CADExtension //Graphic JEntity JDBtext JObjectID JDouble 

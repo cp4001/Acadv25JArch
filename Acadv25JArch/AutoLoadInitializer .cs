@@ -16,6 +16,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Color = Autodesk.AutoCAD.Colors.Color;
 using Exception = System.Exception;
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace Acadv25JArch
 {

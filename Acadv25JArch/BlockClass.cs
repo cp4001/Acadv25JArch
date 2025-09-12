@@ -15,6 +15,7 @@ using System.Runtime.InteropServices;
 using Exception = System.Exception;
 using Image = System.Drawing.Image;
 using AcadFunction;
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace Acadv25JArch
 {

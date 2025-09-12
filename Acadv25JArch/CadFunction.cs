@@ -12,6 +12,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Exception = System.Exception;
 
 namespace AcadFunction
@@ -559,6 +560,7 @@ namespace AcadFunction
             }
         }
     }
+
 
     //Selection Class
     public class SelSet // Selection Set 
@@ -1568,6 +1570,487 @@ namespace AcadFunction
         //    if (dd1.Count == 1) return $"{dd1[0].ToString()}";
         //    return "";
         //}
+
+    }
+
+    //Entity 
+    public class JEntity
+    {
+        public static Document AcDoc
+        {
+            get { return Application.DocumentManager.MdiActiveDocument; }
+        }
+
+        public static SelectionSet getSelectionSet()
+        {
+            var _editor = AcDoc.Editor;
+            var _selAll = _editor.SelectAll();
+            return _selAll.Value;
+        }
+
+
+        public static SelectionFilter MakeSelFilter(string start) //09.05
+        {
+            TypedValue[] filterlist = new TypedValue[1];
+            filterlist[0] = new TypedValue((int)DxfCode.Start, start);
+            //filterlist[1] = new TypedValue((int)DxfCode.ExtendedDataRegAppName, regName);
+
+            SelectionFilter sf = new SelectionFilter(filterlist);
+
+            return sf;
+        }
+
+        public static List<Entity> GetPreSeletedEntity()
+        {
+            List<Entity> entities = new List<Entity>();
+            var psr = AcDoc.Editor.SelectImplied();
+            var acSSet = psr.Value;
+            if (acSSet == null) return null;
+            foreach (SelectedObject ss in acSSet) //var ii in ids2
+            {
+                var ssen = ss.ObjectId.GetObject(OpenMode.ForRead) as Entity;
+                if (ssen != null)
+                {
+                    entities.Add(ssen);
+                }
+            }
+
+
+
+
+            return entities;
+        }
+
+
+
+        public static List<T> GetEntityByTpye<T>(string psoMessage) where T : DBObject
+        {
+
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            var ed = doc.Editor;
+
+
+            PromptSelectionOptions pso = new PromptSelectionOptions();
+            //PromptSelectionOptions pso2 = new PromptSelectionOptions();
+            pso.MessageForAdding = $"\n {psoMessage} ";
+
+            //TypedValue[] tvs = new TypedValue[1] {
+            //    new TypedValue( (int)DxfCode.Start, "LINE,ARC"),
+            //    //new TypedValue( (int)DxfCode.ExtendedDataRegAppName, "FirePipe,MainPipe,Pipe,Duct")
+            //    };
+            //SelectionFilter sf = new SelectionFilter(tvs);
+
+            PromptSelectionResult sPsr = ed.GetSelection(pso);
+            if (sPsr.Status != PromptStatus.OK)
+                return null;
+
+
+            SelectionSet baseSet = sPsr.Value;
+            List<ObjectId> ids = sPsr.Value.GetObjectIds().ToList();
+
+            List<T> sEntitys = new List<T>();
+
+            var aaa = baseSet.OfType<SelectedObject>().ToList();
+            foreach (var ss in aaa)
+            {
+                var ssen = ss.ObjectId.GetObject(OpenMode.ForRead) as T;
+                if (ssen != null)
+                {
+                    sEntitys.Add(ssen);
+                }
+            }
+
+            //.Select(x => x.ObjectId.GetObject(OpenMode.ForRead) as Line).ToList();
+            return sEntitys;
+            //}
+            //var gLines = baseLines.GroupBy(x => (x.Angle / Math.PI * 180.0)).ToList();
+
+        }
+
+        public static List<T> GetSelectedEntityByTpye<T>() where T : DBObject
+        {
+
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            var ed = doc.Editor;
+
+
+            PromptSelectionOptions pso = new PromptSelectionOptions();
+            //PromptSelectionOptions pso2 = new PromptSelectionOptions();
+            //pso.MessageForAdding = $"\n {psoMessage} ";
+
+            //TypedValue[] tvs = new TypedValue[1] {
+            //    new TypedValue( (int)DxfCode.Start, "LINE,ARC"),
+            //    //new TypedValue( (int)DxfCode.ExtendedDataRegAppName, "FirePipe,MainPipe,Pipe,Duct")
+            //    };
+            //SelectionFilter sf = new SelectionFilter(tvs);
+
+            PromptSelectionResult sPsr = ed.SelectImplied();                    //ed.GetSelection(pso);
+            if (sPsr.Status != PromptStatus.OK)
+                return null;
+
+
+            SelectionSet baseSet = sPsr.Value;
+            List<ObjectId> ids = sPsr.Value.GetObjectIds().ToList();
+
+            List<T> sEntitys = new List<T>();
+
+            var aaa = baseSet.OfType<SelectedObject>().ToList();
+            foreach (var ss in aaa)
+            {
+                var ssen = ss.ObjectId.GetObject(OpenMode.ForRead) as T;
+                if (ssen != null)
+                {
+                    sEntitys.Add(ssen);
+                }
+            }
+
+            //.Select(x => x.ObjectId.GetObject(OpenMode.ForRead) as Line).ToList();
+            return sEntitys;
+            //}
+            //var gLines = baseLines.GroupBy(x => (x.Angle / Math.PI * 180.0)).ToList();
+
+        }
+        public static List<ObjectId> GetSelectedEntityIds()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            //var db = doc.Database;
+            var ed = doc.Editor;
+            PromptSelectionOptions pso = new PromptSelectionOptions();
+            PromptSelectionResult sPsr = ed.SelectImplied();
+            if (sPsr.Status != PromptStatus.OK)
+                return null;
+
+            List<ObjectId> ids = sPsr.Value.GetObjectIds().ToList();
+
+            //.Select(x => x.ObjectId.GetObject(OpenMode.ForRead) as Line).ToList();
+            return ids;
+            //}
+            //var gLines = baseLines.GroupBy(x => (x.Angle / Math.PI * 180.0)).ToList();
+
+        }
+        public static List<T> GetSelectedEntityByTpye<T>(SelectionFilter sf) where T : DBObject
+        {
+
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            var ed = doc.Editor;
+
+
+            PromptSelectionOptions pso = new PromptSelectionOptions();
+            //PromptSelectionOptions pso2 = new PromptSelectionOptions();
+            //pso.MessageForAdding = $"\n {psoMessage} ";
+
+            //TypedValue[] tvs = new TypedValue[1] {
+            //    new TypedValue( (int)DxfCode.Start, "LINE,ARC"),
+            //    //new TypedValue( (int)DxfCode.ExtendedDataRegAppName, "FirePipe,MainPipe,Pipe,Duct")
+            //    };
+            //SelectionFilter sf = new SelectionFilter(tvs);
+
+            PromptSelectionResult sPsr = ed.SelectImplied();                    //ed.GetSelection(pso);
+            if (sPsr.Status != PromptStatus.OK)
+                return null;
+
+
+            SelectionSet baseSet = sPsr.Value;
+            List<ObjectId> ids = sPsr.Value.GetObjectIds().ToList();
+
+            List<T> sEntitys = new List<T>();
+
+            var aaa = baseSet.OfType<SelectedObject>().ToList();
+            foreach (var ss in aaa)
+            {
+                var ssen = ss.ObjectId.GetObject(OpenMode.ForRead) as T;
+                if (ssen != null)
+                {
+                    sEntitys.Add(ssen);
+                }
+            }
+
+            //.Select(x => x.ObjectId.GetObject(OpenMode.ForRead) as Line).ToList();
+            return sEntitys;
+            //}
+            //var gLines = baseLines.GroupBy(x => (x.Angle / Math.PI * 180.0)).ToList();
+
+        }
+
+        public static List<T> GetEntityByTpye<T>(string psoMessage, SelectionFilter sf) where T : DBObject
+        {
+
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            var ed = doc.Editor;
+
+
+            PromptSelectionOptions pso = new PromptSelectionOptions();
+            //PromptSelectionOptions pso2 = new PromptSelectionOptions();
+            pso.MessageForAdding = $"\n {psoMessage} ";
+
+            //TypedValue[] tvs = new TypedValue[1] {
+            //    //new TypedValue( (int)DxfCode.Start, "LINE,ARC,CIRCLE,TEXT"),
+            //    new TypedValue( (int)DxfCode.ExtendedDataRegAppName, "FirePipe,MainPipe,Pipe,Duct")
+            //    };
+            //SelectionFilter sf = new SelectionFilter(tvs);
+            SelectionSet ss;
+            PromptSelectionResult psr = ed.GetSelection(pso, sf);
+            if (psr.Status == PromptStatus.OK)
+            {
+                ss = psr.Value;
+            }
+            else
+            {
+                return null;
+            }
+
+
+            //if (sLinesPsr.Status != PromptStatus.OK)
+            //    return null;
+
+
+
+
+
+            //Get Base Lines
+
+            //SelectionSet baseSet = sLinesPsr.Value;
+            var ids = psr.Value.GetObjectIds().ToList();
+
+            //sEntitys = ids.ForEach(x=> x.GetObject(OpenMode.ForRead)).OfType<T>().ToList();
+
+
+            //if (typeof(T) == typeof(Line))
+            //{
+            List<T> sEntitys = new List<T>();
+
+            var aaa = ss.OfType<SelectedObject>().ToList();
+            //
+            foreach (var ss1 in aaa)
+            {
+                var ssen = ss1.ObjectId.GetObject(OpenMode.ForRead) as T;
+                //var ssen = tr.GetObject(ss1.ObjectId,OpenMode.ForWrite) as T;  
+                if (ssen != null)
+                {
+                    sEntitys.Add(ssen);
+                }
+            }
+            // tr.Commit();
+            //}
+
+            //.Select(x => x.ObjectId.GetObject(OpenMode.ForRead) as Line).ToList();
+            return sEntitys;
+            //}
+            //var gLines = baseLines.GroupBy(x => (x.Angle / Math.PI * 180.0)).ToList();
+
+        }
+        public static SelectionSet GetEntityByType(Editor ed, string psoMessage, SelectionFilter sf)
+        {
+            PromptSelectionOptions pso = new PromptSelectionOptions();
+            pso.MessageForAdding = $"\n {psoMessage} ";
+            SelectionSet ss;
+            PromptSelectionResult psr = ed.GetSelection(pso, sf);
+            if (psr.Status == PromptStatus.OK)
+            {
+                ss = psr.Value;
+            }
+            else
+            {
+                return null;
+            }
+            return ss;
+        }
+
+        public static List<Entity> GetAllEntityBySelcFilter(SelectionFilter sf)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            //var db = doc.Database;
+            var ed = doc.Editor;
+
+            PromptSelectionResult selRes = ed.SelectAll(sf);
+            if (selRes.Status != PromptStatus.OK) return null;
+
+            SelectionSet baseSet = selRes.Value;
+            //var ids = selRes.Value.GetObjectIds().ToList();
+
+            List<Entity> sEntitys = new List<Entity>();
+
+            var aaa = baseSet.OfType<SelectedObject>().ToList();
+            foreach (var ss in aaa)
+            {
+                var ssen = ss.ObjectId.GetObject(OpenMode.ForRead) as Entity;
+                if (ssen != null)
+                {
+                    sEntitys.Add(ssen);
+                }
+            }
+
+            return sEntitys;
+        }
+
+        // 필터에 해당되는 모든 Entity Return 09.05
+        public static List<T> GetEntityAllByTpye<T>(SelectionFilter sf) where T : DBObject
+        {
+            // Get the current database and start a transaction
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+            List<T> sEntitys = new List<T>();
+            //using (Transaction tr = db.TransactionManager.StartTransaction())
+            //{
+            PromptSelectionResult selRes = ed.SelectAll(sf);
+            if (selRes.Status != PromptStatus.OK) return null;
+
+            SelectionSet baseSet = selRes.Value;
+            //var ids = selRes.Value.GetObjectIds().ToList();
+
+
+            var aaa = baseSet.OfType<SelectedObject>().ToList();
+
+
+            foreach (var ss in aaa)
+            {
+                var ssen = ss.ObjectId.GetObject(OpenMode.ForRead) as T; //tr.GetObject(ss.ObjectId, OpenMode.ForRead) as T;//   ss.ObjectId.GetObject(OpenMode.ForRead) as T;
+                if (ssen != null)
+                {
+                    sEntitys.Add(ssen);
+                }
+            }
+            //}
+
+            return sEntitys;
+
+        }
+
+        // 필터에 해당되는 모든 Entity Return 09.05
+        public static IEnumerable<T> GetEntityAllByType<T>(SelectionFilter sf, String grp = "") where T : DBObject
+        {
+            // Get the current database and start a transaction
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+            List<T> sEntitys = new List<T>();
+            //using (Transaction tr = db.TransactionManager.StartTransaction())
+            //{
+            PromptSelectionResult selRes = ed.SelectAll(sf);
+            if (selRes.Status != PromptStatus.OK) yield return null;
+
+            SelectionSet baseSet = selRes.Value;
+            //var ids = selRes.Value.GetObjectIds().ToList();
+            if (baseSet == null)
+            {
+                //yield return null;// Enumerable.Empty<T>();
+                yield break;
+            }
+
+            var aaa = baseSet.OfType<SelectedObject>();
+
+
+            foreach (var ss in aaa)
+            {
+                var ssen = ss.ObjectId.GetObject(OpenMode.ForRead) as T; //tr.GetObject(ss.ObjectId, OpenMode.ForRead) as T;//   ss.ObjectId.GetObject(OpenMode.ForRead) as T;
+                var grpName = JXdata.GetXdata(ssen, "Group");
+                if (grp == "")
+                {
+                    yield return ssen;
+                }
+                if (ssen != null && grpName != null && grpName == grp)
+                {
+                    yield return ssen;
+                    //sEntitys.Add(ssen);
+                }
+            }
+            //}
+
+            //return sEntitys;
+
+        }
+
+        // 필터에 해당되는 모든 Entity Return 09.05
+        public static List<T> GetEntityAllByTpye<T>(Transaction tr, SelectionFilter sf) where T : DBObject
+        {
+            // Get the current database and start a transaction
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+            List<T> sEntitys = new List<T>();
+            //using (Transaction tr = db.TransactionManager.StartTransaction())
+            //{
+            PromptSelectionResult selRes = ed.SelectAll(sf);
+            if (selRes.Status != PromptStatus.OK) return null;
+
+            SelectionSet baseSet = selRes.Value;
+            //var ids = selRes.Value.GetObjectIds().ToList();
+            var aaa = baseSet.OfType<SelectedObject>().ToList();
+
+            foreach (var ss in aaa)
+            {
+                var ssen = ss.ObjectId.GetObject(OpenMode.ForRead) as T; //tr.GetObject(ss.ObjectId, OpenMode.ForRead) as T;//   ss.ObjectId.GetObject(OpenMode.ForRead) as T;
+                if (ssen != null)
+                {
+                    sEntitys.Add(ssen);
+                }
+            }
+            //tr.Commit();
+
+            //}
+
+            return sEntitys;
+
+        }
+
+        public static List<ObjectId> GetEntityAllByType(SelectionFilter sf)
+        {
+            // Get the current database and start a transaction
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+            List<ObjectId> sIds = new List<ObjectId>();
+            //using (Transaction tr = db.TransactionManager.StartTransaction())
+            //{
+            PromptSelectionResult selRes = ed.SelectAll(sf);
+            if (selRes.Status != PromptStatus.OK) return null;
+
+            SelectionSet baseSet = selRes.Value;
+            //var ids = selRes.Value.GetObjectIds().ToList();
+
+            var aaa = baseSet.OfType<SelectedObject>().ToList();
+            foreach (var ss in aaa)
+            {
+                sIds.Add(ss.ObjectId);
+            }
+            //}
+            if (sIds.Count == 0) return null;
+            return sIds;
+
+        }
+
+
+        public static SelectionFilter MakeSelFilter(string start, string regName) //09.05
+        {
+            TypedValue[] filterlist = new TypedValue[2];
+            filterlist[0] = new TypedValue((int)DxfCode.Start, start);
+            filterlist[1] = new TypedValue((int)DxfCode.ExtendedDataRegAppName, regName);
+
+            SelectionFilter sf = new SelectionFilter(filterlist);
+
+            return sf;
+        }
+
+        public static SelectionFilter MakeSelFilterAndReg(string start, string regName1, string regName2) //24.11.26
+        {
+            TypedValue[] filterlist =
+            {
+                new TypedValue((int)DxfCode.Start, start),
+                new TypedValue((int) DxfCode.Operator, "<and"),
+                new TypedValue((int)DxfCode.ExtendedDataRegAppName, regName1),
+                new TypedValue((int)DxfCode.ExtendedDataRegAppName, regName2),
+                new TypedValue((int) DxfCode.Operator, "and>")
+            };
+            SelectionFilter sf = new SelectionFilter(filterlist);
+
+            return sf;
+        }
+
 
     }
     public class JEntityFunc
