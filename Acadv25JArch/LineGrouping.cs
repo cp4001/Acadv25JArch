@@ -31,7 +31,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 선택된 라인들을 기울기별로 그룹화하고 색상을 적용하는 메인 커맨드
         /// </summary>
-        [CommandMethod(COMMAND_NAME)]
+        [CommandMethod("Group_Lines")]
         public void GroupLinesBySlope()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -81,6 +81,83 @@ namespace Acadv25JArch
                 ed.WriteMessage($"\n오류 발생: {ex.Message}");
             }
         }
+
+
+        /// <summary>
+        /// 선택된 라인들을 기울기별로 그룹화하고 대상 그룹에 센터 라인을 생성하는 메인 커맨드
+        /// </summary>
+        [CommandMethod("Group_Lines_And_Middle_Lines")]
+        public void GroupLinesBySlopeAndMiddleLine()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 1단계: 라인들 선택
+                //var selectedLineIds = SelectLines(ed);
+                var selectedLineIds = SelectLinesCurrentLayer(ed);
+                if (selectedLineIds.Count == 0)
+                {
+                    ed.WriteMessage("\n선택된 라인이 없습니다.");
+                    return;
+                }
+
+                // 2단계: 한 번의 Transaction으로 모든 Line 객체 로드 및 그룹화
+                using var tr = db.TransactionManager.StartTransaction();
+
+                // ObjectId에서 Line 객체로 직접 변환
+                var lines = selectedLineIds
+                    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Line)
+                    .Where(line => line != null)
+                    .ToList();
+
+                if (lines.Count == 0)
+                {
+                    ed.WriteMessage("\n유효한 라인을 로드할 수 없습니다.");
+                    tr.Commit();
+                    return;
+                }
+
+                // Line 객체들로 그룹화 수행
+                var lineGroups = GroupLinesByAngleAndDistance(lines, DEFAULT_TOLERANCE);
+
+                // 3단계: 그룹별 센터 line 생성 
+                //ApplyColorsToGroups(lineGroups, selectedLineIds, db);
+                foreach (var group in lineGroups)
+                {
+                    if (group.Count >= 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
+                    {
+                        var centerLineCreator = new CenterLine();
+                        var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group[0], group[1]);
+                        Line middleLine = result.line;
+                        
+                            BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                            BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],
+                                OpenMode.ForWrite) as BlockTableRecord;
+                            btr.AppendEntity(middleLine);
+                            tr.AddNewlyCreatedDBObject(middleLine, true);
+                            tr.Commit();
+                        
+                    }
+                }
+
+                tr.Commit();
+
+ 
+
+
+
+                // 4단계: 결과 출력
+                ed.WriteMessage($"\n{lineGroups.Count}개 그룹으로 분류 완료. 색상이 적용되었습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
 
         /// <summary>
         /// 허용 각도 차이를 사용자로부터 입력받는 추가 커맨드

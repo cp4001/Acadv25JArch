@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
@@ -9,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
+using Color = Autodesk.AutoCAD.Colors.Color;
 
 namespace Acadv25JArch
 {
@@ -929,4 +931,465 @@ namespace Acadv25JArch
             }
         }
     }
+
+
+    public class LayerManager
+    {
+        /// <summary>
+        /// 레이어 이름을 제공받아 레이어를 생성하거나 기존 레이어를 반환하는 함수
+        /// 레이어가 이미 존재하면 기존 레이어를 반환하고, 없으면 새로 생성합니다.
+        /// </summary>
+        /// <param name="layerName">생성할 레이어 이름</param>
+        /// <returns>생성되거나 기존의 LayerTableRecord 객체</returns>
+        public static LayerTableRecord GetOrCreateLayer(string layerName)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+
+            // 레이어 이름이 null이거나 빈 문자열인 경우 예외 처리
+            if (string.IsNullOrWhiteSpace(layerName))
+            {
+                throw new System.ArgumentException("레이어 이름이 유효하지 않습니다.", nameof(layerName));
+            }
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    // LayerTable 가져오기
+                    LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                    LayerTableRecord layerTableRecord;
+
+                    // 레이어가 이미 존재하는지 확인
+                    if (layerTable.Has(layerName))
+                    {
+                        // 기존 레이어 반환
+                        ObjectId layerId = layerTable[layerName];
+                        layerTableRecord = tr.GetObject(layerId, OpenMode.ForRead) as LayerTableRecord;
+                    }
+                    else
+                    {
+                        // 새 레이어 생성
+                        layerTable.UpgradeOpen();
+
+                        layerTableRecord = new LayerTableRecord
+                        {
+                            Name = layerName,
+                            Color = Color.FromColorIndex(ColorMethod.ByAci, 7), // 기본 색상 (흰색)
+                            IsFrozen = false,
+                            IsLocked = false,
+                            IsOff = false,
+                            IsPlottable = true
+                        };
+
+                        // LayerTable에 새 레이어 추가
+                        ObjectId layerId = layerTable.Add(layerTableRecord);
+                        tr.AddNewlyCreatedDBObject(layerTableRecord, true);
+                    }
+
+                    tr.Commit();
+                    return layerTableRecord;
+                }
+                catch (System.Exception ex)
+                {
+                    tr.Abort();
+                    throw new System.Exception($"레이어 생성 중 오류가 발생했습니다: {ex.Message}", ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 레이어를 생성하고 속성을 설정하는 고급 함수
+        /// </summary>
+        /// <param name="layerName">레이어 이름</param>
+        /// <param name="color">레이어 색상 (ACI 인덱스, 기본값: 7)</param>
+        /// <param name="description">레이어 설명 (선택사항)</param>
+        /// <param name="isPlottable">출력 가능 여부 (기본값: true)</param>
+        /// <returns>생성되거나 기존의 LayerTableRecord 객체</returns>
+        public static LayerTableRecord GetOrCreateLayerWithProperties(
+            string layerName,
+            short color = 7,
+            string description = "",
+            bool isPlottable = true)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+
+            if (string.IsNullOrWhiteSpace(layerName))
+            {
+                throw new System.ArgumentException("레이어 이름이 유효하지 않습니다.", nameof(layerName));
+            }
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                    LayerTableRecord layerTableRecord;
+
+                    if (layerTable.Has(layerName))
+                    {
+                        // 기존 레이어 가져오기
+                        ObjectId layerId = layerTable[layerName];
+                        layerTableRecord = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+
+                        // 기존 레이어 속성 업데이트
+                        layerTableRecord.Color = Color.FromColorIndex(ColorMethod.ByAci, color);
+                        if (!string.IsNullOrEmpty(description))
+                        {
+                            layerTableRecord.Description = description;
+                        }
+                        layerTableRecord.IsPlottable = isPlottable;
+                    }
+                    else
+                    {
+                        // 새 레이어 생성
+                        layerTable.UpgradeOpen();
+
+                        layerTableRecord = new LayerTableRecord
+                        {
+                            Name = layerName,
+                            Color = Color.FromColorIndex(ColorMethod.ByAci, color),
+                            Description = description ?? "",
+                            IsFrozen = false,
+                            IsLocked = false,
+                            IsOff = false,
+                            IsPlottable = isPlottable
+                        };
+
+                        ObjectId layerId = layerTable.Add(layerTableRecord);
+                        tr.AddNewlyCreatedDBObject(layerTableRecord, true);
+                    }
+
+                    tr.Commit();
+                    return layerTableRecord;
+                }
+                catch (System.Exception ex)
+                {
+                    tr.Abort();
+                    throw new System.Exception($"레이어 생성 중 오류가 발생했습니다: {ex.Message}", ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 레이어 생성 테스트 커맨드
+        /// </summary>
+        [CommandMethod("TESTLAYER")]
+        public void TestCreateLayer()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 레이어 이름 입력받기
+                var layerPrompt = new PromptStringOptions("\n생성할 레이어 이름을 입력하세요: ")
+                {
+                    AllowSpaces = false
+                };
+
+                var layerResult = ed.GetString(layerPrompt);
+                if (layerResult.Status != PromptStatus.OK)
+                    return;
+
+                string layerName = layerResult.StringResult;
+
+                // 레이어 생성 또는 가져오기
+                LayerTableRecord layer = GetOrCreateLayer(layerName);
+
+                if (layer != null)
+                {
+                    ed.WriteMessage($"\n레이어 '{layerName}'이 성공적으로 처리되었습니다.");
+                    ed.WriteMessage($"\n레이어 색상: {layer.Color.ColorIndex}");
+                    ed.WriteMessage($"\n레이어 상태: {(layer.IsOff ? "끔" : "켜짐")}");
+                    ed.WriteMessage($"\n출력 가능: {(layer.IsPlottable ? "예" : "아니오")}");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 고급 레이어 생성 테스트 커맨드
+        /// </summary>
+        [CommandMethod("TESTLAYER_ADVANCED")]
+        public void TestCreateLayerAdvanced()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 레이어 이름 입력
+                var layerPrompt = new PromptStringOptions("\n생성할 레이어 이름을 입력하세요: ")
+                {
+                    AllowSpaces = false
+                };
+
+                var layerResult = ed.GetString(layerPrompt);
+                if (layerResult.Status != PromptStatus.OK)
+                    return;
+
+                string layerName = layerResult.StringResult;
+
+                // 색상 입력
+                var colorPrompt = new PromptIntegerOptions($"\n레이어 색상 인덱스를 입력하세요 (1-255, 기본값: 7): ")
+                {
+                    DefaultValue = 7,
+                    AllowNegative = false,
+                    LowerLimit = 1,
+                    UpperLimit = 255
+                };
+
+                var colorResult = ed.GetInteger(colorPrompt);
+                if (colorResult.Status != PromptStatus.OK)
+                    return;
+
+                short colorIndex = (short)colorResult.Value;
+
+                // 설명 입력
+                var descPrompt = new PromptStringOptions("\n레이어 설명을 입력하세요 (선택사항): ")
+                {
+                    AllowSpaces = true,
+                    //AllowEmpty = true
+                };
+
+                var descResult = ed.GetString(descPrompt);
+                string description = descResult.Status == PromptStatus.OK ? descResult.StringResult : "";
+
+                // 고급 레이어 생성
+                LayerTableRecord layer = GetOrCreateLayerWithProperties(layerName, colorIndex, description);
+
+                if (layer != null)
+                {
+                    ed.WriteMessage($"\n레이어 '{layerName}'이 성공적으로 생성되었습니다.");
+                    ed.WriteMessage($"\n레이어 색상: {layer.Color.ColorIndex}");
+                    ed.WriteMessage($"\n레이어 설명: {layer.Description}");
+                    ed.WriteMessage($"\n출력 가능: {(layer.IsPlottable ? "예" : "아니오")}");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 현재 레이어의 이름을 반환하는 함수
+        /// </summary>
+        /// <returns>현재 레이어 이름</returns>
+        public static string GetCurrentLayerName()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    // 현재 레이어 ObjectId 가져오기
+                    ObjectId currentLayerId = db.Clayer;
+
+                    // LayerTableRecord 가져오기
+                    LayerTableRecord currentLayer = tr.GetObject(currentLayerId, OpenMode.ForRead) as LayerTableRecord;
+
+                    tr.Commit();
+                    return currentLayer?.Name ?? "0"; // 기본값으로 "0" 레이어 반환
+                }
+                catch (System.Exception)
+                {
+                    tr.Abort();
+                    return "0"; // 오류 시 기본 레이어 반환
+                }
+            }
+        }
+
+        /// <summary>
+        /// 현재 레이어 이외의 모든 레이어를 Display Off 시키는 함수
+        /// </summary>
+        /// <returns>Off된 레이어 개수</returns>
+        public static int TurnOffAllLayersExceptCurrent()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            int layersOffCount = 0;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    // 현재 레이어 ObjectId 가져오기
+                    ObjectId currentLayerId = db.Clayer;
+
+                    // LayerTable 가져오기
+                    LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                    // LayerTable 순회
+                    using (var enumerator = layerTable.GetEnumerator())
+                    {
+                        while (enumerator.MoveNext())
+                        {
+                            ObjectId layerId = enumerator.Current;
+
+                            // 현재 레이어가 아닌 경우에만 처리
+                            if (layerId != currentLayerId)
+                            {
+                                LayerTableRecord layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+
+                                // 레이어가 현재 On 상태이고 "0" 레이어가 아닌 경우에만 Off
+                                if (layer != null && !layer.IsOff && layer.Name != "0")
+                                {
+                                    layer.IsOff = true;
+                                    layersOffCount++;
+                                }
+                            }
+                        }
+                    }
+
+                    tr.Commit();
+                    return layersOffCount;
+                }
+                catch (System.Exception ex)
+                {
+                    tr.Abort();
+                    throw new System.Exception($"레이어 Off 처리 중 오류가 발생했습니다: {ex.Message}", ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 모든 레이어를 Display On 시키는 함수
+        /// </summary>
+        /// <returns>On된 레이어 개수</returns>
+        public static int TurnOnAllLayers()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            int layersOnCount = 0;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    // LayerTable 가져오기
+                    LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                    // LayerTable 순회
+                    using (var enumerator = layerTable.GetEnumerator())
+                    {
+                        while (enumerator.MoveNext())
+                        {
+                            ObjectId layerId = enumerator.Current;
+                            LayerTableRecord layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+
+                            // 레이어가 현재 Off 상태인 경우에만 On
+                            if (layer != null && layer.IsOff)
+                            {
+                                layer.IsOff = false;
+                                layersOnCount++;
+                            }
+                        }
+                    }
+
+                    tr.Commit();
+                    return layersOnCount;
+                }
+                catch (System.Exception ex)
+                {
+                    tr.Abort();
+                    throw new System.Exception($"레이어 On 처리 중 오류가 발생했습니다: {ex.Message}", ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 현재 레이어 정보 출력 커맨드
+        /// </summary>
+        [CommandMethod("CURRENTLAYER")]
+        public void ShowCurrentLayerInfo()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                string currentLayerName = GetCurrentLayerName();
+                ed.WriteMessage($"\n현재 레이어: {currentLayerName}");
+
+                // 추가 정보 표시
+                Database db = doc.Database;
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    LayerTableRecord currentLayer = tr.GetObject(db.Clayer, OpenMode.ForRead) as LayerTableRecord;
+                    if (currentLayer != null)
+                    {
+                        ed.WriteMessage($"\n레이어 색상: {currentLayer.Color.ColorIndex}");
+                        ed.WriteMessage($"\n레이어 상태: {(currentLayer.IsOff ? "끔" : "켜짐")}");
+                        ed.WriteMessage($"\n잠금 상태: {(currentLayer.IsLocked ? "잠김" : "해제")}");
+                        ed.WriteMessage($"\n동결 상태: {(currentLayer.IsFrozen ? "동결" : "해제")}");
+                        ed.WriteMessage($"\n출력 가능: {(currentLayer.IsPlottable ? "예" : "아니오")}");
+
+                        if (!string.IsNullOrEmpty(currentLayer.Description))
+                        {
+                            ed.WriteMessage($"\n레이어 설명: {currentLayer.Description}");
+                        }
+                    }
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 현재 레이어 이외 모든 레이어 Off 커맨드
+        /// </summary>
+        [CommandMethod("ISOLATELAYER")]
+        public void IsolateCurrentLayer()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                string currentLayerName = GetCurrentLayerName();
+                int layersOffCount = TurnOffAllLayersExceptCurrent();
+
+                ed.WriteMessage($"\n현재 레이어 '{currentLayerName}'만 표시됩니다.");
+                ed.WriteMessage($"\n{layersOffCount}개의 레이어가 비표시 처리되었습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 모든 레이어 On 커맨드
+        /// </summary>
+        [CommandMethod("LAYERALLON")]
+        public void TurnOnAllLayersCommand()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                int layersOnCount = TurnOnAllLayers();
+                ed.WriteMessage($"\n{layersOnCount}개의 레이어가 표시 처리되었습니다.");
+                ed.WriteMessage($"\n모든 레이어가 표시됩니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+    }
+
 }
