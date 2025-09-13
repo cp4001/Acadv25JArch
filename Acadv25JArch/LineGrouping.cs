@@ -127,7 +127,7 @@ namespace Acadv25JArch
                 //ApplyColorsToGroups(lineGroups, selectedLineIds, db);
                 foreach (var group in lineGroups)
                 {
-                    if (group.Count >= 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
+                    if (group.Count == 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
                     {
                         var centerLineCreator = new CenterLine();
                         var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group[0], group[1]);
@@ -138,7 +138,7 @@ namespace Acadv25JArch
                                 OpenMode.ForWrite) as BlockTableRecord;
                             btr.AppendEntity(middleLine);
                             tr.AddNewlyCreatedDBObject(middleLine, true);
-                            tr.Commit();
+                            //tr.Commit();
                         
                     }
                 }
@@ -404,6 +404,12 @@ namespace Acadv25JArch
 
                 // 2단계: 두 라인 사이의 최단거리가 100 이내인지 확인
                 double minDistance = CalculateMinimumDistanceBetweenLines(line1, line2);
+                // Line1 최소 한점이  Line2에 수직투영했을때  내부에 존재 하는지 확인 
+                if(!ParallelLineChecker.HasVerticalProjectionInside(line1, line2))
+                {
+                    return false;
+                }   
+
                 return minDistance <= MAX_DISTANCE;
             }
             catch (System.Exception)
@@ -467,7 +473,7 @@ namespace Acadv25JArch
                 var lineGroup = lineGroups[groupIndex];
                 int colorIndex = GroupColors[groupIndex % GroupColors.Length];
                 var color = Color.FromColorIndex(ColorMethod.ByAci, (short)colorIndex);
-
+                if (lineGroup.Count == 1) continue;
                 foreach (var line in lineGroup)
                 {
                     try
@@ -1035,6 +1041,224 @@ namespace Acadv25JArch
 
             return lineIds;
         }
+    }
+
+
+    public class ParallelLineChecker
+    {
+        // .NET 8.0 기능: 컴파일 타임 상수
+        private const double TOLERANCE = 1e-6; // 허용 오차 (점이 선분 내부에 있는지 판단용)
+        private const string COMMAND_NAME = "CHKLINEPROJ";
+
+        /// <summary>
+        /// 2개의 평행한 line에서 line1의 2점 중 최소한 한개가 수직방향 Projection했을때 line2 내부에 점이 있는지 확인
+        /// </summary>
+        /// <param name="line1">첫 번째 선분 (투영할 점들이 있는 선분)</param>
+        /// <param name="line2">두 번째 선분 (투영 대상 선분)</param>
+        /// <returns>line1의 점 중 하나라도 line2 내부에 투영되면 true, 아니면 false</returns>
+        public static bool HasVerticalProjectionInside(Line line1, Line line2)
+        {
+            try
+            {
+                // Step 1: line1의 StartPoint를 line2에 수직 투영하여 내부에 있는지 확인
+                bool startPointInside = IsPointProjectedInside(line1.StartPoint, line2);
+
+                // Step 2: line1의 EndPoint를 line2에 수직 투영하여 내부에 있는지 확인
+                bool endPointInside = IsPointProjectedInside(line1.EndPoint, line2);
+
+                // Step 3: 둘 중 하나라도 내부에 있으면 true 반환
+                return startPointInside || endPointInside;
+            }
+            catch (System.Exception)
+            {
+                return false; // 오류 발생시 false 반환
+            }
+        }
+
+        /// <summary>
+        /// 특정 점이 선분에 수직 투영했을 때 선분 내부에 있는지 확인
+        /// </summary>
+        /// <param name="point">투영할 점</param>
+        /// <param name="targetLine">투영 대상 선분</param>
+        /// <returns>투영점이 선분 내부에 있으면 true, 아니면 false</returns>
+        public static bool IsPointProjectedInside(Point3d point, Line targetLine)
+        {
+            try
+            {
+                // GetClosestPointTo(point, false) 사용 - 연장선 제외, 선분 내부만
+                Point3d projectedPoint = targetLine.GetClosestPointTo(point, false);
+
+                // GetClosestPointTo(point, true) 사용 - 연장선 포함
+                Point3d projectedPointExtended = targetLine.GetClosestPointTo(point, true);
+
+                // 두 투영점이 거의 같으면 원점이 선분 내부에 투영됨
+                double distance = projectedPoint.DistanceTo(projectedPointExtended);
+                return distance <= TOLERANCE;
+            }
+            catch (System.Exception)
+            {
+                return false; // 오류 발생시 false 반환
+            }
+        }
+
+        /// <summary>
+        /// 투영 정보를 포함한 상세 결과를 반환하는 확장 함수
+        /// </summary>
+        /// <param name="line1">첫 번째 선분</param>
+        /// <param name="line2">두 번째 선분</param>
+        /// <returns>투영 결과 정보</returns>
+        public static ProjectionResult CheckProjectionWithDetails(Line line1, Line line2)
+        {
+            var result = new ProjectionResult();
+
+            try
+            {
+                // line1.StartPoint 투영 확인
+                result.StartPointProjection = GetProjectionDetails(line1.StartPoint, line2);
+
+                // line1.EndPoint 투영 확인
+                result.EndPointProjection = GetProjectionDetails(line1.EndPoint, line2);
+
+                // 결과 요약
+                result.HasAnyInternalProjection = result.StartPointProjection.IsInside ||
+                                                result.EndPointProjection.IsInside;
+
+                return result;
+            }
+            catch (System.Exception ex)
+            {
+                result.ErrorMessage = ex.Message;
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// 한 점의 투영 세부 정보를 구하는 헬퍼 함수
+        /// </summary>
+        /// <param name="point">투영할 점</param>
+        /// <param name="targetLine">투영 대상 선분</param>
+        /// <returns>투영 세부 정보</returns>
+        private static ProjectionDetail GetProjectionDetails(Point3d point, Line targetLine)
+        {
+            var detail = new ProjectionDetail();
+
+            try
+            {
+                detail.OriginalPoint = point;
+                detail.ProjectedPoint = targetLine.GetClosestPointTo(point, false); // 선분 내부만
+                detail.ProjectedPointExtended = targetLine.GetClosestPointTo(point, true); // 연장선 포함
+
+                // 투영 거리 계산
+                detail.ProjectionDistance = point.DistanceTo(detail.ProjectedPoint);
+
+                // 내부 투영 여부 확인
+                double internalExternalDiff = detail.ProjectedPoint.DistanceTo(detail.ProjectedPointExtended);
+                detail.IsInside = internalExternalDiff <= TOLERANCE;
+
+                return detail;
+            }
+            catch (System.Exception ex)
+            {
+                detail.ErrorMessage = ex.Message;
+                return detail;
+            }
+        }
+
+        /// <summary>
+        /// AutoCAD 커맨드로 함수 테스트
+        /// </summary>
+        [CommandMethod(COMMAND_NAME)]
+        public void TestParallelLineProjection()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // Step 1: 첫 번째 Line 선택
+                Line line1 = SelectLine(ed, "\n첫 번째 선분을 선택하세요: ");
+                if (line1 == null) return;
+
+                // Step 2: 두 번째 Line 선택
+                Line line2 = SelectLine(ed, "\n두 번째 선분을 선택하세요: ");
+                if (line2 == null) return;
+
+                // Step 3: 투영 확인 수행
+                var result = CheckProjectionWithDetails(line1, line2);
+
+                // Step 4: 결과 출력
+                ed.WriteMessage($"\n=== 투영 결과 ===");
+                ed.WriteMessage($"\n전체 결과: {(result.HasAnyInternalProjection ? "내부 투영 있음" : "내부 투영 없음")}");
+
+                ed.WriteMessage($"\n\n--- Line1 StartPoint 투영 ---");
+                ed.WriteMessage($"\n원본 점: {result.StartPointProjection.OriginalPoint}");
+                ed.WriteMessage($"\n투영점(내부): {result.StartPointProjection.ProjectedPoint}");
+                ed.WriteMessage($"\n투영점(연장): {result.StartPointProjection.ProjectedPointExtended}");
+                ed.WriteMessage($"\n투영 거리: {result.StartPointProjection.ProjectionDistance:F3}");
+                ed.WriteMessage($"\n내부 투영: {(result.StartPointProjection.IsInside ? "예" : "아니오")}");
+
+                ed.WriteMessage($"\n\n--- Line1 EndPoint 투영 ---");
+                ed.WriteMessage($"\n원본 점: {result.EndPointProjection.OriginalPoint}");
+                ed.WriteMessage($"\n투영점(내부): {result.EndPointProjection.ProjectedPoint}");
+                ed.WriteMessage($"\n투영점(연장): {result.EndPointProjection.ProjectedPointExtended}");
+                ed.WriteMessage($"\n투영 거리: {result.EndPointProjection.ProjectionDistance:F3}");
+                ed.WriteMessage($"\n내부 투영: {(result.EndPointProjection.IsInside ? "예" : "아니오")}");
+
+                if (!string.IsNullOrEmpty(result.ErrorMessage))
+                {
+                    ed.WriteMessage($"\n오류: {result.ErrorMessage}");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Line 선택 헬퍼 함수
+        /// </summary>
+        private Line SelectLine(Editor ed, string prompt)
+        {
+            PromptEntityOptions peo = new PromptEntityOptions(prompt);
+            peo.SetRejectMessage("\nLine 객체만 선택할 수 있습니다.");
+            peo.AddAllowedClass(typeof(Line), true);
+
+            PromptEntityResult per = ed.GetEntity(peo);
+            if (per.Status != PromptStatus.OK) return null;
+
+            using (Transaction tr = Application.DocumentManager.MdiActiveDocument.Database.TransactionManager.StartTransaction())
+            {
+                Line line = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Line;
+                tr.Commit();
+                return line;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 투영 결과를 담는 클래스
+    /// </summary>
+    public class ProjectionResult
+    {
+        public ProjectionDetail StartPointProjection { get; set; } = new ProjectionDetail();
+        public ProjectionDetail EndPointProjection { get; set; } = new ProjectionDetail();
+        public bool HasAnyInternalProjection { get; set; } = false;
+        public string ErrorMessage { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// 개별 점의 투영 세부 정보를 담는 클래스
+    /// </summary>
+    public class ProjectionDetail
+    {
+        public Point3d OriginalPoint { get; set; }
+        public Point3d ProjectedPoint { get; set; }
+        public Point3d ProjectedPointExtended { get; set; }
+        public double ProjectionDistance { get; set; }
+        public bool IsInside { get; set; } = false;
+        public string ErrorMessage { get; set; } = string.Empty;
     }
 
 }

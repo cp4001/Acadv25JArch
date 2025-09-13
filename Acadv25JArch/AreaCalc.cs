@@ -42,11 +42,7 @@ namespace Acadv25JArch
 
                     // Step 2: 현재 레이어 상태를 layer_org에 저장
                     LayerTableRecord? currentLayer = tr.GetObject(db.Clayer, OpenMode.ForRead) as LayerTableRecord;
-                    //if (currentLayer != null)
-                    //{
-                    //    layer_org = currentLayer.Name;
-                    //    ed.WriteMessage($"\n현재 레이어 '{layer_org}'를 layer_org에 저장했습니다.");
-                    //}
+                    string layer_org = currentLayer?.Name ?? "0";
 
                     // Step 3: layer_org 이름으로 Layer State 저장
                     LayerStateManager lsm = db.LayerStateManager;
@@ -70,7 +66,7 @@ namespace Acadv25JArch
                         ObjectId.Null);
                     ed.WriteMessage($"\n현재 상태를 Layer State '{layer_org}'로 저장했습니다.");
 
-                    // Step 4: !AreaCalc 레이어가 존재하는지 확인하고, 없으면 생성
+                    // Step 4: !AreaCalc 레이어 처리
                     ObjectId areaCalcLayerId = ObjectId.Null;
                     string areaCalcLayerName = "!AreaCalc";
 
@@ -98,7 +94,43 @@ namespace Acadv25JArch
                     db.Clayer = areaCalcLayerId;
                     ed.WriteMessage($"\n현재 레이어를 '{areaCalcLayerName}'로 변경했습니다.");
 
-                    // Step 6: 다른 모든 레이어의 잠금 상태 및 투명도 설정
+                    // Step 6: !ArchCalc 레이어 처리 (Display On 설정)
+                    string archCalcLayerName = "!ArchCalc";
+                    ObjectId archCalcLayerId = ObjectId.Null;
+                    bool archCalcLayerCreated = false;
+
+                    if (layerTable.Has(archCalcLayerName))
+                    {
+                        // !ArchCalc 레이어가 존재하는 경우 - Display On 설정
+                        archCalcLayerId = layerTable[archCalcLayerName];
+                        LayerTableRecord? archCalcLayer = tr.GetObject(archCalcLayerId, OpenMode.ForWrite) as LayerTableRecord;
+                        if (archCalcLayer != null)
+                        {
+                            archCalcLayer.IsOff = false; // Display On 설정
+                            ed.WriteMessage($"\n기존 레이어 '{archCalcLayerName}'를 Display On으로 설정했습니다.");
+                        }
+                    }
+                    else
+                    {
+                        // !ArchCalc 레이어가 존재하지 않으면 생성하고 Display On 설정
+                        LayerTableRecord newArchCalcLayer = new LayerTableRecord();
+                        newArchCalcLayer.Name = archCalcLayerName;
+                        newArchCalcLayer.IsOff = false; // 생성과 동시에 Display On 설정
+
+                        // LayerTable을 쓰기 모드로 업그레이드
+                        if (!layerTable.IsWriteEnabled)
+                        {
+                            layerTable.UpgradeOpen();
+                        }
+
+                        archCalcLayerId = layerTable.Add(newArchCalcLayer);
+                        tr.AddNewlyCreatedDBObject(newArchCalcLayer, true);
+                        archCalcLayerCreated = true;
+
+                        ed.WriteMessage($"\n레이어 '{archCalcLayerName}'를 생성하고 Display On으로 설정했습니다.");
+                    }
+
+                    // Step 7: 다른 모든 레이어의 잠금 상태 및 투명도 설정
                     int processedLayers = 0;
                     int lockedLayers = 0;
                     int transparentLayers = 0;
@@ -106,20 +138,21 @@ namespace Acadv25JArch
                     foreach (ObjectId layerId in layerTable)
                     {
                         LayerTableRecord? layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
-                        if (layer != null && layer.Name != areaCalcLayerName)
+                        //if (layer.Name == "areaCalcLayerName") layer.IsOff = false;
+
+
+                        if (layer != null && layer.Name != areaCalcLayerName && layer.Name != archCalcLayerName)
                         {
                             processedLayers++;
 
-                            // 레이어 잠금 설정 (!AreaCalc 제외)
+                            // 레이어 잠금 설정 (!AreaCalc, !ArchCalc 제외)
                             if (!layer.IsLocked)
                             {
                                 layer.IsLocked = true;
                                 lockedLayers++;
                             }
 
-                            // 투명도 설정 (50% = 0.5)
-                            // AutoCAD에서 투명도는 Alpha 값으로 설정됩니다.
-                            // 50% 투명도 = Alpha 값 127 (255 * (100-50) / 100)
+                            // 투명도 설정 (50% = Alpha 값 127)
                             byte alphaValue = (byte)(255 * (100 - 50) / 100);
                             Transparency transparency = new Transparency(alphaValue);
                             layer.Transparency = transparency;
@@ -130,7 +163,7 @@ namespace Acadv25JArch
                         }
                     }
 
-                    // Step 7: 트랜잭션 커밋
+                    // Step 8: 트랜잭션 커밋
                     tr.Commit();
 
                     // 결과 출력
@@ -138,6 +171,7 @@ namespace Acadv25JArch
                     ed.WriteMessage($"\n- 이전 레이어 상태 저장: {layer_org}");
                     ed.WriteMessage($"\n- Layer State '{layer_org}' 저장 완료");
                     ed.WriteMessage($"\n- 현재 활성 레이어: {areaCalcLayerName}");
+                    ed.WriteMessage($"\n- !ArchCalc 레이어 상태: {(archCalcLayerCreated ? "새로 생성됨" : "기존 레이어 사용")} (Display On)");
                     ed.WriteMessage($"\n- 처리된 레이어 수: {processedLayers}");
                     ed.WriteMessage($"\n- 잠금 처리된 레이어: {lockedLayers}");
                     ed.WriteMessage($"\n- 투명도 설정된 레이어: {transparentLayers}");
@@ -152,7 +186,6 @@ namespace Acadv25JArch
                 }
             }
         }
-
         [CommandMethod("qq_aa")]
         public void Area_Work_only()
         {
