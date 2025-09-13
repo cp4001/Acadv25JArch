@@ -154,6 +154,8 @@ namespace Acadv25JArch
             List<BlockPart> parts = new List<BlockPart>();
             List<BlockReference> blockrefs = new List<BlockReference>();
             //LightPart.ResetCounter();
+            // 문서 잠금 및 트랜잭션 시작
+            using (DocumentLock docLock = doc.LockDocument())
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
 

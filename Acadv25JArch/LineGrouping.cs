@@ -41,7 +41,8 @@ namespace Acadv25JArch
             try
             {
                 // 1단계: 라인들 선택
-                var selectedLineIds = SelectLines(ed);
+                //var selectedLineIds = SelectLines(ed);
+                var selectedLineIds = SelectLinesCurrentLayer(ed);  
                 if (selectedLineIds.Count == 0)
                 {
                     ed.WriteMessage("\n선택된 라인이 없습니다.");
@@ -162,6 +163,56 @@ namespace Acadv25JArch
             var opts = new PromptSelectionOptions
             {
                 MessageForAdding = "\n라인들을 선택하세요: "
+            };
+
+            var psr = ed.GetSelection(opts, filter);
+
+            if (psr.Status == PromptStatus.OK && psr.Value != null)
+            {
+                lineIds.AddRange(psr.Value.GetObjectIds());
+            }
+
+            return lineIds;
+        }
+
+        /// <summary>
+        /// 현재 레이어 이름을 가져오는 메서드
+        /// </summary>
+        private string GetCurrentLayerName(Database db)
+        {
+            using var tr = db.TransactionManager.StartTransaction();
+
+            // 현재 레이어의 ObjectId 가져오기
+            ObjectId currentLayerId = db.Clayer;
+
+            // LayerTableRecord로 변환하여 레이어 이름 가져오기
+            if (tr.GetObject(currentLayerId, OpenMode.ForRead) is LayerTableRecord currentLayer)
+            {
+                string layerName = currentLayer.Name;
+                tr.Commit();
+                return layerName;
+            }
+
+            tr.Commit();
+            return "0"; // 기본 레이어
+        }
+
+        private List<ObjectId> SelectLinesCurrentLayer(Editor ed)
+        {
+            var lineIds = new List<ObjectId>();
+            Database db = ed.Document.Database;
+            string currentLayerName = GetCurrentLayerName(db);
+
+            // 라인만 선택하도록 필터 설정
+            TypedValue[] filterList = [
+                new TypedValue((int)DxfCode.Start, "LINE"),
+                new TypedValue((int)DxfCode.LayerName, currentLayerName)
+            ];
+            var filter = new SelectionFilter(filterList);
+
+            var opts = new PromptSelectionOptions
+            {
+                MessageForAdding = "\n현재 레이어의 Line들을 선택하세요: "
             };
 
             var psr = ed.GetSelection(opts, filter);
@@ -458,7 +509,7 @@ namespace Acadv25JArch
 
 
         [CommandMethod("CreateMiddleLine")]
-        public void CreateMiddleLine()
+        public void Cmd_CreateMiddleLine()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -561,7 +612,7 @@ namespace Acadv25JArch
             return angle <= toleranceDegrees;
         }
 
-        private (Line line, double maxDistance) CreateMiddleLineFromParallelsWithInfo(Line line1, Line line2)
+        public  (Line line, double maxDistance) CreateMiddleLineFromParallelsWithInfo(Line line1, Line line2)
         {
             // 두 선의 모든 점들을 배열로 정리
             Point3d[] allPoints = {
@@ -632,6 +683,280 @@ namespace Acadv25JArch
                 (point1.Y + point2.Y) / 2.0,
                 (point1.Z + point2.Z) / 2.0
             );
+        }
+    }
+
+
+    // Colinear line 처리 
+    public class ColinearLineProcessor
+    {
+        // .NET 8.0 기능: 컴파일 타임 상수
+        private const double ANGLE_TOLERANCE = 1.0; // 평행 판단용 허용 각도 차이 (도)
+        private const double DISTANCE_TOLERANCE = 1e-6; // colinear 판단용 허용 거리 차이
+
+        /// <summary>
+        /// colinear한 line들 중에서 가장 큰 line만 남기고 나머지는 제거하는 메인 함수
+        /// </summary>
+        /// <param name="lines">처리할 Line 객체들의 리스트</param>
+        /// <returns>colinear 그룹별로 가장 긴 line만 포함된 새로운 리스트</returns>
+        public static List<Line> RemoveRedundantColinearLines(List<Line> lines)
+        {
+            if (lines == null || lines.Count <= 1)
+                return new List<Line>(lines ?? new List<Line>());
+
+            var result = new List<Line>();
+            var processedLines = new HashSet<Line>();
+
+            foreach (var line in lines)
+            {
+                if (processedLines.Contains(line))
+                    continue;
+
+                // 현재 line과 colinear한 모든 line들을 찾기
+                var colinearGroup = FindColinearLines(line, lines, processedLines);
+
+                // 그룹에서 가장 긴 line 찾기
+                var longestLine = FindLongestLine(colinearGroup);
+                result.Add(longestLine);
+
+                // 처리된 line들을 표시
+                foreach (var processedLine in colinearGroup)
+                {
+                    processedLines.Add(processedLine);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 주어진 line과 colinear한 모든 line들을 찾아 그룹으로 반환
+        /// </summary>
+        private static List<Line> FindColinearLines(Line baseLine, List<Line> allLines, HashSet<Line> processedLines)
+        {
+            var colinearGroup = new List<Line> { baseLine };
+
+            foreach (var otherLine in allLines)
+            {
+                if (otherLine == baseLine || processedLines.Contains(otherLine))
+                    continue;
+
+                if (AreColinear(baseLine, otherLine))
+                {
+                    colinearGroup.Add(otherLine);
+                }
+            }
+
+            return colinearGroup;
+        }
+
+        /// <summary>
+        /// 두 Line이 colinear한지 판단하는 함수
+        /// colinear 조건: 1) 평행해야 함, 2) 한 line의 점이 다른 line의 연장선 위에 있어야 함
+        /// </summary>
+        private static bool AreColinear(Line line1, Line line2)
+        {
+            try
+            {
+                // 1단계: 두 line이 평행한지 확인
+                if (!AreParallel(line1, line2))
+                    return false;
+
+                // 2단계: 한 line의 점이 다른 line의 연장선 위에 있는지 확인
+                // line1의 시작점이 line2의 연장선 위에 있는지 확인
+                Point3d closestPoint1 = line2.GetClosestPointTo(line1.StartPoint, true); // true = 연장선 포함
+                double distance1 = line1.StartPoint.DistanceTo(closestPoint1);
+
+                if (distance1 <= DISTANCE_TOLERANCE)
+                    return true;
+
+                // line1의 끝점이 line2의 연장선 위에 있는지 확인
+                Point3d closestPoint2 = line2.GetClosestPointTo(line1.EndPoint, true);
+                double distance2 = line1.EndPoint.DistanceTo(closestPoint2);
+
+                return distance2 <= DISTANCE_TOLERANCE;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 두 Line이 평행한지 판단하는 함수
+        /// </summary>
+        private static bool AreParallel(Line line1, Line line2)
+        {
+            try
+            {
+                double angle1 = CalculateLineAngle(line1);
+                double angle2 = CalculateLineAngle(line2);
+                return AreAnglesParallel(angle1, angle2, ANGLE_TOLERANCE);
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Line의 기울기를 도(degree) 단위로 계산
+        /// 첨부 샘플 코드의 CalculateLineAngle 함수와 동일한 방식
+        /// </summary>
+        private static double CalculateLineAngle(Line line)
+        {
+            // Vector2d를 사용하여 시작점과 끝점 사이의 벡터 계산
+            var startPt = new Point2d(line.StartPoint.X, line.StartPoint.Y);
+            var endPt = new Point2d(line.EndPoint.X, line.EndPoint.Y);
+
+            var vector = startPt.GetVectorTo(endPt);
+
+            // 각도를 라디안에서 도로 변환
+            double angleInRadians = vector.Angle;
+            double angleInDegrees = angleInRadians * 180.0 / Math.PI;
+
+            // 0~180도 범위로 정규화 (평행선 판단을 위해)
+            return NormalizeAngle(angleInDegrees);
+        }
+
+        /// <summary>
+        /// 두 각도가 평행한지 판단 (허용범위 포함)
+        /// 첨부 샘플 코드의 AreAnglesParallel 함수와 동일
+        /// </summary>
+        private static bool AreAnglesParallel(double angle1, double angle2, double tolerance)
+        {
+            // 각도를 0~180 범위로 정규화
+            angle1 = NormalizeAngle(angle1);
+            angle2 = NormalizeAngle(angle2);
+
+            // 각도 차이 계산
+            double diff = Math.Abs(angle1 - angle2);
+
+            // 180도 근처에서의 평행선 처리 (예: 179도와 1도)
+            if (diff > 90)
+                diff = 180 - diff;
+
+            return diff <= tolerance;
+        }
+
+        /// <summary>
+        /// 각도를 0~180도 범위로 정규화
+        /// 첨부 샘플 코드의 NormalizeAngle 함수와 동일
+        /// </summary>
+        private static double NormalizeAngle(double angle)
+        {
+            // 각도를 0~360 범위로 먼저 정규화
+            angle = angle % 360;
+            if (angle < 0) angle += 360;
+
+            // 180도 이상이면 180을 빼서 0~180 범위로 만듦 (평행선 처리를 위해)
+            if (angle >= 180)
+                angle -= 180;
+
+            return angle;
+        }
+
+        /// <summary>
+        /// Line 그룹에서 가장 긴 Line을 찾아 반환
+        /// </summary>
+        private static Line FindLongestLine(List<Line> lines)
+        {
+            if (lines == null || lines.Count == 0)
+                throw new ArgumentException("Line 그룹이 비어있습니다.");
+
+            Line longestLine = lines[0];
+            double maxLength = longestLine.Length;
+
+            foreach (var line in lines.Skip(1))
+            {
+                if (line.Length > maxLength)
+                {
+                    maxLength = line.Length;
+                    longestLine = line;
+                }
+            }
+
+            return longestLine;
+        }
+
+        /// <summary>
+        /// colinear line 처리 결과를 테스트하는 커맨드
+        /// </summary>
+        [CommandMethod("TEST_COLINEAR")]
+        public void TestColinearLineProcessor()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // Line 선택
+                var selectedLineIds = SelectLines(ed);
+                if (selectedLineIds.Count == 0)
+                {
+                    ed.WriteMessage("\n선택된 line이 없습니다.");
+                    return;
+                }
+
+                using var tr = db.TransactionManager.StartTransaction();
+
+                // ObjectId에서 Line 객체로 변환
+                var lines = selectedLineIds
+                    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Line)
+                    .Where(line => line != null)
+                    .ToList();
+
+                ed.WriteMessage($"\n원본 line 개수: {lines.Count}");
+
+                // colinear line 처리
+                var processedLines = RemoveRedundantColinearLines(lines);
+
+                ed.WriteMessage($"\n처리 후 line 개수: {processedLines.Count}");
+                ed.WriteMessage($"\n제거된 line 개수: {lines.Count - processedLines.Count}");
+
+                // 결과 출력
+                for (int i = 0; i < processedLines.Count; i++)
+                {
+                    var line = processedLines[i];
+                    double angle = CalculateLineAngle(line);
+                    ed.WriteMessage($"\n남은 Line {i + 1}: 길이 {line.Length:F3}, 각도 {angle:F1}도");
+                }
+
+                tr.Commit();
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Line 선택 메서드 (첨부 샘플 코드에서 참조)
+        /// </summary>
+        private List<ObjectId> SelectLines(Editor ed)
+        {
+            var lineIds = new List<ObjectId>();
+
+            // 라인만 선택하도록 필터 설정
+            TypedValue[] filterList = [
+                new TypedValue((int)DxfCode.Start, "LINE")
+            ];
+            var filter = new SelectionFilter(filterList);
+
+            var opts = new PromptSelectionOptions
+            {
+                MessageForAdding = "\n라인들을 선택하세요: "
+            };
+
+            var psr = ed.GetSelection(opts, filter);
+
+            if (psr.Status == PromptStatus.OK && psr.Value != null)
+            {
+                lineIds.AddRange(psr.Value.GetObjectIds());
+            }
+
+            return lineIds;
         }
     }
 
