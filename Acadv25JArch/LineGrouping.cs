@@ -129,8 +129,10 @@ namespace Acadv25JArch
                 {
                     if (group.Count >= 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
                     {
+                        // 길이 기준 오름차순 (긴 것부터)
+                        var group1  = group.OrderByDescending(line => line.Length).ToList();
                         var centerLineCreator = new CenterLine();
-                        var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group[0], group[1]);
+                        var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group1[0], group1[1]);
                         Line middleLine = result.line;
                         
                             BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
