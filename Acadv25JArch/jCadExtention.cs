@@ -1060,6 +1060,12 @@ namespace CADExtension //Curve Line Poly Geometry Point
             return Math.Abs(distSum - lineLength) < Tolerance.Global.EqualPoint;
         }
 
+        //line 과 point  사이의 수직 거리   
+        public static double ShortestDistanceToPoint(this Line line, Point3d point)
+        {
+            var pt1 = line.GetClosestPointTo(point, false);
+            return  (point.DistanceTo(pt1));
+        }
 
     }
 

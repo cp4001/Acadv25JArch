@@ -121,6 +121,8 @@ namespace Acadv25JArch
                 }
 
                 // Line 객체들로 그룹화 수행
+                // line 을 긴것부터 우선 처리 되게 정열
+                lines = lines.OrderByDescending(line => line.Length).ToList();
                 var lineGroups = GroupLinesByAngleAndDistance(lines, DEFAULT_TOLERANCE);
 
                 // 3단계: 그룹별 센터 line 생성 
@@ -134,8 +136,9 @@ namespace Acadv25JArch
                         var centerLineCreator = new CenterLine();
                         var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group1[0], group1[1]);
                         Line middleLine = result.line;
-                        
-                            BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                        middleLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Red
+
+                        BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
                             BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],
                                 OpenMode.ForWrite) as BlockTableRecord;
                             btr.AppendEntity(middleLine);
@@ -1261,6 +1264,338 @@ namespace Acadv25JArch
         public double ProjectionDistance { get; set; }
         public bool IsInside { get; set; } = false;
         public string ErrorMessage { get; set; } = string.Empty;
+    }
+
+
+    // Find Near Lines
+    public class PointLineHighlighter
+    {
+        private const double BOX_SIZE = 4000.0; // 사각형 박스 크기
+        private const short RED_COLOR_INDEX = 1; // AutoCAD Red 색상 인덱스
+
+        /// <summary>
+        /// 특정 Point가 특정 Line의 확장되지 않은 실제 선분 위에 수직 투영될 수 있는지 확인하는 함수
+        /// (이전에 작성한 함수를 여기서 재사용)
+        /// </summary>
+        public static bool IsPointProjectableOnLine(Point3d targetPoint, Line line, double tolerance = 1e-6)
+        {
+            try
+            {
+                if (line == null)
+                    return false;
+
+                // 선분 자체에서만 최근점을 구함 (extend = false)
+                Point3d closestOnSegment = line.GetClosestPointTo(targetPoint, false);
+
+                // 연장선을 포함하여 최근점을 구함 (extend = true)
+                Point3d closestOnExtended = line.GetClosestPointTo(targetPoint, true);
+
+                // 두 점이 같으면 투영점이 선분 자체에 있음
+                double distance = closestOnSegment.DistanceTo(closestOnExtended);
+                bool isOnSegment = distance <= tolerance;
+
+                return isOnSegment;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 메인 커맨드: 점 선택 후 주변 Line들 중 투영 가능한 것들을 빨간색으로 변경
+        /// </summary>
+        [CommandMethod("HighlightProjectableLines")]
+        public void HighlightProjectableLinesCommand()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 1단계: 기준점 선택
+                PromptPointOptions pointOpts = new PromptPointOptions("\n기준점을 선택하세요: ");
+                pointOpts.AllowNone = false;
+
+                PromptPointResult pointResult = ed.GetPoint(pointOpts);
+                if (pointResult.Status != PromptStatus.OK)
+                {
+                    ed.WriteMessage("\n작업이 취소되었습니다.");
+                    return;
+                }
+
+                Point3d centerPoint = pointResult.Value;
+                ed.WriteMessage($"\n기준점: ({centerPoint.X:F2}, {centerPoint.Y:F2})");
+
+                // 2단계: 기준점을 중심으로 하는 2000x2000 사각형 영역 생성
+                Point3dCollection selectionPolygon = CreateSelectionBox(centerPoint, BOX_SIZE);
+
+                // 3단계: 사각형 영역에 걸치는 Line 객체들 선택
+                List<ObjectId> selectedLineIds = SelectLinesInArea(ed, selectionPolygon);
+
+                if (selectedLineIds.Count == 0)
+                {
+                    ed.WriteMessage("\n지정된 영역에서 선분을 찾을 수 없습니다.");
+                    return;
+                }
+
+                ed.WriteMessage($"\n총 {selectedLineIds.Count}개의 선분을 발견했습니다.");
+
+                // 4단계: 선택된 Line들 중 투영 가능한 것들 찾기 및 색상 변경
+                int highlightedCount = HighlightProjectableLines(db, selectedLineIds, centerPoint);
+
+                // 5단계: 결과 출력
+                ed.WriteMessage($"\n작업 완료!");
+                ed.WriteMessage($"\n - 검사된 선분: {selectedLineIds.Count}개");
+                ed.WriteMessage($"\n - 투영 가능한 선분: {highlightedCount}개");
+                ed.WriteMessage($"\n - 빨간색으로 변경된 선분: {highlightedCount}개");
+
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 기준점을 중심으로 하는 정사각형 선택 영역 생성
+        /// </summary>
+        private Point3dCollection CreateSelectionBox(Point3d centerPoint, double boxSize)
+        {
+            double halfSize = boxSize / 2.0;
+
+            Point3dCollection polygon = new Point3dCollection();
+
+            // 사각형의 네 모서리 점들 (시계방향)
+            polygon.Add(new Point3d(centerPoint.X - halfSize, centerPoint.Y - halfSize, centerPoint.Z)); // 좌하
+            polygon.Add(new Point3d(centerPoint.X + halfSize, centerPoint.Y - halfSize, centerPoint.Z)); // 우하
+            polygon.Add(new Point3d(centerPoint.X + halfSize, centerPoint.Y + halfSize, centerPoint.Z)); // 우상
+            polygon.Add(new Point3d(centerPoint.X - halfSize, centerPoint.Y + halfSize, centerPoint.Z)); // 좌상
+
+            return polygon;
+        }
+
+        /// <summary>
+        /// 지정된 영역에서 Line 객체들을 선택
+        /// </summary>
+        private List<ObjectId> SelectLinesInArea(Editor ed, Point3dCollection selectionPolygon)
+        {
+            List<ObjectId> lineIds = new List<ObjectId>();
+
+            try
+            {
+                // Line 객체만 선택하도록 필터 설정
+                TypedValue[] filterList = new TypedValue[]
+                {
+                    new TypedValue((int)DxfCode.Start, "LINE")
+                };
+                SelectionFilter filter = new SelectionFilter(filterList);
+
+                // Crossing Polygon 선택 수행
+                PromptSelectionResult selectionResult = ed.SelectCrossingPolygon(selectionPolygon, filter);
+
+                if (selectionResult.Status == PromptStatus.OK && selectionResult.Value != null)
+                {
+                    ObjectId[] selectedIds = selectionResult.Value.GetObjectIds();
+                    lineIds.AddRange(selectedIds);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n선분 선택 중 오류: {ex.Message}");
+            }
+
+            return lineIds;
+        }
+
+        /// <summary>
+        /// 선택된 Line들 중 투영 가능한 것들을 찾아서 빨간색으로 변경
+        /// </summary>
+        private int HighlightProjectableLines(Database db, List<ObjectId> lineIds, Point3d centerPoint)
+        {
+            int highlightedCount = 0;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    Color redColor = Color.FromColorIndex(ColorMethod.ByAci, RED_COLOR_INDEX);
+
+                    foreach (ObjectId lineId in lineIds)
+                    {
+                        try
+                        {
+                            // Line 객체를 읽기 모드로 열기
+                            Line line = tr.GetObject(lineId, OpenMode.ForRead) as Line;
+
+                            if (line == null)
+                                continue;
+
+                            // 투영 가능한지 확인
+                            bool isProjectable = IsPointProjectableOnLine(centerPoint, line);
+
+                            if (isProjectable)
+                            {
+                                // 쓰기 모드로 업그레이드하여 색상 변경
+                                line.UpgradeOpen();
+                                line.Color = redColor;
+                                line.DowngradeOpen();
+
+                                highlightedCount++;
+                            }
+                        }
+                        catch (System.Exception)
+                        {
+                            // 개별 선분 처리 실패 시 계속 진행
+                            continue;
+                        }
+                    }
+
+                    tr.Commit();
+                }
+                catch (System.Exception)
+                {
+                    tr.Abort();
+                    throw;
+                }
+            }
+
+            return highlightedCount;
+        }
+
+        /// <summary>
+        /// 디버그용 커맨드: 선택 영역을 시각적으로 표시
+        /// </summary>
+        [CommandMethod("ShowSelectionBox")]
+        public void ShowSelectionBoxCommand()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 기준점 선택
+                PromptPointOptions pointOpts = new PromptPointOptions("\n기준점을 선택하세요: ");
+                PromptPointResult pointResult = ed.GetPoint(pointOpts);
+
+                if (pointResult.Status != PromptStatus.OK)
+                    return;
+
+                Point3d centerPoint = pointResult.Value;
+
+                // 선택 영역 생성
+                Point3dCollection selectionBox = CreateSelectionBox(centerPoint, BOX_SIZE);
+
+                // 선택 영역을 선으로 그리기
+                DrawSelectionBox(db, selectionBox);
+
+                ed.WriteMessage($"\n기준점 ({centerPoint.X:F2}, {centerPoint.Y:F2})을 중심으로 하는");
+                ed.WriteMessage($"\n{BOX_SIZE}x{BOX_SIZE} 선택 영역이 표시되었습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 선택 영역을 시각적으로 표시하는 보조 함수
+        /// </summary>
+        private void DrawSelectionBox(Database db, Point3dCollection boxPoints)
+        {
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                    BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+
+                    // 사각형의 네 변을 그리기
+                    for (int i = 0; i < boxPoints.Count; i++)
+                    {
+                        Point3d startPoint = boxPoints[i];
+                        Point3d endPoint = boxPoints[(i + 1) % boxPoints.Count]; // 마지막 점은 첫 번째 점과 연결
+
+                        Line boxLine = new Line(startPoint, endPoint);
+                        boxLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 3); // 녹색으로 표시
+
+                        btr.AppendEntity(boxLine);
+                        tr.AddNewlyCreatedDBObject(boxLine, true);
+                    }
+
+                    tr.Commit();
+                }
+                catch (System.Exception)
+                {
+                    tr.Abort();
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 색상 복원 커맨드: 빨간색 선분들을 원래 색상(ByLayer)으로 복원
+        /// </summary>
+        [CommandMethod("RestoreLineColors")]
+        public void RestoreLineColorsCommand()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 빨간색 Line 객체들을 선택
+                TypedValue[] filterList = new TypedValue[]
+                {
+                    new TypedValue((int)DxfCode.Start, "LINE"),
+                    new TypedValue((int)DxfCode.Color, RED_COLOR_INDEX)
+                };
+                SelectionFilter filter = new SelectionFilter(filterList);
+
+                PromptSelectionResult selectionResult = ed.SelectAll(filter);
+
+                if (selectionResult.Status != PromptStatus.OK || selectionResult.Value == null)
+                {
+                    ed.WriteMessage("\n복원할 빨간색 선분을 찾을 수 없습니다.");
+                    return;
+                }
+
+                ObjectId[] redLineIds = selectionResult.Value.GetObjectIds();
+
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    int restoredCount = 0;
+                    Color byLayerColor = Color.FromColorIndex(ColorMethod.ByLayer, 256);
+
+                    foreach (ObjectId lineId in redLineIds)
+                    {
+                        try
+                        {
+                            Line line = tr.GetObject(lineId, OpenMode.ForWrite) as Line;
+                            if (line != null)
+                            {
+                                line.Color = byLayerColor;
+                                restoredCount++;
+                            }
+                        }
+                        catch (System.Exception)
+                        {
+                            continue;
+                        }
+                    }
+
+                    tr.Commit();
+                    ed.WriteMessage($"\n{restoredCount}개의 선분 색상이 복원되었습니다.");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
     }
 
 }
