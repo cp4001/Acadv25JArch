@@ -68,7 +68,9 @@ namespace Acadv25JArch
 
                     // Step 4: !AreaCalc 레이어 처리
                     ObjectId areaCalcLayerId = ObjectId.Null;
+                    ObjectId areaCenterId = ObjectId.Null;
                     string areaCalcLayerName = "!AreaCalc";
+                    string areaCenterName = "!AreaCenter"; // Wall  Center 용 레이어
 
                     if (layerTable.Has(areaCalcLayerName))
                     {
@@ -90,9 +92,29 @@ namespace Acadv25JArch
                         ed.WriteMessage($"\n레이어 '{areaCalcLayerName}'를 생성했습니다.");
                     }
 
+                    if (layerTable.Has(areaCenterName))
+                    {
+                        // 레이어가 이미 존재하는 경우
+                        areaCenterId = layerTable[areaCenterName];
+                        ed.WriteMessage($"\n레이어 '{areaCenterName}'가 이미 존재합니다.");
+                    }
+                    else
+                    {
+                        // 새 레이어 생성
+                        LayerTableRecord newLayerRecord = new LayerTableRecord();
+                        newLayerRecord.Name = areaCenterName;
+
+                        // LayerTable을 쓰기 모드로 업그레이드
+                        layerTable.UpgradeOpen();
+                        areaCalcLayerId = layerTable.Add(newLayerRecord);
+                        tr.AddNewlyCreatedDBObject(newLayerRecord, true);
+
+                        ed.WriteMessage($"\n레이어 '{areaCenterName}'를 생성했습니다.");
+                    }
+
                     // Step 5: !AreaCalc 레이어를 현재 레이어로 설정
                     db.Clayer = areaCalcLayerId;
-                    ed.WriteMessage($"\n현재 레이어를 '{areaCalcLayerName}'로 변경했습니다.");
+                    ed.WriteMessage($"\n현재 레이어를 '{areaCenterName}'로 변경했습니다.");
 
                     // Step 6: !ArchCalc 레이어 처리 (Display On 설정)
                     string archCalcLayerName = "!ArchCalc";

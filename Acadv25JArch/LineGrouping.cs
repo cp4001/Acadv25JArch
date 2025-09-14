@@ -127,7 +127,7 @@ namespace Acadv25JArch
                 //ApplyColorsToGroups(lineGroups, selectedLineIds, db);
                 foreach (var group in lineGroups)
                 {
-                    if (group.Count == 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
+                    if (group.Count >= 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
                     {
                         var centerLineCreator = new CenterLine();
                         var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group[0], group[1]);
