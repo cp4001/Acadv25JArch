@@ -21,8 +21,8 @@ namespace Acadv25JArch
         // 이전 레이어 상태를 저장하는 정적 변수
         private static string layer_org = "Drw_org";
 
-        [CommandMethod("qq_a")]
-        public void Area_Work()
+        [CommandMethod("a_Work")]
+        public void Cmd_Area_Work()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -208,8 +208,8 @@ namespace Acadv25JArch
                 }
             }
         }
-        [CommandMethod("qq_aa")]
-        public void Area_Work_only()
+        [CommandMethod("a_Work_Disp")]
+        public void Cmd_Area_Work_only()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;

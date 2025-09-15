@@ -554,4 +554,496 @@ namespace AutoCADLineIntersection
             }
         }
     }
+
+
+    //
+
+    public class LineBlockIntersection
+    {
+        // .NET 8.0 기능: 컴파일 타임 상수
+        private const string COMMAND_NAME = "CHECKLINEBLOCKINTERSECT";
+        private const string DEMO_COMMAND = "DEMOINTERSECT";
+        private const string ORIGIN_COMMAND = "CHECKLINEORIGIN";
+        private const string GEOMETRY_COMMAND = "CHECKLINEGEOMETRY";
+        private const double DEFAULT_TOLERANCE = 50.0; // 기본 교차 판정 거리 (50mm)
+
+        /// <summary>
+        /// Line과 Block이 교차하는지 확인 (Block 원점에서 Line까지 최단거리 기준)
+        /// </summary>
+        /// <param name="line">검사할 Line 객체</param>
+        /// <param name="blockRef">검사할 BlockReference 객체</param>
+        /// <param name="tolerance">교차 판정 허용 거리 (기본값: 50mm)</param>
+        /// <returns>교차 여부</returns>
+        public static bool DoesLineIntersectBlock(Line line, BlockReference blockRef, double tolerance = DEFAULT_TOLERANCE)
+        {
+            if (line == null || blockRef == null)
+                return false;
+
+            try
+            {
+                // Step 1: Block 원점에서 Line까지의 최단거리 계산
+                double distance = GetDistanceFromBlockOriginToLine(line, blockRef);
+
+                // Step 2: 허용 거리 내에 있으면 교차로 판정
+                return distance <= tolerance;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Block 원점에서 Line까지의 최단거리 계산
+        /// </summary>
+        /// <param name="line">검사할 Line 객체</param>
+        /// <param name="blockRef">검사할 BlockReference 객체</param>
+        /// <returns>최단거리</returns>
+        public static double GetDistanceFromBlockOriginToLine(Line line, BlockReference blockRef)
+        {
+            if (line == null || blockRef == null)
+                return double.MaxValue;
+
+            try
+            {
+                // Step 1: Block의 원점(insertion point) 가져오기
+                Point3d blockOrigin = blockRef.Position;
+
+                // Step 2: 원점에서 Line으로의 수직 투영점 찾기 (첨부 샘플에서 우선 권장)
+                Point3d closestPointOnLine = line.GetClosestPointTo(blockOrigin, true);
+
+                // Step 3: 거리 계산
+                return blockOrigin.DistanceTo(closestPointOnLine);
+            }
+            catch (System.Exception)
+            {
+                return double.MaxValue;
+            }
+        }
+
+        /// <summary>
+        /// Line과 Block의 교차점 반환 (Block 원점에서 Line으로의 수직 투영점)
+        /// </summary>
+        /// <param name="line">검사할 Line 객체</param>
+        /// <param name="blockRef">검사할 BlockReference 객체</param>
+        /// <param name="tolerance">교차 판정 허용 거리</param>
+        /// <returns>교차점 (교차하지 않으면 빈 배열)</returns>
+        public static Point3d[] GetLineBlockIntersectionPoints(Line line, BlockReference blockRef, double tolerance = DEFAULT_TOLERANCE)
+        {
+            if (line == null || blockRef == null)
+                return [];
+
+            try
+            {
+                // Step 1: Block 원점에서 Line까지의 거리 확인
+                double distance = GetDistanceFromBlockOriginToLine(line, blockRef);
+
+                // Step 2: 허용 거리 내에 있으면 교차점 반환
+                if (distance <= tolerance)
+                {
+                    Point3d blockOrigin = blockRef.Position;
+                    Point3d intersectionPoint = line.GetClosestPointTo(blockOrigin, true);
+                    return [intersectionPoint];
+                }
+
+                return [];
+            }
+            catch (System.Exception)
+            {
+                return [];
+            }
+        }
+
+        /// <summary>
+        /// Line과 Block의 교차 정보를 상세하게 반환 (원점 기준)
+        /// </summary>
+        /// <param name="line">검사할 Line 객체</param>
+        /// <param name="blockRef">검사할 BlockReference 객체</param>
+        /// <param name="tolerance">교차 판정 허용 거리</param>
+        /// <returns>교차 정보 객체</returns>
+        public static LineBlockIntersectionInfo GetDetailedIntersectionInfo(Line line, BlockReference blockRef, double tolerance = DEFAULT_TOLERANCE)
+        {
+            var result = new LineBlockIntersectionInfo
+            {
+                HasIntersection = false,
+                IntersectionPoints = [],
+                LineLength = 0,
+                BlockName = "",
+                BlockOrigin = Point3d.Origin,
+                DistanceToBlock = double.MaxValue,
+                Tolerance = tolerance
+            };
+
+            if (line == null || blockRef == null)
+                return result;
+
+            try
+            {
+                // Step 1: 기본 정보 설정
+                result.LineLength = line.Length;
+                result.BlockName = blockRef.Name;
+                result.BlockOrigin = blockRef.Position;
+                result.Tolerance = tolerance;
+
+                // Step 2: Block 원점에서 Line까지의 거리 계산
+                result.DistanceToBlock = GetDistanceFromBlockOriginToLine(line, blockRef);
+
+                // Step 3: 교차 판정 및 교차점 계산
+                if (result.DistanceToBlock <= tolerance)
+                {
+                    result.HasIntersection = true;
+                    Point3d intersectionPoint = line.GetClosestPointTo(blockRef.Position, true);
+                    result.IntersectionPoints = [intersectionPoint];
+                }
+
+                return result;
+            }
+            catch (System.Exception)
+            {
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Block의 원점이 Line 위에 정확히 있는지 확인
+        /// </summary>
+        /// <param name="line">검사할 Line 객체</param>
+        /// <param name="blockRef">검사할 BlockReference 객체</param>
+        /// <param name="tolerance">허용 오차 (기본값: 1e-6)</param>
+        /// <returns>원점이 Line 위에 있는지 여부</returns>
+        public static bool IsBlockOriginOnLine(Line line, BlockReference blockRef, double tolerance = 1e-6)
+        {
+            if (line == null || blockRef == null)
+                return false;
+
+            try
+            {
+                double distance = GetDistanceFromBlockOriginToLine(line, blockRef);
+                return distance <= tolerance;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Block 원점에서 Line의 시작점과 끝점까지의 거리 계산
+        /// </summary>
+        /// <param name="line">검사할 Line 객체</param>
+        /// <param name="blockRef">검사할 BlockReference 객체</param>
+        /// <returns>시작점 거리, 끝점 거리, 수직 투영점 거리</returns>
+        public static (double toStart, double toEnd, double toClosest) GetDistancesToLinePoints(Line line, BlockReference blockRef)
+        {
+            if (line == null || blockRef == null)
+                return (double.MaxValue, double.MaxValue, double.MaxValue);
+
+            try
+            {
+                Point3d blockOrigin = blockRef.Position;
+
+                double distanceToStart = blockOrigin.DistanceTo(line.StartPoint);
+                double distanceToEnd = blockOrigin.DistanceTo(line.EndPoint);
+                double distanceToClosest = GetDistanceFromBlockOriginToLine(line, blockRef);
+
+                return (distanceToStart, distanceToEnd, distanceToClosest);
+            }
+            catch (System.Exception)
+            {
+                return (double.MaxValue, double.MaxValue, double.MaxValue);
+            }
+        }
+
+        #region Block 내부 Geometry와의 실제 교차 검사 (기존 방식)
+
+        /// <summary>
+        /// Line과 Block 내부 geometry의 실제 교차점 반환 (기존 IntersectWith 방식)
+        /// </summary>
+        /// <param name="line">검사할 Line 객체</param>
+        /// <param name="blockRef">검사할 BlockReference 객체</param>
+        /// <returns>실제 교차점들</returns>
+        public static Point3d[] GetActualGeometryIntersectionPoints(Line line, BlockReference blockRef)
+        {
+            if (line == null || blockRef == null)
+                return [];
+
+            try
+            {
+                var intersectionPoints = new Point3dCollection();
+
+                line.IntersectWith(blockRef,
+                    Intersect.OnBothOperands,
+                    intersectionPoints,
+                    IntPtr.Zero,
+                    IntPtr.Zero);
+
+                var points = new Point3d[intersectionPoints.Count];
+                for (int i = 0; i < intersectionPoints.Count; i++)
+                {
+                    points[i] = intersectionPoints[i];
+                }
+
+                return points;
+            }
+            catch (System.Exception)
+            {
+                return [];
+            }
+        }
+
+        /// <summary>
+        /// Line과 Block 내부 geometry가 실제로 교차하는지 확인
+        /// </summary>
+        /// <param name="line">검사할 Line 객체</param>
+        /// <param name="blockRef">검사할 BlockReference 객체</param>
+        /// <returns>실제 교차 여부</returns>
+        public static bool DoesLineIntersectBlockGeometry(Line line, BlockReference blockRef)
+        {
+            if (line == null || blockRef == null)
+                return false;
+
+            try
+            {
+                var intersectionPoints = new Point3dCollection();
+                line.IntersectWith(blockRef, Intersect.OnBothOperands, intersectionPoints, IntPtr.Zero, IntPtr.Zero);
+                return intersectionPoints.Count > 0;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region Command Methods
+
+        /// <summary>
+        /// Line과 Block 교차 검사 비교 데모 명령어
+        /// </summary>
+        [CommandMethod(DEMO_COMMAND)]
+        public void Cmd_DemoLineBlockIntersection()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // Step 1: Line 선택
+                Line selectedLine = SelectLine(ed, "\n라인을 선택하세요: ");
+                if (selectedLine == null) return;
+
+                // Step 2: Block 선택
+                BlockReference selectedBlock = SelectBlock(ed, "\n블록을 선택하세요: ");
+                if (selectedBlock == null) return;
+
+                // Step 3: 허용 거리 입력
+                var tolPrompt = new PromptDoubleOptions($"\n교차 판정 허용 거리를 입력하세요 (기본값: {DEFAULT_TOLERANCE}): ")
+                {
+                    DefaultValue = DEFAULT_TOLERANCE,
+                    AllowNegative = false,
+                    AllowZero = true
+                };
+
+                var tolResult = ed.GetDouble(tolPrompt);
+                double tolerance = tolResult.Status == PromptStatus.OK ? tolResult.Value : DEFAULT_TOLERANCE;
+
+                ed.WriteMessage($"\n=== Line-Block 교차 검사 비교 ===");
+                ed.WriteMessage($"\n블록 이름: {selectedBlock.Name}");
+                ed.WriteMessage($"\n블록 원점: X={selectedBlock.Position.X:F3}, Y={selectedBlock.Position.Y:F3}, Z={selectedBlock.Position.Z:F3}");
+                ed.WriteMessage($"\n라인 길이: {selectedLine.Length:F3}");
+                ed.WriteMessage($"\n허용 거리: {tolerance:F3}");
+
+                // Step 4: 원점 기준 교차 검사 (새로운 방식)
+                var intersectionInfo = GetDetailedIntersectionInfo(selectedLine, selectedBlock, tolerance);
+                ed.WriteMessage($"\n\n📍 원점 기준 교차 검사 (새로운 방식):");
+                ed.WriteMessage($"\n  원점까지 거리: {intersectionInfo.DistanceToBlock:F3}");
+                ed.WriteMessage($"\n  교차 여부: {(intersectionInfo.HasIntersection ? "예" : "아니오")}");
+
+                if (intersectionInfo.HasIntersection)
+                {
+                    var pt = intersectionInfo.IntersectionPoints[0];
+                    ed.WriteMessage($"\n  교차점 (수직투영점): X={pt.X:F3}, Y={pt.Y:F3}, Z={pt.Z:F3}");
+                }
+
+                // Step 5: 거리 정보
+                var distances = GetDistancesToLinePoints(selectedLine, selectedBlock);
+                ed.WriteMessage($"\n\n📏 거리 정보:");
+                ed.WriteMessage($"\n  원점 → Line 시작점: {distances.toStart:F3}");
+                ed.WriteMessage($"\n  원점 → Line 끝점: {distances.toEnd:F3}");
+                ed.WriteMessage($"\n  원점 → Line 수직투영점: {distances.toClosest:F3}");
+
+                // Step 6: Block 내부 geometry와의 실제 교차 (기존 방식 비교)
+                bool actualIntersect = DoesLineIntersectBlockGeometry(selectedLine, selectedBlock);
+                var actualPoints = GetActualGeometryIntersectionPoints(selectedLine, selectedBlock);
+
+                ed.WriteMessage($"\n\n🔧 Block 내부 geometry와 실제 교차 (기존 방식):");
+                ed.WriteMessage($"\n  실제 교차 여부: {(actualIntersect ? "예" : "아니오")}");
+                ed.WriteMessage($"\n  실제 교차점 개수: {actualPoints.Length}");
+
+                for (int i = 0; i < actualPoints.Length; i++)
+                {
+                    var pt = actualPoints[i];
+                    ed.WriteMessage($"\n    실제 교차점 {i + 1}: X={pt.X:F3}, Y={pt.Y:F3}, Z={pt.Z:F3}");
+                }
+
+                // Step 7: 결론
+                ed.WriteMessage($"\n\n💡 교차점 정의 방식:");
+                ed.WriteMessage($"\n  새로운 방식: Block 원점에서 Line으로의 수직 투영점");
+                ed.WriteMessage($"\n  기존 방식: Block 내부 entities와의 실제 교차점");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 원점 기준 교차 검사 명령어
+        /// </summary>
+        [CommandMethod(COMMAND_NAME)]
+        public void Cmd_CheckLineBlockIntersection()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // Line과 Block 선택
+                Line line = SelectLine(ed, "\n라인을 선택하세요: ");
+                if (line == null) return;
+
+                BlockReference block = SelectBlock(ed, "\n블록을 선택하세요: ");
+                if (block == null) return;
+
+                // 허용 거리 입력
+                var tolPrompt = new PromptDoubleOptions($"\n교차 판정 허용 거리 (기본값: {DEFAULT_TOLERANCE}): ")
+                {
+                    DefaultValue = DEFAULT_TOLERANCE,
+                    AllowNegative = false,
+                    AllowZero = true
+                };
+
+                var tolResult = ed.GetDouble(tolPrompt);
+                double tolerance = tolResult.Status == PromptStatus.OK ? tolResult.Value : DEFAULT_TOLERANCE;
+
+                // 교차 검사
+                bool intersects = DoesLineIntersectBlock(line, block, tolerance);
+                double distance = GetDistanceFromBlockOriginToLine(line, block);
+
+                ed.WriteMessage($"\n=== 원점 기준 교차 검사 결과 ===");
+                ed.WriteMessage($"\n원점까지 거리: {distance:F3}");
+                ed.WriteMessage($"\n허용 거리: {tolerance:F3}");
+                ed.WriteMessage($"\n결과: {(intersects ? "교차함" : "교차하지 않음")}");
+
+                if (intersects)
+                {
+                    var points = GetLineBlockIntersectionPoints(line, block, tolerance);
+                    if (points.Length > 0)
+                    {
+                        var pt = points[0];
+                        ed.WriteMessage($"\n교차점 (수직투영점): X={pt.X:F3}, Y={pt.Y:F3}, Z={pt.Z:F3}");
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Block 내부 geometry와의 실제 교차 검사 명령어
+        /// </summary>
+        [CommandMethod(GEOMETRY_COMMAND)]
+        public void Cmd_CheckLineGeometryIntersection()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                Line line = SelectLine(ed, "\n라인을 선택하세요: ");
+                if (line == null) return;
+
+                BlockReference block = SelectBlock(ed, "\n블록을 선택하세요: ");
+                if (block == null) return;
+
+                bool intersects = DoesLineIntersectBlockGeometry(line, block);
+                var points = GetActualGeometryIntersectionPoints(line, block);
+
+                ed.WriteMessage($"\n=== Block 내부 geometry 교차 검사 ===");
+                ed.WriteMessage($"\n교차 여부: {(intersects ? "예" : "아니오")}");
+                ed.WriteMessage($"\n교차점 개수: {points.Length}");
+
+                for (int i = 0; i < points.Length; i++)
+                {
+                    var pt = points[i];
+                    ed.WriteMessage($"\n  교차점 {i + 1}: X={pt.X:F3}, Y={pt.Y:F3}, Z={pt.Z:F3}");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Line 객체 선택 헬퍼 메서드
+        /// </summary>
+        private Line SelectLine(Editor ed, string prompt)
+        {
+            var peo = new PromptEntityOptions(prompt);
+            peo.SetRejectMessage("\nLine 객체만 선택할 수 있습니다.");
+            peo.AddAllowedClass(typeof(Line), true);
+
+            var per = ed.GetEntity(peo);
+            if (per.Status != PromptStatus.OK) return null;
+
+            using var tr = Application.DocumentManager.MdiActiveDocument.Database.TransactionManager.StartTransaction();
+            var line = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Line;
+            tr.Commit();
+            return line;
+        }
+
+        /// <summary>
+        /// BlockReference 객체 선택 헬퍼 메서드
+        /// </summary>
+        private BlockReference SelectBlock(Editor ed, string prompt)
+        {
+            var peo = new PromptEntityOptions(prompt);
+            peo.SetRejectMessage("\nBlock 객체만 선택할 수 있습니다.");
+            peo.AddAllowedClass(typeof(BlockReference), true);
+
+            var per = ed.GetEntity(peo);
+            if (per.Status != PromptStatus.OK) return null;
+
+            using var tr = Application.DocumentManager.MdiActiveDocument.Database.TransactionManager.StartTransaction();
+            var blockRef = tr.GetObject(per.ObjectId, OpenMode.ForRead) as BlockReference;
+            tr.Commit();
+            return blockRef;
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Line과 Block 교차 정보를 담는 클래스 (원점 기준)
+    /// </summary>
+    public class LineBlockIntersectionInfo
+    {
+        public bool HasIntersection { get; set; }
+        public Point3d[] IntersectionPoints { get; set; } = [];
+        public double LineLength { get; set; }
+        public string BlockName { get; set; } = "";
+        public Point3d BlockOrigin { get; set; }
+        public double DistanceToBlock { get; set; }
+        public double Tolerance { get; set; }
+    }
+
+
 }
