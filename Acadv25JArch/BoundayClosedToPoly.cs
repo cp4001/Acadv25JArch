@@ -959,7 +959,7 @@ namespace Acadv25JArch
         private const string TARGET_LAYER = "!AreaCalc";
 
         [CommandMethod("CloneToAreaCalc")]
-        public void CloneToAreaCalc()
+        public void Cmd_CloneToAreaCalc()
         {
             // Step 1: 현재 문서와 데이터베이스 가져오기
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -971,18 +971,18 @@ namespace Acadv25JArch
                 // Step 2: Line과 Polyline만 선택할 수 있는 SelectionFilter 생성
                 TypedValue[] filterValues = new TypedValue[]
                 {
-                    new TypedValue((int)DxfCode.Operator, "<OR"),
-                    new TypedValue((int)DxfCode.Start, "LINE"),
-                    new TypedValue((int)DxfCode.Start, "POLYLINE"),
-                    new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
-                    new TypedValue((int)DxfCode.Operator, "OR>")
+                    //new TypedValue((int)DxfCode.Operator, "<OR"),
+                    new TypedValue((int)DxfCode.Start, "LINE,LWPOLYLINE,INSERT"),
+                    //new TypedValue((int)DxfCode.Start, "POLYLINE"),
+                    //new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
+                    //new TypedValue((int)DxfCode.Operator, "OR>")
                 };
 
                 SelectionFilter filter = new SelectionFilter(filterValues);
 
                 // Step 3: 사용자에게 Entity 선택 요청
                 PromptSelectionOptions selOpts = new PromptSelectionOptions();
-                selOpts.MessageForAdding = "참조할 레이어의 Line 또는 Polyline을 선택하세요: ";
+                selOpts.MessageForAdding = "참조할 레이어의 Entity 을 선택하세요: ";
                 selOpts.AllowDuplicates = false;
                 selOpts.SingleOnly = true; // 하나만 선택
 
@@ -1018,7 +1018,7 @@ namespace Acadv25JArch
                         // Step 9: 지정된 레이어의 모든 Line/Polyline 엔티티 찾기
                         List<ObjectId> sourceEntityIds = FindEntitiesInLayer(tr, db, sourceLayerName??"", filter);
 
-                        ed.WriteMessage($"\n'{sourceLayerName}' 레이어에서 {sourceEntityIds.Count}개의 Line/Polyline을 발견했습니다.");
+                        ed.WriteMessage($"\n'{sourceLayerName}' 레이어에서 {sourceEntityIds.Count}개의 Line/Polyline/Block을 발견했습니다.");
 
                         // Step 10: 아직 복사되지 않은 엔티티만 필터링
                         List<ObjectId> entitiesToClone = new List<ObjectId>();
