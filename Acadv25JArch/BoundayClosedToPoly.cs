@@ -535,7 +535,7 @@ namespace Acadv25JArch
         /// TB1 Command - Process room polygon at user-selected point
         /// </summary>
         [CommandMethod("TB1")]
-        public void TraceRoomBoundary()
+        public void Cmd_TraceRoomBoundary()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -592,7 +592,7 @@ namespace Acadv25JArch
         /// 도면의 모든 Text를 자동으로 선택하는 명령
         /// </summary>
         [CommandMethod("TB_rr")]
-        public void TraceRoomBoundary_From_RoomText()
+        public void Cmd_TraceRoomBoundary_From_RoomText()
         {
             try
             {
@@ -739,7 +739,7 @@ namespace Acadv25JArch
                 double yExtent = extents.MaxPoint.Y - extents.MinPoint.Y;
 
                 // Text height is 1/8 of Y extent, with minimum of 10 units
-                double textHeight = Math.Max(yExtent / 8.0, 10.0);
+                double textHeight = Math.Max(yExtent / 12.0, 10.0);
 
                 return textHeight;
             }
