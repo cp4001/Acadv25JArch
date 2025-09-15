@@ -15,6 +15,8 @@ using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Color = Autodesk.AutoCAD.Colors.Color;
 using Exception = System.Exception;
 
+using CADExtension;
+
 namespace Acadv25JArch
 {
     public class LineGrouping
@@ -32,7 +34,7 @@ namespace Acadv25JArch
         /// 선택된 라인들을 기울기별로 그룹화하고 색상을 적용하는 메인 커맨드
         /// </summary>
         [CommandMethod("Group_Lines")]
-        public void GroupLinesBySlope()
+        public void Cmd_GroupLinesBySlope()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -75,6 +77,115 @@ namespace Acadv25JArch
 
                 // 4단계: 결과 출력
                 ed.WriteMessage($"\n{lineGroups.Count}개 그룹으로 분류 완료. 색상이 적용되었습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        [CommandMethod("Group_Lines1")]
+        public void Cmd_GroupLinesBySlope1()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 1단계: 라인들 선택
+                //var selectedLineIds = SelectLines(ed);
+                var selectedLineIds = SelectLinesCurrentLayer(ed);
+                if (selectedLineIds.Count == 0)
+                {
+                    ed.WriteMessage("\n선택된 라인이 없습니다.");
+                    return;
+                }
+
+
+                // 2단계: 기준점 선택
+                PromptPointOptions pointOpts = new PromptPointOptions("\n기준점을 선택하세요: ");
+                pointOpts.AllowNone = false;
+
+                PromptPointResult pointResult = ed.GetPoint(pointOpts);
+                if (pointResult.Status != PromptStatus.OK)
+                {
+                    ed.WriteMessage("\n작업이 취소되었습니다.");
+                    return;
+                }
+
+                Point3d basePoint = pointResult.Value;
+
+
+                // 2단계: 한 번의 Transaction으로 모든 Line 객체 로드 및 그룹화
+                using var tr = db.TransactionManager.StartTransaction();
+
+                // ObjectId에서 Line 객체로 직접 변환
+                var lines = selectedLineIds
+                    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Line)
+                    .Where(line => line != null)
+                    .ToList();
+
+                if (lines.Count == 0)
+                {
+                    ed.WriteMessage("\n유효한 라인을 로드할 수 없습니다.");
+                    tr.Commit();
+                    return;
+                }
+
+                // 기준점에서 가까운 순서로 정렬
+                //lines = lines.OrderBy(line => line.GetClosestPointTo(basePoint, false).DistanceTo(basePoint)).ToList();
+
+                //  기준점에서 line 센터까지의 거리로 정열
+                lines = lines.OrderBy(line => line.GetCenDisTance(basePoint)).ToList();
+
+                // line 길이가 250 보다 적으면 제외
+                lines = lines.Where(line => line.Length  > 250.0).ToList();
+
+
+                // 기준점 대비 line 각도 적은 것은 제외
+                //lines = lines.Where(x=> x.GetAngleSpEp(basePoint) > 3 ).ToList();  
+
+
+
+                //// Line 객체들로 그룹화 수행
+                var lineGroups = GroupLinesByAngleAndDistance(lines,basePoint, DEFAULT_TOLERANCE);
+
+                //// Group의 첫번쨰 만 추출
+                var firstLines = lineGroups.Select(g => g.First()).ToList();
+
+                // 색상 적용 (같은 Transaction 내에서, UpgradeOpen 사용)
+                // 빨간색으로 변경
+
+                //line에서 8개만 선택     
+                var slines = firstLines.Take(5).ToList();
+
+                Color redColor = Color.FromColorIndex(ColorMethod.ByAci, 1);
+
+                foreach (var ll in slines)
+                {
+                    try
+                    {
+                        // 쓰기 모드로 업그레이드하여 색상 변경
+                        ll.UpgradeOpen();
+                        ll.Color = redColor;
+                        ll.DowngradeOpen();
+
+                    }
+                    catch (System.Exception)
+                    {
+                        // 개별 선분 처리 실패 시 계속 진행
+                        continue;
+                    }
+                }
+
+                tr.Commit();
+
+                //// 3단계: 그룹별 색상 적용 (Handle 기반 매칭)
+                //ApplyColorsToGroups(lineGroups, selectedLineIds, db);
+
+                // 4단계: 결과 출력
+                //ed.WriteMessage($"\n{lineGroups.Count}개 그룹으로 분류 완료. 색상이 적용되었습니다.");
             }
             catch (System.Exception ex)
             {
@@ -426,7 +537,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 라인들을 기울기와 거리별로 그룹화 (Line 객체 직접 사용)
         /// </summary>
-        private List<List<Line>> GroupLinesByAngleAndDistance(List<Line> lines, double tolerance)
+        public  static List<List<Line>> GroupLinesByAngleAndDistance(List<Line> lines, double tolerance)
         {
             var groups = new List<List<Line>>();
             var remainingLines = new List<Line>(lines);
@@ -457,6 +568,49 @@ namespace Acadv25JArch
                     double angle2 = CalculateLineAngle(line2);
                     return angle1.CompareTo(angle2);
                 });
+
+                groups.Add(currentGroup);
+            }
+
+            // 그룹들을 크기 순으로 정렬 (큰 그룹부터)
+            groups.Sort((a, b) => b.Count.CompareTo(a.Count));
+            return groups;
+        }
+
+        //기준점 추가 버전 
+        public static List<List<Line>> GroupLinesByAngleAndDistance(List<Line> lines,Point3d pt, double tolerance)
+        {
+            var groups = new List<List<Line>>();
+            var remainingLines = new List<Line>(lines);
+
+            while (remainingLines.Count > 0)
+            {
+                var currentLine = remainingLines[0];
+                var currentGroup = new List<Line> { currentLine };
+                remainingLines.RemoveAt(0);
+
+                // 현재 라인과 평행하고 거리 조건(100mm 이내)을 만족하는 라인들을 찾아서 그룹에 추가
+                for (int i = remainingLines.Count - 1; i >= 0; i--)
+                {
+                    var compareLine = remainingLines[i];
+
+                    // 각도 조건 AND 거리 조건을 모두 만족해야 같은 그룹
+                    if (AreLinesSameGroup(currentLine, compareLine, tolerance))
+                    {
+                        currentGroup.Add(compareLine);
+                        remainingLines.RemoveAt(i);
+                    }
+                    currentGroup = currentGroup.OrderBy(line => line.ShortestDistanceToPoint(pt)).ToList();
+
+                }
+
+                //// 그룹을 각도순으로 정렬
+                //currentGroup.Sort((line1, line2) =>
+                //{
+                //    double angle1 = CalculateLineAngle(line1);
+                //    double angle2 = CalculateLineAngle(line2);
+                //    return angle1.CompareTo(angle2);
+                //});
 
                 groups.Add(currentGroup);
             }
@@ -1306,7 +1460,7 @@ namespace Acadv25JArch
         /// 메인 커맨드: 점 선택 후 주변 Line들 중 투영 가능한 것들을 빨간색으로 변경
         /// </summary>
         [CommandMethod("HighlightProjectableLines")]
-        public void HighlightProjectableLinesCommand()
+        public void Cmd_HighlightProjectableLines()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -1342,14 +1496,75 @@ namespace Acadv25JArch
 
                 ed.WriteMessage($"\n총 {selectedLineIds.Count}개의 선분을 발견했습니다.");
 
-                // 4단계: 선택된 Line들 중 투영 가능한 것들 찾기 및 색상 변경
-                int highlightedCount = HighlightProjectableLines(db, selectedLineIds, centerPoint);
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    List<Line> lls = new List<Line>();
+                    foreach (ObjectId lineId in selectedLineIds)
+                    {
+                        try
+                        {
+                            Line line = tr.GetObject(lineId, OpenMode.ForRead) as Line;
+                            if (line != null)
+                            {
+                                lls.Add(line);
+                            }
+                        }
+                        catch (System.Exception)
+                        {
+                            // 개별 선분 처리 실패 시 계속 진행
+                            continue;
+                        }
+                    }
+
+                   
+
+                    // point 기준으로 가장 가까운 으로 Sorting
+                    lls = lls.OrderBy(line => line.GetClosestPointTo(centerPoint, false).DistanceTo(centerPoint)).ToList();
+                    // Line 객체들로 그룹화 수행
+                    var lineGroups = LineGrouping.GroupLinesByAngleAndDistance(lls, 1.0);
+
+                    // 기준 Point 와 수직 겹침이 있는 lines
+                    var lls1 =   lls.Where(x=> x.IsPointProjectableOnLine(centerPoint) == true).ToList();
+
+                    // 각 그룹에서 가장 처음 나오는 Line만 남기기
+                    List<Line> finalLines = new List<Line>();   
+                    foreach (var group in lineGroups)
+                    {
+                        finalLines.Add(group[0]);
+                    }
+
+                    // 빨간색으로 변경
+
+                    Color redColor = Color.FromColorIndex(ColorMethod.ByAci, RED_COLOR_INDEX);
+
+                    foreach (var ll in finalLines)
+                    {
+                        try
+                        {
+                            // 쓰기 모드로 업그레이드하여 색상 변경
+                            ll.UpgradeOpen();
+                            ll.Color = redColor;
+                            ll.DowngradeOpen();
+
+                        }
+                        catch (System.Exception)
+                        {
+                            // 개별 선분 처리 실패 시 계속 진행
+                            continue;
+                        }
+                    }
+
+                    tr.Commit();
+                }
+
+                //// 4단계: 선택된 Line들 중 투영 가능한 것들 찾기 및 색상 변경
+                //int highlightedCount = HighlightProjectableLines(db, selectedLineIds, centerPoint);
 
                 // 5단계: 결과 출력
                 ed.WriteMessage($"\n작업 완료!");
                 ed.WriteMessage($"\n - 검사된 선분: {selectedLineIds.Count}개");
-                ed.WriteMessage($"\n - 투영 가능한 선분: {highlightedCount}개");
-                ed.WriteMessage($"\n - 빨간색으로 변경된 선분: {highlightedCount}개");
+                //ed.WriteMessage($"\n - 투영 가능한 선분: {highlightedCount}개");
+                //ed.WriteMessage($"\n - 빨간색으로 변경된 선분: {highlightedCount}개");
 
             }
             catch (System.Exception ex)
@@ -1414,36 +1629,64 @@ namespace Acadv25JArch
         /// </summary>
         private int HighlightProjectableLines(Database db, List<ObjectId> lineIds, Point3d centerPoint)
         {
-            int highlightedCount = 0;
+            int highlightedCount = 1;
+
+            List<Line> lls = new List<Line>();
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
+                foreach (ObjectId lineId in lineIds)
+                {
+                    try
+                    {
+                        Line line = tr.GetObject(lineId, OpenMode.ForRead) as Line;
+                        if (line != null)
+                        {
+                            lls.Add(line);
+                        }
+                    }
+                    catch (System.Exception)
+                    {
+                        // 개별 선분 처리 실패 시 계속 진행
+                        continue;
+                    }
+                }
+
+                if(lls.Count < 2)
+                {
+                    tr.Commit();
+                    return 0;
+                }
+
+                // point 기준으로 가장 가까운 으로 Sorting
+                lls = lls.OrderBy(line => line.GetClosestPointTo(centerPoint, false).DistanceTo(centerPoint)).ToList();
+                // Line 객체들로 그룹화 수행
+                var lineGroups = LineGrouping.GroupLinesByAngleAndDistance(lls, 1.0);
+
+
+                // 각 그룹에서 가장 처음 나오는 Line만 남기기 
+                List<Line> finalLines = new List<Line>();
+
+                foreach (var group in lineGroups)
+                {
+                        finalLines.Add(group[0]);
+                }
+
                 try
                 {
                     Color redColor = Color.FromColorIndex(ColorMethod.ByAci, RED_COLOR_INDEX);
 
-                    foreach (ObjectId lineId in lineIds)
+                    foreach (var ll in finalLines)
                     {
                         try
                         {
-                            // Line 객체를 읽기 모드로 열기
-                            Line line = tr.GetObject(lineId, OpenMode.ForRead) as Line;
-
-                            if (line == null)
-                                continue;
-
-                            // 투영 가능한지 확인
-                            bool isProjectable = IsPointProjectableOnLine(centerPoint, line);
-
-                            if (isProjectable)
-                            {
                                 // 쓰기 모드로 업그레이드하여 색상 변경
-                                line.UpgradeOpen();
-                                line.Color = redColor;
-                                line.DowngradeOpen();
+                                ll.UpgradeOpen();
+                                ll.Color = redColor;
+                                ll.DowngradeOpen();
 
                                 highlightedCount++;
-                            }
+                  
                         }
                         catch (System.Exception)
                         {

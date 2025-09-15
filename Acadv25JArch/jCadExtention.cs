@@ -1063,9 +1063,110 @@ namespace CADExtension //Curve Line Poly Geometry Point
         //line 과 point  사이의 수직 거리   
         public static double ShortestDistanceToPoint(this Line line, Point3d point)
         {
-            var pt1 = line.GetClosestPointTo(point, false);
+            var pt1 = line.GetClosestPointTo(point, true);
             return  (point.DistanceTo(pt1));
         }
+
+        /// <summary>
+        /// 특정 Point가 특정 Line의 확장되지 않은 실제 선분 위에 수직 투영될 수 있는지 확인하는 함수
+        /// (이전에 작성한 함수를 여기서 재사용)
+        /// </summary>
+        public static bool IsPointProjectableOnLine(this Line line,Point3d targetPoint, double tolerance = 1e-6)
+        {
+            try
+            {
+                if (line == null)
+                    return false;
+
+                // 선분 자체에서만 최근점을 구함 (extend = false)
+                Point3d closestOnSegment = line.GetClosestPointTo(targetPoint, false);
+
+                // 연장선을 포함하여 최근점을 구함 (extend = true)
+                Point3d closestOnExtended = line.GetClosestPointTo(targetPoint, true);
+
+                // 두 점이 같으면 투영점이 선분 자체에 있음
+                double distance = closestOnSegment.DistanceTo(closestOnExtended);
+                bool isOnSegment = distance <= tolerance;
+
+                return isOnSegment;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 특정 점에서 라인의 시작점과 끝점으로 이어지는 두 선분 사이의 각도를 계산합니다.
+        /// </summary>
+        /// <param name="pt1">기준점</param>
+        /// <param name="line1">대상 라인</param>
+        /// <returns>두 선분 사이의 각도 (도 단위)</returns>
+        public static double GetAngleSpEp(this Line line1,Point3d pt1)
+        {
+            try
+            {
+                // pt1에서 line1.StartPoint로의 벡터 생성
+                Vector3d vector1 = line1.StartPoint - pt1;
+
+                // pt1에서 line1.EndPoint로의 벡터 생성
+                Vector3d vector2 = line1.EndPoint - pt1;
+
+                // 벡터의 길이가 0인지 확인 (점이 겹치는 경우)
+                if (vector1.Length < 1e-6 || vector2.Length < 1e-6)
+                {
+                    return 0.0; // 점이 겹치면 각도는 0
+                }
+
+                // 벡터를 단위벡터로 정규화
+                vector1 = vector1.GetNormal();
+                vector2 = vector2.GetNormal();
+
+                // 두 벡터의 내적 계산
+                double dotProduct = vector1.DotProduct(vector2);
+
+                // 부동소수점 오차 방지를 위해 범위 제한 (-1.0 ~ 1.0)
+                dotProduct = Math.Max(-1.0, Math.Min(1.0, dotProduct));
+
+                // 아크코사인을 사용하여 각도 계산 (라디안)
+                double angleInRadians = Math.Acos(dotProduct);
+
+                // 라디안을 도(degree)로 변환
+                double angleInDegrees = angleInRadians * 180.0 / Math.PI;
+
+                return angleInDegrees;
+            }
+            catch (System.Exception)
+            {
+                // 오류 발생 시 0 반환
+                return 0.0;
+            }
+        }
+
+        /// <summary>
+        /// 특정 점에서 라인의 센터 까지의 거리를 계산 .
+        /// </summary>
+        /// <param name="pt1">기준점</param>
+        /// <param name="line1">대상 라인</param>
+        /// <returns>두 선분 사이의 각도 (도 단위)</returns>
+        public static double GetCenDisTance(this Line line1, Point3d pt1)
+        {
+            try
+            {
+                // Line 의 벡터
+                Vector3d vector1 = line1.EndPoint - line1.StartPoint;
+
+                Point3d pt = line1.GetCentor();
+
+                return pt1.DistanceTo(pt);
+            }
+            catch (System.Exception)
+            {
+                // 오류 발생 시 0 반환
+                return 0.0;
+            }
+        }
+
 
     }
 
