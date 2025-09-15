@@ -737,9 +737,12 @@ namespace Acadv25JArch
 
                 // Calculate Y extent difference
                 double yExtent = extents.MaxPoint.Y - extents.MinPoint.Y;
+                double xExtent = extents.MaxPoint.X - extents.MinPoint.X;
+
+                var baseExtent = Math.Min(xExtent, yExtent);
 
                 // Text height is 1/8 of Y extent, with minimum of 10 units
-                double textHeight = Math.Max(yExtent / 12.0, 10.0);
+                double textHeight = Math.Max(baseExtent / 12.0, 10.0);
 
                 return textHeight;
             }
