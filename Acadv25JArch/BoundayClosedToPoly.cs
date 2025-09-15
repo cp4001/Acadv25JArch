@@ -972,7 +972,7 @@ namespace Acadv25JArch
                 TypedValue[] filterValues = new TypedValue[]
                 {
                     //new TypedValue((int)DxfCode.Operator, "<OR"),
-                    new TypedValue((int)DxfCode.Start, "LINE,LWPOLYLINE,INSERT"),
+                    new TypedValue((int)DxfCode.Start, "LINE,LWPOLYLINE,INSERT,TEXT"),
                     //new TypedValue((int)DxfCode.Start, "POLYLINE"),
                     //new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
                     //new TypedValue((int)DxfCode.Operator, "OR>")
@@ -1199,6 +1199,8 @@ namespace Acadv25JArch
                 new TypedValue((int)DxfCode.Start, "LINE"),
                 new TypedValue((int)DxfCode.Start, "POLYLINE"),
                 new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
+                new TypedValue((int)DxfCode.Start, "INSERT"),
+                 new TypedValue((int)DxfCode.Start, "TEXT"),
                 new TypedValue((int)DxfCode.Operator, "OR>"),
                 new TypedValue((int)DxfCode.Operator, "AND>")
             };

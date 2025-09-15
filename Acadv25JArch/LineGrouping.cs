@@ -198,7 +198,7 @@ namespace Acadv25JArch
         /// 선택된 라인들을 기울기별로 그룹화하고 대상 그룹에 센터 라인을 생성하는 메인 커맨드
         /// </summary>
         [CommandMethod("Group_Lines_And_Middle_Lines")]
-        public void GroupLinesBySlopeAndMiddleLine()
+        public void Cmd_GroupLinesBySlopeAndMiddleLine()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
