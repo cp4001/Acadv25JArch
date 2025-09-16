@@ -218,11 +218,29 @@ namespace Acadv25JArch
                 // 2단계: 한 번의 Transaction으로 모든 Line 객체 로드 및 그룹화
                 using var tr = db.TransactionManager.StartTransaction();
 
-                // ObjectId에서 Line 객체로 직접 변환
-                var lines = selectedLineIds
-                    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Line)
-                    .Where(line => line != null)
+                // ObjectId에서 Entity 객체로 직접 변환
+                var ents = selectedLineIds
+                    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Entity)
+                    .Where(ent => ent != null)
                     .ToList();
+
+                // ObjectId에서 Line 객체로 직접 변환
+                List<Line> lines = new List<Line>();
+
+                foreach (var ent in ents)
+                {
+                    if(ent.GetType() == typeof(Line)) lines.Add(ent as Line);
+                    if(ent.GetType() == typeof(Polyline))
+                    {
+                        Polyline pl = ent as Polyline;
+                        lines.AddRange(pl.GetLineEntities());
+                    }
+                }
+
+                //var lines = selectedLineIds
+                //    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Line)
+                //    .Where(line => line != null)
+                //    .ToList();
 
                 if (lines.Count == 0)
                 {
@@ -392,30 +410,30 @@ namespace Acadv25JArch
 
         private List<ObjectId> SelectLinesCurrentLayer(Editor ed)
         {
-            var lineIds = new List<ObjectId>();
+            var linePolyIds = new List<ObjectId>();
             Database db = ed.Document.Database;
             string currentLayerName = GetCurrentLayerName(db);
 
             // 라인만 선택하도록 필터 설정
             TypedValue[] filterList = [
-                new TypedValue((int)DxfCode.Start, "LINE"),
+                new TypedValue((int)DxfCode.Start, "LINE,LWPOLYLINE,POLYLINE"),
                 new TypedValue((int)DxfCode.LayerName, currentLayerName)
             ];
             var filter = new SelectionFilter(filterList);
 
             var opts = new PromptSelectionOptions
             {
-                MessageForAdding = "\n현재 레이어의 Line들을 선택하세요: "
+                MessageForAdding = "\n현재 레이어의 Line 또는 Poly 들을 선택하세요: "
             };
 
             var psr = ed.GetSelection(opts, filter);
 
             if (psr.Status == PromptStatus.OK && psr.Value != null)
             {
-                lineIds.AddRange(psr.Value.GetObjectIds());
+                linePolyIds.AddRange(psr.Value.GetObjectIds());
             }
 
-            return lineIds;
+            return linePolyIds;
         }
 
         /// <summary>
