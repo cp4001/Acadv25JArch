@@ -1637,6 +1637,69 @@ namespace CADExtension //Curve Line Poly Geometry Point
             return exts.MinPoint + u.GetNormal() * u.Length / 2;
         }
 
+        //
+        /// <summary>
+        /// Polyline 내부의 Line segment들을 Line Entity로 변환하여 반환하는 확장 함수
+        /// </summary>
+        /// <param name="polyline">대상 Polyline 객체</param>
+        /// <returns>Line Entity들의 리스트</returns>
+        public static List<Line> GetLineEntities(this Polyline polyline)
+        {
+            var lineEntities = new List<Line>();
+
+            if (polyline == null || polyline.NumberOfVertices < 2)
+                return lineEntities;
+
+            try
+            {
+                // Polyline의 segment 개수 계산
+                // Closed polyline: NumberOfVertices개의 segment
+                // Open polyline: NumberOfVertices - 1개의 segment
+                int segmentCount = polyline.Closed ? polyline.NumberOfVertices : polyline.NumberOfVertices - 1;
+
+                for (int i = 0; i < segmentCount; i++)
+                {
+                    // 각 segment의 타입 확인
+                    SegmentType segmentType = polyline.GetSegmentType(i);
+
+                    // Line segment인 경우에만 처리
+                    if (segmentType == SegmentType.Line)
+                    {
+                        try
+                        {
+                            // LineSegment3d 정보 가져오기 (World Coordinates)
+                            LineSegment3d lineSegment3d = polyline.GetLineSegmentAt(i);
+
+                            // LineSegment3d에서 시작점과 끝점 추출
+                            Point3d startPoint = lineSegment3d.StartPoint;
+                            Point3d endPoint = lineSegment3d.EndPoint;
+
+                            // Line Entity 생성
+                            Line lineEntity = new Line(startPoint, endPoint);
+
+                            //// 원본 Polyline의 속성 복사
+                            //CopyEntityProperties(polyline, lineEntity);
+
+                            lineEntities.Add(lineEntity);
+                        }
+                        catch (System.Exception)
+                        {
+                            // 개별 segment 처리 실패 시 건너뛰고 계속 진행
+                            continue;
+                        }
+                    }
+                    // Arc segment나 기타 타입은 무시하고 Line segment만 처리
+                }
+            }
+            catch (System.Exception)
+            {
+                // 전체 처리 실패 시 빈 리스트 반환
+                return new List<Line>();
+            }
+
+            return lineEntities;
+        }
+
     }
 
     public static class jGeoExtens3dExtension
