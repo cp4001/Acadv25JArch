@@ -256,6 +256,11 @@ namespace Acadv25JArch
 
                 // 3단계: 그룹별 센터 line 생성 
                 //ApplyColorsToGroups(lineGroups, selectedLineIds, db);
+                //BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                //BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],OpenMode.ForWrite) as BlockTableRecord;
+                var btr = tr.GetModelSpaceBlockTableRecord(db);
+
+                
                 foreach (var group in lineGroups)
                 {
                     if (group.Count >= 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
@@ -266,10 +271,6 @@ namespace Acadv25JArch
                         var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group1[0], group1[1]);
                         Line middleLine = result.line;
                         middleLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Red
-
-                        BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                            BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],
-                                OpenMode.ForWrite) as BlockTableRecord;
                             btr.AppendEntity(middleLine);
                             tr.AddNewlyCreatedDBObject(middleLine, true);
                             //tr.Commit();

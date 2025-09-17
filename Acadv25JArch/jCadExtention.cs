@@ -1799,15 +1799,10 @@ namespace CADExtension  //tr Editor Block
         {
             BlockTableRecord btr = null;
             // Open the Block table for read
-            BlockTable acBlkTbl;
-            acBlkTbl = tr.GetObject(db.BlockTableId,
-                                        OpenMode.ForRead) as BlockTable;
+            BlockTable bt = tr.GetObject(db.BlockTableId,OpenMode.ForRead) as BlockTable;
 
             // Open the Block table record Model space for write
-            btr = tr.GetObject(acBlkTbl[BlockTableRecord.ModelSpace],
-                                            OpenMode.ForWrite) as BlockTableRecord;
-
-
+            btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],OpenMode.ForWrite) as BlockTableRecord;
             return btr;
         }
 
