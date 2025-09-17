@@ -240,8 +240,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 명령어: 선택된 블록의 PreviewIcon 추출
         /// </summary>
-        [CommandMethod("EXTRACTBLOCKICON")]
-        public static void ExtractSelectedBlockIcon()
+        [CommandMethod("EXTRACT_BLOCK_ICON")]
+        public static void Cmd_ExtractSelectedBlockIcon()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
@@ -304,8 +304,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 명령어: 선택된 블록의 PreviewIcon 상세 분석
         /// </summary>
-        [CommandMethod("ANALYZEBLOCKICON")]
-        public static void AnalyzeSelectedBlockIcon()
+        [CommandMethod("ANALYZE_BLOCK_ICON")]
+        public static void Cmd_AnalyzeSelectedBlockIcon()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
@@ -371,8 +371,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 도면 내 모든 블록 정의의 PreviewIcon을 일괄 추출
         /// </summary>
-        [CommandMethod("EXTRACTALLBLOCKICONS")]
-        public static void ExtractAllBlockIcons()
+        [CommandMethod("EXTRACT_ALL_BLOCKICONS")]
+        public static void Cmd_ExtractAllBlockIcons()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -461,8 +461,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 명령어: PreviewIcon 통계 분석
         /// </summary>
-        [CommandMethod("ANALYZEPREVIEWICONS")]
-        public static void AnalyzePreviewIcons()
+        [CommandMethod("ANALYZE_PREVIEW_ICONS")]
+        public static void Cmd_AnalyzePreviewIcons()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -521,8 +521,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 명령어: PreviewIcon이 있는 블록만 추출
         /// </summary>
-        [CommandMethod("EXTRACTONLYPREVIEWICONS")]
-        public static void ExtractOnlyPreviewIcons()
+        [CommandMethod("EXTRACT_ONLY_PREVIEW_ICONS")]
+        public static void Cmd_ExtractOnlyPreviewIcons()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -606,8 +606,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 선택된 블록을 이미지로 바탕화면에 저장하는 메인 명령
         /// </summary>
-        [CommandMethod("SAVEBLOCKIMAGE")]
-        public void SaveBlockImageToDesktop()
+        [CommandMethod("SAVE_BLOCK_IMAGE")]
+        public void Cmd_SaveBlockImageToDesktop()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -752,8 +752,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 도면의 모든 블록을 이미지로 저장하는 추가 기능
         /// </summary>
-        [CommandMethod("SAVEALLBLOCKSIMAGE")]
-        public void SaveAllBlocksImageToDesktop()
+        [CommandMethod("SAVE_ALL_BLOCKS_IMAGE")]
+        public void Cmd_SaveAllBlocksImageToDesktop()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -820,8 +820,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 사용자 정의 크기로 블록 이미지 저장
         /// </summary>
-        [CommandMethod("SAVEBLOCKIMAGEWITHSIZE")]
-        public void SaveBlockImageWithCustomSize()
+        [CommandMethod("SAVE_BLOCK_IMAGE_WITHSIZE")]
+        public void Cmd_SaveBlockImageWithCustomSize()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -974,7 +974,7 @@ namespace Acadv25JArch
 
         // Insert Block 
         [CommandMethod("Insert_Block")]
-        public void InsertInCurrentUcs()
+        public void Cmd_InsertInCurrentUcs()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -1088,7 +1088,7 @@ namespace Acadv25JArch
         //List Attribute
         [CommandMethod("LISTATT")]
 
-        public void ListAttributes()
+        public void Cmd_ListAttributes()
         {
             Editor ed =
               Application.DocumentManager.MdiActiveDocument.Editor;
@@ -1166,7 +1166,7 @@ namespace Acadv25JArch
 
         // 선택된 BlcokReference의 기준 Block 내용 편집
         [CommandMethod("K2")]
-        public void cmd_ChangeBlock()
+        public void Cmd_ChangeBlock()
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
@@ -1313,7 +1313,7 @@ namespace Acadv25JArch
 
         // Selected Block Count
         [CommandMethod("BB_Count1")]
-        static public void SleBlockCounter()
+        static public void Cmd_SleBlockCounter()
         {
             const double rowHeight = 1000, colWidth = 1000.0;
             const double textHeight = rowHeight * 0.25;
@@ -1428,7 +1428,7 @@ namespace Acadv25JArch
 
         // block Explode based by Table
         [CommandMethod("BB_Explode")]
-        public static void ExplodeBlockFromTable()
+        public static void Cmd_ExplodeBlockFromTable()
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null)
@@ -2449,8 +2449,8 @@ namespace Acadv25JArch
 
     public class BlockAnalysisCommands
     {
-        [CommandMethod("BLOCKINFO")]
-        public void GetBlockInfo()
+        [CommandMethod("BLOCK_INFO")]
+        public void Cmd_GetBlockInfo()
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
@@ -2496,8 +2496,8 @@ namespace Acadv25JArch
             }
         }
 
-        [CommandMethod("EXPLODEBLOCKACTUAL")]
-        public void ExplodeBlockActual()
+        [CommandMethod("EXPLODE_BLOCK_ACTUAL")]
+        public void Cmd_ExplodeBlockActual()
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
@@ -2576,8 +2576,8 @@ namespace Acadv25JArch
             }
         }
 
-        [CommandMethod("EXPLODEALLBLOCKS")]
-        public void ExplodeAllBlocks()
+        [CommandMethod("EXPLODE_ALL_BLOCKS")]
+        public void Cmd_ExplodeAllBlocks()
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
@@ -2655,8 +2655,8 @@ namespace Acadv25JArch
         /// 블록 내부의 가장 가까운 엔티티를 현재 레이어에 복사하는 명령어
         /// 사용법: AutoCAD 명령줄에서 COPYBLOCKENTITY 입력
         /// </summary>
-        [CommandMethod("COPYBLOCKENTITY")]
-        public void CopyClosestBlockEntity()
+        [CommandMethod("COPY_BLOCK_ENTITY")]
+        public void Cmd_CopyClosestBlockEntity()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor editor = doc.Editor;
@@ -3189,8 +3189,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 사용자가 검색 반경을 수동으로 설정할 수 있는 명령어
         /// </summary>
-        [CommandMethod("COPYBLOCKENTITY_CUSTOM")]
-        public void CopyClosestBlockEntityWithCustomRadius()
+        [CommandMethod("COPY_BLOCK_ENTITY_CUSTOM")]
+        public void Cmd_CopyClosestBlockEntityWithCustomRadius()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor editor = doc.Editor;
@@ -3538,8 +3538,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 사용자가 블록을 선택하면 선택 포인트 기준 거리 10 이내의 Curve 엔티티를 찾는 명령
         /// </summary>
-        [CommandMethod("FINDNESTEDCURVES")]
-        public void FindNestedCurves()
+        [CommandMethod("FIND_NESTE_DCURVES")]
+        public void Cmd_FindNestedCurves()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -3697,8 +3697,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 선택한 Curve들의 하이라이트를 해제하는 명령
         /// </summary>
-        [CommandMethod("CLEARHIGHLIGHT")]
-        public void ClearHighlight()
+        [CommandMethod("CLEAR_HIGHLIGHT")]
+        public void Cmd_ClearHighlight()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -3728,8 +3728,8 @@ namespace Acadv25JArch
     public class XClipPolylineConverter
     {
         // 명령어 정의
-        [CommandMethod("CREATEXCLIPPOLYLINES", CommandFlags.Modal)]
-        public static void CreateXClipPolylines()
+        [CommandMethod("CREATE_XCLIP_POLYLINES", CommandFlags.Modal)]
+        public static void Cmd_CreateXClipPolylines()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
