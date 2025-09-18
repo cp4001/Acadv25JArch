@@ -1225,7 +1225,7 @@ namespace Acadv25JArch
     public class ParallelLineChecker
     {
         // .NET 8.0 기능: 컴파일 타임 상수
-        private const double TOLERANCE = 1e-6; // 허용 오차 (점이 선분 내부에 있는지 판단용)
+        private const double TOLERANCE = 1e-1; // 허용 오차 (점이 선분 내부에 있는지 판단용)
         private const string COMMAND_NAME = "CHKLINEPROJ";
 
         /// <summary>
