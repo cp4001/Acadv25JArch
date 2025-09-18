@@ -18,7 +18,7 @@ namespace Acadv25JArch
         static int _index = 1;
 
         [CommandMethod("TB")]
-        public void TraceBoundary()
+        public void Cmd_TraceBoundary()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;

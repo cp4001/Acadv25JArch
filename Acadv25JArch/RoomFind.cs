@@ -106,7 +106,7 @@ namespace AutoCADLineIntersection
         /// <summary>
         /// 선택된 line과 교차하는 모든 line을 찾아서 색상을 red로 변경하는 메인 커맨드
         /// </summary>
-        [CommandMethod(COMMAND_NAME+"Multi")]
+        [CommandMethod("Find_intersect_Multi")]
         public void Cmd_FindIntersectingLines1()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -429,8 +429,8 @@ namespace AutoCADLineIntersection
         /// <summary>
         /// 교차 통계 정보를 출력하는 추가 커맨드
         /// </summary>
-        [CommandMethod("INTERSECTIONSTATS")]
-        public void ShowIntersectionStatistics()
+        [CommandMethod("INTERSECTION_STATS")]
+        public void Cmd_ShowIntersectionStatistics()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -498,8 +498,8 @@ namespace AutoCADLineIntersection
         /// <summary>
         /// 검색 영역을 시각적으로 표시하는 디버그 커맨드
         /// </summary>
-        [CommandMethod("SHOWSEARCHAREA")]
-        public void ShowSearchArea()
+        [CommandMethod("SHOW_SEARCH_AREA")]
+        public void Cmd_ShowSearchArea()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;

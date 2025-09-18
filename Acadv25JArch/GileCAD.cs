@@ -22,7 +22,7 @@ namespace AutoCADKdTreeLineHighlighter
         /// KdTree를 이용한 고성능 Line 검색 및 색상 변경 메인 커맨드
         /// </summary>
         [CommandMethod("HighlightLinesKdTree")]
-        public void HighlightLinesWithKdTreeCommand()
+        public void Cmd_HighlightLinesWithKdTreeCommand()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -260,7 +260,7 @@ namespace AutoCADKdTreeLineHighlighter
         /// 근거리 Line 검색 데모 (반경 기반)
         /// </summary>
         [CommandMethod("FindNearbyLines")]
-        public void FindNearbyLinesCommand()
+        public void Cmd_FindNearbyLinesCommand()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -359,7 +359,7 @@ namespace AutoCADKdTreeLineHighlighter
         /// 성능 비교용: 기존 방식 (GetCrossingPolygon)
         /// </summary>
         [CommandMethod("HighlightLinesTraditional")]
-        public void HighlightLinesTraditionalCommand()
+        public void Cmd_HighlightLinesTraditionalCommand()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -440,7 +440,7 @@ namespace AutoCADKdTreeLineHighlighter
         /// 성능 테스트 커맨드
         /// </summary>
         [CommandMethod("PerformanceTest")]
-        public void PerformanceTestCommand()
+        public void Cmd_PerformanceTestCommand()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -497,7 +497,7 @@ namespace AutoCADKdTreeLineHighlighter
         /// 색상 복원 커맨드
         /// </summary>
         [CommandMethod("RestoreLineColors")]
-        public void RestoreLineColorsCommand()
+        public void Cmd_RestoreLineColorsCommand()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;

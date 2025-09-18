@@ -22,7 +22,7 @@ namespace Acadv25JArch
     class ArchZone
     {
         [CommandMethod("ceil_height")]
-        public static void SelectFullyInsideClosedPolyline()
+        public static void Cmd_SelectFullyInsideClosedPolyline()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;

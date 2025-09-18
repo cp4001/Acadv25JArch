@@ -367,7 +367,7 @@ namespace AcadFunction
         [CommandMethod("XD_DelALL", CommandFlags.UsePickSet)]
         //2Point PolyLine은 Line으로 변경 한다. 
         // Wire Line Extend는 Line에만 적용 되기때문
-        public void Entity_To_DeleteXdata()
+        public void Cmd_Entity_To_DeleteXdata()
         {
             // Get the current database and start a transaction
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -411,7 +411,7 @@ namespace AcadFunction
 
         #region List Entity  XData
         [CommandMethod("GXD")]
-        static public void ListXData()
+        static public void Cmd_ListXData()
 
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;

@@ -15,8 +15,8 @@ namespace Acadv25JArch
 {
     public class XClipCommands
     {
-        [CommandMethod("PROCESSXCLIP")]
-        public void ProcessXClippedObjects()
+        [CommandMethod("PROCESS_XCLIP")]
+        public void Cmd_ProcessXClippedObjects()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;

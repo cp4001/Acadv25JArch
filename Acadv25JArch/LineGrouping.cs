@@ -298,7 +298,7 @@ namespace Acadv25JArch
         /// 허용 각도 차이를 사용자로부터 입력받는 추가 커맨드
         /// </summary>
         [CommandMethod("GROUPLINES_CUSTOM")]
-        public void GroupLinesBySlopeWithCustomTolerance()
+        public void Cmd_GroupLinesBySlopeWithCustomTolerance()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -702,7 +702,7 @@ namespace Acadv25JArch
         /// 그룹별 통계 정보 출력 (Line 객체 직접 사용)
         /// </summary>
         [CommandMethod("GROUPLINES_STATS")]
-        public void ShowGroupStatistics()
+        public void Cmd_ShowGroupStatistics()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -1144,7 +1144,7 @@ namespace Acadv25JArch
         /// colinear line 처리 결과를 테스트하는 커맨드
         /// </summary>
         [CommandMethod("TEST_COLINEAR")]
-        public void TestColinearLineProcessor()
+        public void Cmd_TestColinearLineProcessor()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -1346,7 +1346,7 @@ namespace Acadv25JArch
         /// AutoCAD 커맨드로 함수 테스트
         /// </summary>
         [CommandMethod("line_proj")]
-        public void TestParallelLineProjection()
+        public void Cmd_TestParallelLineProjection()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -1478,7 +1478,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 메인 커맨드: 점 선택 후 주변 Line들 중 투영 가능한 것들을 빨간색으로 변경
         /// </summary>
-        [CommandMethod("HighlightProjectableLines")]
+        [CommandMethod("Highlight_Projectable_Lines")]
         public void Cmd_HighlightProjectableLines()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -1729,8 +1729,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 디버그용 커맨드: 선택 영역을 시각적으로 표시
         /// </summary>
-        [CommandMethod("ShowSelectionBox")]
-        public void ShowSelectionBoxCommand()
+        [CommandMethod("Show_SelectionBox")]
+        public void Cmd_ShowSelectionBoxCommand()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;

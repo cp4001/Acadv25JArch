@@ -1210,7 +1210,7 @@ namespace Acadv25JArch
 
         // Block Count
         [CommandMethod("BB_Count")]
-        static public void BlockTableCounter()
+        static public void Cmd_BlockTableCounter()
         {
             const double rowHeight = 1000, colWidth = 2000.0;
             const double textHeight = rowHeight * 0.25;

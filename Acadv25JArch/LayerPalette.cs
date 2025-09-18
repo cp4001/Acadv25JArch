@@ -30,8 +30,8 @@ namespace LayerManager
         /// <summary>
         /// 레이어 관리 팔레트 표시/숨김 토글
         /// </summary>
-        [CommandMethod("LAYERMANAGER")]
-        public static void ShowLayerManager()
+        [CommandMethod("LAYER_MANAGER")]
+        public static void Cmd_ShowLayerManager()
         {
             try
             {

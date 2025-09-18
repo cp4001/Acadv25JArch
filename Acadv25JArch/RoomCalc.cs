@@ -357,8 +357,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 상세한 방향 분석 정보 출력 (기준각 10도 사용)
         /// </summary>
-        [CommandMethod("ANALYZEDIRECTION_DETAIL")]
-        public void ShowDetailedDirectionAnalysis()
+        [CommandMethod("ANALYZE_DIRECTION_DETAIL")]
+        public void Cmd_ShowDetailedDirectionAnalysis()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;

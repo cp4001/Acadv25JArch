@@ -16,8 +16,8 @@ namespace Acadv25JArch
 {
     public class LayerControl_
     {
-        [CommandMethod("LAYEROFF")]
-        public void LayerDisplayOff()
+        [CommandMethod("LAYER_OFF")]
+        public void Cmd_LayerDisplayOff()
         {
             // 현재 문서와 편집기 가져오기
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -117,8 +117,8 @@ namespace Acadv25JArch
         }
 
         // 추가 기능: 레이어 다시 켜기 명령어
-        [CommandMethod("LAYERON")]
-        public void LayerDisplayOn()
+        [CommandMethod("LAYER_ON")]
+        public void Cmd_LayerDisplayOn()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
@@ -179,7 +179,7 @@ namespace Acadv25JArch
     {
         // 현재 레이어 상태를 저장하는 명령어
         [CommandMethod("La_Save")]
-        public void LayerState_SaveCurrent()
+        public void Cmd_LayerState_SaveCurrent()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
@@ -263,7 +263,7 @@ namespace Acadv25JArch
 
         // 저장된 레이어 상태를 복원하는 명령어 - 번호 선택 방식으로 수정
         [CommandMethod("La_Restore")]
-        public void LayerState_Restore()
+        public void Cmd_LayerState_Restore()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
@@ -389,7 +389,7 @@ namespace Acadv25JArch
 
         // 저장된 레이어 상태를 삭제하는 명령어
         [CommandMethod("La_Delete")]
-        public void LayerState_Delete()
+        public void Cmd_LayerState_Delete()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
@@ -491,8 +491,8 @@ namespace Acadv25JArch
 
     public class LayerLockControl_
     {
-        [CommandMethod("UNLOCKALL")]
-        public void UnlockAllLayers()
+        [CommandMethod("UNLOCK_Layer_All")]
+        public void Cmd_UnlockAllLayers()
         {
             // 현재 문서와 편집기 가져오기
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -589,8 +589,8 @@ namespace Acadv25JArch
         }
 
         // 추가 기능: 모든 레이어 잠금 설정
-        [CommandMethod("LOCKALL")]
-        public void LockAllLayers()
+        [CommandMethod("LOCK_ALL_Layer")]
+        public void Cmd_LockAllLayers()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
@@ -691,8 +691,8 @@ namespace Acadv25JArch
         }
 
         // 잠긴 레이어 목록 표시
-        [CommandMethod("LISTLOCKEDLAYERS")]
-        public void ListLockedLayers()
+        [CommandMethod("LIST_LOCKED_LAYERS")]
+        public void Cmd_ListLockedLayers()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
@@ -781,7 +781,7 @@ namespace Acadv25JArch
         public class LayerCountTable_
         {
             [CommandMethod("ll_Count")]
-            public static void LayerCountTable()
+            public static void Cmd_LayerCountTable()
             {
                 // 테이블 설정값들
                 const double rowHeight = 1000.0;
@@ -1076,8 +1076,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 레이어 생성 테스트 커맨드
         /// </summary>
-        [CommandMethod("TESTLAYER")]
-        public void TestCreateLayer()
+        [CommandMethod("TEST_LAYER")]
+        public void Cmd_TestCreateLayer()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
@@ -1116,8 +1116,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 고급 레이어 생성 테스트 커맨드
         /// </summary>
-        [CommandMethod("TESTLAYER_ADVANCED")]
-        public void TestCreateLayerAdvanced()
+        [CommandMethod("TEST_LAYER_ADVANCED")]
+        public void Cmd_TestCreateLayerAdvanced()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
@@ -1309,8 +1309,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 현재 레이어 정보 출력 커맨드
         /// </summary>
-        [CommandMethod("CURRENTLAYER")]
-        public void ShowCurrentLayerInfo()
+        [CommandMethod("CURRENT_LAYER_info")]
+        public void Cmd_ShowCurrentLayerInfo()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
@@ -1373,8 +1373,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 모든 레이어 On 커맨드
         /// </summary>
-        [CommandMethod("LAYERALLON")]
-        public void TurnOnAllLayersCommand()
+        [CommandMethod("LAYER_ALL_ON")]
+        public void Cmd_TurnOnAllLayersCommand()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;

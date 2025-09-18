@@ -11,7 +11,7 @@ namespace Acadv25JArch
     {
 
         [CommandMethod("Show_BlockForm")]
-        public void ShowMyForm()
+        public void Cmd_ShowMyForm()
         {
             FormBlockPart  form = new FormBlockPart();
             //Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(form);
