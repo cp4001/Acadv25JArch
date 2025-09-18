@@ -107,7 +107,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 방향 벡터를 기준으로 선택된 line의 방향을 NW, NE, SE, SW로 분석하는 메인 커맨드
         /// </summary>
-        [CommandMethod("rm_dir")]
+        [CommandMethod("room_dir")]
         public void Cmd_AnalyzeLineDirection()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -152,7 +152,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 커스텀 허용 각도로 방향 분석하는 추가 커맨드
         /// </summary>
-        [CommandMethod("rm_Dir_Cus")]
+        [CommandMethod("room_Dir_Cus")]
         public void Cmd_AnalyzeLineDirectionWithCustomRange()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
