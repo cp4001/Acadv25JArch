@@ -1345,7 +1345,7 @@ namespace Acadv25JArch
         /// <summary>
         /// AutoCAD 커맨드로 함수 테스트
         /// </summary>
-        [CommandMethod(COMMAND_NAME)]
+        [CommandMethod("line_proj")]
         public void TestParallelLineProjection()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;

@@ -30,7 +30,7 @@ namespace AutoCADLineIntersection
         /// <summary>
         /// 선택된 line과 교차하는 모든 line을 찾아서 색상을 red로 변경하는 메인 커맨드
         /// </summary>
-        [CommandMethod(COMMAND_NAME)]
+        [CommandMethod("Find_intersect")]
         public void Cmd_FindIntersectingLines()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -821,7 +821,7 @@ namespace AutoCADLineIntersection
         /// <summary>
         /// Line과 Block 교차 검사 비교 데모 명령어
         /// </summary>
-        [CommandMethod(DEMO_COMMAND)]
+        [CommandMethod("Line_Block_intersect")]
         public void Cmd_DemoLineBlockIntersection()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -901,7 +901,7 @@ namespace AutoCADLineIntersection
         /// <summary>
         /// 원점 기준 교차 검사 명령어
         /// </summary>
-        [CommandMethod(COMMAND_NAME)]
+        [CommandMethod("Check_line_intersect")]
         public void Cmd_CheckLineBlockIntersection()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -955,7 +955,7 @@ namespace AutoCADLineIntersection
         /// <summary>
         /// Block 내부 geometry와의 실제 교차 검사 명령어
         /// </summary>
-        [CommandMethod(GEOMETRY_COMMAND)]
+        [CommandMethod("Check_Geo_intersect")]
         public void Cmd_CheckLineGeometryIntersection()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
