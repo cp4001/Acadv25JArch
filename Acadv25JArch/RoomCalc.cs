@@ -1,30 +1,26 @@
 ﻿using AcadFunction;
+using CADExtension;
 using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Internal;
 using Autodesk.AutoCAD.Runtime;
-using Autodesk.AutoCAD.Windows.Data;
-using CADExtension;
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Runtime.InteropServices;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
-using Exception = System.Exception;
 
 namespace Acadv25JArch
 {
 
     public class RoomCalc
     {
-        #region ToWire
+        #region Text To Room
         // 선택 Line Poly XData Wire 지정
         //TO DuctLine
-        [CommandMethod("RR", CommandFlags.UsePickSet)] //ToRoom
+        [CommandMethod("Room_Text", CommandFlags.UsePickSet)] //ToRoom
                                                        //Text 에  Room 지정                                                    
         public void Cmd_Text_To_Room()
         {
@@ -101,6 +97,7 @@ namespace Acadv25JArch
                 // Dispose of the transaction
             }
         }
+
         #endregion
 
     }
