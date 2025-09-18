@@ -72,9 +72,6 @@
       <HintPath>C:\Users\junhoi\.nuget\packages\autocad.net\25.0.1\lib\net8.0\AcMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GeometryExtensionsR25">
-      <HintPath>..\..\..\..\..\..\Jarch25\GeometryExtensionsR25.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>

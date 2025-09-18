@@ -1238,6 +1238,14 @@ namespace Acadv25JArch
         {
             try
             {
+                //길이가 짧은 것을 투영한다. 
+                if (line1.Length > line2.Length)
+                {
+                    var temp = line1;
+                    line1 = line2;
+                    line2 = temp;
+                }
+
                 // Step 1: line1의 StartPoint를 line2에 수직 투영하여 내부에 있는지 확인
                 bool startPointInside = IsPointProjectedInside(line1.StartPoint, line2);
 
