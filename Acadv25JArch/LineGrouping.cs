@@ -84,7 +84,7 @@ namespace Acadv25JArch
             }
         }
 
-        [CommandMethod("Group_Lines1")]
+        [CommandMethod("Group_Lines11")]
         public void Cmd_GroupLinesBySlope1()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
