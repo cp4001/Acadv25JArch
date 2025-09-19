@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
+﻿using AcadFunction;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -6,6 +7,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Internal;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows.Data;
+using CADExtension;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -14,8 +16,6 @@ using System.Runtime.InteropServices;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Color = Autodesk.AutoCAD.Colors.Color;
 using Exception = System.Exception;
-
-using CADExtension;
 
 namespace Acadv25JArch
 {
@@ -197,8 +197,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 선택된 라인들을 기울기별로 그룹화하고 대상 그룹에 센터 라인을 생성하는 메인 커맨드
         /// </summary>
-        [CommandMethod("Group_Lines_And_Middle_Lines")]
-        public void Cmd_GroupLinesBySlopeAndMiddleLine()
+        [CommandMethod("mmdl")]
+        public void Cmd_mmdl_GroupLinesBySlopeAndMiddleLine()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -824,6 +824,84 @@ namespace Acadv25JArch
                 ed.WriteMessage($"\n오류 발생: {ex.Message}");
             }
         }
+
+
+        [CommandMethod("mdl")]
+        public void Cmd_mdl_Create_Middle_Line()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+
+                // Step 4: 중간선을 데이터베이스에 추가
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    var btr = tr.GetModelSpaceBlockTableRecord(db);
+
+                    tr.CheckRegName("CenWidth");
+                    //Create layerfor Wall Center Line
+                    tr.CreateLayer("!Arch_CenterLine", 1, LineWeight.LineWeight018);
+                    
+
+                    List<Line> targets = JEntity.GetEntityByTpye<Line>("2개의 Line  대상을 선택 하세요?", JSelFilter.MakeFilterTypes("LINE"));//, JSelFilter.MakeFilterTypes("LINE,POLYLINE,LWPOYLINE"));   //DBText-> Text  Mtext-> Mtext  
+                    if ((targets == null) | !(targets.Count() == 2)) return;
+
+
+                    // Step 1: 두 개의 Line 객체를 선택
+                    Line line1 = targets[0];
+
+                    Line line2 = targets[1];
+
+                    // Step 2: 두 선이 평행한지 확인 (1도 이내)
+                    double angle = GetAngleBetweenLines(line1, line2);
+                    if (!AreNearlyParallel(line1, line2, 1.0))
+                    {
+                        ed.WriteMessage($"\n선택한 두 선이 평행하지 않습니다. 현재 각도: {angle:F2}도 (1도 이내 허용)");
+                        return;
+                    }
+                    else
+                    {
+                        ed.WriteMessage($"\n두 선의 각도: {angle:F2}도 - 평행 조건 만족");
+                    }
+
+                    // Step 3: 중간선 생성 (4개 점 중 가장 먼 2개 점 기준)
+                    var result = CreateMiddleLineFromParallelsWithInfo(line1, line2);
+                    Line middleLine = result.line;
+                    double maxDistance = result.maxDistance;
+
+                    //middleLine.UpgradeOpen();
+                    middleLine.Layer = "!Arch_CenterLine";
+                    JXdata.SetXdata(middleLine, "CenWidth", maxDistance.ToString());
+                    // 색상을 ByLayer로 설정
+                    middleLine.Color = Color.FromColorIndex(ColorMethod.ByLayer, 256);
+
+                    // 선형태도 ByLayer로 설정 (옵션)
+                    middleLine.LinetypeId = db.ByLayerLinetype;
+
+
+                    //BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                    //BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],
+                    //OpenMode.ForWrite) as BlockTableRecord;
+
+                    btr.AppendEntity(middleLine);
+                    tr.AddNewlyCreatedDBObject(middleLine, true);
+
+                    tr.Commit();
+                    ed.WriteMessage($"\n중간선이 생성되었습니다.");
+                    ed.WriteMessage($"\n - 중간선 길이: {middleLine.Length:F3}");
+                    ed.WriteMessage($"\n - 기준 거리 (가장 먼 두 점): {maxDistance:F3}");
+                    ed.WriteMessage($"\n - 두 선의 각도: {angle:F2}도");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
 
         private Line SelectLine(Editor ed, string prompt)
         {

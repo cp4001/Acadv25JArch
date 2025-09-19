@@ -81,7 +81,7 @@ namespace AcadFunction
         public static void SetXdata(DBObject obj, string xName, string sdata)
         {
             if (obj == null) return;
-            obj.UpgradeOpen();
+            //obj.UpgradeOpen();
             //AddRegAppTableRecord(xName);
             ResultBuffer rbt =
                 new ResultBuffer(
