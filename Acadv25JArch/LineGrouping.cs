@@ -199,7 +199,7 @@ namespace Acadv25JArch
         /// 선택된 라인들을 기울기별로 그룹화하고 대상 그룹에 센터 라인을 생성하는 메인 커맨드
         /// 대상 group 거리는 300mm 이내, 2개 이상 라인 존재
         /// </summary>
-        [CommandMethod("mmdl")]
+        [CommandMethod(Jdf.Cmd.mmdl)]
         public void Cmd_mmdl_GroupLinesBySlopeAndMiddleLine()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -225,7 +225,7 @@ namespace Acadv25JArch
                 tr.CheckRegName("CenWidth");
                 //Create layerfor Wall Center Line
                 tr.CreateLayer("!Arch_CenterLine", 1, LineWeight.LineWeight018);
-
+                
 
                 // ObjectId에서 Entity 객체로 직접 변환
                 var ents = selectedLineIds

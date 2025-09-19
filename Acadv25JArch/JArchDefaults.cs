@@ -8,6 +8,20 @@ namespace Acadv25JArch
 {
     public static class Jdf // JArch Defaults
     {
+        public static class LineGroup
+        {
+            public const string Default = "Default";
+        }
+        public static class Layer
+        {
+            public const string Default = "Default";
+        }
 
+        public static class Cmd
+        {
+            public const string mmdl = "mmdl"; //Cmd_mmdl_GroupLinesBySlopeAndMiddleLine()
+
+
+        }
     }
 }
