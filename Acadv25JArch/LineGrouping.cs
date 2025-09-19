@@ -22,8 +22,9 @@ namespace Acadv25JArch
     public class LineGrouping
     {
         // .NET 8.0 기능: 컴파일 타임 상수
-        private const double DEFAULT_TOLERANCE = 1.0; // 기본 허용 각도 차이 (도)
-        private const double MAX_DISTANCE = 300.0; // 같은 그룹으로 처리할 최대 거리
+        private const double DEFAULT_ANGLE_TOLERANCE = 1.0; // 기본 허용 각도 차이 (도)
+        private const double MAX_DISTANCE1 = 300.0; // 같은 그룹으로 처리할 최대 거리 mmddl 용 
+        private const double MAX_DISTANCE2 = 800.0; // 같은 그룹으로 처리할 최대 거리 mmddl 용
         private const string COMMAND_NAME = "GROUPLINES";
 
         // AutoCAD 표준 색상 인덱스 배열 (ACI Colors)
@@ -68,7 +69,7 @@ namespace Acadv25JArch
                 }
 
                 // Line 객체들로 그룹화 수행
-                var lineGroups = GroupLinesByAngleAndDistance(lines, DEFAULT_TOLERANCE);
+                var lineGroups = GroupLinesByAngleAndDistance(lines, DEFAULT_ANGLE_TOLERANCE,300.0);
 
                 tr.Commit();
 
@@ -149,7 +150,7 @@ namespace Acadv25JArch
 
 
                 //// Line 객체들로 그룹화 수행
-                var lineGroups = GroupLinesByAngleAndDistance(lines,basePoint, DEFAULT_TOLERANCE);
+                var lineGroups = GroupLinesByAngleAndDistance(lines,basePoint,1,300);
 
                 //// Group의 첫번쨰 만 추출
                 var firstLines = lineGroups.Select(g => g.First()).ToList();
@@ -196,6 +197,7 @@ namespace Acadv25JArch
 
         /// <summary>
         /// 선택된 라인들을 기울기별로 그룹화하고 대상 그룹에 센터 라인을 생성하는 메인 커맨드
+        /// 대상 group 거리는 300mm 이내, 2개 이상 라인 존재
         /// </summary>
         [CommandMethod("mmdl")]
         public void Cmd_mmdl_GroupLinesBySlopeAndMiddleLine()
@@ -217,6 +219,13 @@ namespace Acadv25JArch
 
                 // 2단계: 한 번의 Transaction으로 모든 Line 객체 로드 및 그룹화
                 using var tr = db.TransactionManager.StartTransaction();
+
+                var btr = tr.GetModelSpaceBlockTableRecord(db);
+
+                tr.CheckRegName("CenWidth");
+                //Create layerfor Wall Center Line
+                tr.CreateLayer("!Arch_CenterLine", 1, LineWeight.LineWeight018);
+
 
                 // ObjectId에서 Entity 객체로 직접 변환
                 var ents = selectedLineIds
@@ -252,13 +261,9 @@ namespace Acadv25JArch
                 // Line 객체들로 그룹화 수행
                 // line 을 긴것부터 우선 처리 되게 정열
                 lines = lines.OrderByDescending(line => line.Length).ToList();
-                var lineGroups = GroupLinesByAngleAndDistance(lines, DEFAULT_TOLERANCE);
+                var lineGroups = GroupLinesByAngleAndDistance(lines, 1,300);
 
                 // 3단계: 그룹별 센터 line 생성 
-                //ApplyColorsToGroups(lineGroups, selectedLineIds, db);
-                //BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                //BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],OpenMode.ForWrite) as BlockTableRecord;
-                var btr = tr.GetModelSpaceBlockTableRecord(db);
 
                 
                 foreach (var group in lineGroups)
@@ -270,11 +275,14 @@ namespace Acadv25JArch
                         var centerLineCreator = new CenterLine();
                         var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group1[0], group1[1]);
                         Line middleLine = result.line;
+
                         middleLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Red
-                            btr.AppendEntity(middleLine);
-                            tr.AddNewlyCreatedDBObject(middleLine, true);
-                            //tr.Commit();
-                        
+                        middleLine.Layer = "!Arch_CenterLine";
+                        JXdata. SetXdata(middleLine, "CenWidth", result.shortDistance.ToString("F0"));
+
+                        btr.AppendEntity(middleLine);
+                        tr.AddNewlyCreatedDBObject(middleLine, true);
+
                     }
                 }
 
@@ -295,6 +303,106 @@ namespace Acadv25JArch
 
 
         /// <summary>
+        /// 선택된 라인들을 기울기별로 그룹화하고 대상 그룹에 센터 라인을 생성하는 메인 커맨드
+        /// 대상 group 거리는 800까지 적용 mm 이내, 2개 이상 라인 존재
+        /// 많으 대상은 아니고 비교적 형태가 정형화된 경우 적용
+        /// </summary>
+        [CommandMethod("mmdl1")]
+        public void Cmd_mmdl_GroupLinesBySlopeAndMiddleLine_800()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 1단계: 라인들 선택
+                //var selectedLineIds = SelectLines(ed);
+                var selectedLineIds = SelectLinesCurrentLayer(ed);
+                if (selectedLineIds.Count == 0)
+                {
+                    ed.WriteMessage("\n선택된 라인이 없습니다.");
+                    return;
+                }
+
+                // 2단계: 한 번의 Transaction으로 모든 Line 객체 로드 및 그룹화
+                using var tr = db.TransactionManager.StartTransaction();
+
+                // ObjectId에서 Entity 객체로 직접 변환
+                var ents = selectedLineIds
+                    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Entity)
+                    .Where(ent => ent != null)
+                    .ToList();
+
+                // ObjectId에서 Line 객체로 직접 변환
+                List<Line> lines = new List<Line>();
+
+                foreach (var ent in ents)
+                {
+                    if (ent.GetType() == typeof(Line)) lines.Add(ent as Line);
+                    if (ent.GetType() == typeof(Polyline))
+                    {
+                        Polyline pl = ent as Polyline;
+                        lines.AddRange(pl.GetLineEntities());
+                    }
+                }
+
+                //var lines = selectedLineIds
+                //    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Line)
+                //    .Where(line => line != null)
+                //    .ToList();
+
+                if (lines.Count == 0)
+                {
+                    ed.WriteMessage("\n유효한 라인을 로드할 수 없습니다.");
+                    tr.Commit();
+                    return;
+                }
+
+                // Line 객체들로 그룹화 수행
+                // line 을 긴것부터 우선 처리 되게 정열
+                lines = lines.OrderByDescending(line => line.Length).ToList();
+                var lineGroups = GroupLinesByAngleAndDistance(lines, 1,800);
+
+                // 3단계: 그룹별 센터 line 생성 
+                //ApplyColorsToGroups(lineGroups, selectedLineIds, db);
+                //BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                //BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],OpenMode.ForWrite) as BlockTableRecord;
+                var btr = tr.GetModelSpaceBlockTableRecord(db);
+
+
+                foreach (var group in lineGroups)
+                {
+                    if (group.Count >= 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
+                    {
+                        // 길이 기준 오름차순 (긴 것부터)
+                        var group1 = group.OrderByDescending(line => line.Length).ToList();
+                        var centerLineCreator = new CenterLine();
+                        var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group1[0], group1[1]);
+                        Line middleLine = result.line;
+                        middleLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Red
+                        btr.AppendEntity(middleLine);
+                        tr.AddNewlyCreatedDBObject(middleLine, true);
+                        //tr.Commit();
+
+                    }
+                }
+
+                tr.Commit();
+
+
+                // 4단계: 결과 출력
+                ed.WriteMessage($"\n{lineGroups.Count}개 그룹으로 분류 완료. 색상이 적용되었습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+
+
+        /// <summary>
         /// 허용 각도 차이를 사용자로부터 입력받는 추가 커맨드
         /// </summary>
         [CommandMethod("GROUPLINES_CUSTOM")]
@@ -307,9 +415,9 @@ namespace Acadv25JArch
             try
             {
                 // 허용 각도 차이 입력
-                var tolPrompt = new PromptDoubleOptions($"\n허용 각도 차이를 입력하세요 (기본값: {DEFAULT_TOLERANCE}도): ")
+                var tolPrompt = new PromptDoubleOptions($"\n허용 각도 차이를 입력하세요 (기본값: {DEFAULT_ANGLE_TOLERANCE}도): ")
                 {
-                    DefaultValue = DEFAULT_TOLERANCE,
+                    DefaultValue = DEFAULT_ANGLE_TOLERANCE,
                     AllowNegative = false,
                     AllowZero = false
                 };
@@ -342,7 +450,7 @@ namespace Acadv25JArch
                     return;
                 }
 
-                var lineGroups = GroupLinesByAngleAndDistance(lines, tolerance);
+                var lineGroups = GroupLinesByAngleAndDistance(lines, tolerance,300);
 
                 // 색상 적용 (같은 Transaction 내에서, UpgradeOpen 사용)
                 ApplyColorsDirectly(lineGroups);
@@ -526,7 +634,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 두 라인이 같은 그룹에 속할 수 있는지 판단 (Line 객체 직접 사용)
         /// </summary>
-        private static bool AreLinesSameGroup(Line line1, Line line2, double angleTolerance)
+        private static bool AreLinesSameGroup(Line line1, Line line2, double angleTolerance,double distance)
         {
             try
             {
@@ -545,7 +653,7 @@ namespace Acadv25JArch
                     return false;
                 }   
 
-                return minDistance <= MAX_DISTANCE;
+                return minDistance <= distance;
             }
             catch (System.Exception)
             {
@@ -556,7 +664,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 라인들을 기울기와 거리별로 그룹화 (Line 객체 직접 사용)
         /// </summary>
-        public  static List<List<Line>> GroupLinesByAngleAndDistance(List<Line> lines, double tolerance)
+        public  static List<List<Line>> GroupLinesByAngleAndDistance(List<Line> lines, double angtolerance,double distance)
         {
             var groups = new List<List<Line>>();
             var remainingLines = new List<Line>(lines);
@@ -573,7 +681,7 @@ namespace Acadv25JArch
                     var compareLine = remainingLines[i];
 
                     // 각도 조건 AND 거리 조건을 모두 만족해야 같은 그룹
-                    if (AreLinesSameGroup(currentLine, compareLine, tolerance))
+                    if (AreLinesSameGroup(currentLine, compareLine, angtolerance, distance))
                     {
                         currentGroup.Add(compareLine);
                         remainingLines.RemoveAt(i);
@@ -597,7 +705,7 @@ namespace Acadv25JArch
         }
 
         //기준점 추가 버전 
-        public static List<List<Line>> GroupLinesByAngleAndDistance(List<Line> lines,Point3d pt, double tolerance)
+        public static List<List<Line>> GroupLinesByAngleAndDistance(List<Line> lines,Point3d pt, double tolerance,double distdance)
         {
             var groups = new List<List<Line>>();
             var remainingLines = new List<Line>(lines);
@@ -614,7 +722,7 @@ namespace Acadv25JArch
                     var compareLine = remainingLines[i];
 
                     // 각도 조건 AND 거리 조건을 모두 만족해야 같은 그룹
-                    if (AreLinesSameGroup(currentLine, compareLine, tolerance))
+                    if (AreLinesSameGroup(currentLine, compareLine, tolerance, distdance))
                     {
                         currentGroup.Add(compareLine);
                         remainingLines.RemoveAt(i);
@@ -724,7 +832,7 @@ namespace Acadv25JArch
                     .Where(line => line != null)
                     .ToList();
 
-                var lineGroups = GroupLinesByAngleAndDistance(lines, DEFAULT_TOLERANCE);
+                var lineGroups = GroupLinesByAngleAndDistance(lines, DEFAULT_ANGLE_TOLERANCE,300);
 
                 tr.Commit();
 
@@ -951,7 +1059,7 @@ namespace Acadv25JArch
             return angle <= toleranceDegrees;
         }
 
-        public  (Line line, double maxDistance) CreateMiddleLineFromParallelsWithInfo(Line line1, Line line2)
+        public  (Line line, double maxDistance,double shortDistance) CreateMiddleLineFromParallelsWithInfo(Line line1, Line line2)
         {
             // 두 선의 모든 점들을 배열로 정리
             Point3d[] allPoints = {
@@ -979,10 +1087,11 @@ namespace Acadv25JArch
 
             // pp1과 pp2를 잇는 중간선 생성
             Line middleLine = new Line(pp1, pp2);
-            return (middleLine, maxDistance);
+            double shortDistance = p1.DistanceTo(np1) < p2.DistanceTo(np2) ? p1.DistanceTo(np1) : p2.DistanceTo(np2);
+            return (middleLine, maxDistance,shortDistance);
         }
 
-        private bool IsPointOnLine(Point3d point, Line line)
+        private bool IsPointOnLine(Point3d point, Line line) // 점이 선 위에 있는지 확인
         {
             // 점이 선 위에 있는지 확인 (허용 오차 포함)
             double tolerance = 1e-6;
@@ -1626,7 +1735,7 @@ namespace Acadv25JArch
                     // point 기준으로 가장 가까운 으로 Sorting
                     lls = lls.OrderBy(line => line.GetClosestPointTo(centerPoint, false).DistanceTo(centerPoint)).ToList();
                     // Line 객체들로 그룹화 수행
-                    var lineGroups = LineGrouping.GroupLinesByAngleAndDistance(lls, 1.0);
+                    var lineGroups = LineGrouping.GroupLinesByAngleAndDistance(lls, 1.0,300);
 
                     // 기준 Point 와 수직 겹침이 있는 lines
                     var lls1 =   lls.Where(x=> x.IsPointProjectableOnLine(centerPoint) == true).ToList();
@@ -1766,7 +1875,7 @@ namespace Acadv25JArch
                 // point 기준으로 가장 가까운 으로 Sorting
                 lls = lls.OrderBy(line => line.GetClosestPointTo(centerPoint, false).DistanceTo(centerPoint)).ToList();
                 // Line 객체들로 그룹화 수행
-                var lineGroups = LineGrouping.GroupLinesByAngleAndDistance(lls, 1.0);
+                var lineGroups = LineGrouping.GroupLinesByAngleAndDistance(lls, 1.0, 300 );
 
 
                 // 각 그룹에서 가장 처음 나오는 Line만 남기기 
