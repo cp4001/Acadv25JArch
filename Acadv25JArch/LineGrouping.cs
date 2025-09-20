@@ -308,7 +308,7 @@ namespace Acadv25JArch
         /// 많으 대상은 아니고 비교적 형태가 정형화된 경우 적용
         /// </summary>
         [CommandMethod("mdl")]
-        public void Cmd_mmdl_GroupLinesBySlopeAndMiddleLine_800()
+        public void Cmd_mdl_GroupLinesBySlopeAndMiddleLine800()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -327,6 +327,13 @@ namespace Acadv25JArch
 
                 // 2단계: 한 번의 Transaction으로 모든 Line 객체 로드 및 그룹화
                 using var tr = db.TransactionManager.StartTransaction();
+
+                var btr = tr.GetModelSpaceBlockTableRecord(db);
+
+                tr.CheckRegName("CenWidth");
+                //Create layerfor Wall Center Line
+                tr.CreateLayer("!Arch_CenterLine", 1, LineWeight.LineWeight018);
+
 
                 // ObjectId에서 Entity 객체로 직접 변환
                 var ents = selectedLineIds
@@ -362,13 +369,9 @@ namespace Acadv25JArch
                 // Line 객체들로 그룹화 수행
                 // line 을 긴것부터 우선 처리 되게 정열
                 lines = lines.OrderByDescending(line => line.Length).ToList();
-                var lineGroups = GroupLinesByAngleAndDistance(lines, 1,800);
+                var lineGroups = GroupLinesByAngleAndDistance(lines, 1, 800);
 
                 // 3단계: 그룹별 센터 line 생성 
-                //ApplyColorsToGroups(lineGroups, selectedLineIds, db);
-                //BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                //BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],OpenMode.ForWrite) as BlockTableRecord;
-                var btr = tr.GetModelSpaceBlockTableRecord(db);
 
 
                 foreach (var group in lineGroups)
@@ -380,15 +383,21 @@ namespace Acadv25JArch
                         var centerLineCreator = new CenterLine();
                         var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group1[0], group1[1]);
                         Line middleLine = result.line;
+
                         middleLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Red
+                        middleLine.Layer = "!Arch_CenterLine";
+                        JXdata.SetXdata(middleLine, "CenWidth", result.shortDistance.ToString("F0"));
+
                         btr.AppendEntity(middleLine);
                         tr.AddNewlyCreatedDBObject(middleLine, true);
-                        //tr.Commit();
 
                     }
                 }
 
                 tr.Commit();
+
+
+
 
 
                 // 4단계: 결과 출력

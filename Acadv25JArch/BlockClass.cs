@@ -3965,4 +3965,234 @@ namespace Acadv25JArch
         }
     }
 
+
+
+    //Block Entity layer color change command
+    public class BlockEntityLayerChanger
+    {
+        [CommandMethod("CHANGEBLOCKENTITYLAYER", CommandFlags.UsePickSet)]
+        public static void Cmd_ChangeBlockEntityLayer()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // 사용자에게 블록 선택 요청
+                    PromptSelectionOptions pso = new PromptSelectionOptions();
+                    pso.MessageForAdding = "\n블록을 선택하세요: ";
+
+                    // 블록 참조만 선택할 수 있도록 필터 설정
+                    SelectionFilter filter = new SelectionFilter(new TypedValue[]
+                    {
+                        new TypedValue((int)DxfCode.Start, "INSERT")
+                    });
+
+                    PromptSelectionResult psr = ed.GetSelection(pso, filter);
+
+                    if (psr.Status != PromptStatus.OK)
+                    {
+                        ed.WriteMessage("\n선택이 취소되었습니다.");
+                        return;
+                    }
+
+                    int processedBlocks = 0;
+                    HashSet<ObjectId> processedBlockDefs = new HashSet<ObjectId>();
+
+                    // 선택된 각 블록 참조 처리
+                    foreach (SelectedObject selObj in psr.Value)
+                    {
+                        if (selObj != null)
+                        {
+                            BlockReference blockRef = tr.GetObject(selObj.ObjectId, OpenMode.ForRead) as BlockReference;
+
+                            if (blockRef != null)
+                            {
+                                // 동일한 블록 정의를 중복 처리하지 않도록 체크
+                                if (!processedBlockDefs.Contains(blockRef.BlockTableRecord))
+                                {
+                                    bool success = ChangeBlockDefinitionEntitiesToLayer0(tr, blockRef.BlockTableRecord, ed);
+                                    if (success)
+                                    {
+                                        processedBlocks++;
+                                        processedBlockDefs.Add(blockRef.BlockTableRecord);
+                                        ed.WriteMessage($"\n블록 '{blockRef.Name}'의 내부 객체 레이어를 변경했습니다.");
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (processedBlocks > 0)
+                    {
+                        tr.Commit();
+                        ed.WriteMessage($"\n총 {processedBlocks}개의 블록 정의가 처리되었습니다.");
+
+                        // 화면 재생성
+                        ed.Command("REGEN");
+                    }
+                    else
+                    {
+                        ed.WriteMessage("\n처리된 블록이 없습니다.");
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 블록 정의 내의 모든 엔티티를 0 레이어로 변경
+        /// </summary>
+        private static bool ChangeBlockDefinitionEntitiesToLayer0(Transaction tr, ObjectId blockTableRecordId, Editor ed)
+        {
+            try
+            {
+                BlockTableRecord btr = tr.GetObject(blockTableRecordId, OpenMode.ForRead) as BlockTableRecord;
+
+                if (btr == null || btr.IsAnonymous || btr.IsLayout)
+                {
+                    return false;
+                }
+
+                int changedEntities = 0;
+
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                Database db = doc.Database;
+
+                //Database db = tr.Database;
+                LayerTable lt = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                // 블록 정의 내의 모든 엔티티 순회
+                foreach (ObjectId entityId in btr)
+                {
+                    Entity entity = tr.GetObject(entityId, OpenMode.ForWrite) as Entity;
+
+                    if (entity != null && entity.Layer != "0")
+                    {
+                        string oldLayerName = entity.Layer;
+
+                        // 원래 레이어의 색상 정보 가져오기
+                        if (lt.Has(oldLayerName))
+                        {
+                            ObjectId layerId = lt[oldLayerName];
+                            LayerTableRecord ltr = tr.GetObject(layerId, OpenMode.ForRead) as LayerTableRecord;
+
+                            if (ltr != null)
+                            {
+                                // 엔티티의 색상이 ByLayer인 경우에만 레이어 색상으로 설정
+                                if (entity.ColorIndex == 256) // ByLayer
+                                {
+                                    entity.ColorIndex = (short)ltr.Color.ColorIndex;
+                                    ed.WriteMessage($"\n  - {entity.GetType().Name}: 색상 {ltr.Color.ColorIndex}로 설정");
+                                }
+
+                                // 엔티티의 선종류가 ByLayer인 경우 레이어 선종류로 설정
+                                if (entity.Linetype == "ByLayer")
+                                {
+                                    entity.LinetypeId = ltr.LinetypeObjectId;
+                                }
+
+                                // 엔티티의 선 가중치가 ByLayer인 경우 레이어 선 가중치로 설정
+                                if (entity.LineWeight == LineWeight.ByLayer)
+                                {
+                                    entity.LineWeight = ltr.LineWeight;
+                                }
+                            }
+                        }
+
+                        // 레이어를 0으로 변경
+                        entity.Layer = "0";
+                        changedEntities++;
+
+                        ed.WriteMessage($"\n  - {entity.GetType().Name}: '{oldLayerName}' → '0'");
+                    }
+                }
+
+                ed.WriteMessage($"\n  총 {changedEntities}개의 객체 레이어가 변경되었습니다.");
+                return changedEntities > 0;
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n블록 처리 중 오류: {ex.Message}");
+                return false;
+            }
+        }
+
+        [CommandMethod("CHANGEBLOCKENTITYLAYERALL")]
+        public static void Cmd_ChangeAllBlockEntityLayersToZeroWithColor()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                ed.WriteMessage("\n=== 모든 블록 정의의 내부 객체 레이어 변경 ===");
+                ed.WriteMessage("\n- 레이어를 0으로 변경");
+                ed.WriteMessage("\n- 원래 레이어의 색상/선종류/선가중치를 객체에 직접 적용");
+
+                PromptKeywordOptions pko = new PromptKeywordOptions("\n작업을 진행하시겠습니까? [Yes/No]");
+                pko.Keywords.Add("Yes");
+                pko.Keywords.Add("No");
+                pko.Keywords.Default = "No";
+
+                PromptResult pr = ed.GetKeywords(pko);
+
+                if (pr.Status != PromptStatus.OK || pr.StringResult != "Yes")
+                {
+                    ed.WriteMessage("\n작업이 취소되었습니다.");
+                    return;
+                }
+
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                    int processedBlocks = 0;
+
+                    foreach (ObjectId blockId in bt)
+                    {
+                        BlockTableRecord btr = tr.GetObject(blockId, OpenMode.ForRead) as BlockTableRecord;
+
+                        // 시스템 블록 및 레이아웃 블록 제외
+                        if (btr != null && !btr.IsAnonymous && !btr.IsLayout &&
+                            btr.Name != "*Model_Space" && btr.Name != "*Paper_Space")
+                        {
+                            ed.WriteMessage($"\n\n블록 '{btr.Name}' 처리 중...");
+                            bool success = ChangeBlockDefinitionEntitiesToLayer0(tr, blockId, ed);
+                            if (success)
+                            {
+                                processedBlocks++;
+                                ed.WriteMessage($"\n블록 '{btr.Name}' 처리 완료");
+                            }
+                        }
+                    }
+
+                    if (processedBlocks > 0)
+                    {
+                        tr.Commit();
+                        ed.WriteMessage($"\n\n=== 작업 완료 ===");
+                        ed.WriteMessage($"\n총 {processedBlocks}개의 블록 정의가 처리되었습니다.");
+                        ed.WriteMessage("\n화면을 재생성합니다...");
+                        ed.Command("REGEN");
+                    }
+                    else
+                    {
+                        ed.WriteMessage("\n처리된 블록이 없습니다.");
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+    }
+
+
 }

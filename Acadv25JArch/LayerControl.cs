@@ -173,6 +173,313 @@ namespace Acadv25JArch
         }
 
 
+        /// <summary>
+        /// 선택된 entity의 레이어를 현재 레이어로 설정하는 커맨드
+        /// </summary>
+        [CommandMethod("Layer_SetLayer_Current")]
+        public void Cmd_SetLayer_Current()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 1단계: 기준이 될 entity 선택
+                Entity selectedEntity = SelectSingleEntity(ed, "\n레이어를 현재 레이어로 설정할 entity를 선택하세요: ");
+                if (selectedEntity == null)
+                {
+                    ed.WriteMessage("\n선택이 취소되었습니다.");
+                    return;
+                }
+
+                // 2단계: 선택된 entity의 layer 이름과 ObjectId 가져오기
+                string layerName = selectedEntity.Layer;
+                ObjectId layerId = selectedEntity.LayerId;
+
+                // 3단계: 현재 레이어인지 확인
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // 현재 레이어 확인
+                    LayerTableRecord currentLayer = tr.GetObject(db.Clayer, OpenMode.ForRead) as LayerTableRecord;
+                    string currentLayerName = currentLayer?.Name ?? "Unknown";
+
+                    if (layerId == db.Clayer)
+                    {
+                        ed.WriteMessage($"\n레이어 '{layerName}'는 이미 현재 레이어입니다.");
+                        tr.Commit();
+                        return;
+                    }
+
+                    // 4단계: 선택된 레이어가 유효한지 확인
+                    LayerTableRecord targetLayer = tr.GetObject(layerId, OpenMode.ForRead) as LayerTableRecord;
+                    if (targetLayer == null)
+                    {
+                        ed.WriteMessage($"\n레이어 '{layerName}'를 찾을 수 없습니다.");
+                        tr.Commit();
+                        return;
+                    }
+
+                    // 5단계: 레이어가 동결되어 있는지 확인
+                    if (targetLayer.IsFrozen)
+                    {
+                        ed.WriteMessage($"\n레이어 '{layerName}'는 동결되어 있어 현재 레이어로 설정할 수 없습니다.");
+                        tr.Commit();
+                        return;
+                    }
+
+                    tr.Commit();
+
+                    // 6단계: 현재 레이어로 설정
+                    db.Clayer = layerId;
+
+                    // 7단계: 결과 출력
+                    ed.WriteMessage($"\n현재 레이어가 '{currentLayerName}'에서 '{layerName}'로 변경되었습니다.");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+
+        /// <summary>
+        /// 현재 레이어의 이름을 반환하는 함수
+        /// </summary>
+        /// <returns>현재 레이어 이름</returns>
+        public static string GetCurrentLayerName()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    // 현재 레이어 ObjectId 가져오기
+                    ObjectId currentLayerId = db.Clayer;
+
+                    // LayerTableRecord 가져오기
+                    LayerTableRecord currentLayer = tr.GetObject(currentLayerId, OpenMode.ForRead) as LayerTableRecord;
+
+                    tr.Commit();
+                    return currentLayer?.Name ?? "0"; // 기본값으로 "0" 레이어 반환
+                }
+                catch (System.Exception)
+                {
+                    tr.Abort();
+                    return "0"; // 오류 시 기본 레이어 반환
+                }
+            }
+        }
+
+        /// <summary>
+        /// 현재 레이어 이외의 모든 레이어를 Display Off 시키는 함수
+        /// </summary>
+        /// <returns>Off된 레이어 개수</returns>
+        public static int TurnOffAllLayersExceptCurrent()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            int layersOffCount = 0;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    // 현재 레이어 ObjectId 가져오기
+                    ObjectId currentLayerId = db.Clayer;
+
+                    // LayerTable 가져오기
+                    LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                    // LayerTable 순회
+                    using (var enumerator = layerTable.GetEnumerator())
+                    {
+                        while (enumerator.MoveNext())
+                        {
+                            ObjectId layerId = enumerator.Current;
+
+                            // 현재 레이어가 아닌 경우에만 처리
+                            if (layerId != currentLayerId)
+                            {
+                                LayerTableRecord layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+
+                                // 레이어가 현재 On 상태이고 "0" 레이어가 아닌 경우에만 Off
+                                if (layer != null && !layer.IsOff && layer.Name != "0")
+                                {
+                                    layer.IsOff = true;
+                                    layersOffCount++;
+                                }
+                            }
+                        }
+                    }
+
+                    tr.Commit();
+                    return layersOffCount;
+                }
+                catch (System.Exception ex)
+                {
+                    tr.Abort();
+                    throw new System.Exception($"레이어 Off 처리 중 오류가 발생했습니다: {ex.Message}", ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 모든 레이어를 Display On 시키는 함수
+        /// </summary>
+        /// <returns>On된 레이어 개수</returns>
+        public static int TurnOnAllLayers()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            int layersOnCount = 0;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    // LayerTable 가져오기
+                    LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                    // LayerTable 순회
+                    using (var enumerator = layerTable.GetEnumerator())
+                    {
+                        while (enumerator.MoveNext())
+                        {
+                            ObjectId layerId = enumerator.Current;
+                            LayerTableRecord layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+
+                            // 레이어가 현재 Off 상태인 경우에만 On
+                            if (layer != null && layer.IsOff)
+                            {
+                                layer.IsOff = false;
+                                layersOnCount++;
+                            }
+                        }
+                    }
+
+                    tr.Commit();
+                    return layersOnCount;
+                }
+                catch (System.Exception ex)
+                {
+                    tr.Abort();
+                    throw new System.Exception($"레이어 On 처리 중 오류가 발생했습니다: {ex.Message}", ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 현재 레이어 정보 출력 커맨드
+        /// </summary>
+        [CommandMethod("CURRENT_LAYER_info")]
+        public void Cmd_ShowCurrentLayerInfo()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                string currentLayerName = GetCurrentLayerName();
+                ed.WriteMessage($"\n현재 레이어: {currentLayerName}");
+
+                // 추가 정보 표시
+                Database db = doc.Database;
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    LayerTableRecord currentLayer = tr.GetObject(db.Clayer, OpenMode.ForRead) as LayerTableRecord;
+                    if (currentLayer != null)
+                    {
+                        ed.WriteMessage($"\n레이어 색상: {currentLayer.Color.ColorIndex}");
+                        ed.WriteMessage($"\n레이어 상태: {(currentLayer.IsOff ? "끔" : "켜짐")}");
+                        ed.WriteMessage($"\n잠금 상태: {(currentLayer.IsLocked ? "잠김" : "해제")}");
+                        ed.WriteMessage($"\n동결 상태: {(currentLayer.IsFrozen ? "동결" : "해제")}");
+                        ed.WriteMessage($"\n출력 가능: {(currentLayer.IsPlottable ? "예" : "아니오")}");
+
+                        if (!string.IsNullOrEmpty(currentLayer.Description))
+                        {
+                            ed.WriteMessage($"\n레이어 설명: {currentLayer.Description}");
+                        }
+                    }
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 현재 레이어 이외 모든 레이어 Off 커맨드
+        /// </summary>
+        [CommandMethod("ISOLATELAYER")]
+        public void Cmd_IsolateCurrentLayer()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                string currentLayerName = GetCurrentLayerName();
+                int layersOffCount = TurnOffAllLayersExceptCurrent();
+
+                ed.WriteMessage($"\n현재 레이어 '{currentLayerName}'만 표시됩니다.");
+                ed.WriteMessage($"\n{layersOffCount}개의 레이어가 비표시 처리되었습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 모든 레이어 On 커맨드
+        /// </summary>
+        [CommandMethod("LAYER_ALL_ON")]
+        public void Cmd_TurnOnAllLayersCommand()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                int layersOnCount = TurnOnAllLayers();
+                ed.WriteMessage($"\n{layersOnCount}개의 레이어가 표시 처리되었습니다.");
+                ed.WriteMessage($"\n모든 레이어가 표시됩니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+
+
+        //func
+        // <summary>
+        /// 단일 entity 선택 메서드
+        /// </summary>
+        private Entity SelectSingleEntity(Editor ed, string prompt)
+        {
+            PromptEntityOptions peo = new PromptEntityOptions(prompt);
+            peo.SetRejectMessage("\n유효한 entity를 선택해야 합니다.");
+
+            PromptEntityResult per = ed.GetEntity(peo);
+            if (per.Status != PromptStatus.OK)
+                return null;
+
+            using (Transaction tr = Application.DocumentManager.MdiActiveDocument.Database.TransactionManager.StartTransaction())
+            {
+                Entity entity = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Entity;
+                tr.Commit();
+                return entity;
+            }
+        }
+
     }
 
     public class LayerStateControl_
@@ -1178,167 +1485,414 @@ namespace Acadv25JArch
             }
         }
 
+ 
+    }
+
+
+    public class LayerEntitySelector_
+    {
+        // .NET 8.0 기능: 컴파일 타임 상수
+        private const string COMMAND_NAME = "SELECTLAYER";
+        private const string COMMAND_NAME_CUSTOM = "SELECTLAYER_CUSTOM";
+
+        // Isolate 관련 상수
+        private const string ISOLATE_XDATA_APPNAME = "LAYER_ISOLATE_STATE";
+        private const string ISOLATE_XDATA_KEY = "ORIGINAL_STATE";
+
         /// <summary>
-        /// 현재 레이어의 이름을 반환하는 함수
+        /// 여러 Entity를 선택하여 해당 layer들의 모든 Entity를 isolate하는 메인 커맨드
         /// </summary>
-        /// <returns>현재 레이어 이름</returns>
-        public static string GetCurrentLayerName()
+        [CommandMethod("LyIso")]//_ISOLATE_ENTITY_LAYERS
+        public void Cmd_LyIso_IsolateEntityLayers()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
-
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                try
-                {
-                    // 현재 레이어 ObjectId 가져오기
-                    ObjectId currentLayerId = db.Clayer;
-
-                    // LayerTableRecord 가져오기
-                    LayerTableRecord currentLayer = tr.GetObject(currentLayerId, OpenMode.ForRead) as LayerTableRecord;
-
-                    tr.Commit();
-                    return currentLayer?.Name ?? "0"; // 기본값으로 "0" 레이어 반환
-                }
-                catch (System.Exception)
-                {
-                    tr.Abort();
-                    return "0"; // 오류 시 기본 레이어 반환
-                }
-            }
-        }
-
-        /// <summary>
-        /// 현재 레이어 이외의 모든 레이어를 Display Off 시키는 함수
-        /// </summary>
-        /// <returns>Off된 레이어 개수</returns>
-        public static int TurnOffAllLayersExceptCurrent()
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            int layersOffCount = 0;
-
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                try
-                {
-                    // 현재 레이어 ObjectId 가져오기
-                    ObjectId currentLayerId = db.Clayer;
-
-                    // LayerTable 가져오기
-                    LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
-
-                    // LayerTable 순회
-                    using (var enumerator = layerTable.GetEnumerator())
-                    {
-                        while (enumerator.MoveNext())
-                        {
-                            ObjectId layerId = enumerator.Current;
-
-                            // 현재 레이어가 아닌 경우에만 처리
-                            if (layerId != currentLayerId)
-                            {
-                                LayerTableRecord layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
-
-                                // 레이어가 현재 On 상태이고 "0" 레이어가 아닌 경우에만 Off
-                                if (layer != null && !layer.IsOff && layer.Name != "0")
-                                {
-                                    layer.IsOff = true;
-                                    layersOffCount++;
-                                }
-                            }
-                        }
-                    }
-
-                    tr.Commit();
-                    return layersOffCount;
-                }
-                catch (System.Exception ex)
-                {
-                    tr.Abort();
-                    throw new System.Exception($"레이어 Off 처리 중 오류가 발생했습니다: {ex.Message}", ex);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 모든 레이어를 Display On 시키는 함수
-        /// </summary>
-        /// <returns>On된 레이어 개수</returns>
-        public static int TurnOnAllLayers()
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            int layersOnCount = 0;
-
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                try
-                {
-                    // LayerTable 가져오기
-                    LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
-
-                    // LayerTable 순회
-                    using (var enumerator = layerTable.GetEnumerator())
-                    {
-                        while (enumerator.MoveNext())
-                        {
-                            ObjectId layerId = enumerator.Current;
-                            LayerTableRecord layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
-
-                            // 레이어가 현재 Off 상태인 경우에만 On
-                            if (layer != null && layer.IsOff)
-                            {
-                                layer.IsOff = false;
-                                layersOnCount++;
-                            }
-                        }
-                    }
-
-                    tr.Commit();
-                    return layersOnCount;
-                }
-                catch (System.Exception ex)
-                {
-                    tr.Abort();
-                    throw new System.Exception($"레이어 On 처리 중 오류가 발생했습니다: {ex.Message}", ex);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 현재 레이어 정보 출력 커맨드
-        /// </summary>
-        [CommandMethod("CURRENT_LAYER_info")]
-        public void Cmd_ShowCurrentLayerInfo()
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
 
             try
             {
-                string currentLayerName = GetCurrentLayerName();
-                ed.WriteMessage($"\n현재 레이어: {currentLayerName}");
+                // 1단계: 여러 Entity 선택
+                var selectedEntities = SelectMultipleEntities(ed, "\nIsolate할 entity들을 선택하세요: ");
+                if (selectedEntities.Count == 0)
+                {
+                    ed.WriteMessage("\n선택된 entity가 없습니다.");
+                    return;
+                }
 
-                // 추가 정보 표시
-                Database db = doc.Database;
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    LayerTableRecord currentLayer = tr.GetObject(db.Clayer, OpenMode.ForRead) as LayerTableRecord;
-                    if (currentLayer != null)
-                    {
-                        ed.WriteMessage($"\n레이어 색상: {currentLayer.Color.ColorIndex}");
-                        ed.WriteMessage($"\n레이어 상태: {(currentLayer.IsOff ? "끔" : "켜짐")}");
-                        ed.WriteMessage($"\n잠금 상태: {(currentLayer.IsLocked ? "잠김" : "해제")}");
-                        ed.WriteMessage($"\n동결 상태: {(currentLayer.IsFrozen ? "동결" : "해제")}");
-                        ed.WriteMessage($"\n출력 가능: {(currentLayer.IsPlottable ? "예" : "아니오")}");
+                    // 2단계: 선택된 Entity들의 layer 목록 수집 (중복 제거)
+                    var targetLayers = selectedEntities
+                        .Select(entity => entity.Layer)
+                        .Distinct()
+                        .ToHashSet();
 
-                        if (!string.IsNullOrEmpty(currentLayer.Description))
+                    ed.WriteMessage($"\n선택된 entity들의 레이어: {string.Join(", ", targetLayers)}");
+
+                    // 3단계: 해당 layer들의 모든 Entity 수집
+                    var allEntitiesInTargetLayers = CollectAllEntitiesInLayers(ed, targetLayers.ToList());
+
+                    // 4단계: 현재 layer 상태 저장 (복원용)
+                    SaveLayerStates(tr, db);
+
+                    // 5단계: Isolate 실행 - 대상 layer가 아닌 모든 layer를 끄기
+                    IsolateTargetLayers(tr, db, targetLayers);
+
+                    tr.Commit();
+
+                    // 6단계: 결과 출력
+                    ed.WriteMessage($"\n{targetLayers.Count}개 레이어의 {allEntitiesInTargetLayers.Length}개 entity가 isolate되었습니다.");
+                    ed.WriteMessage($"\nIsolate된 레이어: {string.Join(", ", targetLayers)}");
+                    ed.WriteMessage($"\nUNISOLATE_LAYERS 명령으로 원래 상태로 복원할 수 있습니다.");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\nIsolate 중 오류 발생: {ex.Message}");
+            }
+        }
+
+
+        /// <summary>
+        /// 여러 Entity 선택 메서드
+        /// </summary>
+        private List<Entity> SelectMultipleEntities(Editor ed, string prompt)
+        {
+            var entities = new List<Entity>();
+
+            var opts = new PromptSelectionOptions
+            {
+                MessageForAdding = prompt,
+                AllowDuplicates = false
+            };
+
+            var psr = ed.GetSelection(opts);
+
+            if (psr.Status == PromptStatus.OK && psr.Value != null)
+            {
+                using (Transaction tr = Application.DocumentManager.MdiActiveDocument.Database.TransactionManager.StartTransaction())
+                {
+                    foreach (ObjectId objId in psr.Value.GetObjectIds())
+                    {
+                        if (tr.GetObject(objId, OpenMode.ForRead) is Entity entity)
                         {
-                            ed.WriteMessage($"\n레이어 설명: {currentLayer.Description}");
+                            entities.Add(entity);
                         }
                     }
                     tr.Commit();
+                }
+            }
+
+            return entities;
+        }
+
+        /// <summary>
+        /// 지정된 layer들의 모든 entity를 수집하는 메서드
+        /// </summary>
+        private ObjectId[] CollectAllEntitiesInLayers(Editor ed, List<string> layerNames)
+        {
+            var allEntityIds = new List<ObjectId>();
+
+            foreach (string layerName in layerNames)
+            {
+                var layerEntities = SelectAllEntitiesOnLayer(ed, layerName);
+                allEntityIds.AddRange(layerEntities);
+            }
+
+            return allEntityIds.Distinct().ToArray();
+        }
+
+        /// <summary>
+        /// 현재 layer 상태를 저장하는 메서드 (Extended Data 사용)
+        /// </summary>
+        private void SaveLayerStates(Transaction tr, Database db)
+        {
+            try
+            {
+                // 레지스터드 애플리케이션 확인/생성
+                RegAppTable regAppTable = tr.GetObject(db.RegAppTableId, OpenMode.ForRead) as RegAppTable;
+                if (!regAppTable.Has(ISOLATE_XDATA_APPNAME))
+                {
+                    regAppTable.UpgradeOpen();
+                    RegAppTableRecord regApp = new RegAppTableRecord();
+                    regApp.Name = ISOLATE_XDATA_APPNAME;
+                    regAppTable.Add(regApp);
+                    tr.AddNewlyCreatedDBObject(regApp, true);
+                    regAppTable.DowngradeOpen();
+                }
+
+                LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                foreach (ObjectId layerId in layerTable)
+                {
+                    LayerTableRecord layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+
+                    // 현재 상태를 XData로 저장
+                    var xdata = new List<TypedValue>
+                    {
+                        new TypedValue((int)DxfCode.ExtendedDataRegAppName, ISOLATE_XDATA_APPNAME),
+                        new TypedValue((int)DxfCode.ExtendedDataAsciiString, ISOLATE_XDATA_KEY),
+                        new TypedValue((int)DxfCode.ExtendedDataInteger16, layer.IsOff ? 1 : 0)
+                    };
+
+                    layer.XData = new ResultBuffer(xdata.ToArray());
+                }
+            }
+            catch (System.Exception ex)
+            {
+                // XData 저장 실패 시 무시하고 계속 진행
+                System.Diagnostics.Debug.WriteLine($"Layer state save failed: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 저장된 layer 상태를 복원하는 메서드
+        /// </summary>
+        private bool RestoreLayerStates(Transaction tr, Database db)
+        {
+            try
+            {
+                LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                bool hasRestoredData = false;
+
+                foreach (ObjectId layerId in layerTable)
+                {
+                    LayerTableRecord layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+
+                    // XData에서 원래 상태 복원
+                    ResultBuffer xdata = layer.XData;
+                    if (xdata != null)
+                    {
+                        var values = xdata.AsArray();
+                        if (values.Length >= 3 &&
+                            values[0].TypeCode == (int)DxfCode.ExtendedDataRegAppName &&
+                            values[0].Value.ToString() == ISOLATE_XDATA_APPNAME &&
+                            values[1].TypeCode == (int)DxfCode.ExtendedDataAsciiString &&
+                            values[1].Value.ToString() == ISOLATE_XDATA_KEY)
+                        {
+                            bool wasOff = Convert.ToInt16(values[2].Value) == 1;
+                            layer.IsOff = wasOff;
+                            hasRestoredData = true;
+
+                            // XData 제거
+                            layer.XData = null;
+                        }
+                    }
+                }
+
+                return hasRestoredData;
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Layer state restore failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 대상 layer들만 켜고 나머지는 끄는 isolate 메서드
+        /// </summary>
+        private void IsolateTargetLayers(Transaction tr, Database db, HashSet<string> targetLayers)
+        {
+            LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+            foreach (ObjectId layerId in layerTable)
+            {
+                LayerTableRecord layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+
+                // 대상 layer가 아니면 끄기
+                if (!targetLayers.Contains(layer.Name))
+                {
+                    layer.IsOff = true;
+                }
+                else
+                {
+                    // 대상 layer는 켜기 (isolate 상태에서 보이도록)
+                    layer.IsOff = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 모든 layer를 켜는 안전장치 메서드
+        /// </summary>
+        private void TurnOnAllLayers(Transaction tr, Database db)
+        {
+            LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+            foreach (ObjectId layerId in layerTable)
+            {
+                LayerTableRecord layer = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+                layer.IsOff = false;
+            }
+        }
+
+
+        /// <summary>
+        /// 선택된 entity와 같은 layer에 있는 모든 entity를 선택하는 메인 커맨드
+        /// </summary>
+        [CommandMethod(COMMAND_NAME)]
+        public void SelectEntitiesOnSameLayer()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 1단계: 기준이 될 entity 선택
+                Entity selectedEntity = SelectSingleEntity(ed, "\n기준 entity를 선택하세요: ");
+                if (selectedEntity == null)
+                {
+                    ed.WriteMessage("\n선택이 취소되었습니다.");
+                    return;
+                }
+
+                // 2단계: 선택된 entity의 layer 이름 가져오기
+                string layerName = selectedEntity.Layer;
+                ed.WriteMessage($"\n선택된 레이어: '{layerName}'");
+
+                // 3단계: 같은 layer에 있는 모든 entity 선택
+                var selectedObjectIds = SelectAllEntitiesOnLayer(ed, layerName);
+
+                if (selectedObjectIds.Length == 0)
+                {
+                    ed.WriteMessage($"\n레이어 '{layerName}'에서 선택 가능한 entity가 없습니다.");
+                    return;
+                }
+
+                // 4단계: 선택된 entity들을 AutoCAD의 선택 상태로 설정
+                ed.SetImpliedSelection(selectedObjectIds);
+
+                // 5단계: 결과 출력
+                ed.WriteMessage($"\n레이어 '{layerName}'에서 {selectedObjectIds.Length}개의 entity가 선택되었습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+
+        /// <summary>
+        /// 단일 entity 선택 메서드
+        /// </summary>
+        private Entity SelectSingleEntity(Editor ed, string prompt)
+        {
+            PromptEntityOptions peo = new PromptEntityOptions(prompt);
+            peo.SetRejectMessage("\n유효한 entity를 선택해야 합니다.");
+
+            PromptEntityResult per = ed.GetEntity(peo);
+            if (per.Status != PromptStatus.OK)
+                return null;
+
+            using (Transaction tr = Application.DocumentManager.MdiActiveDocument.Database.TransactionManager.StartTransaction())
+            {
+                Entity entity = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Entity;
+                tr.Commit();
+                return entity;
+            }
+        }
+
+        /// <summary>
+        /// 지정된 layer에 있는 모든 entity를 선택하는 메서드
+        /// </summary>
+        private ObjectId[] SelectAllEntitiesOnLayer(Editor ed, string layerName)
+        {
+            // SelectionFilter를 사용하여 특정 layer의 entity만 필터링
+            TypedValue[] filterList = [
+                new TypedValue((int)DxfCode.LayerName, layerName)
+            ];
+            var filter = new SelectionFilter(filterList);
+
+            // SelectAll 메서드로 필터 조건에 맞는 모든 entity 선택
+            var selectionResult = ed.SelectAll(filter);
+
+            if (selectionResult.Status == PromptStatus.OK && selectionResult.Value != null)
+            {
+                return selectionResult.Value.GetObjectIds();
+            }
+
+            return new ObjectId[0]; // 빈 배열 반환
+        }
+
+        /// <summary>
+        /// 지정된 layer가 데이터베이스에 존재하는지 확인하는 메서드
+        /// </summary>
+        private bool LayerExists(Database db, string layerName)
+        {
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                LayerTable layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                bool exists = layerTable.Has(layerName);
+                tr.Commit();
+                return exists;
+            }
+        }
+
+
+        /// <summary>
+        /// 선택된 entity의 레이어를 현재 레이어로 설정하는 커맨드
+        /// </summary>
+        [CommandMethod("SETLAYERCURRENT")]
+        public void SetLayerCurrent()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 1단계: 기준이 될 entity 선택
+                Entity selectedEntity = SelectSingleEntity(ed, "\n레이어를 현재 레이어로 설정할 entity를 선택하세요: ");
+                if (selectedEntity == null)
+                {
+                    ed.WriteMessage("\n선택이 취소되었습니다.");
+                    return;
+                }
+
+                // 2단계: 선택된 entity의 layer 이름과 ObjectId 가져오기
+                string layerName = selectedEntity.Layer;
+                ObjectId layerId = selectedEntity.LayerId;
+
+                // 3단계: 현재 레이어인지 확인
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // 현재 레이어 확인
+                    LayerTableRecord currentLayer = tr.GetObject(db.Clayer, OpenMode.ForRead) as LayerTableRecord;
+                    string currentLayerName = currentLayer?.Name ?? "Unknown";
+
+                    if (layerId == db.Clayer)
+                    {
+                        ed.WriteMessage($"\n레이어 '{layerName}'는 이미 현재 레이어입니다.");
+                        tr.Commit();
+                        return;
+                    }
+
+                    // 4단계: 선택된 레이어가 유효한지 확인
+                    LayerTableRecord targetLayer = tr.GetObject(layerId, OpenMode.ForRead) as LayerTableRecord;
+                    if (targetLayer == null)
+                    {
+                        ed.WriteMessage($"\n레이어 '{layerName}'를 찾을 수 없습니다.");
+                        tr.Commit();
+                        return;
+                    }
+
+                    // 5단계: 레이어가 동결되어 있는지 확인
+                    if (targetLayer.IsFrozen)
+                    {
+                        ed.WriteMessage($"\n레이어 '{layerName}'는 동결되어 있어 현재 레이어로 설정할 수 없습니다.");
+                        tr.Commit();
+                        return;
+                    }
+
+                    tr.Commit();
+
+                    // 6단계: 현재 레이어로 설정
+                    db.Clayer = layerId;
+
+                    // 7단계: 결과 출력
+                    ed.WriteMessage($"\n현재 레이어가 '{currentLayerName}'에서 '{layerName}'로 변경되었습니다.");
                 }
             }
             catch (System.Exception ex)
@@ -1347,49 +1901,28 @@ namespace Acadv25JArch
             }
         }
 
-        /// <summary>
-        /// 현재 레이어 이외 모든 레이어 Off 커맨드
-        /// </summary>
-        [CommandMethod("ISOLATELAYER")]
-        public void IsolateCurrentLayer()
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Editor ed = doc.Editor;
 
-            try
-            {
-                string currentLayerName = GetCurrentLayerName();
-                int layersOffCount = TurnOffAllLayersExceptCurrent();
-
-                ed.WriteMessage($"\n현재 레이어 '{currentLayerName}'만 표시됩니다.");
-                ed.WriteMessage($"\n{layersOffCount}개의 레이어가 비표시 처리되었습니다.");
-            }
-            catch (System.Exception ex)
-            {
-                ed.WriteMessage($"\n오류 발생: {ex.Message}");
-            }
-        }
 
         /// <summary>
-        /// 모든 레이어 On 커맨드
+        /// LinetypeObjectId로부터 라인타입 이름을 가져오는 헬퍼 메서드
         /// </summary>
-        [CommandMethod("LAYER_ALL_ON")]
-        public void Cmd_TurnOnAllLayersCommand()
+        private string GetLinetypeName(Transaction tr, ObjectId linetypeId)
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Editor ed = doc.Editor;
-
             try
             {
-                int layersOnCount = TurnOnAllLayers();
-                ed.WriteMessage($"\n{layersOnCount}개의 레이어가 표시 처리되었습니다.");
-                ed.WriteMessage($"\n모든 레이어가 표시됩니다.");
+                if (linetypeId.IsNull)
+                    return "Unknown";
+
+                LinetypeTableRecord linetype = tr.GetObject(linetypeId, OpenMode.ForRead) as LinetypeTableRecord;
+                return linetype?.Name ?? "Unknown";
             }
-            catch (System.Exception ex)
+            catch
             {
-                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+                return "Unknown";
             }
         }
     }
+
+
 
 }
