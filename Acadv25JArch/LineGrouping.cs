@@ -307,7 +307,7 @@ namespace Acadv25JArch
         /// 대상 group 거리는 800까지 적용 mm 이내, 2개 이상 라인 존재
         /// 많으 대상은 아니고 비교적 형태가 정형화된 경우 적용
         /// </summary>
-        [CommandMethod("mmdl1")]
+        [CommandMethod("mdl")]
         public void Cmd_mmdl_GroupLinesBySlopeAndMiddleLine_800()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -877,65 +877,65 @@ namespace Acadv25JArch
         //6. pp1과 pp2를 잇는 중간선 생성 ✅
 
 
+        //[CommandMethod("CreateMiddleLine")]
+        //public void Cmd_CreateMiddleLine()
+        //{
+        //    Document doc = Application.DocumentManager.MdiActiveDocument;
+        //    Database db = doc.Database;
+        //    Editor ed = doc.Editor;
+
+        //    try
+        //    {
+        //        // Step 1: 두 개의 Line 객체를 선택
+        //        Line line1 = SelectLine(ed, "\n첫 번째 평행선을 선택하세요: ");
+        //        if (line1 == null) return;
+
+        //        Line line2 = SelectLine(ed, "\n두 번째 평행선을 선택하세요: ");
+        //        if (line2 == null) return;
+
+        //        // Step 2: 두 선이 평행한지 확인 (1도 이내)
+        //        double angle = GetAngleBetweenLines(line1, line2);
+        //        if (!AreNearlyParallel(line1, line2, 1.0))
+        //        {
+        //            ed.WriteMessage($"\n선택한 두 선이 평행하지 않습니다. 현재 각도: {angle:F2}도 (1도 이내 허용)");
+        //            return;
+        //        }
+        //        else
+        //        {
+        //            ed.WriteMessage($"\n두 선의 각도: {angle:F2}도 - 평행 조건 만족");
+        //        }
+
+        //        // Step 3: 중간선 생성 (4개 점 중 가장 먼 2개 점 기준)
+        //        var result = CreateMiddleLineFromParallelsWithInfo(line1, line2);
+        //        Line middleLine = result.line;
+        //        double maxDistance = result.maxDistance;
+
+        //        // Step 4: 중간선을 데이터베이스에 추가
+        //        using (Transaction tr = db.TransactionManager.StartTransaction())
+        //        {
+        //            BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+        //            BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],
+        //                OpenMode.ForWrite) as BlockTableRecord;
+
+        //            btr.AppendEntity(middleLine);
+        //            tr.AddNewlyCreatedDBObject(middleLine, true);
+
+        //            tr.Commit();
+        //            ed.WriteMessage($"\n중간선이 생성되었습니다.");
+        //            ed.WriteMessage($"\n - 중간선 길이: {middleLine.Length:F3}");
+        //            ed.WriteMessage($"\n - 기준 거리 (가장 먼 두 점): {maxDistance:F3}");
+        //            ed.WriteMessage($"\n - 두 선의 각도: {angle:F2}도");
+        //        }
+        //    }
+        //    catch (System.Exception ex)
+        //    {
+        //        ed.WriteMessage($"\n오류 발생: {ex.Message}");
+        //    }
+        //}
+
+
         [CommandMethod("CreateMiddleLine")]
         public void Cmd_CreateMiddleLine()
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
-
-            try
-            {
-                // Step 1: 두 개의 Line 객체를 선택
-                Line line1 = SelectLine(ed, "\n첫 번째 평행선을 선택하세요: ");
-                if (line1 == null) return;
-
-                Line line2 = SelectLine(ed, "\n두 번째 평행선을 선택하세요: ");
-                if (line2 == null) return;
-
-                // Step 2: 두 선이 평행한지 확인 (1도 이내)
-                double angle = GetAngleBetweenLines(line1, line2);
-                if (!AreNearlyParallel(line1, line2, 1.0))
-                {
-                    ed.WriteMessage($"\n선택한 두 선이 평행하지 않습니다. 현재 각도: {angle:F2}도 (1도 이내 허용)");
-                    return;
-                }
-                else
-                {
-                    ed.WriteMessage($"\n두 선의 각도: {angle:F2}도 - 평행 조건 만족");
-                }
-
-                // Step 3: 중간선 생성 (4개 점 중 가장 먼 2개 점 기준)
-                var result = CreateMiddleLineFromParallelsWithInfo(line1, line2);
-                Line middleLine = result.line;
-                double maxDistance = result.maxDistance;
-
-                // Step 4: 중간선을 데이터베이스에 추가
-                using (Transaction tr = db.TransactionManager.StartTransaction())
-                {
-                    BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                    BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],
-                        OpenMode.ForWrite) as BlockTableRecord;
-
-                    btr.AppendEntity(middleLine);
-                    tr.AddNewlyCreatedDBObject(middleLine, true);
-
-                    tr.Commit();
-                    ed.WriteMessage($"\n중간선이 생성되었습니다.");
-                    ed.WriteMessage($"\n - 중간선 길이: {middleLine.Length:F3}");
-                    ed.WriteMessage($"\n - 기준 거리 (가장 먼 두 점): {maxDistance:F3}");
-                    ed.WriteMessage($"\n - 두 선의 각도: {angle:F2}도");
-                }
-            }
-            catch (System.Exception ex)
-            {
-                ed.WriteMessage($"\n오류 발생: {ex.Message}");
-            }
-        }
-
-
-        [CommandMethod("mdl")]
-        public void Cmd_mdl_Create_Middle_Line()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
