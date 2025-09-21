@@ -31,9 +31,10 @@ namespace Acadv25JArch
 
         public static class Cmd
         {
-            public const string mmdl = "mmdl"; //Cmd_mmdl_GroupLinesBySlopeAndMiddleLine()
-            public const string mdl  = "mdl";   //Cmd_mdl_GroupLinesBySlopeAndMiddleLine800()
-
+            public const string mmdl = "mmdl";                           //Cmd_mmdl_GroupLinesBySlopeAndMiddleLine()
+            public const string mdl  = "mdl";                            //Cmd_mdl_GroupLinesBySlopeAndMiddleLine800()
+            public const string AnalyzeLineDirection = "LineDir";        //Cmd_LineDir_AnalyzeLineDirection()
+            public const string AnalyzePolyLineDirection = "PolyDir";    //Cmd_PolyDir_LinesDirection()
         }
     }
 }

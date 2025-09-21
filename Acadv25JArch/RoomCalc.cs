@@ -108,7 +108,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 방향 벡터를 기준으로 선택된 line의 방향을 NW, NE, SE, SW로 분석하는 메인 커맨드
         /// </summary>
-        [CommandMethod("LineDir")]
+        [CommandMethod(Jdf.Cmd.AnalyzeLineDirection)]
         public void Cmd_LineDir_AnalyzeLineDirection()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -155,7 +155,7 @@ namespace Acadv25JArch
         /// Polyline 내부에 있는 Line 객체 찾기
         /// 방향 벡터를 기준으로 선택된 각 line의 방향을 NW, NE, SE, SW로 분석하는 메인 커맨드
         /// </summary>
-        [CommandMethod("PolyDir")]
+        [CommandMethod(Jdf.Cmd.AnalyzePolyLineDirection)]
         public void Cmd_PolyDir_LinesDirection()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
