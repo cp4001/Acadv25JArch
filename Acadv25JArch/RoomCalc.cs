@@ -1,15 +1,16 @@
 ﻿using AcadFunction;
-using CADExtension;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+using CADExtension;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Media3D;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace Acadv25JArch
@@ -148,6 +149,103 @@ namespace Acadv25JArch
                 ed.WriteMessage($"\n오류 발생: {ex.Message}");
             }
         }
+
+
+        /// <summary>
+        /// Polyline 내부에 있는 Line 객체 찾기
+        /// 방향 벡터를 기준으로 선택된 각 line의 방향을 NW, NE, SE, SW로 분석하는 메인 커맨드
+        /// </summary>
+        [CommandMethod("PolyDir")]
+        public void Cmd_PolyDir_LinesDirection()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 1. 폴리라인 선택
+                PromptEntityOptions polyOptions = new PromptEntityOptions("\n폴리라인을 선택하세요: ");
+                polyOptions.SetRejectMessage("\n선택된 객체가 폴리라인이 아닙니다.");
+                polyOptions.AddAllowedClass(typeof(Polyline), true);
+
+                PromptEntityResult polyResult = ed.GetEntity(polyOptions);
+                if (polyResult.Status != PromptStatus.OK)
+                    return;
+
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    var btr = tr.GetModelSpaceBlockTableRecord(db);
+
+                    // 2. 폴리라인 객체 가져오기
+                    Polyline poly = tr.GetObject(polyResult.ObjectId, OpenMode.ForRead) as Polyline;
+                    if (poly == null)
+                    {
+                        ed.WriteMessage("\n폴리라인을 읽을 수 없습니다.");
+                        return;
+                    }
+
+                    // 3. 폴리라인이 닫혀있는지 확인
+                    if (!poly.Closed)
+                    {
+                        ed.WriteMessage("\n폴리라인이 닫혀있지 않습니다. 닫힌 폴리라인만 처리할 수 있습니다.");
+                        return;
+                    }
+
+                    // 4. 폴리라인 내부에 있는 라인들 찾기
+                    var lines = poly.GetLines();
+                    var  cp = poly.CenterPoint();
+
+                    if (lines.Count == 0)
+                    {
+                        ed.WriteMessage("\n폴리라인 내부에 라인이 없습니다.");
+                        tr.Commit();
+                        return;
+                    }
+
+                    // line 방위각 분석
+                    var northVecor = new Line(cp, new Point3d(cp.X, cp.Y + 10, cp.Z));
+                    foreach (var line in lines)
+                    {
+                        var cp1 = line.GetClosestPointTo(cp, false);
+                        var lineVec  = new Line(cp,cp1);
+                        var dir = AnalyzeDirectionRelativeToNorth(northVecor, lineVec);
+
+                        DBText textEntity = new DBText();
+                        textEntity.Position = line.GetPointAtDist(line.Length/2);
+                        textEntity.Height = line.Length/12;
+                        textEntity.TextString = dir.direction.ToString();
+                        textEntity.SetDatabaseDefaults();
+
+                        btr.AppendEntity(textEntity);
+                        tr.AddNewlyCreatedDBObject(textEntity, true);
+
+                        //ed.WriteMessage($"\n라인 시작점: ({line.StartPoint.X:F3}, {line.StartPoint.Y:F3})");
+                        //ed.WriteMessage($", 끝점: ({line.EndPoint.X:F3}, {line.EndPoint.Y:F3})");
+                        //ed.WriteMessage($", 길이: {line.Length:F3}");
+                        //ed.WriteMessage($", 각도: {dir.targetAngle:F2}°");
+                        //ed.WriteMessage($", 방향: {dir.direction}");
+                        //ed.WriteMessage($", 설명: {GetDirectionDescription(dir.direction)}");
+                    }   
+
+
+
+                    ed.WriteMessage($"\n폴리라인 내부에서 {lines.Count}개의 라인을 찾았습니다.");
+
+                    // 5. 사용자 확인
+
+
+                    ed.WriteMessage($"\n{lines.Count}개의 라인이 성공적으로 분석 되었습니다.");
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+
 
         /// <summary>
         /// 커스텀 허용 각도로 방향 분석하는 추가 커맨드
