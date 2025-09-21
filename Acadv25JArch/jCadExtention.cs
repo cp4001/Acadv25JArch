@@ -1884,6 +1884,17 @@ namespace CADExtension  //tr Editor Block
             return true;
         }
 
+        //Get Layer  LayerTableRecord
+        public static LayerTableRecord GetLayer(this Transaction tr, string layerName)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            LayerTable lt = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+            if (!lt.Has(layerName)) return null;
+            LayerTableRecord ltr = tr.GetObject(lt[layerName], OpenMode.ForWrite) as LayerTableRecord;
+            return ltr;
+        }   
+
     }
     public static class EditorExtension
     {

@@ -222,9 +222,9 @@ namespace Acadv25JArch
 
                 var btr = tr.GetModelSpaceBlockTableRecord(db);
 
-                tr.CheckRegName("CenWidth");
+                tr.CheckRegName("WallWidth");
                 //Create layerfor Wall Center Line
-                tr.CreateLayer("!Arch_CenterLine", 1, LineWeight.LineWeight018);
+                tr.CreateLayer(Jdf.Layer.Wall, Jdf.Color.Red, LineWeight.LineWeight040);
                 
 
                 // ObjectId에서 Entity 객체로 직접 변환
@@ -277,8 +277,8 @@ namespace Acadv25JArch
                         Line middleLine = result.line;
 
                         middleLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Red
-                        middleLine.Layer = "!Arch_CenterLine";
-                        JXdata. SetXdata(middleLine, "CenWidth", result.shortDistance.ToString("F0"));
+                        middleLine.Layer = Jdf.Layer.Wall;
+                        JXdata. SetXdata(middleLine, "WallWidth", result.shortDistance.ToString("F0"));
 
                         btr.AppendEntity(middleLine);
                         tr.AddNewlyCreatedDBObject(middleLine, true);
@@ -307,7 +307,7 @@ namespace Acadv25JArch
         /// 대상 group 거리는 800까지 적용 mm 이내, 2개 이상 라인 존재
         /// 많으 대상은 아니고 비교적 형태가 정형화된 경우 적용
         /// </summary>
-        [CommandMethod("mdl")]
+        [CommandMethod(Jdf.Cmd.mdl)]
         public void Cmd_mdl_GroupLinesBySlopeAndMiddleLine800()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -330,9 +330,9 @@ namespace Acadv25JArch
 
                 var btr = tr.GetModelSpaceBlockTableRecord(db);
 
-                tr.CheckRegName("CenWidth");
+                tr.CheckRegName("WallWidth");
                 //Create layerfor Wall Center Line
-                tr.CreateLayer("!Arch_CenterLine", 1, LineWeight.LineWeight018);
+                tr.CreateLayer(Jdf.Layer.Wall, Jdf.Color.Red, LineWeight.LineWeight040);
 
 
                 // ObjectId에서 Entity 객체로 직접 변환
@@ -385,8 +385,8 @@ namespace Acadv25JArch
                         Line middleLine = result.line;
 
                         middleLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Red
-                        middleLine.Layer = "!Arch_CenterLine";
-                        JXdata.SetXdata(middleLine, "CenWidth", result.shortDistance.ToString("F0"));
+                        middleLine.Layer = Jdf.Layer.Wall;
+                        JXdata.SetXdata(middleLine, "WallWidth", result.shortDistance.ToString("F0"));
 
                         btr.AppendEntity(middleLine);
                         tr.AddNewlyCreatedDBObject(middleLine, true);
