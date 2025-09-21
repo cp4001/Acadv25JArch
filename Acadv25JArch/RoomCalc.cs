@@ -194,6 +194,7 @@ namespace Acadv25JArch
 
                     // 4. 폴리라인 내부에 있는 라인들 찾기
                     var lines = poly.GetLines();
+                        lines = lines.OrderBy(x=> x.Length).ToList(); // 길이순 정렬
                     var  cp = poly.CenterPoint();
 
                     if (lines.Count == 0)
@@ -213,7 +214,7 @@ namespace Acadv25JArch
 
                         DBText textEntity = new DBText();
                         textEntity.Position = line.GetPointAtDist(line.Length/2);
-                        textEntity.Height = line.Length/12;
+                        textEntity.Height = lines[0].Length/12;
                         textEntity.TextString = dir.direction.ToString();
                         textEntity.SetDatabaseDefaults();
 
