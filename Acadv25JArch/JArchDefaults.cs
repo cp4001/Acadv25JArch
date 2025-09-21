@@ -31,12 +31,15 @@ namespace Acadv25JArch
 
         public static class Cmd
         {
-            public const string mmdl = "mmdl";                                  //Cmd_mmdl_GroupLinesBySlopeAndMiddleLine()
-            public const string mdl  = "mdl";                                   //Cmd_mdl_GroupLinesBySlopeAndMiddleLine800()
-            public const string AnalyzeLineDirection = "LineDir";               //Cmd_LineDir_AnalyzeLineDirection()
-            public const string AnalyzePolyLineDirection = "PolyDir";           //Cmd_PolyDir_LinesDirection()
-            public const string ChangeBlockEntityLayer = "Block_Entity_layer";  //Cmd_ChangeAllBlockEntityLayersToZeroWithColor()
-            public const string ChangeBlockAllEntityColor = "Block_Entity_ALL_color";  //Cmd_ChangeAllBlockEntityLayersToZeroWithColor()   
+            public const string mmdl = "mmdl";                                           //Cmd_mmdl_GroupLinesBySlopeAndMiddleLine()
+            public const string mdl  = "mdl";                                            //Cmd_mdl_GroupLinesBySlopeAndMiddleLine800()
+            public const string AnalyzeLineDirection = "LineDir";                        //Cmd_LineDir_AnalyzeLineDirection()
+            public const string AnalyzePolyLineDirection = "PolyDir";                    //Cmd_PolyDir_LinesDirection()
+
+            public const string ShowBlockForm = "ShowBlockForm";                         //Cmd_ShowBlockForm()
+
+            public const string ChangeBlockEntityLayer = "Block_Entity_layer";           //Cmd_ChangeBlockEntityLayer()
+            public const string ChangeBlockAllEntityColor = "Block_Entity_ALL_color";    //Cmd_ChangeAllBlockEntityLayersToZeroWithColor()   
                    //도면내부의 전체 블럭에 대하여  Block 내부 Entity 의 Layer 를 0 으로 변경하고 Color 를 ByBlock 으로 변경
 
         }

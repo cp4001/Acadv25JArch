@@ -23,14 +23,11 @@ namespace Acadv25JArch
         public string Name { get; set; }  // Block Name
         public int Count { get; set; }   // 행당 Block의 개수 
         public string PartName { get; set; } // 부품명 
-        public string Type { get; set; } //  Type
+        public string Type { get; set; } //  Type  // 문{Door}  창문{Windwo} 
         public string SymbolType { get; set; } // 동일 Block이라도 SymbolType이 다르면 구별해서 적용
                                                // SymbolType이 있으면 Name = Name+":+SymbolType 적용 
                                                // 이 정보는 선택된 Block을 Grouping 할 떄 분류 한다.
-        public String Attach { get; set; } // 천장형{OutletBox}  벽부형{SwitchBox}  바닥형{x} 
-        public bool IsWire { get; set; }  // Block에 걸쳐진 Wire 종류 구분용으로  사용 할지 안 할지 결정 
-        public bool IsReturn { get; set; } //Return 이 있는지  Check
-        public bool IsBlockCount { get; set; } //Block이 Count용 BLock인지 Check
+        //public String Attach { get; set; }  
 
 
         // 생성자 
@@ -41,8 +38,8 @@ namespace Acadv25JArch
             //this.Count = num;
             var btr = id.GetObject(OpenMode.ForWrite) as BlockTableRecord;
             this.Name = btr.Name;
-            this.IsWire = false;
-            this.IsReturn = false;
+            //this.IsWire = false;
+            //this.IsReturn = false;
             this.Img = btr.PreviewIcon?.GetThumbnailImage(40, 40, () => false, IntPtr.Zero);
             IdCounter++;
         }
@@ -128,11 +125,11 @@ namespace Acadv25JArch
                     jbtr.Count = brg.Count();
                     jbtr.PartName = JXdata.GetXdata(brg.First(), "PartName");
                     jbtr.Type = JXdata.GetXdata(brg.First(), "Type");
-                    jbtr.Attach = JXdata.GetXdata(brg.First(), "Attatch");
+                    //jbtr.Attach = JXdata.GetXdata(brg.First(), "Attatch");
                     jbtr.SymbolType = JXdata.GetXdata(brg.First(), "SymbolType");
 
-                    if (JXdata.GetXdata(brg.First(), "IsWire") == "True") jbtr.IsWire = true;
-                    if (JXdata.GetXdata(brg.First(), "IsReturn") == "True") jbtr.IsReturn = true;
+                    //if (JXdata.GetXdata(brg.First(), "IsWire") == "True") jbtr.IsWire = true;
+                    //if (JXdata.GetXdata(brg.First(), "IsReturn") == "True") jbtr.IsReturn = true;
 
                     blockParts.Add(jbtr);
                 }
@@ -216,12 +213,12 @@ namespace Acadv25JArch
                     jbtr.Count = brg.Count();
                     jbtr.PartName = JXdata.GetXdata(brg.First(), "PartName");
                     jbtr.Type = JXdata.GetXdata(brg.First(), "Type");
-                    jbtr.Attach = JXdata.GetXdata(brg.First(), "Attatch");
+                    //jbtr.Attach = JXdata.GetXdata(brg.First(), "Attatch");
                     jbtr.SymbolType = JXdata.GetXdata(brg.First(), "SymbolType");
 
-                    if (JXdata.GetXdata(brg.First(), "IsWire") == "True") jbtr.IsWire = true;
-                    if (JXdata.GetXdata(brg.First(), "IsReturn") == "True") jbtr.IsReturn = true;
-                    if (JXdata.GetXdata(brg.First(), "IsBlockCount") == "True") jbtr.IsBlockCount = true;
+                    //if (JXdata.GetXdata(brg.First(), "IsWire") == "True") jbtr.IsWire = true;
+                    //if (JXdata.GetXdata(brg.First(), "IsReturn") == "True") jbtr.IsReturn = true;
+                    //if (JXdata.GetXdata(brg.First(), "IsBlockCount") == "True") jbtr.IsBlockCount = true;
 
                     blockParts.Add(jbtr);
                 }
@@ -309,11 +306,11 @@ namespace Acadv25JArch
                     jbtr.Count = brg.Count();
                     jbtr.PartName = JXdata.GetXdata(brg.First(), "PartName");
                     jbtr.Type = JXdata.GetXdata(brg.First(), "Type");
-                    jbtr.Attach = JXdata.GetXdata(brg.First(), "Attatch");
+                    //jbtr.Attach = JXdata.GetXdata(brg.First(), "Attatch");
                     jbtr.SymbolType = JXdata.GetXdata(brg.First(), "SymbolType");
 
-                    if (JXdata.GetXdata(brg.First(), "IsWire") == "True") jbtr.IsWire = true;
-                    if (JXdata.GetXdata(brg.First(), "IsReturn") == "True") jbtr.IsReturn = true;
+                    //if (JXdata.GetXdata(brg.First(), "IsWire") == "True") jbtr.IsWire = true;
+                    //if (JXdata.GetXdata(brg.First(), "IsReturn") == "True") jbtr.IsReturn = true;
 
                     blockParts.Add(jbtr);
                 }
