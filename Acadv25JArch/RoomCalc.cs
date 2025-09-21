@@ -107,8 +107,8 @@ namespace Acadv25JArch
         /// <summary>
         /// 방향 벡터를 기준으로 선택된 line의 방향을 NW, NE, SE, SW로 분석하는 메인 커맨드
         /// </summary>
-        [CommandMethod("room_dir")]
-        public void Cmd_AnalyzeLineDirection()
+        [CommandMethod("LineDir")]
+        public void Cmd_LineDir_AnalyzeLineDirection()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -299,7 +299,7 @@ namespace Acadv25JArch
 
             // E: 80 ~ 100도 (90±10)
             if (relativeAngle >= (90 - baseAngle) && relativeAngle <= (90 + baseAngle))
-                return DirectionType.E;
+                return DirectionType.W;
 
             // S: 170 ~ -170도 (180±10, 170도 이상이거나 -170도 이하)
             if (relativeAngle >= (180 - baseAngle) || relativeAngle <= (-180 + baseAngle))
@@ -307,7 +307,7 @@ namespace Acadv25JArch
 
             // W: -100 ~ -80도 (-90±10)
             if (relativeAngle >= (-90 - baseAngle) && relativeAngle <= (-90 + baseAngle))
-                return DirectionType.W;
+                return DirectionType.E;
 
             // 2단계: 주요 방향이 아니면 중간 방향 확인
 
