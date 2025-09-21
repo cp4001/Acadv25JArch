@@ -1361,6 +1361,11 @@ namespace Acadv25JArch
                 // 2번 컬럼: Count (기본 width)
 
                 // Loop through the blocks in the drawing, creating rows
+
+                //BlockGroup 수자로 정렬
+
+                brGrps = brGrps.OrderByDescending(g => g.Count());
+
                 foreach (var brg in brGrps)
                 {
                     ObjectId btrId = new ObjectId();

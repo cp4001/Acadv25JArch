@@ -211,7 +211,7 @@ namespace Acadv25JArch
         }
 
 
-        [CommandMethod("aWork")]
+        [CommandMethod(Jdf.Cmd.RoomLayOutWork)]
         public void Cmd_aWork_Area_Work()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
