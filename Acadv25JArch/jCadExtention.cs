@@ -2604,14 +2604,14 @@ namespace CADExtension
 
     }
 
-    public static class LinqExtensions
-    {
-        public static void Dictionary<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, Action<TKey, TValue> invoke)
-        {
-            foreach (var kvp in dictionary)
-                invoke(kvp.Key, kvp.Value);
-        }
-    }
+    //public static class LinqExtensions
+    //{
+    //    public static void Dictionary<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, Action<TKey, TValue> invoke)
+    //    {
+    //        foreach (var kvp in dictionary)
+    //            invoke(kvp.Key, kvp.Value);
+    //    }
+    //}
 
     public static class ListListEntension
     {
