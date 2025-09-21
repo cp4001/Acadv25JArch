@@ -3970,7 +3970,7 @@ namespace Acadv25JArch
     //Block Entity layer color change command
     public class BlockEntityLayerChanger
     {
-        [CommandMethod("CHANGEBLOCKENTITYLAYER", CommandFlags.UsePickSet)]
+        [CommandMethod(Jdf.Cmd.ChangeBlockEntityLayer, CommandFlags.UsePickSet)]
         public static void Cmd_ChangeBlockEntityLayer()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -4124,7 +4124,7 @@ namespace Acadv25JArch
             }
         }
 
-        [CommandMethod("CHANGEBLOCKENTITYLAYERALL")]
+        [CommandMethod(Jdf.Cmd.ChangeBlockAllEntityColor)]
         public static void Cmd_ChangeAllBlockEntityLayersToZeroWithColor()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
