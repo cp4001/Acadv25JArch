@@ -40,7 +40,7 @@ namespace Acadv25JArch
 
             public const string ChangeBlockEntityLayer = "Block_Entity_layer";           //Cmd_ChangeBlockEntityLayer()
             public const string ChangeBlockAllEntityColor = "Block_Entity_ALL_color";    //Cmd_ChangeAllBlockEntityLayersToZeroWithColor()   
-                                                                                         //도면내부의 전체 블럭에 대하여  Block 내부 Entity 의 Layer 를 0 으로 변경하고 Color 를 ByBlock 으로 변경
+                                //도면내부의 전체 블럭에 대하여  Block 내부 Entity 의 Layer 를 0 으로 변경하고 Color 를 ByBlock 으로 변경
 
             public const string RoomLayOutWork = "aWork";                                   //Cmd_aWork_Area_Work()
 
