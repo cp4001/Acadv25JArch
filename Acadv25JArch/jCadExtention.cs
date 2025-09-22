@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
+﻿using AcadFunction;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -13,11 +14,11 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Windows.Shapes;
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
+using Color = Autodesk.AutoCAD.Colors.Color;
 using Exception = System.Exception;
 using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
-using AcadFunction;
-using Color = Autodesk.AutoCAD.Colors.Color;
-using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 //using Gile.AutoCAD.Extension;
 
 namespace CADExtension //Graphic JEntity JDBtext JObjectID JDouble 
@@ -1266,32 +1267,24 @@ namespace CADExtension //Curve Line Poly Geometry Point
             return pts;
         }
 
-        public static Point3dCollection GetPointCollections(this Polyline poly)
+        public static Point3dCollection GetPointCollections(this Polyline polyline, bool includeClosedConnection = false)
         {
-            Point3dCollection ptcols = new Point3dCollection();
-            List<Point3d> pts = new List<Point3d>();//int n = poly.Closed ? 0 : 1;
-            for (int i = 0; i < poly.NumberOfVertices - 1; i++)
+            Point3dCollection points = new Point3dCollection();
+            // 모든 vertex의 3D 좌표를 수집
+            for (int i = 0; i < polyline.NumberOfVertices; i++)
             {
-                Curve3d seg = null; //Line or Arc
-                SegmentType segType = poly.GetSegmentType(i);
-                if (segType == SegmentType.Arc)
-                    seg = poly.GetArcSegmentAt(i);
-                else if (segType == SegmentType.Line)
-                    seg = poly.GetLineSegmentAt(i);
-                //LineSegment2d seg1 = poly.GetLineSegment2dAt(i);
-                //LineSegment3d ll = poly.GetLineSegmentAt(i);
-                //Line lll = new Line();
-                //lll.StartPoint = ll.StartPoint;
-                //lll.EndPoint = ll.EndPoint;
-                pts.Add(seg.StartPoint);
-                pts.Add(seg.EndPoint);
+                Point3d point = polyline.GetPoint3dAt(i);
+                points.Add(point);
             }
-            pts = pts.Distinct().ToList();
 
-            if (pts.Count == 0) return null;
-            pts.Select(x => ptcols.Add(x));
+            // 닫힌 polyline이고 연결점 포함이 요청된 경우
+            if (includeClosedConnection && polyline.Closed && polyline.NumberOfVertices > 0)
+            {
+                Point3d firstPoint = polyline.GetPoint3dAt(0);
+                points.Add(firstPoint);
+            }
 
-            return ptcols;
+            return points;
         }
 
 

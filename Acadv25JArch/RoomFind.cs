@@ -244,7 +244,7 @@ namespace AutoCADLineIntersection
             try
             {
                 // 1단계: 기준 라인의 경계 박스를 구하고 확장
-                var searchPolygon = CreateSearchPolygonAroundLine(baseLine);
+                var searchPolygon =    CreateSearchPolygonAroundLine(baseLine); //baseLine.GetPoly();
 
                 // 2단계: Line만 선택하도록 필터 설정
                 TypedValue[] filterList = [
