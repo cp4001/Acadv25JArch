@@ -921,11 +921,42 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
 
         // Line에서 일정폭을 가지는 PoyLine 
-        public static Polyline GetPoly(this Line l1, double width)
+        public static Polyline GetPoly(this Line line, double width=10)
         {
-            Polyline poly = new Polyline();
+            // 1. 선의 방향 벡터와 수직 벡터 계산
+            Vector3d lineDirection = line.EndPoint - line.StartPoint;
+            Vector3d perpVec = lineDirection.CrossProduct(line.Normal).GetNormal();
 
-            return poly;
+            // 2. 폭의 절반만큼 오프셋 벡터 계산 (폭/2 = 5)
+            Vector3d offsetVector = perpVec * (width / 2.0);
+
+            // 3. 사각형의 4개 꼭짓점 계산
+            Point3d point1 = line.StartPoint + offsetVector;  // 시작점 위쪽
+            Point3d point2 = line.EndPoint + offsetVector;    // 끝점 위쪽
+            Point3d point3 = line.EndPoint - offsetVector;    // 끝점 아래쪽
+            Point3d point4 = line.StartPoint - offsetVector;  // 시작점 아래쪽
+
+            // 4. Polyline 생성 및 꼭짓점 추가
+            Polyline polyline = new Polyline();
+
+            // 2D 좌표로 변환 (Polyline은 2D 객체이므로)
+            Point2d pt1_2d = new Point2d(point1.X, point1.Y);
+            Point2d pt2_2d = new Point2d(point2.X, point2.Y);
+            Point2d pt3_2d = new Point2d(point3.X, point3.Y);
+            Point2d pt4_2d = new Point2d(point4.X, point4.Y);
+
+            // 꼭짓점을 시계방향으로 추가하여 닫힌 사각형 생성
+            polyline.AddVertexAt(0, pt1_2d, 0, 0, 0);
+            polyline.AddVertexAt(1, pt2_2d, 0, 0, 0);
+            polyline.AddVertexAt(2, pt3_2d, 0, 0, 0);
+            polyline.AddVertexAt(3, pt4_2d, 0, 0, 0);
+
+            // 5. Polyline을 닫고 속성 설정
+            polyline.Closed = true;
+            polyline.Normal = line.Normal;
+            polyline.Elevation = line.StartPoint.Z; // Z 좌표 설정
+
+            return polyline;
         }
 
         // line Vector의 직각 Vector 
