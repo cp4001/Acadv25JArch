@@ -680,6 +680,53 @@ namespace CADExtension //Curve Line Poly Geometry Point
             return ents;
         }
 
+        public static Point3d GetFirstIntersectPoint(this Line line, Entity ent)
+        {
+            Point3d inter = new Point3d(0, 0, 0);
+            // get the intersection
+            var ptscol = new Point3dCollection();
+            line.IntersectWith(ent, Intersect.OnBothOperands, ptscol, IntPtr.Zero, IntPtr.Zero);
+            var pts = ptscol.OfType<Point3d>().OrderBy(p => p.DistanceTo(line.StartPoint)).ToList();
+            return pts[0];
+        }
+
+        public static Entity GetFirstEntity(this Line line)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            var polygonpts = line.GetPoly().GetPointCollections(true);
+
+            //  SelectCrossingPolygon을 사용하여 근처 Entity 선택    
+            var selectionResult = ed.SelectCrossingPolygon(polygonpts);//, filter);
+
+            List<Entity> ents = new List<Entity>();
+
+            if (selectionResult.Status == PromptStatus.OK && selectionResult.Value != null)
+            {
+                var selectedIds = selectionResult.Value.GetObjectIds();
+
+                // 4단계: 선택된 ObjectId들을 Line 객체로 변환
+                foreach (ObjectId objId in selectedIds)
+                {
+                    ents.Add(objId.GetObject(OpenMode.ForRead) as Entity);
+
+                }
+            }
+
+            // 교차점 기준 가장 가까운 Entity return  
+            // Line과 BlockReference 간 교차 확인 (완전히 유효)
+            //line.IntersectWith(blockRef, Intersect.OnBothOperands, intersectionPoints, IntPtr.Zero, IntPtr.Zero);
+            
+            if (ents.Count == 0) return ents.First(); ;   
+                
+            
+            //ents = ents.Select(ent => new {Ent = ent , Po = line.IntersectWith(ent, Intersect.OnBothOperands, intersectionPoints, IntPtr.Zero, IntPtr.Zero))  })
+
+            return ents.First();
+        }
+
 
         public static Vector3d GetVector(this Line line)
         {
