@@ -707,7 +707,7 @@ namespace CADExtension //Curve Line Poly Geometry Point
             {
                 var selectedIds = selectionResult.Value.GetObjectIds();
 
-                // 4단계: 선택된 ObjectId들을 Line 객체로 변환
+                // 4단계: 선택된 ObjectId들을 Entity 객체로 변환
                 foreach (ObjectId objId in selectedIds)
                 {
                     ents.Add(objId.GetObject(OpenMode.ForRead) as Entity);
@@ -719,10 +719,12 @@ namespace CADExtension //Curve Line Poly Geometry Point
             // Line과 BlockReference 간 교차 확인 (완전히 유효)
             //line.IntersectWith(blockRef, Intersect.OnBothOperands, intersectionPoints, IntPtr.Zero, IntPtr.Zero);
             
-            if (ents.Count == 0) return ents.First(); ;   
-                
-            
-            //ents = ents.Select(ent => new {Ent = ent , Po = line.IntersectWith(ent, Intersect.OnBothOperands, intersectionPoints, IntPtr.Zero, IntPtr.Zero))  })
+            if (ents.Count == 0) return ents.First(); 
+
+            ents = ents.Select(ent => new {Ent = ent , Po = (Point3d)line.GetFirstIntersectPoint(ent)})
+                   .OrderBy(x => x.Po.DistanceTo(line.StartPoint))
+                   .Select(x => x.Ent)
+                   .ToList();
 
             return ents.First();
         }
