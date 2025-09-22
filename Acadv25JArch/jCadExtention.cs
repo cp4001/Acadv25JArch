@@ -18,6 +18,7 @@ using System.Windows.Shapes;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Color = Autodesk.AutoCAD.Colors.Color;
 using Exception = System.Exception;
+using Line = Autodesk.AutoCAD.DatabaseServices.Line;
 using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 //using Gile.AutoCAD.Extension;
 
@@ -651,6 +652,35 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
     public static class jLineEntension
     {
+        public static List<Entity> GetCrossEntity(this Line line,SelectionFilter filter)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            var polygonpts = line.GetPoly().GetPointCollections(true);
+
+            //  SelectCrossingPolygon을 사용하여 근처 Entity 선택    
+            var selectionResult = ed.SelectCrossingPolygon(polygonpts, filter);
+
+            List<Entity> ents = new List<Entity>();
+
+            if (selectionResult.Status == PromptStatus.OK && selectionResult.Value != null)
+            {
+                var selectedIds = selectionResult.Value.GetObjectIds();
+
+                // 4단계: 선택된 ObjectId들을 Line 객체로 변환
+                foreach (ObjectId objId in selectedIds)
+                {
+                    ents.Add(objId.GetObject(OpenMode.ForRead) as Entity);
+
+                }
+            }
+
+            return ents;
+        }
+
+
         public static Vector3d GetVector(this Line line)
         {
             var vec = line.EndPoint - line.StartPoint;
