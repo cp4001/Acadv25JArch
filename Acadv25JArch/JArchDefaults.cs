@@ -44,6 +44,9 @@ namespace Acadv25JArch
 
             public const string RoomLayOutWork = "aWork";                                   //Cmd_aWork_Area_Work()
 
+            public const string Wall_Line_Arrange = "Wall_Line_Arrange";                   //Cmd_Wall_Line_Arrange()
+
+
         }
     }
 }

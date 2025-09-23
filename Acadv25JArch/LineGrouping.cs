@@ -197,7 +197,7 @@ namespace Acadv25JArch
 
 
         //
-        [CommandMethod("Wall_line_Extend")]
+        [CommandMethod(Jdf.Cmd.Wall_Line_Arrange)]
         public void Cmd_Wall_Line_Arrange()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
