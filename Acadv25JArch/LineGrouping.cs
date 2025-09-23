@@ -311,7 +311,7 @@ namespace Acadv25JArch
 
                 var btr = tr.GetModelSpaceBlockTableRecord(db);
 
-                tr.CheckRegName("WallWidth");
+                tr.CheckRegName("Arch,WallWidth");
                 //Create layerfor Wall Center Line
                 tr.CreateLayer(Jdf.Layer.Wall, Jdf.Color.Red, LineWeight.LineWeight040);
                 
@@ -367,6 +367,7 @@ namespace Acadv25JArch
 
                         middleLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Red
                         middleLine.Layer = Jdf.Layer.Wall;
+                        JXdata.SetXdata(middleLine, "Arch","Wall");
                         JXdata. SetXdata(middleLine, "WallWidth", result.shortDistance.ToString("F0"));
 
                         btr.AppendEntity(middleLine);
@@ -419,7 +420,7 @@ namespace Acadv25JArch
 
                 var btr = tr.GetModelSpaceBlockTableRecord(db);
 
-                tr.CheckRegName("WallWidth");
+                tr.CheckRegName("Arch,WallWidth");
                 //Create layerfor Wall Center Line
                 tr.CreateLayer(Jdf.Layer.Wall, Jdf.Color.Red, LineWeight.LineWeight040);
 
@@ -475,6 +476,7 @@ namespace Acadv25JArch
 
                         middleLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Red
                         middleLine.Layer = Jdf.Layer.Wall;
+                        JXdata.SetXdata(middleLine, "Arch", "Wall");
                         JXdata.SetXdata(middleLine, "WallWidth", result.shortDistance.ToString("F0"));
 
                         btr.AppendEntity(middleLine);
