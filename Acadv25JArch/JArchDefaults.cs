@@ -26,6 +26,7 @@ namespace Acadv25JArch
         public static class Layer
         {
             public const string Wall = "!Arch_Wall";
+            public const string Room = "!Arch_Room";
             public const string Block = "!Arch_Block"; // Window Door 
         }
 
