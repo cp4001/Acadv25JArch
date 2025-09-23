@@ -13,6 +13,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
+using static System.Net.Mime.MediaTypeNames;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Color = Autodesk.AutoCAD.Colors.Color;
 using Exception = System.Exception;
@@ -195,11 +196,99 @@ namespace Acadv25JArch
         }
 
 
-        /// <summary>
-        /// 선택된 라인들을 기울기별로 그룹화하고 대상 그룹에 센터 라인을 생성하는 메인 커맨드
-        /// 대상 group 거리는 300mm 이내, 2개 이상 라인 존재
-        /// </summary>
-        [CommandMethod(Jdf.Cmd.mmdl)]
+        //
+        [CommandMethod("Wall_line_Extend")]
+        public void Cmd_Wall_Line_Arrange()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            // 트랜잭션 시작
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    // 방법 1: 특정 Application Name을 가진 Xdata 필터링
+                    string appName = "WallWidth"; // 찾고자 하는 Application Name
+
+                    TypedValue[] filterList = new TypedValue[]
+                    {
+                    // Xdata Application Name 필터 (DxfCode.ExtendedDataApplicationName = 1001)
+                     new TypedValue((int)DxfCode.ExtendedDataRegAppName , appName)
+                    };
+
+                    SelectionFilter filter = new SelectionFilter(filterList);
+
+                    PromptSelectionResult result = ed.GetSelection(filter);
+
+                    if (result.Status == PromptStatus.OK)
+                    {
+                        ed.WriteMessage($"\n{result.Value.Count}개의 엔티티가 선택되었습니다.");
+                    }
+
+                    //
+                    SelectionSet selectionSet = result.Value;
+
+                    // 선택된 각 개체에 Extend 진행
+                    foreach (ObjectId objectId in selectionSet.GetObjectIds())
+                    {
+                        // 개체를 쓰기 모드로 열기
+                        Line ll = tr.GetObject(objectId, OpenMode.ForWrite) as Line;
+                        //Get Wall Width
+                        var width = Convert.ToDouble(JXdata.GetXdata(ll, "WallWidth"))+1;
+                        //Width 거리이내에 있는 Line 을 찾는다.
+
+                        var cls =  ll.GetCrossEntity(width,filter).OfType<Line>().ToList();
+                        //원본 삭제 
+                        cls.Remove(ll);
+
+
+                        ////
+                        //// First the start-point
+                        //ll.Extend(true, ln.StartPoint - ext);
+
+                        //// And then the end-point
+                        //ll.Extend(false, ln.EndPoint + ext);
+
+                        foreach (var l in cls)
+                        {
+                            l.UpgradeOpen();
+                            //선분 연장
+                            if (ll.GetClosestPointTo(l.StartPoint, true).DistanceTo(l.StartPoint) <
+                                ll.GetClosestPointTo(l.EndPoint, true).DistanceTo(l.EndPoint))
+                            {
+                                //startPoint  확장
+                                l.StartPoint = ll.GetClosestPointTo(l.StartPoint, true);
+                            }
+                            else 
+                            {
+                                //EndPoint  확장
+                                l.EndPoint = ll.GetClosestPointTo(l.EndPoint, true);
+                            }
+
+                        }   
+
+                    }
+
+
+
+                }
+                catch (System.Exception ex)
+                {
+                    ed.WriteMessage($"\n오류 발생: {ex.Message}");
+                }
+                tr.Commit();
+            }
+        }
+
+
+
+            /// <summary>
+            /// 선택된 라인들을 기울기별로 그룹화하고 대상 그룹에 센터 라인을 생성하는 메인 커맨드
+            /// 대상 group 거리는 300mm 이내, 2개 이상 라인 존재
+            /// </summary>
+            [CommandMethod(Jdf.Cmd.mmdl)]
         public void Cmd_mmdl_GroupLinesBySlopeAndMiddleLine()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;

@@ -652,13 +652,13 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
     public static class jLineEntension
     {
-        public static List<Entity> GetCrossEntity(this Line line,SelectionFilter filter)
+        public static List<Entity> GetCrossEntity(this Line line,double width ,SelectionFilter filter)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            var polygonpts = line.GetPoly().GetPointCollections(true);
+            var polygonpts = line.GetPoly(width).GetPointCollections(true);
 
             //  SelectCrossingPolygon을 사용하여 근처 Entity 선택    
             var selectionResult = ed.SelectCrossingPolygon(polygonpts, filter);
@@ -716,11 +716,11 @@ namespace CADExtension //Curve Line Poly Geometry Point
             }
 
             // 교차점 기준 가장 가까운 Entity return  
-            // Line과 BlockReference 간 교차 확인 (완전히 유효)
-            //line.IntersectWith(blockRef, Intersect.OnBothOperands, intersectionPoints, IntPtr.Zero, IntPtr.Zero);
+            // Line과 Eitity 간 교차 확인 (완전히 유효)
+            //line.IntersectWith(EnntityRef, Intersect.OnBothOperands, intersectionPoints, IntPtr.Zero, IntPtr.Zero);
             
             if (ents.Count == 0) return ents.First(); 
-
+            //line의 StartPoint 기준으로 가장 가까운 위치에 있는 Entity
             ents = ents.Select(ent => new {Ent = ent , Po = (Point3d)line.GetFirstIntersectPoint(ent)})
                    .OrderBy(x => x.Po.DistanceTo(line.StartPoint))
                    .Select(x => x.Ent)
