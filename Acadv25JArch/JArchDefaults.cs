@@ -34,7 +34,7 @@ namespace Acadv25JArch
         {
             public const string mmdl = "mmdl";                                           //Cmd_mmdl_GroupLinesBySlopeAndMiddleLine()
             public const string mdl  = "mdl";                                            //Cmd_mdl_GroupLinesBySlopeAndMiddleLine800()
-            public const string AnalyzeLineDirection = "LineDir";                        //Cmd_LineDir_AnalyzeLineDirection()
+            public const string 선택라인방위각 = "LineDir";                        //Cmd_LineDir_AnalyzeLineDirection()
             public const string AnalyzePolyLineDirection = "PolyDir";                    //Cmd_PolyDir_LinesDirection()
 
             public const string ShowBlockForm = "ShowBlockForm";                         //Cmd_ShowBlockForm()

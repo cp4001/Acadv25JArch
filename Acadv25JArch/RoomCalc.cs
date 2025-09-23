@@ -191,7 +191,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 방향 벡터를 기준으로 선택된 line의 방향을 NW, NE, SE, SW로 분석하는 메인 커맨드
         /// </summary>
-        [CommandMethod(Jdf.Cmd.AnalyzeLineDirection)]
+        [CommandMethod(Jdf.Cmd.선택라인방위각)]
         public void Cmd_LineDir_AnalyzeLineDirection()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
