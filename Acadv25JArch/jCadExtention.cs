@@ -747,7 +747,7 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
         public static Vector3d GetVector(this Line line)
         {
-            var vec = line.EndPoint - line.StartPoint;
+            var vec = (line.EndPoint - line.StartPoint).GetNormal();
             return vec;
         }
 

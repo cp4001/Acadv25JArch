@@ -265,8 +265,8 @@ namespace Acadv25JArch
 
                         DBText textEntity = new DBText();
                         textEntity.Position = line.GetPointAtDist(line.Length/2);
-                        textEntity.Height = lines[0].Length/12;
-                        textEntity.TextString = dir.direction.ToString();
+                        textEntity.Height = lines[0].Length/20;
+                        textEntity.TextString = dir.direction.ToString()+":"+((int)line.Length).ToString();
                         textEntity.SetDatabaseDefaults();
 
                         btr.AppendEntity(textEntity);
@@ -279,6 +279,145 @@ namespace Acadv25JArch
                         //ed.WriteMessage($", 방향: {dir.direction}");
                         //ed.WriteMessage($", 설명: {GetDirectionDescription(dir.direction)}");
                     }   
+
+
+
+                    ed.WriteMessage($"\n폴리라인 내부에서 {lines.Count}개의 라인을 찾았습니다.");
+
+                    // 5. 사용자 확인
+
+
+                    ed.WriteMessage($"\n{lines.Count}개의 라인이 성공적으로 분석 되었습니다.");
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+
+        /// <summary>
+        /// Room Polyline 내부에 있는 Line 분석 Text로 기록 
+        /// 방향 벡터를 기준으로 선택된 각 line의 방향을 NW, NE, SE, SW로 분석하는 메인 커맨드
+        /// </summary>
+        [CommandMethod("RoomPolyCalc")]
+        public void Cmd_RoomPoly_Calc()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 1. 폴리라인 선택
+                PromptEntityOptions polyOptions = new PromptEntityOptions("\n폴리라인을 선택하세요: ");
+                polyOptions.SetRejectMessage("\n선택된 객체가 폴리라인이 아닙니다.");
+                polyOptions.AddAllowedClass(typeof(Polyline), true);
+
+                PromptEntityResult polyResult = ed.GetEntity(polyOptions);
+                if (polyResult.Status != PromptStatus.OK)
+                    return;
+
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    var btr = tr.GetModelSpaceBlockTableRecord(db);
+
+                    tr.CheckRegName("Arch,Handle,LL,Dir,LEN"); //LL(Line)
+                    //Create layerfor Wall Center Line
+                    tr.CreateLayer(Jdf.Layer.Room, Jdf.Color.Red, LineWeight.LineWeight040);
+
+                    // 2. 폴리라인 객체 가져오기
+                    Polyline poly = tr.GetObject(polyResult.ObjectId, OpenMode.ForRead) as Polyline;
+                    if (poly == null)
+                    {
+                        ed.WriteMessage("\n폴리라인을 읽을 수 없습니다.");
+                        return;
+                    }
+
+                    // 3. 폴리라인이 닫혀있는지 확인
+                    if (!poly.Closed)
+                    {
+                        ed.WriteMessage("\n폴리라인이 닫혀있지 않습니다. 닫힌 폴리라인만 처리할 수 있습니다.");
+                        return;
+                    }
+
+                    // 4. 폴리라인 내부에 있는 라인들 찾기
+                    var lines = poly.GetLines();
+                    lines = lines.OrderBy(x => x.Length).ToList(); // 길이순 정렬
+                    var cp = poly.CenterPoint();
+
+                    if (lines.Count == 0)
+                    {
+                        ed.WriteMessage("\n폴리라인 내부에 라인이 없습니다.");
+                        tr.Commit();
+                        return;
+                    }
+
+                    // line 방위각 분석
+                    var northVecor = new Line(cp, new Point3d(cp.X, cp.Y + 10, cp.Z));
+                    // 길이가 10 이하인 라인은 무시    
+                    // poly 만들때  첫번째 point 와 마지막 point 가 같은 경우가 발생하여  길이가 0 인 line 이 발생한다.      
+                    lines = lines.Where(x => x.Length >= 10).ToList();
+
+                    foreach (var line in lines)
+                    {
+                        //if (line.Length < 10) continue;
+                        //line의 X 위치가 적은 것을 StartPoint 로 지정한다.
+                        // X 위차가 같으면 Y가 적은 것을 StartPoint 로 지정 한다.
+
+                        if (line.EndPoint.X < line.StartPoint.X)
+                        { 
+                            var tmp = line.StartPoint;    
+                            line.StartPoint = line.EndPoint;
+                            line.EndPoint = tmp;                        
+                        }
+
+                        if (line.EndPoint.X == line.StartPoint.X)
+                        {
+                            if(line.EndPoint.Y < line.StartPoint.Y)
+                            {
+                                var tmp = line.StartPoint;
+                                line.StartPoint = line.EndPoint;
+                                line.EndPoint = tmp;
+                            }   
+                        }
+
+
+                        var cp1 = line.GetClosestPointTo(cp, false);
+                        var lineDirection = new Line(cp, cp1);
+                        var lineVec2 = lineDirection.GetVector(); 
+                        var dir = AnalyzeDirectionRelativeToNorth(northVecor, lineDirection);
+
+                        DBText textEntity = new DBText();               
+                        textEntity.Height = lines[0].Length / 20;
+                        textEntity.Position = line.GetPointAtDist(line.Length / 2) - lineVec2 * lines[0].Length/10;
+                        textEntity.TextString = dir.direction.ToString() + ":" + ((int)line.Length).ToString();
+                        textEntity.Rotation = line.Angle;
+                        textEntity.HorizontalMode = TextHorizontalMode.TextCenter;
+                        textEntity.VerticalMode = TextVerticalMode.TextVerticalMid;
+                        textEntity.AlignmentPoint = line.GetPointAtDist(line.Length / 2) - lineVec2 * lines[0].Length / 10;
+                        textEntity.SetDatabaseDefaults();
+                        textEntity.Layer = Jdf.Layer.Room;
+
+                        //Set Xdata
+                        JXdata.SetXdata(textEntity, "Arch", "RoomText");
+                        JXdata.SetXdata(textEntity, "Handle", poly.Handle.ToString());  
+                        JXdata.SetXdata(textEntity, "LL", line.ToStr());
+                        JXdata.SetXdata(textEntity, "Dir", dir.direction.ToString());
+                        JXdata.SetXdata(textEntity, "LEN", ((int)line.Length).ToString());
+
+                        btr.AppendEntity(textEntity);
+                        tr.AddNewlyCreatedDBObject(textEntity, true);
+
+                        //ed.WriteMessage($"\n라인 시작점: ({line.StartPoint.X:F3}, {line.StartPoint.Y:F3})");
+                        //ed.WriteMessage($", 끝점: ({line.EndPoint.X:F3}, {line.EndPoint.Y:F3})");
+                        //ed.WriteMessage($", 길이: {line.Length:F3}");
+                        //ed.WriteMessage($", 각도: {dir.targetAngle:F2}°");
+                        //ed.WriteMessage($", 방향: {dir.direction}");
+                        //ed.WriteMessage($", 설명: {GetDirectionDescription(dir.direction)}");
+                    }
 
 
 
