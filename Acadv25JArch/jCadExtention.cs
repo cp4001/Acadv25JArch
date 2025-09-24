@@ -652,6 +652,21 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
     public static class jLineEntension
     {
+
+        //line에서 string 으로 표현 
+        public static string ToStr(this Line line)
+        {
+            // 시작점 좌표 (소수점 이하 무시)
+            int startX = (int)line.StartPoint.X;
+            int startY = (int)line.StartPoint.Y;
+
+            // 끝점 좌표 (소수점 이하 무시)
+            int endX = (int)line.EndPoint.X;
+            int endY = (int)line.EndPoint.Y;
+
+            // "SPx.SPy:EPx.EPy" 형식으로 문자열 생성
+            return $"{startX}.{startY}:{endX}.{endY}";
+        }
         public static List<Entity> GetCrossEntity(this Line line,double width ,SelectionFilter filter)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -2680,6 +2695,30 @@ namespace CADExtension
 
     public static class StringExtension
     {
+
+        // line 으로 변환
+        public static Line GetLine(this string coordString)
+        {
+            // ":"로 시작점과 끝점 분리
+            string[] points = coordString.Split(':');
+
+            // 시작점 파싱
+            string[] startCoords = points[0].Split('.');
+            double startX = double.Parse(startCoords[0]);
+            double startY = double.Parse(startCoords[1]);
+            Point3d startPoint = new Point3d(startX, startY, 0);
+
+            // 끝점 파싱
+            string[] endCoords = points[1].Split('.');
+            double endX = double.Parse(endCoords[0]);
+            double endY = double.Parse(endCoords[1]);
+            Point3d endPoint = new Point3d(endX, endY, 0);
+
+            // Line 객체 생성 및 반환
+            return new Line(startPoint, endPoint);
+
+        }
+
         public static string GetStrNum(this string strText)
         {
             string res = "";
