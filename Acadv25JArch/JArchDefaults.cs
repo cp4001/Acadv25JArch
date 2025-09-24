@@ -46,7 +46,7 @@ namespace Acadv25JArch
 
             public const string RoomLayOutWork = "aWork";                                   //Cmd_aWork_Area_Work()
 
-            public const string Wall_Line_Arrange = "Wall_Line_Arrange";                   //Cmd_Wall_Line_Arrange()
+            public const string 벽라인정리 = "Wall_Line_Arrange";                   //Cmd_Wall_Line_Arrange()
 
             public const string 선택폴리룸계산 = "Room_Poly_Calc";                         //Cmd_RoomPoly_Calc()
 
