@@ -847,6 +847,43 @@ namespace Acadv25JArch
             return groups;
         }
 
+
+        /// <summary>
+        /// 라인들을 Colinear line으로  그룹화 (Line 객체 직접 사용)
+        /// </summary>
+        public static List<List<Line>> GroupLinesByCollinear(List<Line> lines)//, double angtolerance, double distance)
+        {
+            var groups = new List<List<Line>>();
+            var remainingLines = new List<Line>(lines);
+
+            while (remainingLines.Count > 0)
+            {
+                var currentLine = remainingLines[0];
+                var currentGroup = new List<Line> { currentLine };
+                remainingLines.RemoveAt(0);
+
+                // 현재 라인과 Collinear 한  line들을 찾아서 그룹에 추가    
+                for (int i = remainingLines.Count - 1; i >= 0; i--)
+                {
+                    var compareLine = remainingLines[i];
+
+                    // 각도 조건 AND 거리 조건을 모두 만족해야 같은 그룹
+                    if (currentLine.IsCoLinear( compareLine))
+                    {
+                        currentGroup.Add(compareLine);
+                        remainingLines.RemoveAt(i);
+                    }
+                }
+
+                groups.Add(currentGroup);
+            }
+
+            // 그룹들을 크기 순으로 정렬 (큰 그룹부터)
+            groups.Sort((a, b) => b.Count.CompareTo(a.Count));
+            return groups;
+        }
+
+
         /// <summary>
         /// 그룹별로 라인에 색상을 적용 (Handle 기반 매칭)
         /// </summary>

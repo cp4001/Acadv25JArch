@@ -2575,13 +2575,14 @@ namespace AcadFunction
 
 
 
-    public class JAcadFunc
+    public class Func
     {
-        // <summary>
+        /// <summary>
         /// colinear한 선분들 중 가장 짧은 것만 남기고 나머지를 제거합니다.
+        /// colinear 관계가 없는 선분은 그대로 유지됩니다.
         /// </summary>
         /// <param name="lines">입력 선분 리스트</param>
-        /// <returns>colinear 그룹별로 가장 짧은 선분만 포함된 리스트</returns>
+        /// <returns>colinear 그룹별로 가장 짧은 선분과 단독 선분이 포함된 리스트</returns>
         public static List<Line> RemoveColinearLinesKeepShortest(List<Line> lines)
         {
             if (lines == null || lines.Count <= 1)
@@ -2597,36 +2598,50 @@ namespace AcadFunction
                     continue;
 
                 // 현재 선분과 colinear한 모든 선분들을 찾기
-                var colinearGroup = new List<(Line line, int index)> { (lines[i], i) };
+                var colinearGroup = new List<(Line line, int index)>() { (lines[i], i) };
 
                 for (int j = i + 1; j < lines.Count; j++)
                 {
                     if (processedIndices.Contains(j))
                         continue;
 
-                    if (lines[i].IsCoLinear(lines[j]))
+                    if (lines[i].IsCoLinear1(lines[j]))
                     {
                         colinearGroup.Add((lines[j], j));
                     }
                 }
 
-                // colinear 그룹에서 가장 짧은 선분 찾기
-                var shortestLine = colinearGroup
-                    .OrderBy(item => item.line.Length)
-                    .First();
-
-                // 결과에 가장 짧은 선분 추가
-                result.Add(shortestLine.line);
-
-                // 이 그룹의 모든 인덱스를 처리됨으로 표시
-                foreach (var (line, index) in colinearGroup)
+                // colinear한 다른 선분이 있는 경우
+                if (colinearGroup.Count > 1)
                 {
-                    processedIndices.Add(index);
+                    //// 현재 선분도 그룹에 추가
+                    //colinearGroup.Add((lines[i], i));
+
+                    // 그룹에서 가장 짧은 선분 찾기
+                    var shortestLine = colinearGroup
+                        .OrderBy(item => item.line.Length)
+                        .First();
+
+                    // 결과에 가장 짧은 선분 추가
+                    result.Add(shortestLine.line);
+
+                    // 이 그룹의 모든 인덱스를 처리됨으로 표시
+                    foreach (var (line, index) in colinearGroup)
+                    {
+                        processedIndices.Add(index);
+                    }
+                }
+                else
+                {
+                    // colinear한 다른 선분이 없는 경우 - 원본 그대로 추가
+                    result.Add(lines[i]);
+                    processedIndices.Add(i);
                 }
             }
 
+
+
             return result;
         }
-
     }
 }

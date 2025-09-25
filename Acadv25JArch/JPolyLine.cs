@@ -42,6 +42,10 @@ namespace Acadv25JArch
                     return;
                 }
 
+                // colinear line 제거 
+                var selines = Func.RemoveColinearLinesKeepShortest(selectedLines);  
+
+
                 // 기준점 선택
                 Point3d? referencePoint = GetReferencePoint(ed);
                 if (!referencePoint.HasValue)
@@ -51,7 +55,7 @@ namespace Acadv25JArch
                 }
 
                 // 기준점을 사용하여 라인들을 각도 순서로 정렬
-                List<Line> sortedLines = SortLinesByAngle(selectedLines, referencePoint.Value);
+                List<Line> sortedLines = SortLinesByAngle(selines, referencePoint.Value);
                 ed.WriteMessage($"\n기준점에서 각도 순서로 {sortedLines.Count}개의 라인을 정렬했습니다.");
 
                 // 정렬된 순서로 순환적 이웃 관계 형성
