@@ -25,8 +25,8 @@ namespace Acadv25JArch
 {
     public class LineToPolylineConverter
     {
-        [CommandMethod("LINES2POLY")]
-        public void ConvertLinesToClosedPolyline()
+        [CommandMethod(Jdf.Cmd.벽센터라인선택폴리만들기)]
+        public void Cmd_LinesTo_ConvertClosedPolyline()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
@@ -42,14 +42,24 @@ namespace Acadv25JArch
                     return;
                 }
 
-                // 이웃하지 않는 라인들은 평행해도 괜찮음
+                // 기준점 선택
+                Point3d? referencePoint = GetReferencePoint(ed);
+                if (!referencePoint.HasValue)
+                {
+                    ed.WriteMessage("\n기준점이 선택되지 않았습니다.");
+                    return;
+                }
 
-                // 이웃한 라인들의 교차점 계산 (순환적으로)
-                List<Point3d> intersectionPoints = CalculateIntersectionPoints(selectedLines);
+                // 기준점을 사용하여 라인들을 각도 순서로 정렬
+                List<Line> sortedLines = SortLinesByAngle(selectedLines, referencePoint.Value);
+                ed.WriteMessage($"\n기준점에서 각도 순서로 {sortedLines.Count}개의 라인을 정렬했습니다.");
 
-                ed.WriteMessage($"\n{selectedLines.Count}개의 라인에서 {intersectionPoints.Count}개의 교차점을 찾았습니다.");
+                // 정렬된 순서로 순환적 이웃 관계 형성
+                List<Point3d> intersectionPoints = CalculateIntersectionPoints(sortedLines);
 
-                if (intersectionPoints.Count != selectedLines.Count)
+                ed.WriteMessage($"\n{sortedLines.Count}개의 라인에서 {intersectionPoints.Count}개의 교차점을 찾았습니다.");
+
+                if (intersectionPoints.Count != sortedLines.Count)
                 {
                     ed.WriteMessage("\n예상된 교차점 수와 일치하지 않습니다.");
                     return;
@@ -73,11 +83,14 @@ namespace Acadv25JArch
             List<Line> lines = new List<Line>();
 
             PromptSelectionOptions opts = new PromptSelectionOptions();
-            opts.MessageForAdding = "\n라인들을 이웃 순서대로 선택하세요 (3개 이상): ";
+            opts.MessageForAdding = "\n라인들을 선택하세요 (3개 이상, 순서 무관): ";
             opts.AllowDuplicates = false;
 
             // 라인만 선택하도록 필터 설정
-            TypedValue[] filterList = { new TypedValue((int)DxfCode.Start, "LINE") };
+            TypedValue[] filterList = {
+                new TypedValue((int)DxfCode.Start, "LINE"),
+                new TypedValue((int)DxfCode.ExtendedDataRegAppName , "WallWidth")
+            };
             SelectionFilter filter = new SelectionFilter(filterList);
 
             PromptSelectionResult selResult = ed.GetSelection(opts, filter);
@@ -99,6 +112,52 @@ namespace Acadv25JArch
             }
 
             return lines;
+        }
+
+        private Point3d? GetReferencePoint(Editor ed)
+        {
+            PromptPointOptions pointOpts = new PromptPointOptions("\n기준점을 선택하세요: ");
+            pointOpts.AllowNone = false;
+
+            PromptPointResult pointResult = ed.GetPoint(pointOpts);
+
+            if (pointResult.Status == PromptStatus.OK)
+            {
+                return pointResult.Value;
+            }
+
+            return null;
+        }
+
+        private List<Line> SortLinesByAngle(List<Line> lines, Point3d referencePoint)
+        {
+            if (lines.Count < 3)
+                return lines;
+
+            // 각 라인의 중심점 계산
+            List<Point3d> lineCenters = lines.Select(line => GetLineCenter(line)).ToList();
+
+            // 기준점에서 각 라인 중심점까지의 각도 계산하여 정렬
+            var lineWithAngles = lines.Select((line, index) => new
+            {
+                Line = line,
+                Center = lineCenters[index],
+                Angle = Math.Atan2(
+                    lineCenters[index].Y - referencePoint.Y,
+                    lineCenters[index].X - referencePoint.X
+                )
+            }).OrderBy(item => item.Angle).ToList();
+
+            return lineWithAngles.Select(item => item.Line).ToList();
+        }
+
+        private Point3d GetLineCenter(Line line)
+        {
+            return new Point3d(
+                (line.StartPoint.X + line.EndPoint.X) / 2.0,
+                (line.StartPoint.Y + line.EndPoint.Y) / 2.0,
+                (line.StartPoint.Z + line.EndPoint.Z) / 2.0
+            );
         }
 
         private List<Point3d> CalculateIntersectionPoints(List<Line> lines)
