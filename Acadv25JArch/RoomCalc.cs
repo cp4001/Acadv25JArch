@@ -514,7 +514,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 북쪽 방향 벡터를 기준으로 대상 line의 방향을 분석
         /// </summary>
-        private DirectionResult AnalyzeDirectionRelativeToNorth(Line northVectorLine, Line targetLine, double baseAngle = 10.0)
+        private DirectionResult AnalyzeDirectionRelativeToNorth(Line northVectorLine, Line targetLine, double baseAngle = 22.5)
         {
             // 북쪽 방향 벡터 계산 (시작점 → 끝점)
             Vector3d northVector = northVectorLine.EndPoint - northVectorLine.StartPoint;
