@@ -360,6 +360,8 @@ namespace Acadv25JArch
                     // 길이가 10 이하인 라인은 무시    
                     // poly 만들때  첫번째 point 와 마지막 point 가 같은 경우가 발생하여  길이가 0 인 line 이 발생한다.      
                     lines = lines.Where(x => x.Length >= 10).ToList();
+                    var lineAvglength = lines.Average(x => x.Length);
+
 
                     foreach (var line in lines)
                     {
@@ -391,13 +393,14 @@ namespace Acadv25JArch
                         var dir = AnalyzeDirectionRelativeToNorth(northVecor, lineDirection);
 
                         DBText textEntity = new DBText();               
-                        textEntity.Height = lines[0].Length / 20;
-                        textEntity.Position = line.GetPointAtDist(line.Length / 2) - lineVec2 * lines[0].Length/10;
-                        textEntity.TextString = dir.direction.ToString() + ":" + ((int)line.Length).ToString();
+                        textEntity.Height = lineAvglength / 30;
+                        textEntity.Position = line.GetPointAtDist(line.Length / 2) - lineVec2 * lineAvglength / 12;
+                        var lineText = dir.direction.ToString() + ":" + (Math.Round(line.Length)).ToString();
+                        textEntity.TextString = lineText;
                         textEntity.Rotation = line.Angle;
                         textEntity.HorizontalMode = TextHorizontalMode.TextCenter;
                         textEntity.VerticalMode = TextVerticalMode.TextVerticalMid;
-                        textEntity.AlignmentPoint = line.GetPointAtDist(line.Length / 2) - lineVec2 * lines[0].Length / 10;
+                        textEntity.AlignmentPoint = line.GetPointAtDist(line.Length / 2) - lineVec2 * lineAvglength / 12;
                         textEntity.SetDatabaseDefaults();
                         textEntity.Layer = Jdf.Layer.Room;
 
@@ -406,7 +409,7 @@ namespace Acadv25JArch
                         JXdata.SetXdata(textEntity, "Handle", poly.Handle.ToString());  
                         JXdata.SetXdata(textEntity, "LL", line.ToStr());
                         JXdata.SetXdata(textEntity, "Dir", dir.direction.ToString());
-                        JXdata.SetXdata(textEntity, "LEN", ((int)line.Length).ToString());
+                        JXdata.SetXdata(textEntity, "LEN", (Math.Round(line.Length)).ToString());
 
                         btr.AppendEntity(textEntity);
                         tr.AddNewlyCreatedDBObject(textEntity, true);
