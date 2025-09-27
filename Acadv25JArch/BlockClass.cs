@@ -4164,18 +4164,28 @@ namespace Acadv25JArch
                     {
                         BlockTableRecord btr = tr.GetObject(blockId, OpenMode.ForRead) as BlockTableRecord;
 
-                        // 시스템 블록 및 레이아웃 블록 제외
-                        if (btr != null && !btr.IsAnonymous && !btr.IsLayout &&
-                            btr.Name != "*Model_Space" && btr.Name != "*Paper_Space")
+                        try
                         {
-                            ed.WriteMessage($"\n\n블록 '{btr.Name}' 처리 중...");
-                            bool success = ChangeBlockDefinitionEntitiesToLayer0(tr, blockId, ed);
-                            if (success)
+                            // 시스템 블록 및 레이아웃 블록 제외
+                            if (btr != null && !btr.IsAnonymous && !btr.IsLayout &&
+                                btr.Name != "*Model_Space" && btr.Name != "*Paper_Space")
                             {
-                                processedBlocks++;
-                                ed.WriteMessage($"\n블록 '{btr.Name}' 처리 완료");
+                                ed.WriteMessage($"\n\n블록 '{btr.Name}' 처리 중...");
+                                bool success = ChangeBlockDefinitionEntitiesToLayer0(tr, blockId, ed);
+                                if (success)
+                                {
+                                    processedBlocks++;
+                                    ed.WriteMessage($"\n블록 '{btr.Name}' 처리 완료");
+                                }
                             }
+
                         }
+                        catch (Exception ex)
+                        {
+                            ed.WriteMessage($"\n블록 '{ex.Message}'  미처리 ");
+
+                        }
+      
                     }
 
                     if (processedBlocks > 0)
