@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
+﻿using AcadFunction;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.DatabaseServices.Filters;
@@ -12,10 +13,11 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Transactions;
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Exception = System.Exception;
 using Image = System.Drawing.Image;
-using AcadFunction;
-using Application = Autodesk.AutoCAD.ApplicationServices.Application;
+using Transaction = Autodesk.AutoCAD.DatabaseServices.Transaction;
 
 namespace Acadv25JArch
 {
@@ -2212,6 +2214,69 @@ namespace Acadv25JArch
                 return finalResult;
             }
         }
+        //Block Size 이상만 재귀적으로 explode
+        public static List<ObjectId> ExplodeBlockCompletely(BlockReference blockRef, Transaction transaction,double blockSize, bool deleteOriginal = true)
+        {
+            var finalResult = new List<ObjectId>();
+
+            if (blockRef == null || transaction == null)
+                return finalResult;
+
+            try
+            {
+                var toProcess = new Queue<ObjectId>();
+
+                // 첫 번째 explode 수행
+                var firstLevelEntities = ExplodeBlock(blockRef, transaction, deleteOriginal);
+
+                foreach (var entityId in firstLevelEntities)
+                {
+                    toProcess.Enqueue(entityId);
+                }
+
+                // 재귀적으로 모든 BlockReference를 explode
+                while (toProcess.Count > 0)
+                {
+                    var currentEntityId = toProcess.Dequeue();
+
+                    try
+                    {
+                        if (currentEntityId.IsNull || currentEntityId.IsErased)
+                            continue;
+
+                        var currentEntity = transaction.GetObject(currentEntityId, OpenMode.ForRead);
+
+                        if ((currentEntity is BlockReference nestedBlockRef) && (GetBlockSize(nestedBlockRef, transaction).Area >= blockSize))  
+                        {
+                            // 중첩된 BlockReference를 explode
+                            var explodedEntities = ExplodeBlock(nestedBlockRef, transaction, true);
+
+                            // explode된 Entity들을 처리 대기열에 추가
+                            foreach (var explodedId in explodedEntities)
+                            {
+                                toProcess.Enqueue(explodedId);
+                            }
+                        }
+                        else
+                        {
+                            // 기본 Entity는 최종 결과에 추가
+                            finalResult.Add(currentEntityId);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // 개별 Entity 처리 실패 시 계속 진행
+                        continue;
+                    }
+                }
+
+                return finalResult;
+            }
+            catch (Exception)
+            {
+                return finalResult;
+            }
+        }
 
         /// <summary>
         /// 선택된 여러 BlockReference들을 일괄 explode합니다
@@ -2267,6 +2332,64 @@ namespace Acadv25JArch
 
             return results;
         }
+
+        /// <summary>
+        /// 선택된 여러 BlockReference들을 일괄 explode합니다
+        /// </summary>
+        /// <param name="blockRefIds">explode할 BlockReference ObjectId 목록</param>
+        /// <param name="transaction">활성 Transaction</param>
+        /// <param name="blockSize"> Block Size</param>
+        /// <param name="recursive">재귀적 explode 여부</param>
+        /// <param name="deleteOriginals">원본 Block들 삭제 여부</param>
+        /// <returns>처리 결과 정보</returns>
+        public static ExplodeResults ExplodeMultipleBlocks(List<ObjectId> blockRefIds, Transaction transaction,double blockSize, bool recursive = false, bool deleteOriginals = true)
+        {
+            var results = new ExplodeResults();
+
+            if (blockRefIds == null || transaction == null)
+                return results;
+
+            foreach (var blockRefId in blockRefIds)
+            {
+                try
+                {
+                    if (blockRefId.IsNull || blockRefId.IsErased)
+                    {
+                        results.FailedBlocks.Add(blockRefId);
+                        continue;
+                    }
+
+                    var blockRef = transaction.GetObject(blockRefId, OpenMode.ForRead) as BlockReference;
+                    if ((blockRef == null) || (GetBlockSize(blockRef, transaction).Area < blockSize))
+                    {
+                        results.FailedBlocks.Add(blockRefId);
+                        continue;
+                    }
+
+                    List<ObjectId> explodedEntities;
+
+                    if (recursive)
+                    {
+                        explodedEntities = ExplodeBlockCompletely(blockRef, transaction, deleteOriginals);
+                    }
+                    else
+                    {
+                        explodedEntities = ExplodeBlock(blockRef, transaction, deleteOriginals);
+                    }
+
+                    results.SuccessfulBlocks.Add(blockRefId);
+                    results.CreatedEntities.AddRange(explodedEntities);
+                }
+                catch (Exception)
+                {
+                    results.FailedBlocks.Add(blockRefId);
+                }
+            }
+
+            return results;
+        }
+
+
 
         /// <summary>
         /// 현재 공간의 모든 BlockReference를 찾아서 explode합니다
@@ -2644,6 +2767,91 @@ namespace Acadv25JArch
                 }
             }
         }
+
+
+        //선택된 블럭을 일과적으로 explode
+        [CommandMethod("EXPLODE_Sel_BLOCKS")]
+        public void Cmd_Explode_Selected_Blocks()
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            var ed = doc.Editor;
+
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    List<BlockReference> blockRefs = JEntityFunc.GetEntityByTpye<BlockReference>("대상을 선택 하세요?", JSelFilter.MakeFilterTypes("INSERT"));
+
+                    if( blockRefs.Count == 0)
+                    {
+                        ed.WriteMessage("\n대상을 선택하지 않았습니다.");
+                        return;
+                    }
+
+
+                    //foreach( var brref in blockRefs)
+                    //{
+                        // 찾은 BlockReference들을 explode
+                        var results = BlockUtilities.ExplodeMultipleBlocks(blockRefs.Select(x=>x.Id).ToList(), tr, true, true);
+
+                        ed.WriteMessage($"\n=== Explode 결과 ===");
+                        ed.WriteMessage($"\n{results}");
+
+                        if (results.FailureCount > 0)
+                        {
+                            ed.WriteMessage($"\n실패한 Block들이 있습니다. 로그를 확인하세요.");
+                        }
+                        //ed.WriteMessage($"\n선택된 Block: {br.Name}, ID: {br.Id}");
+                    //}
+
+                    //// 재귀적 explode 여부 확인
+                    //var pko1 = new PromptKeywordOptions("\n재귀적으로 explode하시겠습니까?");
+                    //pko1.Keywords.Add("Yes");
+                    //pko1.Keywords.Add("No");
+                    //pko1.Keywords.Default = "Yes";
+
+                    //var pkr1 = ed.GetKeywords(pko1);
+                    //if (pkr1.Status != PromptStatus.OK) return;
+
+                    //bool recursive = (pkr1.StringResult == "Yes");
+
+                    //// Block 이름 패턴 입력
+                    //var pso = new PromptStringOptions("\nBlock 이름 패턴을 입력하세요 (Enter=모든 Block): ");
+                    //pso.AllowSpaces = true;
+                    //var psr = ed.GetString(pso);
+
+                    //string pattern = null;
+                    //if (psr.Status == PromptStatus.OK && !string.IsNullOrWhiteSpace(psr.StringResult))
+                    //{
+                    //    pattern = psr.StringResult;
+                    //}
+
+                    //// 확인 메시지
+                    //var pko2 = new PromptKeywordOptions($"\n현재 공간의 {(string.IsNullOrEmpty(pattern) ? "모든" : pattern + " 패턴의")} Block을 {(recursive ? "재귀적으로" : "")} explode하시겠습니까?");
+                    //pko2.Keywords.Add("Yes");
+                    //pko2.Keywords.Add("No");
+                    //pko2.Keywords.Default = "No";
+
+                    //var pkr2 = ed.GetKeywords(pko2);
+                    //if (pkr2.Status != PromptStatus.OK || pkr2.StringResult != "Yes")
+                    //    return;
+
+                    // 모든 Block explode 수행
+                    //var results = BlockUtilities.ExplodeAllBlocks(db, tr, recursive, pattern);
+ 
+
+                    tr.Commit();
+                }
+                catch (Exception ex)
+                {
+                    ed.WriteMessage($"\n오류: {ex.Message}");
+                    tr.Abort();
+                }
+            }
+        }
+
+
     }
     #endregion
 

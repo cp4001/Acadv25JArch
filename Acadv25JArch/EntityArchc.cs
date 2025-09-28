@@ -210,7 +210,7 @@ namespace Acadv25JArch
                     if(btr.IsLayout || btr.IsAnonymous) continue; // Layout과 Anonymous Block은 제외
 
 
-                    var Img = btr.PreviewIcon?.GetThumbnailImage(40, 40, () => false, IntPtr.Zero);
+                    var Img = btr.PreviewIcon?.GetThumbnailImage(128, 128, () => false, IntPtr.Zero);
                     if (Img == null) continue; // Img가 없는것은 제외
                     BlockPart jbtr = new BlockPart(btrId);//brg.First().BlockTableRecord);
                     
