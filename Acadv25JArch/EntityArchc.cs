@@ -119,7 +119,7 @@ namespace Acadv25JArch
                         btrId = brg.First().BlockTableRecord;
                         btr = tr.GetObject(brg.First().BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
                     }
-
+                    if (btr.IsLayout || btr.IsAnonymous) continue; // Layout과 Anonymous Block은 제외   
                     BlockPart jbtr = new BlockPart(btrId);//brg.First().BlockTableRecord);
                     //jbtr.Attach = "천장";
                     jbtr.Count = brg.Count();
@@ -207,8 +207,13 @@ namespace Acadv25JArch
                         btrId = brg.First().BlockTableRecord;
                         btr = tr.GetObject(brg.First().BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
                     }
+                    if(btr.IsLayout || btr.IsAnonymous) continue; // Layout과 Anonymous Block은 제외
 
+
+                    var Img = btr.PreviewIcon?.GetThumbnailImage(40, 40, () => false, IntPtr.Zero);
+                    if (Img == null) continue; // Img가 없는것은 제외
                     BlockPart jbtr = new BlockPart(btrId);//brg.First().BlockTableRecord);
+                    
                     //jbtr.Attach = "천장";
                     jbtr.Count = brg.Count();
                     jbtr.PartName = JXdata.GetXdata(brg.First(), "PartName");

@@ -31,6 +31,9 @@ namespace Acadv25JArch
             //blockparts = BlockPart.GetSelectedBlockParts();
             blockparts = BlockPart.GetAllBlockParts();
 
+            //// Img  가 없는것은 제외   
+            //blockparts = blockparts.Where(x => x.Img != null).ToList();
+
             if (blockparts == null)
             {
                 MessageBox.Show(" 대상을 선택 하세요");
