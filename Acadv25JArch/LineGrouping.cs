@@ -253,6 +253,9 @@ namespace Acadv25JArch
 
                         foreach (var l in cls)
                         {
+                            //l 과 ll 이 평행하면 무시 
+                            if (ll.IsParallel(l)) continue;
+
                             l.UpgradeOpen();
                             //선분 연장
                             if (ll.GetClosestPointTo(l.StartPoint, true).DistanceTo(l.StartPoint) <

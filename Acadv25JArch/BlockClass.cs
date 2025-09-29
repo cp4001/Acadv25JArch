@@ -21,7 +21,7 @@ using Transaction = Autodesk.AutoCAD.DatabaseServices.Transaction;
 
 namespace Acadv25JArch
 {
- 
+
 
     /// <summary>
     /// 선택된 블록의 PreviewIcon 이미지를 224x224 PNG로 추출하는 서브루틴
