@@ -448,7 +448,7 @@ namespace Acadv25JArch
         /// Room Polyline 내부에 있는 Line 분석 Text로 기록 
         /// 방향 벡터를 기준으로 선택된 각 line의 방향을 NW, NE, SE, SW로 분석하는 메인 커맨드
         /// </summary>
-        [CommandMethod("룸폴리전제계산")]
+        [CommandMethod(Jdf.Cmd.룸폴리전체계산)]
         public void Cmd_RoomPoly_All_Calc()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;

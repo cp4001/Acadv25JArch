@@ -51,6 +51,8 @@ namespace Acadv25JArch
 
             public const string 선택폴리룸계산 = "Room_Poly_Calc";                         //Cmd_RoomPoly_Calc()
 
+            public const string 룸폴리전체계산 = "Room_Poly_ALL_Calc";                        //Cmd_RoomPoly_All_Calc()
+
             public const string 벽센터라인선택폴리만들기 = "Wall_LINES2POLY";         // Cmd_LinesTo_ConvertClosedPolyline()
 
         }
