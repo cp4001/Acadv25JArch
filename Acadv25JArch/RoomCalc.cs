@@ -584,6 +584,56 @@ namespace Acadv25JArch
         }
 
 
+
+        /// <summary>
+        /// 선택 Room Text  제거
+        /// </summary>
+        [CommandMethod(Jdf.Cmd.룸텍스트제거)]
+        public void Cmd_Room_texts_Delete()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // 1. Room Polyline 선택
+                    List<DBText> targets = JEntity.GetEntityByTpye<DBText>("Room Text 를 선택 하세요?", JSelFilter.MakeFilterTypesRegs("TEXT", "RoomText"));
+                    if (targets.Count() == 0) return;
+
+                    var btr = tr.GetModelSpaceBlockTableRecord(db);
+
+                    foreach (var txt in targets)
+                    {
+
+                        if (txt == null)
+                        {
+                            ed.WriteMessage("\n폴리라인을 읽을 수 없습니다.");
+                            continue;
+                        }
+                        txt.UpgradeOpen();
+                        txt.Erase();
+
+                        // 5. 사용자 확인
+                        ed.WriteMessage($"\n{targets.Count}개의 룸 텍스트가  성공적으로 제거 되었습니다.");
+
+                    }
+
+
+                    tr.Commit();
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+
+
         /// <summary>
         /// 커스텀 허용 각도로 방향 분석하는 추가 커맨드
         /// </summary>
