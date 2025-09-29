@@ -81,26 +81,35 @@ namespace XclipBoundaryToPolyline
                         return;
                     }
 
-                    // 새로운 폴리라인 생성
                     Polyline polyline = new Polyline();
-
-                    // 블록의 변환 행렬(위치, 회전, 축척)을 적용하여 좌표 변환
                     Matrix3d transform = blockRef.BlockTransform;
 
-                    for (int i = 0; i < boundaryPoints.Count; i++)
-                    {
-                        Point3d pt3d = new Point3d(boundaryPoints[i].X, boundaryPoints[i].Y, 0);
-                        Point3d transformedPt = pt3d.TransformBy(transform);
-                        polyline.AddVertexAt(i, new Point2d(transformedPt.X, transformedPt.Y), 0, 0, 0);
-                    }
-
-                    // 경계가 직사각형일 경우 두 개의 점만 반환되므로 폴리라인을 완성해야 함
+                    // 경계가 직사각형일 경우 (점이 2개)
                     if (boundaryPoints.Count == 2)
                     {
-                        Point2d p1 = polyline.GetPoint2dAt(0);
-                        Point2d p2 = polyline.GetPoint2dAt(1);
-                        polyline.AddVertexAt(1, new Point2d(p1.X, p2.Y), 0, 0, 0);
-                        polyline.AddVertexAt(3, new Point2d(p2.X, p1.Y), 0, 0, 0);
+                        // 두 대각선 점을 WCS로 변환
+                        Point3d p1_3d = new Point3d(boundaryPoints[0].X, boundaryPoints[0].Y, 0).TransformBy(transform);
+                        Point3d p3_3d = new Point3d(boundaryPoints[1].X, boundaryPoints[1].Y, 0).TransformBy(transform);
+
+                        // 나머지 두 꼭지점 계산
+                        Point3d p2_3d = new Point3d(p3_3d.X, p1_3d.Y, 0);
+                        Point3d p4_3d = new Point3d(p1_3d.X, p3_3d.Y, 0);
+
+                        // 올바른 순서(반시계 방향)로 정점 추가
+                        polyline.AddVertexAt(0, new Point2d(p1_3d.X, p1_3d.Y), 0, 0, 0);
+                        polyline.AddVertexAt(1, new Point2d(p2_3d.X, p2_3d.Y), 0, 0, 0);
+                        polyline.AddVertexAt(2, new Point2d(p3_3d.X, p3_3d.Y), 0, 0, 0);
+                        polyline.AddVertexAt(3, new Point2d(p4_3d.X, p4_3d.Y), 0, 0, 0);
+                    }
+                    // 경계가 다각형일 경우 (점이 2개 초과)
+                    else
+                    {
+                        for (int i = 0; i < boundaryPoints.Count; i++)
+                        {
+                            Point3d pt3d = new Point3d(boundaryPoints[i].X, boundaryPoints[i].Y, 0);
+                            Point3d transformedPt = pt3d.TransformBy(transform);
+                            polyline.AddVertexAt(i, new Point2d(transformedPt.X, transformedPt.Y), 0, 0, 0);
+                        }
                     }
 
                     polyline.Closed = true;
