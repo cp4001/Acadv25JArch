@@ -1294,6 +1294,7 @@ namespace CADExtension //Curve Line Poly Geometry Point
         }
 
 
+
     }
 
     public static class jPolyLineExtension

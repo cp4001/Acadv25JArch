@@ -365,7 +365,10 @@ namespace Acadv25JArch
                         // 길이 기준 오름차순 (긴 것부터)
                         var group1  = group.OrderByDescending(line => line.Length).ToList();
                         var centerLineCreator = new CenterLine();
-                        var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group1[0], group1[1]);
+                        var res= GetFarthestParallelLines(group1);
+
+                        //var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group1[0], group1[1]);
+                        var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(res.Item1, res.Item2);
                         Line middleLine = result.line;
 
                         middleLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Red
@@ -394,6 +397,35 @@ namespace Acadv25JArch
             }
         }
 
+
+        //  Line 그룹에서 가장먼 2 개 찾기
+        public static (Line, Line) GetFarthestParallelLines(List<Line> lines)
+        {
+            if (lines.Count < 2)
+                throw new ArgumentException("최소 2개 이상의 Line이 필요합니다.");
+
+            double maxDistance = 0;
+            Line farthestLine1 = null;
+            Line farthestLine2 = null;
+
+            for (int i = 0; i < lines.Count - 1; i++)
+            {
+                for (int j = i + 1; j < lines.Count; j++)
+                {
+                    Point3d closestPoint = lines[j].GetClosestPointTo(lines[i].GetCentor(), false);
+                    double distance = lines[i].GetCentor().DistanceTo(closestPoint);
+
+                    if (distance > maxDistance)
+                    {
+                        maxDistance = distance;
+                        farthestLine1 = lines[i];
+                        farthestLine2 = lines[j];
+                    }
+                }
+            }
+
+            return (farthestLine1, farthestLine2);
+        }
 
         /// <summary>
         /// 선택된 라인들을 기울기별로 그룹화하고 대상 그룹에 센터 라인을 생성하는 메인 커맨드
