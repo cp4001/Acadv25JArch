@@ -365,10 +365,10 @@ namespace Acadv25JArch
                         // 길이 기준 오름차순 (긴 것부터)
                         var group1  = group.OrderByDescending(line => line.Length).ToList();
                         var centerLineCreator = new CenterLine();
-                        var res= GetFarthestParallelLines(group1);
+                        var (far1,far2)= GetFarthestParallelLines(group1);
 
                         //var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group1[0], group1[1]);
-                        var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(res.Item1, res.Item2);
+                        var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(far1, far2);
                         Line middleLine = result.line;
 
                         middleLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Red
@@ -506,7 +506,9 @@ namespace Acadv25JArch
                         // 길이 기준 오름차순 (긴 것부터)
                         var group1 = group.OrderByDescending(line => line.Length).ToList();
                         var centerLineCreator = new CenterLine();
-                        var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(group1[0], group1[1]);
+
+                        var (far1, far2) = GetFarthestParallelLines(group1);
+                        var result = centerLineCreator.CreateMiddleLineFromParallelsWithInfo(far1, far2);
                         Line middleLine = result.line;
 
                         middleLine.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Red
