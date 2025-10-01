@@ -1107,6 +1107,56 @@ namespace Acadv25JArch
         //    }
         //}
 
+        /// <summary>
+        /// 선택 Wall Line  제거
+        /// </summary>
+        [CommandMethod(Jdf.Cmd.벽라인제거)]
+        public void Cmd_Wall_Lines_Delete()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // 1. Room Polyline 선택
+                    List<Line> targets = JEntity.GetEntityByTpye<Line>("Wall Line 를 선택 하세요?", JSelFilter.MakeFilterTypesRegs("LINE", "WallWidth"));
+                    if (targets.Count() == 0) return;
+
+                    var btr = tr.GetModelSpaceBlockTableRecord(db);
+
+                    foreach (var ll in targets)
+                    {
+
+                        if (ll == null)
+                        {
+                            ed.WriteMessage("\n라인을 읽을 수 없습니다.");
+                            continue;
+                        }
+                        ll.UpgradeOpen();
+                        ll.Erase();
+
+                        // 5. 사용자 확인
+                        ed.WriteMessage($"\n{targets.Count}개의 Wall Line이 성공적으로 제거 되었습니다.");
+
+                    }
+
+
+                    tr.Commit();
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+
+
+
 
         [CommandMethod("CreateMiddleLine")]
         public void Cmd_CreateMiddleLine()

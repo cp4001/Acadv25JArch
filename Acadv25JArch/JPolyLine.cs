@@ -43,8 +43,6 @@ namespace Acadv25JArch
                     return;
                 }
 
-                // colinear line 제거 
-                var selines = Func.RemoveColinearLinesKeepShortest(selectedLines);
 
                           // GroupLinesBySlope(selines);  
 
@@ -58,6 +56,12 @@ namespace Acadv25JArch
 
                 // 같은 방위각 line 으로 Grouping
                 var pt = (Point3d)referencePoint;
+
+
+                // colinear line 제거 
+                var selines = Func.RemoveColinearLinesKeepShortest(selectedLines,pt);
+
+
                 var groupedLines = GroupLinesByAzimuth(selines, pt);
                 // 그룹별로 처리 기준점에서 가장 가까운 라인 선택   
                 List<Line> glines = new List<Line>();

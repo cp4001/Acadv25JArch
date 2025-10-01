@@ -2583,7 +2583,7 @@ namespace AcadFunction
         /// </summary>
         /// <param name="lines">입력 선분 리스트</param>
         /// <returns>colinear 그룹별로 가장 짧은 선분과 단독 선분이 포함된 리스트</returns>
-        public static List<Line> RemoveColinearLinesKeepShortest(List<Line> lines)
+        public static List<Line> RemoveColinearLinesKeepShortest(List<Line> lines,Point3d bpt)
         {
             if (lines == null || lines.Count <= 1)
                 return lines?.ToList() ?? new List<Line>();
@@ -2617,9 +2617,9 @@ namespace AcadFunction
                     //// 현재 선분도 그룹에 추가
                     //colinearGroup.Add((lines[i], i));
 
-                    // 그룹에서 가장 짧은 선분 찾기
+                    // 그룹에서 기준 point 가장 짧은 선분 찾기
                     var shortestLine = colinearGroup
-                        .OrderBy(item => item.line.Length)
+                        .OrderBy(item => item.line.GetCentor().DistanceTo(bpt))
                         .First();
 
                     // 결과에 가장 짧은 선분 추가
