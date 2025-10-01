@@ -707,7 +707,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 북쪽 방향 벡터를 기준으로 대상 line의 방향을 분석
         /// </summary>
-        private DirectionResult AnalyzeDirectionRelativeToNorth(Line northVectorLine, Line targetLine, double baseAngle = 22.5)
+        public static DirectionResult AnalyzeDirectionRelativeToNorth(Line northVectorLine, Line targetLine, double baseAngle = 22.5)
         {
             // 북쪽 방향 벡터 계산 (시작점 → 끝점)
             Vector3d northVector = northVectorLine.EndPoint - northVectorLine.StartPoint;
@@ -746,7 +746,7 @@ namespace Acadv25JArch
         /// <summary>
         /// Vector3d를 도(degree) 단위 각도로 변환
         /// </summary>
-        private double GetAngleInDegrees(Vector3d vector)
+        private static double GetAngleInDegrees(Vector3d vector)
         {
             // XY 평면에서의 각도 계산 (Z 축은 무시)
             double angleRad = Math.Atan2(vector.Y, vector.X);
@@ -762,7 +762,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 각도를 -180° ~ 180° 범위로 정규화
         /// </summary>
-        private double NormalizeAngleToSignedRange(double angle)
+        private static double NormalizeAngleToSignedRange(double angle)
         {
             while (angle > 180.0)
                 angle -= 360.0;
@@ -774,7 +774,7 @@ namespace Acadv25JArch
         /// <summary>
         /// 상대 각도에 따른 방향 결정 (기준각 d=10도 사용)
         /// </summary>
-        private DirectionType DetermineDirection(double relativeAngle, double baseAngle = 10.0)
+        private static DirectionType DetermineDirection(double relativeAngle, double baseAngle = 10.0)
         {
             // 1단계: 먼저 주요 방향(N, E, S, W) 확인
 

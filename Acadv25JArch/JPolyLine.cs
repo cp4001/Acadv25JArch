@@ -8,6 +8,7 @@ using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.Internal;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows.Data;
+using CADExtension;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -43,8 +44,9 @@ namespace Acadv25JArch
                 }
 
                 // colinear line 제거 
-                var selines = Func.RemoveColinearLinesKeepShortest(selectedLines);  
+                var selines = Func.RemoveColinearLinesKeepShortest(selectedLines);
 
+                          // GroupLinesBySlope(selines);  
 
                 // 기준점 선택
                 Point3d? referencePoint = GetReferencePoint(ed);
@@ -54,8 +56,29 @@ namespace Acadv25JArch
                     return;
                 }
 
+                // 같은 방위각 line 으로 Grouping
+                var pt = (Point3d)referencePoint;
+                var groupedLines = GroupLinesByAzimuth(selines, pt);
+                // 그룹별로 처리 기준점에서 가장 가까운 라인 선택   
+                List<Line> glines = new List<Line>();
+                foreach (var group in groupedLines)
+                {
+                    if (group.Count == 1)
+                    {
+                        glines.Add(group[0]);
+                        continue;
+                    }
+                    // 그룹에서 가장 기준점에 가까운 라인 선택
+                    var shortestLine = group
+                        .OrderBy(item => item.GetCentor().DistanceTo(pt))
+                        .First();
+
+                    glines.Add(shortestLine);
+                }
+
+
                 // 기준점을 사용하여 라인들을 각도 순서로 정렬
-                List<Line> sortedLines = SortLinesByAngle(selines, referencePoint.Value);
+                List<Line> sortedLines = SortLinesByAngle(glines, pt);
                 ed.WriteMessage($"\n기준점에서 각도 순서로 {sortedLines.Count}개의 라인을 정렬했습니다.");
 
                 // 정렬된 순서로 순환적 이웃 관계 형성
@@ -236,6 +259,88 @@ namespace Acadv25JArch
 
                 tr.Commit();
             }
+        }
+
+        // 같은 기울기 line으로 Grouping
+        public List<List<Line>> GroupLinesBySlope(List<Line> lines, double tolerance = 0.01)
+        {
+            var groups = new List<List<Line>>();
+
+            foreach (var line in lines)
+            {
+                // 각도를 0~180도 범위로 정규화 (라디안을 도로 변환)
+                double angle = (line.Angle * (180.0 / Math.PI)) % 180.0;
+
+                // 음수 각도 처리
+                if (angle < 0) angle += 180.0;
+
+                // 기존 그룹 중 허용 오차(tolerance) 내의 각도가 있는지 확인
+                List<Line> matchingGroup = null;
+                foreach (var group in groups)
+                {
+                    double groupAngle = (group[0].Angle * (180.0 / Math.PI)) % 180.0;
+                    if (groupAngle < 0) groupAngle += 180.0;
+
+                    if (Math.Abs(groupAngle - angle) < tolerance)
+                    {
+                        matchingGroup = group;
+                        break;
+                    }
+                }
+
+                // 매칭되는 그룹에 추가하거나 새 그룹 생성
+                if (matchingGroup != null)
+                {
+                    matchingGroup.Add(line);
+                }
+                else
+                {
+                    groups.Add(new List<Line> { line });
+                }
+            }
+
+            return groups;
+        }
+
+        // 같은 방위각 line으로 Grouping
+        public List<List<Line>> GroupLinesByAzimuth(List<Line> lines, Point3d pt)
+        {
+            var groups = new List<List<Line>>();
+
+            foreach (var line in lines)
+            {
+                // 각도를 0~180도 범위로 정규화 (라디안을 도로 변환)
+                var azi = line.GetAzimuth(pt);                  //(line.Angle * (180.0 / Math.PI)) % 180.0;
+
+                //// 음수 각도 처리
+                //if (angle < 0) angle += 180.0;
+
+                // 기존 그룹 중 허용 오차(tolerance) 내의 각도가 있는지 확인
+                List<Line> matchingGroup = null;
+                foreach (var group in groups)
+                {
+                    var groupAzi = (group[0].GetAzimuth(pt));// * (180.0 / Math.PI)) % 180.0;
+                    //if (groupAngle < 0) groupAngle += 180.0;
+
+                    if (Math.Abs(groupAzi - azi) < 1.0)
+                    {
+                        matchingGroup = group;
+                        break;
+                    }
+                }
+
+                // 매칭되는 그룹에 추가하거나 새 그룹 생성
+                if (matchingGroup != null)
+                {
+                    matchingGroup.Add(line);
+                }
+                else
+                {
+                    groups.Add(new List<Line> { line });
+                }
+            }
+
+            return groups;
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using AcadFunction;
+using Acadv25JArch;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
@@ -53,6 +54,26 @@ namespace CADExtension //Graphic JEntity JDBtext JObjectID JDouble
             { resstr = resstr + $"Sz:{sz}"; }
 
             return resstr;
+        }
+
+    }
+
+    public static class jVector
+    {
+        /// <summary>
+        /// Vector3d를 도(degree) 단위 각도로 변환
+        /// </summary>
+        public  static double GetAngleInDegrees(this Vector3d vector)
+        {
+            // XY 평면에서의 각도 계산 (Z 축은 무시)
+            double angleRad = Math.Atan2(vector.Y, vector.X);
+            double angleDeg = angleRad * 180.0 / Math.PI;
+
+            // 0° ~ 360° 범위로 변환
+            if (angleDeg < 0)
+                angleDeg += 360.0;
+
+            return angleDeg;
         }
 
     }
@@ -927,6 +948,14 @@ namespace CADExtension //Curve Line Poly Geometry Point
             return Math.Abs(ang);
         }
 
+        public static double GetAngle(this Line L1)
+        {
+            double angle = (L1.Angle * (180.0 / Math.PI)) % 180.0;
+            if (angle < 0) angle += 180.0;
+            return angle;
+        }
+
+
         public static List<Line> GetCrossedLines(this Line L1, string RegName)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -1293,7 +1322,31 @@ namespace CADExtension //Curve Line Poly Geometry Point
             }
         }
 
+        //  진북 기준   line 진행된  방향 line의 각도  
+        public static double  GetAzimuth(this Line line,Point3d pt)
+        {
+            //// 진북 방향 벡터 (Y축 방향)
+            Line NorthLine = new Line(new Point3d(0, 0, 0), new Point3d(0, 10, 0));
+            // 각도를 도(degree) 단위로 계산
+            double northAngle = NorthLine.GetVector().GetAngleInDegrees();
+            //
+            var   lineDir = new Line(pt, line.GetClosestPointTo(pt,true));
+            double targetAngle = lineDir.GetVector().GetAngleInDegrees();
 
+            // 상대 각도 계산 (북쪽을 0°로 기준)
+            double relativeAngle = targetAngle - northAngle;
+
+
+            return (relativeAngle + 360) % 360; // 0° ~ 360° 범위로 조정
+
+
+            ////Line northVector = new Line(new Point3d(0, 0, 0), new Point3d(0,  10, 0));
+            //var cp1 = line.GetClosestPointTo(pt, true);
+            //var lineDirection = new Line(pt, cp1);
+
+            //return   NorthLine.GetAngle(lineDirection);
+
+        }
 
     }
 
