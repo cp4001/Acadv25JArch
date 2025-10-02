@@ -1330,7 +1330,7 @@ namespace CADExtension //Curve Line Poly Geometry Point
             // 각도를 도(degree) 단위로 계산
             double northAngle = NorthLine.GetVector().GetAngleInDegrees();
             //
-            var   lineDir = new Line(pt, line.GetClosestPointTo(pt,true));
+            var   lineDir = new Line(pt, line.GetCentor());
             double targetAngle = lineDir.GetVector().GetAngleInDegrees();
 
             // 상대 각도 계산 (북쪽을 0°로 기준)
@@ -1346,6 +1346,25 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
             //return   NorthLine.GetAngle(lineDirection);
 
+        }
+
+        // Line 센터에 지정된 글자삽입
+        public static void AddTextAtCen(this Line line, Transaction tr,Point3d pt,string txt)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            DBText textEntity = new DBText();
+            textEntity.Height = line.Length / 30;
+            textEntity.Position = line.GetPointAtDist(line.Length / 2) ;
+            textEntity.TextString = txt + ":" + line.GetAzimuth(pt).ToString("F0");
+            textEntity.Rotation = line.Angle;
+            textEntity.HorizontalMode = TextHorizontalMode.TextCenter;
+            textEntity.VerticalMode = TextVerticalMode.TextVerticalMid;
+            textEntity.AlignmentPoint = line.GetPointAtDist(line.Length / 2);
+            textEntity.SetDatabaseDefaults();
+            var btr = tr.GetModelSpaceBlockTableRecord(db);
+            btr.AppendEntity(textEntity);
+            tr.AddNewlyCreatedDBObject(textEntity, true);
         }
 
     }

@@ -91,7 +91,7 @@ namespace Acadv25JArch
                     regionA.BooleanOperation(BooleanOperationType.BoolSubtract, regionB);
 
                     // Region을 바로 Polyline으로 변환
-                    DBObjectCollection polylines = ConvertRegionToPolylines(regionA, polyA);
+                    DBObjectCollection polylines = ConvertRegionToPolylines(regionA);
 
                     if (polylines.Count > 0)
                     {
@@ -153,7 +153,7 @@ namespace Acadv25JArch
                 BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
 
                 // Region을 Polyline으로 변환
-                DBObjectCollection polylines = ConvertRegionToPolylines(reg, reg);
+                DBObjectCollection polylines = ConvertRegionToPolylines(reg);
 
                 if (polylines.Count > 0)
                 {
@@ -178,7 +178,8 @@ namespace Acadv25JArch
         }
 
         // Region을 Polyline(s)로 변환하는 핵심 메서드
-        private DBObjectCollection ConvertRegionToPolylines(Region reg, Entity sourceEntity)
+        // Region을 Polyline(s)로 변환하는 핵심 메서드
+        private DBObjectCollection ConvertRegionToPolylines(Region reg, Entity sourceEntity = null)
         {
             DBObjectCollection result = new DBObjectCollection();
 
@@ -192,13 +193,16 @@ namespace Acadv25JArch
             // Region의 평면 생성 (3D 좌표를 Region 좌표계로 변환)
             Plane pl = new Plane(new Point3d(0, 0, 0), reg.Normal);
 
+            // 속성 복사용 엔티티 결정 (sourceEntity가 없으면 reg 사용)
+            Entity propertySource = sourceEntity ?? reg;
+
             // 곡선들을 그룹화 (연결된 곡선들끼리)
             while (curves.Count > 0)
             {
                 Polyline poly = new Polyline();
 
                 // 원본 엔티티의 속성 복사
-                poly.SetPropertiesFrom(sourceEntity);
+                poly.SetPropertiesFrom(propertySource);
 
                 // 첫 번째 곡선으로 시작
                 Curve cv1 = curves[0] as Curve;

@@ -26,8 +26,138 @@ namespace Acadv25JArch
 {
     public class LineToPolylineConverter
     {
-        [CommandMethod(Jdf.Cmd.벽센터라인선택폴리만들기)]
+        //선택된 라인들을 기준점에서 각도 순서로 정렬하고, 이웃한 라인들의 교차점을 찾아 닫힌 폴리라인을 생성
+        [CommandMethod(Jdf.Cmd.라인선택폴리만들기)]
         public void Cmd_LinesTo_ConvertClosedPolyline()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+            Database db = doc.Database;
+
+            try
+            {
+
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+
+                    // 3개 이상의 라인 선택
+                    List<Line> selectedLines = SelectLines1(ed, db);
+                    selectedLines = selectedLines.Where(l => l.Length > 300.0).ToList();
+                    if (selectedLines == null || selectedLines.Count < 3)
+                    {
+                        ed.WriteMessage("\n3개 이상의 라인을 선택해야 합니다.");
+                        return;
+                    }
+
+
+                    // GroupLinesBySlope(selines);  
+
+                    // 기준점 선택
+                    Point3d? referencePoint = GetReferencePoint(ed);
+                    if (!referencePoint.HasValue)
+                    {
+                        ed.WriteMessage("\n기준점이 선택되지 않았습니다.");
+                        return;
+                    }
+
+                    // 같은 방위각 line 으로 Grouping
+                    var pt = (Point3d)referencePoint;
+
+                    // line 을 긴것부터 우선 처리 평행 Grouping
+                    selectedLines = selectedLines.OrderByDescending(line => line.Length).ToList();
+                    var lineGroups = LineGrouping.GroupLinesByAngleAndDistance(selectedLines, 1, 300);
+
+                    List<Line> selines = new List<Line>();
+                    foreach (var group in lineGroups)
+                    {
+                        if (group.Count == 1)
+                        {
+                            selines.Add(group[0]);
+                            continue;
+                        }
+                        if (group.Count >= 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
+                        {
+                            // 길이 기준 오름차순 (긴 것부터)
+                            var group1 = group.OrderBy(line => line.GetCentor().DistanceTo(pt)).ToList();
+                            selines.Add(group1[0]); // 기준점에 가장 가까운 라인 추가
+                        }
+                    }
+
+
+
+
+                    // colinear line 제거 
+                    selines = Func.RemoveColinearLinesKeepShortest(selines, pt);
+
+                    selines = selines.OrderBy(ll => ll.GetAzimuth(pt)).ToList();
+
+                    int ic = 0;
+                    foreach (var line in selines)
+                    {
+                        line.AddTextAtCen(tr, pt,ic.ToString()); ic++;    
+                    }
+
+                   
+
+
+                    //var groupedLines = GroupLinesByAzimuth(selines, pt);
+                    //// 그룹별로 처리 기준점에서 가장 가까운 라인 선택   
+                    //List<Line> glines = new List<Line>();
+                    //foreach (var group in groupedLines)
+                    //{
+                    //    if (group.Count == 1)
+                    //    {
+                    //        glines.Add(group[0]);
+                    //        continue;
+                    //    }
+                    //    // 그룹에서 가장 기준점에 가까운 라인 선택
+                    //    var shortestLine = group
+                    //        .OrderBy(item => item.GetCentor().DistanceTo(pt))
+                    //        .First();
+
+                    //    glines.Add(shortestLine);
+                    //}
+
+
+                    // 기준점을 사용하여 라인들을 각도 순서로 정렬
+
+                    //List <Line> sortedLines = SortLinesByAngle(glines, pt);
+
+                    List<Line> sortedLines = selines.OrderBy(ll => ll.GetAzimuth(pt)).ToList();
+
+
+                    ed.WriteMessage($"\n기준점에서 각도 순서로 {sortedLines.Count}개의 라인을 정렬했습니다.");
+
+                    //// 정렬된 순서로 순환적 이웃 관계 형성
+                    //List<Point3d> intersectionPoints = CalculateIntersectionPoints(sortedLines);
+
+                    //ed.WriteMessage($"\n{sortedLines.Count}개의 라인에서 {intersectionPoints.Count}개의 교차점을 찾았습니다.");
+
+                    //if (intersectionPoints.Count != sortedLines.Count)
+                    //{
+                    //    ed.WriteMessage("\n예상된 교차점 수와 일치하지 않습니다.");
+                    //    return;
+                    //}
+
+                    // 교차점들이 이미 올바른 순서로 생성됨 (선택 순서 = 이웃 순서)
+
+                    //// 닫힌 폴리라인 생성
+                    //CreateClosedPolyline(intersectionPoints, db);
+
+                    //ed.WriteMessage($"\n{intersectionPoints.Count}개의 교차점으로 닫힌 폴리라인이 생성되었습니다.");
+
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+
+        [CommandMethod(Jdf.Cmd.벽센터라인선택폴리만들기)]
+        public void Cmd_Wall_LinesTo_ConvertClosedPolyline()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
@@ -144,6 +274,48 @@ namespace Acadv25JArch
 
             return lines;
         }
+        private List<Line> SelectLines1(Editor ed, Database db)
+        {
+            List<Line> lines = new List<Line>();
+
+            PromptSelectionOptions opts = new PromptSelectionOptions();
+            opts.MessageForAdding = "\n라인들을 선택하세요 (3개 이상, 순서 무관): ";
+            opts.AllowDuplicates = false;
+
+            // 라인만 선택하도록 필터 설정
+            TypedValue[] filterList = {
+                new TypedValue((int)DxfCode.Start, "LINE,LWPOLYLINE"),
+                //new TypedValue((int)DxfCode.ExtendedDataRegAppName , "WallWidth")
+            };
+            SelectionFilter filter = new SelectionFilter(filterList);
+
+            PromptSelectionResult selResult = ed.GetSelection(opts, filter);
+
+            if (selResult.Status != PromptStatus.OK)
+                return null;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                foreach (SelectedObject selObj in selResult.Value)
+                {
+                    Entity ent = tr.GetObject(selObj.ObjectId, OpenMode.ForRead) as Entity;
+                    if (ent.GetType()==  typeof(Line))
+                    {
+                        lines.Add(ent as Line);
+                    }
+
+                    else if (ent.GetType() == typeof(Polyline))
+                    {
+                        var poly = ent as Polyline;
+                        var lls = poly.GetLines();
+                        lines.AddRange(lls);    
+                    }   
+                }
+                tr.Commit();
+            }
+
+            return lines;
+        }
 
         private Point3d? GetReferencePoint(Editor ed)
         {
@@ -162,22 +334,31 @@ namespace Acadv25JArch
 
         private List<Line> SortLinesByAngle(List<Line> lines, Point3d referencePoint)
         {
-            if (lines.Count < 3)
-                return lines;
 
-            // 각 라인의 중심점 계산
-            List<Point3d> lineCenters = lines.Select(line => GetLineCenter(line)).ToList();
+            if (lines == null || lines.Count < 3)
+                return lines ?? new List<Line>();
 
-            // 기준점에서 각 라인 중심점까지의 각도 계산하여 정렬
-            var lineWithAngles = lines.Select((line, index) => new
+            var lineWithAngles = lines.Select(line =>
             {
-                Line = line,
-                Center = lineCenters[index],
-                Angle = Math.Atan2(
-                    lineCenters[index].Y - referencePoint.Y,
-                    lineCenters[index].X - referencePoint.X
-                )
-            }).OrderBy(item => item.Angle).ToList();
+                Point3d center = GetLineCenter(line);
+                double deltaX = center.X - referencePoint.X;
+                double deltaY = center.Y - referencePoint.Y;
+
+                // 라디안을 도(degree)로 변환하고 0~360 범위로 정규화
+                double angleInRadians = Math.Atan2(deltaY, deltaX);
+                double angleInDegrees = (angleInRadians * 180 / Math.PI + 360) % 360;
+
+                return new
+                {
+                    Line = line,
+                    Center = center,
+                    Angle = angleInDegrees,
+                    Distance = center.DistanceTo(referencePoint)
+                };
+            })
+            .OrderBy(item => item.Angle)           // 1차: 각도로 정렬
+            .ThenBy(item => item.Distance)         // 2차: 거리로 정렬
+            .ToList();
 
             return lineWithAngles.Select(item => item.Line).ToList();
         }
@@ -326,7 +507,7 @@ namespace Acadv25JArch
                     var groupAzi = (group[0].GetAzimuth(pt));// * (180.0 / Math.PI)) % 180.0;
                     //if (groupAngle < 0) groupAngle += 180.0;
 
-                    if (Math.Abs(groupAzi - azi) < 1.0)
+                    if (Math.Abs(groupAzi - azi) < 3.0)
                     {
                         matchingGroup = group;
                         break;

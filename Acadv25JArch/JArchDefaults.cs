@@ -54,8 +54,8 @@ namespace Acadv25JArch
             public const string 룸폴리전체계산 = "Room_Poly_ALL_Calc";                        //Cmd_RoomPoly_All_Calc()
             public const string 룸텍스트제거 = "Room_text_delete";                  //Cmd_Room_texts_Delete()
 
-            public const string 벽센터라인선택폴리만들기 = "Wall_LINES2POLY";         // Cmd_LinesTo_ConvertClosedPolyline()
-
+            public const string 벽센터라인선택폴리만들기 = "Wall_Cen_LINES2POLY";         // Cmd_Wall_LinesTo_ConvertClosedPolyline Cmd_LinesTo_ConvertClosedPolyline()
+            public const string 라인선택폴리만들기 = "Wall_LINES2POLY";         // Cmd_LinesTo_ConvertClosedPolyline()
             public const string 벽라인제거 = "Wall_Line_delete";      // Cmd_Wall_Lines_Delete()
         }
     }
