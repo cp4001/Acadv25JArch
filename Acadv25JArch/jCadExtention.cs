@@ -826,6 +826,7 @@ namespace CADExtension //Curve Line Poly Geometry Point
             return line.GetVector().IsParallelTo(line1.GetVector());
         }
 
+   
 
         public static bool IsCoLinear1(this Line L1, Line L2)
         {
@@ -1004,9 +1005,6 @@ namespace CADExtension //Curve Line Poly Geometry Point
             }
             else { return false; }
 
-
-
-
             // L2 Point 중에 interdhk 가까운 point 찾는다
             //Point3d tp;
             double dist = 0;
@@ -1025,6 +1023,53 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
             return status;
         }
+
+        public static bool IsInterSect(this Line L1, Line L2)
+        {
+            bool status = false;
+            if (L1.IsCoLinear(L2)) return false;    
+            // get the intersection
+            Point3d inter = new Point3d();
+            var pts = new Point3dCollection();
+            L1.IntersectWith(L2, Intersect.OnBothOperands, pts, IntPtr.Zero, IntPtr.Zero);
+            if (pts.Count >= 1)
+            {
+                inter = pts[0];
+                status = true;  
+            }
+            else { return false; }
+
+            return status;
+        }
+
+
+        public static bool IsInterSect(this Line L1, List<Line> lls)
+        {
+            bool status = false;
+
+            foreach (var ll in lls)
+            {
+                if (L1.IsInterSect(ll))
+                {
+                    status = true;
+                    break;
+                }
+            }  
+
+            return status;
+        }
+
+
+
+        // Base line 과 주어진 List<Line>이 교차하는지  Check
+        public static bool IsCrossed(this Line L1, List<Line> lls)
+        {
+            bool status = false;
+
+
+            return status;
+        }
+
 
         // Base line 기준 offset ploy 생성 
         public static Polyline GetOffsetPloy(this Line L1, double Offset, bool IsInside)
@@ -1182,6 +1227,16 @@ namespace CADExtension //Curve Line Poly Geometry Point
             return minDistance.Item2;
 
         }
+
+        // 2 line에서 가장 가까운 2 점사이의 거리
+        public static double FindNearestPointsDicetance(this Line line1, Line line2)
+        {
+            var (pt1, pt2) = FindNearestPoints(line1, line2);
+            return  pt1.DistanceTo(pt2);    
+
+        }
+
+
 
         public static bool Check2LineAngle(this Line line1, Line line2, double angleThreshold)
         {

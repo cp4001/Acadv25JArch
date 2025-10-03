@@ -2580,6 +2580,7 @@ namespace AcadFunction
         /// <summary>
         /// colinear한 선분들 중 가장 짧은 것만 남기고 나머지를 제거합니다.
         /// colinear 관계가 없는 선분은 그대로 유지됩니다.
+        /// 거리가 너무먼   colinear 선분은 제외함.(대상 길이의 합보다 크면   제외) 
         /// </summary>
         /// <param name="lines">입력 선분 리스트</param>
         /// <returns>colinear 그룹별로 가장 짧은 선분과 단독 선분이 포함된 리스트</returns>
@@ -2605,7 +2606,9 @@ namespace AcadFunction
                     if (processedIndices.Contains(j))
                         continue;
 
-                    if (lines[i].IsCoLinear1(lines[j]))
+                    var dis = (lines[i].FindNearestPointsDicetance(lines[j]));
+                    var len = lines[i].Length + lines[j].Length;    
+                    if ((lines[i].IsCoLinear1(lines[j])) && (dis < len/2 ))
                     {
                         colinearGroup.Add((lines[j], j));
                     }
