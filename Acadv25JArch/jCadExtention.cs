@@ -942,11 +942,25 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
         public static double GetAngle(this Line L1, Line L2)
         {
-            var a = L1.EndPoint - L1.StartPoint;
-            var b = L2.EndPoint - L2.StartPoint;
+            // 방향 벡터 계산
+            Vector3d v1 = L1.EndPoint - L1.StartPoint;
+            Vector3d v2 = L2.EndPoint - L2.StartPoint;
 
-            var ang = Math.Acos(a.DotProduct(b) / (a.Length * b.Length)) * 180.0 / Math.PI;
-            return Math.Abs(ang);
+            // 벡터 정규화
+            v1 = v1.GetNormal();
+            v2 = v2.GetNormal();
+
+            // 내적을 이용한 각도 계산
+            double dotProduct = v1.DotProduct(v2);
+
+            // 부동소수점 오차 방지
+            dotProduct = Math.Max(-1.0, Math.Min(1.0, dotProduct));
+
+            // 라디안을 도(degree)로 변환
+            double angleRad = Math.Acos(dotProduct);
+            double angleDeg = angleRad * (180.0 / Math.PI);
+
+            return angleDeg;
         }
 
         public static double GetAngle(this Line L1)
@@ -955,6 +969,8 @@ namespace CADExtension //Curve Line Poly Geometry Point
             if (angle < 0) angle += 180.0;
             return angle;
         }
+
+
 
 
         public static List<Line> GetCrossedLines(this Line L1, string RegName)
@@ -1041,6 +1057,16 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
             return status;
         }
+        public static int IsInterSectCount(this Line L1, Line L2)
+        {
+            if (L1.IsCoLinear(L2)) return 0;
+            // get the intersection
+            Point3d inter = new Point3d();
+            var pts = new Point3dCollection();
+            L1.IntersectWith(L2, Intersect.OnBothOperands, pts, IntPtr.Zero, IntPtr.Zero);
+
+            return pts.Count;
+        }
 
 
         public static bool IsInterSect(this Line L1, List<Line> lls)
@@ -1049,7 +1075,7 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
             foreach (var ll in lls)
             {
-                if (L1.IsInterSect(ll))
+                if (L1.IsInterSectCount(ll) >=2)
                 {
                     status = true;
                     break;

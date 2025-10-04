@@ -14,6 +14,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Windows.Shapes;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
@@ -84,15 +85,56 @@ namespace Acadv25JArch
                     }
 
 
-
-
                     // colinear line 제거 
                     selines = Func.RemoveColinearLinesKeepShortest(selines, pt);
 
                     selines = selines.OrderBy(ll => ll.GetAzimuth(pt)).ToList();
 
+
+
+                    // selines 순환 페어 
+
+                    List<Line> lll = new List<Line>();
+
+                    var selines1 = selines.SkipLast(1).Prepend(selines.Last()).ToList();
+                    var gg = selines.Zip(selines1, (line1, line2) =>  // line2가  index 이전 것이다.
+                    {
+                        var lin1 = new Line(line2.GetCentor(), pt);  //line2.GetClosestPointTo(pt,true)
+                        var lin2 = new Line(line2.GetCentor(), line1.GetCentor());
+                        var ang = lin1.GetAngle(lin2);
+                        if (ang <= 90)
+                        {
+                            lll.Add(line1);
+                        }
+                        return (lin1, lin2);
+                    }).ToList();
+
+                    foreach (var g in gg)
+                    {
+                        var ang = g.lin1.GetAngle();
+                        var ang1 = g.lin2.GetAngle();
+                        var def = ang - ang1;   
+                        var dd =   g.lin1.GetAngle(g.lin2);
+
+
+                        var ang2 = g.lin1.GetAzimuth(pt);
+                    }
+
+
+
+
+                    //// 방위각 기준으로 선을 만들떄  내측에  교차하는 선이 있으면 삭제 
+                    //List<Line> selines1 = new List<Line>();
+                    //foreach (var line in selines)
+                    //{
+                    //    var lindir = new Line(pt, line.GetCentor());
+                    //    if (lindir.IsInterSect(selines)) continue;
+                    //    selines1.Add(line);
+                    //}
+
+
                     int ic = 0;
-                    foreach (var line in selines)
+                    foreach (var line in lll)
                     {
                         line.AddTextAtCen(tr, pt,ic.ToString()); ic++;    
                     }
@@ -123,13 +165,13 @@ namespace Acadv25JArch
 
                     //List <Line> sortedLines = SortLinesByAngle(glines, pt);
 
-                    List<Line> sortedLines = selines.OrderBy(ll => ll.GetAzimuth(pt)).ToList();
+                    List<Line> sortedLines = lll.OrderBy(ll => ll.GetAzimuth(pt)).ToList();
 
 
                     ed.WriteMessage($"\n기준점에서 각도 순서로 {sortedLines.Count}개의 라인을 정렬했습니다.");
 
-                    //// 정렬된 순서로 순환적 이웃 관계 형성
-                    //List<Point3d> intersectionPoints = CalculateIntersectionPoints(sortedLines);
+                    // 정렬된 순서로 순환적 이웃 관계 형성
+                    List<Point3d> intersectionPoints = CalculateIntersectionPoints(sortedLines);
 
                     //ed.WriteMessage($"\n{sortedLines.Count}개의 라인에서 {intersectionPoints.Count}개의 교차점을 찾았습니다.");
 
@@ -141,8 +183,8 @@ namespace Acadv25JArch
 
                     // 교차점들이 이미 올바른 순서로 생성됨 (선택 순서 = 이웃 순서)
 
-                    //// 닫힌 폴리라인 생성
-                    //CreateClosedPolyline(intersectionPoints, db);
+                    // 닫힌 폴리라인 생성
+                    CreateClosedPolyline(intersectionPoints, db);
 
                     //ed.WriteMessage($"\n{intersectionPoints.Count}개의 교차점으로 닫힌 폴리라인이 생성되었습니다.");
 
@@ -191,8 +233,18 @@ namespace Acadv25JArch
                 // colinear line 제거 
                 var selines = Func.RemoveColinearLinesKeepShortest(selectedLines,pt);
 
+                // 방위각 기준으로 선을 만들떄  내측에  교차하는 선이 있으면 삭제 
+                List<Line> selines1 = new List<Line>(); 
+                foreach (var line in selines)
+                {
+                    var lindir = new Line(pt, line.GetCentor());
+                    if (line.IsInterSect(selines)) continue;
+                    selines1.Add(line);
+                }   
 
-                var groupedLines = GroupLinesByAzimuth(selines, pt);
+
+
+                var groupedLines = GroupLinesByAzimuth(selines1, pt);
                 // 그룹별로 처리 기준점에서 가장 가까운 라인 선택   
                 List<Line> glines = new List<Line>();
                 foreach (var group in groupedLines)
