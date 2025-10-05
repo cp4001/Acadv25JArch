@@ -12,6 +12,7 @@
 	  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <EnableNETAnalyzers>False</EnableNETAnalyzers>
     <Platforms>AnyCPU;x64</Platforms>
+	  
   </PropertyGroup>
 
   <ItemGroup>
@@ -90,5 +91,7 @@
 		<PackageReference Include="AutoCAD.NET" Version="25.0.1" />
 	
 	</ItemGroup>
+
+	
 
 </Project>
