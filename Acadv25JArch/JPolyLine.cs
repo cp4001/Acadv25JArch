@@ -99,26 +99,26 @@ namespace Acadv25JArch
                     var selines1 = selines.SkipLast(1).Prepend(selines.Last()).ToList();
                     var gg = selines.Zip(selines1, (line1, line2) =>  // line2가  index 이전 것이다.
                     {
-                        var lin1 = new Line(line2.GetClosestPointTo(pt, true), pt);  //line2.GetClosestPointTo(pt,true)
-                        var lin2 = new Line(line2.GetClosestPointTo(pt, true), line1.GetCentor());                    //line2.GetCentor()
-                        var ang = lin1.GetAngle(lin2);
-                        if (ang <= 100)
+                        //var lin1 = new Line(line2.GetClosestPointTo(pt, true), pt);  //line2.GetClosestPointTo(pt,true)
+                        //var lin2 = new Line(line2.GetClosestPointTo(pt, true), line1.GetCentor());                    //line2.GetCentor()
+                        var ang = line1.GetAngle(line2);
+                        if( (ang >1) && (ang <179))
                         {
                             lll.Add(line1);
                         }
-                        return (lin1, lin2);
+                        return (line1, line2);
                     }).ToList();
 
-                    foreach (var g in gg)
-                    {
-                        var ang = g.lin1.GetAngle();
-                        var ang1 = g.lin2.GetAngle();
-                        var def = ang - ang1;   
-                        var dd =   g.lin1.GetAngle(g.lin2);
+                    //foreach (var g in gg)
+                    //{
+                    //    var ang = g.lin1.GetAngle();
+                    //    var ang1 = g.lin2.GetAngle();
+                    //    var def = ang - ang1;   
+                    //    var dd =   g.lin1.GetAngle(g.lin2);
 
 
-                        var ang2 = g.lin1.GetAzimuth(pt);
-                    }
+                    //    var ang2 = g.lin1.GetAzimuth(pt);
+                    //}
 
 
 
