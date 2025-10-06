@@ -98,7 +98,7 @@ namespace Acadv25JArch
 
                     var selines1 = selines.SkipLast(1).Prepend(selines.Last()).ToList();
                     var selines2 = selines.Skip(1).Append(selines.First()).ToList();
-                    var gg = selines.Zip(selines2, (line1, line2) =>  // line2가  index 이전 것이다.
+                    var gg = selines.Zip(selines2, (line1, line2) =>  // line2가  index 이후 것이다.
                     {
                         var lin1 = new Line(line2.GetClosestPointTo(pt, true), pt);  //line2.GetClosestPointTo(pt,true)
                         var lin2 = new Line(line2.GetClosestPointTo(pt, true), line1.GetCentor());
@@ -106,7 +106,7 @@ namespace Acadv25JArch
                         lin2 = line2;
                         //line2.GetCentor()
                         var ang = lin1.GetAngle(lin2);
-                        if((ang >70) && (ang <170))
+                        if((ang >70) && (ang <160))
                         {
                             lll.Add(line1);
                         }
