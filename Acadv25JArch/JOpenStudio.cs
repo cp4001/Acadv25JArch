@@ -27,11 +27,6 @@ namespace Acadv25JArch
         /// <summary>
         /// AutoCAD Polyline을 OpenStudio Space로 변환 (바닥, 벽, 천정 생성)
         /// </summary>
-        /// <param name="polyline">AutoCAD Polyline (바닥 평면)</param>
-        /// <param name="floorHeight">층고 높이 (미터)</param>
-        /// <param name="model">OpenStudio Model 객체</param>
-        /// <param name="spaceName">생성될 Space 이름</param>
-        /// <returns>생성된 OpenStudio Space</returns>
         public static Space CreateSpaceFromPolyline(
             Polyline polyline,
             double floorHeight,
@@ -39,11 +34,14 @@ namespace Acadv25JArch
             string spaceName = "Space")
         {
             // Space 생성
-            var space = new OpenStudio.Space(model);
+            var space = new Space(model);
             space.setName(spaceName);
 
             // Polyline의 정점들을 추출
             List<Point3d> vertices = GetPolylineVertices(polyline);
+
+            // *** 중요: 반시계방향으로 정점 순서 보장 ***
+            vertices = EnsureCounterClockwise(vertices);
 
             // 1. 바닥 생성 (Floor)
             CreateFloorSurface(vertices, model, space);
@@ -60,21 +58,61 @@ namespace Acadv25JArch
         /// <summary>
         /// Polyline의 정점들을 추출
         /// </summary>
-        private static List<Autodesk.AutoCAD.Geometry.Point3d> GetPolylineVertices(Polyline polyline)
+        private static List<Point3d> GetPolylineVertices(Polyline polyline)
         {
             List<Point3d> vertices = new List<Point3d>();
 
             int numVertices = polyline.NumberOfVertices;
 
-            // Polyline이 닫혀있지 않으면 마지막 점 추가
-            int count = polyline.Closed ? numVertices : numVertices;
-
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < numVertices; i++)
             {
                 Point2d pt2d = polyline.GetPoint2dAt(i);
-                // AutoCAD 좌표를 미터 단위로 변환 (필요시)
-                // 여기서는 이미 미터 단위라고 가정
                 vertices.Add(new Point3d(pt2d.X, pt2d.Y, 0));
+            }
+
+            return vertices;
+        }
+
+        /// <summary>
+        /// 다각형이 시계방향인지 확인 (Shoelace Formula 사용)
+        /// </summary>
+        /// <param name="vertices">정점 리스트</param>
+        /// <returns>양수: 반시계방향(CCW), 음수: 시계방향(CW)</returns>
+        private static double CalculateSignedArea(List<Point3d> vertices)
+        {
+            double area = 0.0;
+            int n = vertices.Count;
+
+            for (int i = 0; i < n; i++)
+            {
+                Point3d p1 = vertices[i];
+                Point3d p2 = vertices[(i + 1) % n];
+
+                // Shoelace formula: (x1*y2 - x2*y1)
+                area += (p1.X * p2.Y - p2.X * p1.Y);
+            }
+
+            return area / 2.0;
+        }
+
+        /// <summary>
+        /// 정점들이 반시계방향(CCW)이 되도록 보장
+        /// </summary>
+        /// <param name="vertices">원본 정점 리스트</param>
+        /// <returns>반시계방향으로 정렬된 정점 리스트</returns>
+        private static List<Point3d> EnsureCounterClockwise(List<Point3d> vertices)
+        {
+            double signedArea = CalculateSignedArea(vertices);
+
+            // 음수면 시계방향이므로 역순으로 변경
+            if (signedArea < 0)
+            {
+                vertices.Reverse();
+                System.Diagnostics.Debug.WriteLine("Polyline 방향을 시계방향에서 반시계방향으로 변경했습니다.");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Polyline이 이미 반시계방향입니다.");
             }
 
             return vertices;
@@ -86,12 +124,12 @@ namespace Acadv25JArch
         private static void CreateFloorSurface(
             List<Point3d> vertices,
             Model model,
-            OpenStudio.Space space)
+            Space space)
         {
             // OpenStudio Point3dVector 생성
-            var osVertices = new OpenStudio.Point3dVector();
+            var osVertices = new Point3dVector();
 
-            // 바닥은 위에서 봤을 때 시계 반대 방향 (CCW)
+            // 바닥은 위에서 봤을 때 반시계방향 (CCW) - 이미 보장됨
             foreach (var vertex in vertices)
             {
                 osVertices.Add(new OpenStudio.Point3d(vertex.X, vertex.Y, 0.0));
@@ -110,8 +148,8 @@ namespace Acadv25JArch
         private static void CreateWallSurfaces(
             List<Point3d> vertices,
             double floorHeight,
-            OpenStudio.Model model,
-            OpenStudio.Space space)
+            Model model,
+            Space space)
         {
             int numWalls = vertices.Count;
 
@@ -121,9 +159,10 @@ namespace Acadv25JArch
                 Point3d p1 = vertices[i];
                 Point3d p2 = vertices[(i + 1) % numWalls];
 
-                // 벽 정점 생성 (밖에서 봤을 때 시계 반대 방향)
+                // 벽 정점 생성 (밖에서 봤을 때 반시계방향)
+                // 바닥이 반시계방향이면 벽도 자동으로 올바른 방향이 됨
                 // 하단 왼쪽 -> 하단 오른쪽 -> 상단 오른쪽 -> 상단 왼쪽
-                var wallVertices = new OpenStudio.Point3dVector();
+                var wallVertices = new Point3dVector();
                 wallVertices.Add(new OpenStudio.Point3d(p1.X, p1.Y, 0.0));           // 하단 왼쪽
                 wallVertices.Add(new OpenStudio.Point3d(p2.X, p2.Y, 0.0));           // 하단 오른쪽
                 wallVertices.Add(new OpenStudio.Point3d(p2.X, p2.Y, floorHeight));   // 상단 오른쪽
@@ -143,14 +182,14 @@ namespace Acadv25JArch
         private static void CreateCeilingSurface(
             List<Point3d> vertices,
             double floorHeight,
-            OpenStudio.Model model,
-            OpenStudio.Space space)
+            Model model,
+            Space space)
         {
             // OpenStudio Point3dVector 생성
-            var osVertices = new OpenStudio.Point3dVector();
+            var osVertices = new Point3dVector();
 
-            // 천정은 아래에서 봤을 때 시계 반대 방향 (위에서 보면 시계 방향)
-            // 따라서 역순으로 정점 추가
+            // 천정은 아래에서 봤을 때 반시계방향
+            // 바닥이 반시계방향이면 천정은 역순으로
             for (int i = vertices.Count - 1; i >= 0; i--)
             {
                 var vertex = vertices[i];
@@ -162,32 +201,6 @@ namespace Acadv25JArch
             ceiling.setName($"{space.nameString()}_Ceiling");
             ceiling.setSurfaceType("RoofCeiling");
             ceiling.setSpace(space);
-        }
-
-        /// <summary>
-        /// 창문을 벽에 추가하는 헬퍼 함수
-        /// </summary>
-        public static OpenStudio.SubSurface CreateWindow(
-            OpenStudio.Surface wall,
-            double x1, double y1, double z1,
-            double x2, double y2, double z2,
-            double x3, double y3, double z3,
-            double x4, double y4, double z4,
-            OpenStudio.Model model,
-            string windowName = "Window")
-        {
-            var windowVertices = new OpenStudio.Point3dVector();
-            windowVertices.Add(new OpenStudio.Point3d(x1, y1, z1));
-            windowVertices.Add(new OpenStudio.Point3d(x2, y2, z2));
-            windowVertices.Add(new OpenStudio.Point3d(x3, y3, z3));
-            windowVertices.Add(new OpenStudio.Point3d(x4, y4, z4));
-
-            var window = new OpenStudio.SubSurface(windowVertices, model);
-            window.setName(windowName);
-            window.setSubSurfaceType("FixedWindow");
-            window.setSurface(wall);
-
-            return window;
         }
     }
 
