@@ -126,16 +126,17 @@ namespace Acadv25JArch
             Model model,
             Space space)
         {
-            // OpenStudio Point3dVector 생성
             var osVertices = new Point3dVector();
 
-            // 바닥은 위에서 봤을 때 반시계방향 (CCW) - 이미 보장됨
-            foreach (var vertex in vertices)
+            // *** 중요: 바닥의 법선은 아래쪽(-Z)을 향해야 함 ***
+            // vertices는 위에서 봤을 때 CCW이므로, 법선이 위쪽(+Z)을 향함
+            // 따라서 역순(CW)으로 배치하여 법선이 아래쪽(-Z)을 향하도록 함
+            for (int i = vertices.Count - 1; i >= 0; i--)
             {
+                var vertex = vertices[i];
                 osVertices.Add(new OpenStudio.Point3d(vertex.X, vertex.Y, 0.0));
             }
 
-            // Floor Surface 생성
             var floor = new OpenStudio.Surface(osVertices, model);
             floor.setName($"{space.nameString()}_Floor");
             floor.setSurfaceType("Floor");
@@ -155,20 +156,22 @@ namespace Acadv25JArch
 
             for (int i = 0; i < numWalls; i++)
             {
-                // 현재 점과 다음 점
                 Point3d p1 = vertices[i];
                 Point3d p2 = vertices[(i + 1) % numWalls];
 
-                // 벽 정점 생성 (밖에서 봤을 때 반시계방향)
-                // 바닥이 반시계방향이면 벽도 자동으로 올바른 방향이 됨
-                // 하단 왼쪽 -> 하단 오른쪽 -> 상단 오른쪽 -> 상단 왼쪽
                 var wallVertices = new Point3dVector();
-                wallVertices.Add(new OpenStudio.Point3d(p1.X, p1.Y, 0.0));           // 하단 왼쪽
-                wallVertices.Add(new OpenStudio.Point3d(p2.X, p2.Y, 0.0));           // 하단 오른쪽
-                wallVertices.Add(new OpenStudio.Point3d(p2.X, p2.Y, floorHeight));   // 상단 오른쪽
-                wallVertices.Add(new OpenStudio.Point3d(p1.X, p1.Y, floorHeight));   // 상단 왼쪽
 
-                // Wall Surface 생성
+                // *** 중요: 벽의 법선은 방 밖을 향해야 함 ***
+                // 바닥이 위에서 봤을 때 CCW라면, p1->p2 방향으로 바닥 둘레를 따라감
+                // 이 벽을 "방 밖에서" 봤을 때 CCW가 되도록 정점 배치:
+                // 하단 왼쪽(p1,0) -> 하단 오른쪽(p2,0) -> 상단 오른쪽(p2,h) -> 상단 왼쪽(p1,h)
+                // 결과: 법선이 방 밖을 향함 ✓
+
+                wallVertices.Add(new OpenStudio.Point3d(p1.X, p1.Y, 0.0));
+                wallVertices.Add(new OpenStudio.Point3d(p2.X, p2.Y, 0.0));
+                wallVertices.Add(new OpenStudio.Point3d(p2.X, p2.Y, floorHeight));
+                wallVertices.Add(new OpenStudio.Point3d(p1.X, p1.Y, floorHeight));
+
                 var wall = new OpenStudio.Surface(wallVertices, model);
                 wall.setName($"{space.nameString()}_Wall_{i + 1}");
                 wall.setSurfaceType("Wall");
@@ -185,18 +188,16 @@ namespace Acadv25JArch
             Model model,
             Space space)
         {
-            // OpenStudio Point3dVector 생성
             var osVertices = new Point3dVector();
 
-            // 천정은 아래에서 봤을 때 반시계방향
-            // 바닥이 반시계방향이면 천정은 역순으로
-            for (int i = vertices.Count - 1; i >= 0; i--)
+            // *** 중요: 천정의 법선은 위쪽(+Z)을 향해야 함 ***
+            // vertices는 위에서 봤을 때 CCW이므로, 
+            // 그대로 사용하면 법선이 위쪽(+Z)을 향함 ✓
+            foreach (var vertex in vertices)
             {
-                var vertex = vertices[i];
                 osVertices.Add(new OpenStudio.Point3d(vertex.X, vertex.Y, floorHeight));
             }
 
-            // Ceiling Surface 생성
             var ceiling = new OpenStudio.Surface(osVertices, model);
             ceiling.setName($"{space.nameString()}_Ceiling");
             ceiling.setSurfaceType("RoofCeiling");
@@ -207,7 +208,7 @@ namespace Acadv25JArch
     public class AutoCADToOpenStudioCommand
     {
         [CommandMethod("CreateOpenStudioSpace")]
-        public void CreateOpenStudioSpace()
+        public void Cmd_CreateOpenStudioSpace()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;

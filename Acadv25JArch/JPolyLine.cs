@@ -28,7 +28,7 @@ namespace Acadv25JArch
     public class LineToPolylineConverter
     {
         //선택된 라인들을 기준점에서 각도 순서로 정렬하고, 이웃한 라인들의 교차점을 찾아 닫힌 폴리라인을 생성
-        [CommandMethod(Jdf.Cmd.라인선택폴리만들기)]
+        [CommandMethod(Jdf.Cmd.라인선택안목폴리만들기)]
         public void Cmd_LinesTo_ConvertClosedPolyline()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
