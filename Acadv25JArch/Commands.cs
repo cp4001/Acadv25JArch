@@ -109,5 +109,15 @@ namespace Acadv25JArch
         }
 
 
+        [CommandMethod("QQ")]
+        public void SelectSimilarShortcut()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+
+            // SELECTSIMILAR 명령어 실행
+            doc.SendStringToExecute("_SELECTSIMILAR ", true, false, false);
+        }
+
+
     }
 }
