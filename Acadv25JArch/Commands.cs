@@ -109,13 +109,23 @@ namespace Acadv25JArch
         }
 
 
-        [CommandMethod("QQ")]
+        [CommandMethod("QQ", CommandFlags.UsePickSet)]
         public void SelectSimilarShortcut()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
 
-            // SELECTSIMILAR 명령어 실행
-            doc.SendStringToExecute("_SELECTSIMILAR ", true, false, false);
+            // 미리 선택된 객체 가져오기
+            PromptSelectionResult impliedSel = ed.SelectImplied();
+
+            if (impliedSel.Status == PromptStatus.OK)
+            {
+                // 선택 유지
+                ed.SetImpliedSelection(impliedSel.Value);
+            }
+
+            // Command 메서드로 실행
+            ed.Command("_SELECTSIMILAR");
         }
 
 
