@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AAA", "AAA\AAA.csproj", "{7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiskSerialChecker", "DiskSerialChecker\DiskSerialChecker.csproj", "{C7D1D6FB-C235-42F6-AEE6-BAEE37344BB4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LicenseTimeManager", "LicenseTimeManager\LicenseTimeManager.csproj", "{7739C3D8-B464-433C-9137-B2F727269FFB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,14 @@ Global
 		{C7D1D6FB-C235-42F6-AEE6-BAEE37344BB4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C7D1D6FB-C235-42F6-AEE6-BAEE37344BB4}.Release|x64.ActiveCfg = Release|Any CPU
 		{C7D1D6FB-C235-42F6-AEE6-BAEE37344BB4}.Release|x64.Build.0 = Release|Any CPU
+		{7739C3D8-B464-433C-9137-B2F727269FFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7739C3D8-B464-433C-9137-B2F727269FFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7739C3D8-B464-433C-9137-B2F727269FFB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7739C3D8-B464-433C-9137-B2F727269FFB}.Debug|x64.Build.0 = Debug|Any CPU
+		{7739C3D8-B464-433C-9137-B2F727269FFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7739C3D8-B464-433C-9137-B2F727269FFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7739C3D8-B464-433C-9137-B2F727269FFB}.Release|x64.ActiveCfg = Release|Any CPU
+		{7739C3D8-B464-433C-9137-B2F727269FFB}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
