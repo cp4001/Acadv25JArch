@@ -1022,7 +1022,7 @@ namespace Acadv25JArch
 
                     var btr = tr.GetModelSpaceBlockTableRecord(db);
 
-                    tr.CheckRegName("Arch,Window"); //LL(Line)
+                    tr.CheckRegName("Arch,Window,Disp,Type"); //LL(Line)
                     //Create layerfor Wall Center Line
                     tr.CreateLayer(Jdf.Layer.Room, Jdf.Color.Red, LineWeight.LineWeight040);
 
@@ -1036,6 +1036,7 @@ namespace Acadv25JArch
                             JXdata.DeleteAll(br);
                             JXdata.SetXdata(br, "Arch", "Window");
                             JXdata.SetXdata(br, "Window", "Window");
+                            JXdata.SetXdata(br, "Type", "Window");
                             JXdata.SetXdata(br, "Disp", "wd");
 
                             ed.WriteMessage("\n폴리라인이 닫혀있지 않습니다. 닫힌 폴리라인만 처리할 수 있습니다.");
@@ -1082,7 +1083,7 @@ namespace Acadv25JArch
 
                     var btr = tr.GetModelSpaceBlockTableRecord(db);
 
-                    tr.CheckRegName("Arch,Door"); //LL(Line)
+                    tr.CheckRegName("Arch,Door,Disp,Type"); //LL(Line)
                     //Create layerfor Wall Center Line
                     tr.CreateLayer(Jdf.Layer.Room, Jdf.Color.Red, LineWeight.LineWeight040);
 
@@ -1096,6 +1097,7 @@ namespace Acadv25JArch
                             JXdata.DeleteAll(br);
                             JXdata.SetXdata(br, "Arch", "Door");
                             JXdata.SetXdata(br, "Door", "Door");
+                            JXdata.SetXdata(br, "Type", "Door");
                             JXdata.SetXdata(br, "Disp", "dr");
                         }
 
