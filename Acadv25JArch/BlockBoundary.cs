@@ -1,4 +1,5 @@
 ﻿using AcadFunction;
+using CADExtension;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
@@ -744,7 +745,8 @@ namespace BlockBoundaryPolyline
                 {
                     BlockReference br = (BlockReference)tr.GetObject(per.ObjectId, OpenMode.ForRead);
 
-                    Polyline rotatedBoundary = BlockUtils.GetRotatedBlockBoundary(br);
+                    //Polyline rotatedBoundary = BlockUtils.GetRotatedBlockBoundary(br);
+                    Polyline rotatedBoundary = br.GetPoly1();
 
                     if (rotatedBoundary != null)
                     {

@@ -138,7 +138,7 @@ namespace Acadv25JArch
                         pl.Layer = Jdf.Layer.Room;
                         JXdata.SetXdata(pl, "Arch", "Room");
                         JXdata.SetXdata(pl, "Room", "Room");
-                        JXdata.SetXdata(pl, "Disp", "r");
+                        JXdata.SetXdata(pl, "Disp", "room");
                         //JXdata.SetXdata(pl, "Mat", "Hidden");
                     }
 

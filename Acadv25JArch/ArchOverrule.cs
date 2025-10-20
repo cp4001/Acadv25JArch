@@ -5,9 +5,12 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.Runtime;
+using CADExtension;
 using System;
+using System.Windows.Shapes;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Color = Autodesk.AutoCAD.Colors.Color;
+using Line = Autodesk.AutoCAD.DatabaseServices.Line;
 using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 
 namespace AutoCADMultiEntityOverrule
@@ -146,13 +149,13 @@ namespace AutoCADMultiEntityOverrule
             short originalColor = wd.SubEntityTraits.Color;
 
             // 빨간색으로 설정
-            wd.SubEntityTraits.Color = 1; // AutoCAD ACI에서 1은 Red
+            wd.SubEntityTraits.Color = 4; // AutoCAD ACI에서 1은 Red
 
             // Line 그리기
             wd.Geometry.WorldLine(line.StartPoint, line.EndPoint);
 
-            // 원래 색상 복원
-            wd.SubEntityTraits.Color = originalColor;
+            //// 원래 색상 복원
+            //wd.SubEntityTraits.Color = originalColor;
 
             // 중심점 계산
             Point3d centerPoint = new Point3d(
@@ -174,7 +177,7 @@ namespace AutoCADMultiEntityOverrule
             short originalColor = wd.SubEntityTraits.Color;
 
             // 빨간색으로 설정
-            wd.SubEntityTraits.Color = 1; // Red
+            wd.SubEntityTraits.Color = 4; // Red
 
             // Polyline의 각 세그먼트 그리기
             int numVertices = polyline.NumberOfVertices;
@@ -210,49 +213,51 @@ namespace AutoCADMultiEntityOverrule
                 // 기본 블록 그리기
                 base.WorldDraw(blockRef, wd);
 
-                // Block의 회전 각도 가져오기
-                double rotation = blockRef.Rotation;
-                Point3d position = blockRef.Position;
+                //// Block의 회전 각도 가져오기
+                //double rotation = blockRef.Rotation;
+                //Point3d position = blockRef.Position;
 
-                // 회전하지 않은 상태에서 GeometryExtents 계산을 위한 임시 변환
-                // Block의 변환 행렬 생성 (회전 제외)
-                Matrix3d transform = Matrix3d.Identity;
+                //// 회전하지 않은 상태에서 GeometryExtents 계산을 위한 임시 변환
+                //// Block의 변환 행렬 생성 (회전 제외)
+                //Matrix3d transform = Matrix3d.Identity;
 
-                // Scale 적용
-                transform = Matrix3d.Scaling(blockRef.ScaleFactors.X, position);
+                //// Scale 적용
+                //transform = Matrix3d.Scaling(blockRef.ScaleFactors.X, position);
 
-                // 회전 각도가 0인 상태로 extents 계산
-                // BlockReference를 임시로 회전 각도 0으로 만들어 extents를 얻는 대신
-                // 현재 extents를 가져와서 역회전 적용
-                Extents3d extents = blockRef.GeometricExtents;
+                //// 회전 각도가 0인 상태로 extents 계산
+                //// BlockReference를 임시로 회전 각도 0으로 만들어 extents를 얻는 대신
+                //// 현재 extents를 가져와서 역회전 적용
+                //Extents3d extents = blockRef.GeometricExtents;
 
-                // Block의 중심점 계산 (회전된 상태)
-                Point3d center = new Point3d(
-                    (extents.MinPoint.X + extents.MaxPoint.X) / 2,
-                    (extents.MinPoint.Y + extents.MaxPoint.Y) / 2,
-                    (extents.MinPoint.Z + extents.MaxPoint.Z) / 2
-                );
+                //// Block의 중심점 계산 (회전된 상태)
+                //Point3d center = new Point3d(
+                //    (extents.MinPoint.X + extents.MaxPoint.X) / 2,
+                //    (extents.MinPoint.Y + extents.MaxPoint.Y) / 2,
+                //    (extents.MinPoint.Z + extents.MaxPoint.Z) / 2
+                //);
 
-                // Block의 로컬 좌표계에서 박스 크기 계산
-                // Position을 중심으로 역회전하여 회전하지 않은 상태의 extents를 구함
-                Matrix3d inverseRotation = Matrix3d.Rotation(-rotation, Vector3d.ZAxis, position);
+                //// Block의 로컬 좌표계에서 박스 크기 계산
+                //// Position을 중심으로 역회전하여 회전하지 않은 상태의 extents를 구함
+                //Matrix3d inverseRotation = Matrix3d.Rotation(-rotation, Vector3d.ZAxis, position);
 
-                Point3d minPtLocal = extents.MinPoint.TransformBy(inverseRotation);
-                Point3d maxPtLocal = extents.MaxPoint.TransformBy(inverseRotation);
+                //Point3d minPtLocal = extents.MinPoint.TransformBy(inverseRotation);
+                //Point3d maxPtLocal = extents.MaxPoint.TransformBy(inverseRotation);
 
-                // 회전하지 않은 상태의 박스 4개 모서리 점
-                Point3d p1 = new Point3d(minPtLocal.X, minPtLocal.Y, minPtLocal.Z);  // 좌하
-                Point3d p2 = new Point3d(maxPtLocal.X, minPtLocal.Y, minPtLocal.Z);  // 우하
-                Point3d p3 = new Point3d(maxPtLocal.X, maxPtLocal.Y, minPtLocal.Z);  // 우상
-                Point3d p4 = new Point3d(minPtLocal.X, maxPtLocal.Y, minPtLocal.Z);  // 좌상
+                //// 회전하지 않은 상태의 박스 4개 모서리 점
+                //Point3d p1 = new Point3d(minPtLocal.X, minPtLocal.Y, minPtLocal.Z);  // 좌하
+                //Point3d p2 = new Point3d(maxPtLocal.X, minPtLocal.Y, minPtLocal.Z);  // 우하
+                //Point3d p3 = new Point3d(maxPtLocal.X, maxPtLocal.Y, minPtLocal.Z);  // 우상
+                //Point3d p4 = new Point3d(minPtLocal.X, maxPtLocal.Y, minPtLocal.Z);  // 좌상
 
-                // Block의 회전 각도를 다시 적용하여 점들을 회전
-                Matrix3d rotationMatrix = Matrix3d.Rotation(rotation, Vector3d.ZAxis, position);
+                //// Block의 회전 각도를 다시 적용하여 점들을 회전
+                //Matrix3d rotationMatrix = Matrix3d.Rotation(rotation, Vector3d.ZAxis, position);
 
-                Point3d p1Rotated = p1.TransformBy(rotationMatrix);
-                Point3d p2Rotated = p2.TransformBy(rotationMatrix);
-                Point3d p3Rotated = p3.TransformBy(rotationMatrix);
-                Point3d p4Rotated = p4.TransformBy(rotationMatrix);
+                //Point3d p1Rotated = p1.TransformBy(rotationMatrix);
+                //Point3d p2Rotated = p2.TransformBy(rotationMatrix);
+                //Point3d p3Rotated = p3.TransformBy(rotationMatrix);
+                //Point3d p4Rotated = p4.TransformBy(rotationMatrix);
+
+                var polyline = blockRef.GetPoly1();
 
                 // 원본 속성 저장
                 short originalColor = wd.SubEntityTraits.Color;
@@ -262,25 +267,42 @@ namespace AutoCADMultiEntityOverrule
                 wd.SubEntityTraits.Color = 4; // Cyan
                 wd.SubEntityTraits.LineWeight = LineWeight.LineWeight030;
 
-                // 회전된 박스 그리기 (4개의 선)
-                wd.Geometry.WorldLine(p1Rotated, p2Rotated);
-                wd.Geometry.WorldLine(p2Rotated, p3Rotated);
-                wd.Geometry.WorldLine(p3Rotated, p4Rotated);
-                wd.Geometry.WorldLine(p4Rotated, p1Rotated);
+                // Polyline의 각 세그먼트 그리기
+                int numVertices = polyline.NumberOfVertices;
+                for (int i = 0; i < numVertices; i++)
+                {
+                    Point3d startPoint = polyline.GetPoint3dAt(i);
+                    Point3d endPoint = polyline.GetPoint3dAt((i + 1) % numVertices);
 
-                // 원래 속성 복원
-                wd.SubEntityTraits.Color = originalColor;
-                wd.SubEntityTraits.LineWeight = originalLineWeight;
+                    // 닫힌 폴리라인이 아니고 마지막 세그먼트면 건너뛰기
+                    if (!polyline.Closed && i == numVertices - 1)
+                        break;
 
-                // 박스 중심점 (회전된 상태의 중심점 사용)
-                Point3d centerPoint = new Point3d(
-                    (extents.MinPoint.X + extents.MaxPoint.X) / 2,
-                    (extents.MinPoint.Y + extents.MaxPoint.Y) / 2,
-                    (extents.MinPoint.Z + extents.MaxPoint.Z) / 2
-                );
+                    wd.Geometry.WorldLine(startPoint, endPoint);
+                }
+
+
+
+
+                //// 회전된 박스 그리기 (4개의 선)
+                //wd.Geometry.WorldLine(p1Rotated, p2Rotated);
+                //wd.Geometry.WorldLine(p2Rotated, p3Rotated);
+                //wd.Geometry.WorldLine(p3Rotated, p4Rotated);
+                //wd.Geometry.WorldLine(p4Rotated, p1Rotated);
+
+                ////// 원래 속성 복원
+                ////wd.SubEntityTraits.Color = originalColor;
+                ////wd.SubEntityTraits.LineWeight = originalLineWeight;
+
+                //// 박스 중심점 (회전된 상태의 중심점 사용)
+                //Point3d centerPoint = new Point3d(
+                //    (extents.MinPoint.X + extents.MaxPoint.X) / 2,
+                //    (extents.MinPoint.Y + extents.MaxPoint.Y) / 2,
+                //    (extents.MinPoint.Z + extents.MaxPoint.Z) / 2
+                //);
 
                 // "Aach" 텍스트 표시 (수평으로)
-                DrawTextAtCenter(centerPoint, wd);
+                DrawTextAtCenter(polyline.GetEntiyGeoCenter(), wd);
             }
             catch (System.Exception ex)
             {

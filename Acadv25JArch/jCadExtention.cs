@@ -143,18 +143,26 @@ namespace CADExtension //Graphic JEntity JDBtext JObjectID JDouble
         //Entity GeoCEnter
         public static Point3d GetEntiyGeoCenter(this Entity ent)
         {
-            if (ent.GetType() == typeof(Polyline))
-            {
-                var polyline = (Polyline)ent;
+            //if (ent.GetType() == typeof(Polyline))
+            //{
+            //    var polyline = (Polyline)ent;
 
-                return polyline.GetPointAtDist(polyline.Length / 2);
+            //    return polyline.GetPointAtDist(polyline.Length / 2);
 
-            }
+            //}
+
+            //var exts = ent.GeometricExtents;
+            //var u = exts.MaxPoint - exts.MinPoint;
+            //var h = u / u.Length * u.Length * 0.5;
+            //return exts.MinPoint + h;
+
+            //if (ent is Polyline polyline)
+            //{
+            //    return polyline.GetPointAtDist(polyline.Length / 2);
+            //}
 
             var exts = ent.GeometricExtents;
-            var u = exts.MaxPoint - exts.MinPoint;
-            var h = u / u.Length * u.Length * 0.5;
-            return exts.MinPoint + h;
+            return exts.MinPoint + (exts.MaxPoint - exts.MinPoint) * 0.5;
 
         }
 
@@ -2291,6 +2299,89 @@ namespace CADExtension  //tr Editor Block
             return pl;
         }
 
+        public  static Polyline GetPoly1(this BlockReference bref)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+
+            Polyline transformedBoundary = null;
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    // Open the BlockTableRecord of the block definition
+                    BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bref.BlockTableRecord, OpenMode.ForRead);
+
+                    // Get the bounding box of the original block definition
+                    Extents3d blockExtents =   btr. GetBlockDefinitionExtents(tr);
+
+                    if (blockExtents.MinPoint.IsEqualTo(blockExtents.MaxPoint))
+                    {
+                        // Handle empty or invalid extents
+                        return null;
+                    }
+
+                    // Get the transformation matrix from the BlockReference
+                    Matrix3d matrix = bref.BlockTransform;
+
+                    // Define the four corners of the original bounding box
+                    Point3d minPoint = blockExtents.MinPoint;
+                    Point3d maxPoint = blockExtents.MaxPoint;
+
+                    Point3d p1 = new Point3d(minPoint.X, minPoint.Y, 0);
+                    Point3d p2 = new Point3d(maxPoint.X, minPoint.Y, 0);
+                    Point3d p3 = new Point3d(maxPoint.X, maxPoint.Y, 0);
+                    Point3d p4 = new Point3d(minPoint.X, maxPoint.Y, 0);
+
+                    // Transform the corner points
+                    p1 = p1.TransformBy(matrix);
+                    p2 = p2.TransformBy(matrix);
+                    p3 = p3.TransformBy(matrix);
+                    p4 = p4.TransformBy(matrix);
+
+                    // Create a new polyline for the transformed boundary
+                    transformedBoundary = new Polyline();
+                    transformedBoundary.AddVertexAt(0, new Point2d(p1.X, p1.Y), 0, 0, 0);
+                    transformedBoundary.AddVertexAt(1, new Point2d(p2.X, p2.Y), 0, 0, 0);
+                    transformedBoundary.AddVertexAt(2, new Point2d(p3.X, p3.Y), 0, 0, 0);
+                    transformedBoundary.AddVertexAt(3, new Point2d(p4.X, p4.Y), 0, 0, 0);
+                    transformedBoundary.Closed = true;
+
+                }
+                catch (System.Exception ex)
+                {
+                    doc.Editor.WriteMessage("\nError: " + ex.Message);
+                }
+            }
+            return transformedBoundary;
+        }
+
+        /// <summary>
+        /// Gets the combined extents of all entities within a block definition.
+        /// </summary>
+        private static Extents3d GetBlockDefinitionExtents(this BlockTableRecord btr,Transaction tr )
+        {
+            Extents3d combinedExtents = new Extents3d();
+            bool hasExtents = false;
+
+            foreach (ObjectId entId in btr)
+            {
+                Entity ent = (Entity)tr.GetObject(entId, OpenMode.ForRead);
+                if (ent.Bounds.HasValue)
+                {
+                    if (!hasExtents)
+                    {
+                        combinedExtents = ent.Bounds.Value;
+                        hasExtents = true;
+                    }
+                    else
+                    {
+                        combinedExtents.AddExtents(ent.Bounds.Value);
+                    }
+                }
+            }
+            return combinedExtents;
+        }
 
 
         public static List<Point3d> GetBlockPoints(this BlockReference bref)
