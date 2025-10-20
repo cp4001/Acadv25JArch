@@ -50,6 +50,95 @@ namespace BlockBoundaryPolyline
             }
         }
 
+        //
+        public class BlockUtils
+        {
+            public static Polyline GetRotatedBlockBoundary(BlockReference br)
+            {
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                Database db = doc.Database;
+
+                Polyline transformedBoundary = null;
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    try
+                    {
+                        // Open the BlockTableRecord of the block definition
+                        BlockTableRecord btr = (BlockTableRecord)tr.GetObject(br.BlockTableRecord, OpenMode.ForRead);
+
+                        // Get the bounding box of the original block definition
+                        Extents3d blockExtents = GetBlockDefinitionExtents(tr, btr);
+
+                        if (blockExtents.MinPoint.IsEqualTo(blockExtents.MaxPoint))
+                        {
+                            // Handle empty or invalid extents
+                            return null;
+                        }
+
+                        // Get the transformation matrix from the BlockReference
+                        Matrix3d matrix = br.BlockTransform;
+
+                        // Define the four corners of the original bounding box
+                        Point3d minPoint = blockExtents.MinPoint;
+                        Point3d maxPoint = blockExtents.MaxPoint;
+
+                        Point3d p1 = new Point3d(minPoint.X, minPoint.Y, 0);
+                        Point3d p2 = new Point3d(maxPoint.X, minPoint.Y, 0);
+                        Point3d p3 = new Point3d(maxPoint.X, maxPoint.Y, 0);
+                        Point3d p4 = new Point3d(minPoint.X, maxPoint.Y, 0);
+
+                        // Transform the corner points
+                        p1 = p1.TransformBy(matrix);
+                        p2 = p2.TransformBy(matrix);
+                        p3 = p3.TransformBy(matrix);
+                        p4 = p4.TransformBy(matrix);
+
+                        // Create a new polyline for the transformed boundary
+                        transformedBoundary = new Polyline();
+                        transformedBoundary.AddVertexAt(0, new Point2d(p1.X, p1.Y), 0, 0, 0);
+                        transformedBoundary.AddVertexAt(1, new Point2d(p2.X, p2.Y), 0, 0, 0);
+                        transformedBoundary.AddVertexAt(2, new Point2d(p3.X, p3.Y), 0, 0, 0);
+                        transformedBoundary.AddVertexAt(3, new Point2d(p4.X, p4.Y), 0, 0, 0);
+                        transformedBoundary.Closed = true;
+
+                    }
+                    catch (System.Exception ex)
+                    {
+                        doc.Editor.WriteMessage("\nError: " + ex.Message);
+                    }
+                }
+                return transformedBoundary;
+            }
+
+            /// <summary>
+            /// Gets the combined extents of all entities within a block definition.
+            /// </summary>
+            private static Extents3d GetBlockDefinitionExtents(Transaction tr, BlockTableRecord btr)
+            {
+                Extents3d combinedExtents = new Extents3d();
+                bool hasExtents = false;
+
+                foreach (ObjectId entId in btr)
+                {
+                    Entity ent = (Entity)tr.GetObject(entId, OpenMode.ForRead);
+                    if (ent.Bounds.HasValue)
+                    {
+                        if (!hasExtents)
+                        {
+                            combinedExtents = ent.Bounds.Value;
+                            hasExtents = true;
+                        }
+                        else
+                        {
+                            combinedExtents.AddExtents(ent.Bounds.Value);
+                        }
+                    }
+                }
+                return combinedExtents;
+            }
+        }
+
+
         public class Commands
         {
             [CommandMethod("CREATEBLOCKBOUNDARY")]
@@ -635,5 +724,46 @@ namespace BlockBoundaryPolyline
                 }
             }
         }
+
+        public class Commands_BlockUtils
+        {
+        [CommandMethod("GETBLOCKBOUNDARY")]
+        public void GetBlockBoundaryCommand()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            PromptEntityOptions peo = new PromptEntityOptions("\nSelect a block reference:");
+            //peo.SetAllowableClass(typeof(BlockReference), false);
+
+            PromptEntityResult per = ed.GetEntity(peo);
+
+            if (per.Status == PromptStatus.OK)
+            {
+                using (Transaction tr = doc.Database.TransactionManager.StartTransaction())
+                {
+                    BlockReference br = (BlockReference)tr.GetObject(per.ObjectId, OpenMode.ForRead);
+
+                    Polyline rotatedBoundary = BlockUtils.GetRotatedBlockBoundary(br);
+
+                    if (rotatedBoundary != null)
+                    {
+                        // Add the new polyline to the current space for visual inspection
+                        BlockTable bt = (BlockTable)tr.GetObject(doc.Database.BlockTableId, OpenMode.ForRead);
+                        BlockTableRecord btr = (BlockTableRecord)tr.GetObject(doc.Database.CurrentSpaceId, OpenMode.ForWrite);
+                        rotatedBoundary.ColorIndex = 1; // Red
+
+                        btr.AppendEntity(rotatedBoundary);
+                        tr.AddNewlyCreatedDBObject(rotatedBoundary, true);
+
+                        ed.WriteMessage("\nRotated boundary drawn successfully.");
+                    }
+
+                    tr.Commit();
+                }
+            }
+        }
+
     }
+}
 
