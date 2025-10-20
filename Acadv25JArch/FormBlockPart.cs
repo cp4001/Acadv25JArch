@@ -39,11 +39,16 @@ namespace Acadv25JArch
                 MessageBox.Show(" 대상을 선택 하세요");
                 return;
             }
-            SortableBindingList <BlockPart>
+            SortableBindingList<BlockPart>
                       drbl = new SortableBindingList<BlockPart>(blockparts);
             bs.DataSource = drbl;
 
             dgvBlock.DataSource = bs;
+        }
+
+        private void btnRooms_Click(object sender, EventArgs e)
+        {
+
         }
     }
 

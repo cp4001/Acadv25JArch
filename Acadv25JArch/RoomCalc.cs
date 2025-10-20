@@ -15,6 +15,10 @@ using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace Acadv25JArch
 {
+    public class Room
+    {
+    
+    }
 
     public class RoomCalc
     {
