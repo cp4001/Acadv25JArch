@@ -1039,8 +1039,8 @@ namespace Acadv25JArch
                             JXdata.SetXdata(br, "Type", "Window");
                             JXdata.SetXdata(br, "Disp", "wd");
 
-                            ed.WriteMessage("\n폴리라인이 닫혀있지 않습니다. 닫힌 폴리라인만 처리할 수 있습니다.");
-                            continue;
+                            //ed.WriteMessage("\n폴리라인이 닫혀있지 않습니다. 닫힌 폴리라인만 처리할 수 있습니다.");
+                            //continue;
                         }
 
                     }

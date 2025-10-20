@@ -7,6 +7,7 @@ using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.Runtime;
 using CADExtension;
 using System;
+using System.Windows.Controls;
 using System.Windows.Shapes;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Color = Autodesk.AutoCAD.Colors.Color;
@@ -25,6 +26,7 @@ namespace AutoCADMultiEntityOverrule
     {
         private static XDataFilterDrawOverrule _instance;
         private const string XDATA_REGAPP_NAME = "Arch";
+        public static bool IsRegistered = false;
 
         public static void Register()
         {
@@ -47,6 +49,7 @@ namespace AutoCADMultiEntityOverrule
 
                 // Overruling 활성화
                 Overrule.Overruling = true;
+                IsRegistered = true;
 
                 Document doc = Application.DocumentManager.MdiActiveDocument;
                 if (doc != null)
@@ -78,6 +81,7 @@ namespace AutoCADMultiEntityOverrule
                 Overrule.RemoveOverrule(blockRefClass, _instance);
 
                 _instance = null;
+                IsRegistered = false;
 
                 Document doc = Application.DocumentManager.MdiActiveDocument;
                 if (doc != null)
@@ -393,6 +397,30 @@ namespace AutoCADMultiEntityOverrule
     public class XDataFilterCommands
     {
         private const string XDATA_REGAPP_NAME = "Arch";
+
+
+        [CommandMethod("aag")] // Wire Graphic
+        public  void ToggleOverrule()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+            // Initialize Overrule if first time run
+            if (XDataFilterDrawOverrule.IsRegistered == false)
+            {
+                
+                RegisterXdataApp(XDATA_REGAPP_NAME);
+                XDataFilterDrawOverrule.Register();
+                doc.Editor.Regen();
+            }
+            else 
+            {
+                //Turn Overruling off
+                XDataFilterDrawOverrule.Unregister();
+                ed.WriteMessage("\nSetXDataFilter Overrule이 제거되었습니다.");
+                doc.Editor.Regen();
+
+            }
+        }
 
         [CommandMethod("REGISTERXDATAFILTER")]
         public void RegisterXDataFilter()

@@ -191,7 +191,7 @@ namespace Acadv25JArch
                 //Grouping Block
                 //Dynamic Block이 있어서 Grouping에 문제가 있다.
                 //Block Grouping 시  Block의 SymbolType을  같이 고려한다.
-                var bgrGrps = blockrefs.GroupBy(x => x.GetName() + JXdata.GetXdata(x, "SymbolType") ?? "");
+                var bgrGrps = blockrefs.GroupBy(x => x.GetName() + JXdata.GetXdata(x, "Type") ?? ""+JXdata.GetXdata(x, "SymbolType") ?? "");
 
                 foreach (var brg in bgrGrps)
                 {
@@ -433,7 +433,7 @@ namespace Acadv25JArch
                         btr = tr.GetObject(brg.First().BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
                     }
                     if (btr.IsLayout || btr.IsAnonymous) continue; // Layout과 Anonymous Block은 제외   
-                    BlockPart jbtr = new BlockPart(btrId);//brg.First().BlockTableRecord);
+                    WindowPart jbtr = new WindowPart(btrId);//brg.First().BlockTableRecord);
                     //jbtr.Attach = "천장";
                     jbtr.Count = brg.Count();
                     jbtr.PartName = JXdata.GetXdata(brg.First(), "PartName");
