@@ -330,8 +330,11 @@ namespace Acadv25JArch
     public class RoomPart : INotifyPropertyChanged
     {
         private static int IdCounter = 1;
+        private static List<DBText> Roomtxts = new List<DBText>(); // 도면 전체에 있는 Room Wall texts
+
         public int Index { get; set; }
-        private ObjectId ObjID { get; set; }  // Poly Id not Blockreference
+        
+        private Polyline Poly { get; set; }     //
         public System.Drawing.Image Img { get; set; }      // picBoxBr.Image =   btr.PreviewIcon?.GetThumbnailImage(192, 192, () => false, IntPtr.Zero);
 
         public string Name { get; set; }  // Room Name
@@ -339,24 +342,24 @@ namespace Acadv25JArch
         public double FloorHeight { get; set; }   // 층고 높이
         public string RoofArea { get; set; } // 지붕  면적
         public string FloorArea { get; set; } // 바닥 면적
+        public string WallText { get; set; } // 벽체 텍스트  
 
-        public List<Line> WallLines { get; set; } // 벽 Line List
-        public List<BlockReference> Windows { get; set; } // 창 List
-        public List<BlockReference> Doors { get; set; } // 문 List
+        private List<Line> WallLines { get; set; } // 벽 Line List
+        private List<BlockReference> Windows { get; set; } // 창 List
+        private List<BlockReference> Doors { get; set; } // 문 List
 
-
+        //Roomtxts 지정   
+        public static void SetRoomTexts(List<DBText> txts)
+        {
+            RoomPart.Roomtxts = txts;
+        }
 
         // 생성자 
-        public RoomPart(ObjectId id)
+        public RoomPart(Polyline poly)
         {
             this.Index = IdCounter;
-            this.ObjID = id;
-            //this.Count = num;
-            var btr = id.GetObject(OpenMode.ForWrite) as BlockTableRecord;
-            this.Name = btr.Name;
-            //this.IsWire = false;
-            //this.IsReturn = false;
-            this.Img = btr.PreviewIcon?.GetThumbnailImage(40, 40, () => false, IntPtr.Zero);
+            this.Poly = poly;
+            this.WallLines = poly.GetLines();
             IdCounter++;
         }
 
@@ -364,9 +367,9 @@ namespace Acadv25JArch
         public event PropertyChangedEventHandler PropertyChanged;
 
         //Function
-        public ObjectId GetId()
+        public Polyline GetPoly()
         {
-            return this.ObjID;
+            return this.Poly;
         }
         public static void ResetCounter()
         {
@@ -454,98 +457,34 @@ namespace Acadv25JArch
             return blockParts;
         }
 
-        public static List<BlockPart> GetAllBlockParts()
+        public static List<RoomPart> GetAllRoomParts()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            List<BlockPart> blockParts = new List<BlockPart>();
+            List<RoomPart> blockParts = new List<RoomPart>();
 
             ResetCounter();
 
-            List<BlockPart> parts = new List<BlockPart>();
-            List<BlockReference> blockrefs = new List<BlockReference>();
+            List<RoomPart> rooms = new List<RoomPart>();
+            //List<BlockReference> blockrefs = new List<BlockReference>();
             //LightPart.ResetCounter();
             // 문서 잠금 및 트랜잭션 시작
             using (DocumentLock docLock = doc.LockDocument())
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-
-                //var ents = JEntity.GetEntityAllByTpye<Entity>(JEntity.MakeSelFilter("LINE,LWPOLYLINE,INSERT", "LightPart"));
-                //var entids = JEntity.GetEntityAllByTpye(JEntity.MakeSelFilter("LINE,LWPOLYLINE,INSERT", "LightPart"));
-                //var ents = JEntity.GetSelectedEntityByTpye<Entity>();
-                //PreSelected Entity
-                //var entids = JEntity.GetSelectedEntityIds();
-
-                //List<ObjectId> brids = new List<ObjectId>();
-                //if (entids == null)
-                //{
-                //    tr.Commit();
-                //    return null;
-                //}
-
-                ////Filter BlockReferenec 
-                //foreach (var id in entids)
-                //{
-                //    //Check 
-                //    if (id.GetObject(OpenMode.ForRead).GetType() == typeof(BlockReference))
-                //    {
-                //        blockrefs.Add(id.GetObject(OpenMode.ForRead) as BlockReference);
-                //        brids.Add(id);
-                //    }
-                //}
-
-                var ents = JEntity.GetEntityAllByTpye<Entity>(JEntity.MakeSelFilter("INSERT"));                //(JEntity.MakeSelFilter("INSERT", "ElecPart"));
-                if (ents == null) return null;
-                foreach (Entity ent in ents)
+                var polys = JEntity.GetEntityAllByTpye<Polyline>(JEntity.MakeSelFilter("LWPOLYLINE", "Room"));                //(JEntity.MakeSelFilter("INSERT", "ElecPart"));
+                if (polys == null) return null;
+                foreach (var po in polys)
                 {
-                    blockrefs.Add(ent as BlockReference);
-                }
-                FormBlockPart.selids = blockrefs.Select(x => x.ObjectId).ToList();    //          brids;
-
-                //Grouping Block
-                //Dynamic Block이 있어서 Grouping에 문제가 있다.
-                //Block Grouping 시  Block의 SymbolType을  같이 고려한다.
-                var bgrGrps = blockrefs.GroupBy(x => x.GetName() + JXdata.GetXdata(x, "SymbolType") ?? "");
-
-                foreach (var brg in bgrGrps)
-                {
-                    ObjectId btrId = new ObjectId();
-                    BlockTableRecord btr = new BlockTableRecord();
-                    if (brg.First().IsDynamicBlock)
-                    {
-                        btrId = brg.First().DynamicBlockTableRecord;
-                        btr = tr.GetObject(brg.First().DynamicBlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
-                    }
-                    else
-                    {
-                        btrId = brg.First().BlockTableRecord;
-                        btr = tr.GetObject(brg.First().BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
-                    }
-                    if (btr.IsLayout || btr.IsAnonymous) continue; // Layout과 Anonymous Block은 제외
-
-
-                    var Img = btr.PreviewIcon?.GetThumbnailImage(128, 128, () => false, IntPtr.Zero);
-                    if (Img == null) continue; // Img가 없는것은 제외
-                    BlockPart jbtr = new BlockPart(btrId);//brg.First().BlockTableRecord);
-
-                    //jbtr.Attach = "천장";
-                    jbtr.Count = brg.Count();
-                    jbtr.PartName = JXdata.GetXdata(brg.First(), "PartName");
-                    jbtr.Type = JXdata.GetXdata(brg.First(), "Type");
-                    //jbtr.Attach = JXdata.GetXdata(brg.First(), "Attatch");
-                    jbtr.SymbolType = JXdata.GetXdata(brg.First(), "SymbolType");
-
-                    //if (JXdata.GetXdata(brg.First(), "IsWire") == "True") jbtr.IsWire = true;
-                    //if (JXdata.GetXdata(brg.First(), "IsReturn") == "True") jbtr.IsReturn = true;
-                    //if (JXdata.GetXdata(brg.First(), "IsBlockCount") == "True") jbtr.IsBlockCount = true;
-
-                    blockParts.Add(jbtr);
+                    var room = new RoomPart(po);
+                    rooms.Add(room);
+                    //blockrefs.Add(ent as BlockReference);
                 }
 
             }
-            return blockParts;
+            return rooms;
         }
 
         public static List<BlockPart> GetZoneBlockParts(ComboBox cb)
