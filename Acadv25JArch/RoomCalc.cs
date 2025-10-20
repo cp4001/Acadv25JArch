@@ -108,7 +108,7 @@ namespace Acadv25JArch
         #region Poly To Room
         // 선택 Line Poly XData Wire 지정
         //TO DuctLine
-        [CommandMethod("Poly_Set_RoomPoly", CommandFlags.UsePickSet)] //ToRoom
+        [CommandMethod("To_RoomPoly", CommandFlags.UsePickSet)] //ToRoom
                                                                       //Text 에  Room 지정                                                    
         public void Cmd_Poly_Set_RoomPoly()
         {
