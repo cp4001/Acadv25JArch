@@ -26,7 +26,7 @@ namespace AutoCADMultiEntityOverrule
     {
         private static XDataFilterDrawOverrule _instance;
         private const string XDATA_REGAPP_NAME = "Arch";
-        public static bool IsRegistered = false;
+        public static bool IsRegistered => (_instance != null);
 
         public static void Register()
         {
@@ -49,7 +49,7 @@ namespace AutoCADMultiEntityOverrule
 
                 // Overruling 활성화
                 Overrule.Overruling = true;
-                IsRegistered = true;
+                //IsRegistered = true;
 
                 Document doc = Application.DocumentManager.MdiActiveDocument;
                 if (doc != null)
@@ -81,7 +81,7 @@ namespace AutoCADMultiEntityOverrule
                 Overrule.RemoveOverrule(blockRefClass, _instance);
 
                 _instance = null;
-                IsRegistered = false;
+                //IsRegistered = false;
 
                 Document doc = Application.DocumentManager.MdiActiveDocument;
                 if (doc != null)
