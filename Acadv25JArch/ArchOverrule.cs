@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
+﻿using AcadFunction;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -153,7 +154,7 @@ namespace AutoCADMultiEntityOverrule
             short originalColor = wd.SubEntityTraits.Color;
 
             // 빨간색으로 설정
-            wd.SubEntityTraits.Color = 4; // AutoCAD ACI에서 1은 Red
+            wd.SubEntityTraits.Color = 90; // AutoCAD ACI에서 1은 Red
 
             // Line 그리기
             wd.Geometry.WorldLine(line.StartPoint, line.EndPoint);
@@ -181,7 +182,8 @@ namespace AutoCADMultiEntityOverrule
             short originalColor = wd.SubEntityTraits.Color;
 
             // 빨간색으로 설정
-            wd.SubEntityTraits.Color = 4; // Red
+            wd.SubEntityTraits.Color = 30; // Red
+            wd.SubEntityTraits.LineWeight = LineWeight.LineWeight030;
 
             // Polyline의 각 세그먼트 그리기
             int numVertices = polyline.NumberOfVertices;
@@ -268,7 +270,10 @@ namespace AutoCADMultiEntityOverrule
                 LineWeight originalLineWeight = wd.SubEntityTraits.LineWeight;
 
                 // Cyan 색상(4)과 LineWeight 30 설정
-                wd.SubEntityTraits.Color = 4; // Cyan
+                var type = JXdata.GetXdata(blockRef, "Type");
+                if(type =="Window") wd.SubEntityTraits.Color = 50; 
+                if(type == "Door") wd.SubEntityTraits.Color = 130; 
+                //wd.SubEntityTraits.Color = 4; // Cyan
                 wd.SubEntityTraits.LineWeight = LineWeight.LineWeight030;
 
                 // Polyline의 각 세그먼트 그리기
