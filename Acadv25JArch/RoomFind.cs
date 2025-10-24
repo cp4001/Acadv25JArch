@@ -1046,4 +1046,309 @@ namespace AutoCADLineIntersection
     }
 
 
+    public class LineVisibilityFilter
+    {
+        [CommandMethod("c_FILTERVISIBLELINES")]
+        public void FilterVisibleLines()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 1단계: 기준점 입력받기
+                PromptPointOptions ppo = new PromptPointOptions("\n기준점(bp)을 선택하세요: ");
+                PromptPointResult ppr = ed.GetPoint(ppo);
+
+                if (ppr.Status != PromptStatus.OK)
+                {
+                    ed.WriteMessage("\n기준점 선택이 취소되었습니다.");
+                    return;
+                }
+
+                Point3d basePoint = ppr.Value;
+
+                // 2단계: Line들 선택
+                var selectedLineIds = SelectLines(ed);
+                if (selectedLineIds.Count == 0)
+                {
+                    ed.WriteMessage("\n선택된 라인이 없습니다.");
+                    return;
+                }
+
+                // 3단계: Line 객체들 로드
+                using var tr = db.TransactionManager.StartTransaction();
+
+                var lines = selectedLineIds
+                    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Line)
+                    .Where(line => line != null)
+                    .ToList();
+
+                if (lines.Count == 0)
+                {
+                    ed.WriteMessage("\n유효한 라인을 로드할 수 없습니다.");
+                    tr.Commit();
+                    return;
+                }
+
+                // 4단계: 필터링 수행
+                var visibleLines = FilterLinesByVisibility(basePoint, lines);
+
+                tr.Commit();
+
+                // 5단계: 결과 출력
+                ed.WriteMessage($"\n=== 필터링 결과 ===");
+                ed.WriteMessage($"\n전체 라인: {lines.Count}개");
+                ed.WriteMessage($"\n가시선 라인(교차 없음): {visibleLines.Count}개");
+                ed.WriteMessage($"\n제거된 라인: {lines.Count - visibleLines.Count}개");
+
+                // 6단계: 결과 시각화 (선택사항)
+                HighlightVisibleLines(visibleLines, db);
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 기준점에서 보이는 라인들만 필터링 (교차 검사)
+        /// </summary>
+        private List<Line> FilterLinesByVisibility(Point3d basePoint, List<Line> lines)
+        {
+            var visibleLines = new List<Line>();
+
+            foreach (var targetLine in lines)
+            {
+                var len3 = targetLine.Length/3;  //start, end 지점에서 1/3 지점씩 검사
+                // StartPoint 체크
+                bool startPointBlocked = IsLineBlocked(basePoint, targetLine.GetPointAtDist(len3), targetLine, lines);
+
+                // EndPoint 체크
+                bool endPointBlocked = IsLineBlocked(basePoint, targetLine.GetPointAtDist(len3*2), targetLine, lines);
+
+                // 둘 다 교차하지 않으면(false) 유지
+                if (!startPointBlocked && !endPointBlocked)
+                {
+                    visibleLines.Add(targetLine);
+                }
+            }
+
+            return visibleLines;
+        }
+
+        /// <summary>
+        /// 기준점에서 목표점까지의 라인이 다른 라인들과 교차하는지 검사
+        /// </summary>
+        private bool IsLineBlocked(Point3d basePoint, Point3d targetPoint, Line targetLine, List<Line> allLines)
+        {
+            // 임시 라인 생성 (기준점 → 목표점)
+            using (Line tempLine = new Line(basePoint, targetPoint))
+            {
+                foreach (var otherLine in allLines)
+                {
+                    // 자기 자신은 제외
+                    if (otherLine.Handle == targetLine.Handle)
+                        continue;
+
+                    // 교차 검사
+                    if (DoLinesIntersect(tempLine, otherLine))
+                    {
+                        return true; // 교차함 (차단됨)
+                    }
+                }
+            }
+
+            return false; // 교차 없음 (가시선 확보)
+        }
+
+        /// <summary>
+        /// 두 라인이 교차하는지 검사 (IntersectWith 사용)
+        /// </summary>
+        private bool DoLinesIntersect(Line line1, Line line2)
+        {
+            try
+            {
+                Point3dCollection intersectionPoints = new Point3dCollection();
+
+                // IntersectWith 메서드로 교차점 검사
+                // Intersect.OnBothOperands: 두 선분이 실제로 교차하는 경우만
+                line1.IntersectWith(
+                    line2,
+                    Intersect.OnBothOperands,
+                    intersectionPoints,
+                    IntPtr.Zero,
+                    IntPtr.Zero
+                );
+
+                // 교차점이 있으면 true
+                return intersectionPoints.Count > 0;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 라인 선택 메서드
+        /// </summary>
+        private List<ObjectId> SelectLines(Editor ed)
+        {
+            var lineIds = new List<ObjectId>();
+
+            TypedValue[] filterList = [
+                new TypedValue((int)DxfCode.Start, "LINE")
+            ];
+            var filter = new SelectionFilter(filterList);
+
+            var opts = new PromptSelectionOptions
+            {
+                MessageForAdding = "\n라인들을 선택하세요: "
+            };
+
+            var psr = ed.GetSelection(opts, filter);
+
+            if (psr.Status == PromptStatus.OK && psr.Value != null)
+            {
+                lineIds.AddRange(psr.Value.GetObjectIds());
+            }
+
+            return lineIds;
+        }
+
+        /// <summary>
+        /// 가시선 라인들을 하이라이트 (시각화)
+        /// </summary>
+        private void HighlightVisibleLines(List<Line> visibleLines, Database db)
+        {
+            using var tr = db.TransactionManager.StartTransaction();
+
+            // 녹색으로 하이라이트
+            var highlightColor = Color.FromColorIndex(ColorMethod.ByAci, 3); // Green
+
+            foreach (var line in visibleLines)
+            {
+                try
+                {
+                    // Handle로 원본 ObjectId 찾기
+                    var dbObject = line.Database.GetObjectId(false, line.Handle, 0);
+
+                    if (dbObject != ObjectId.Null)
+                    {
+                        if (tr.GetObject(dbObject, OpenMode.ForWrite) is Line writableLine)
+                        {
+                            writableLine.Color = highlightColor;
+                        }
+                    }
+                }
+                catch (System.Exception)
+                {
+                    continue;
+                }
+            }
+
+            tr.Commit();
+        }
+
+        /// <summary>
+        /// 통계 정보 출력 커맨드
+        /// </summary>
+        [CommandMethod("FILTERVISIBLELINES_STATS")]
+        public void ShowFilterStatistics()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 기준점 입력
+                PromptPointOptions ppo = new PromptPointOptions("\n기준점(bp)을 선택하세요: ");
+                PromptPointResult ppr = ed.GetPoint(ppo);
+
+                if (ppr.Status != PromptStatus.OK)
+                    return;
+
+                Point3d basePoint = ppr.Value;
+
+                // 라인 선택
+                var selectedLineIds = SelectLines(ed);
+                if (selectedLineIds.Count == 0)
+                {
+                    ed.WriteMessage("\n선택된 라인이 없습니다.");
+                    return;
+                }
+
+                using var tr = db.TransactionManager.StartTransaction();
+
+                var lines = selectedLineIds
+                    .Select(id => tr.GetObject(id, OpenMode.ForRead) as Line)
+                    .Where(line => line != null)
+                    .ToList();
+
+                // 필터링 및 상세 통계
+                var visibleLines = new List<Line>();
+                var blockedLines = new List<(Line line, string reason)>();
+
+                foreach (var targetLine in lines)
+                {
+                    bool startBlocked = IsLineBlocked(basePoint, targetLine.StartPoint, targetLine, lines);
+                    bool endBlocked = IsLineBlocked(basePoint, targetLine.EndPoint, targetLine, lines);
+
+                    if (!startBlocked && !endBlocked)
+                    {
+                        visibleLines.Add(targetLine);
+                    }
+                    else
+                    {
+                        string reason = "";
+                        if (startBlocked && endBlocked)
+                            reason = "양쪽 끝점 모두 차단됨";
+                        else if (startBlocked)
+                            reason = "시작점 차단됨";
+                        else
+                            reason = "끝점 차단됨";
+
+                        blockedLines.Add((targetLine, reason));
+                    }
+                }
+
+                tr.Commit();
+
+                // 상세 결과 출력
+                ed.WriteMessage("\n");
+                ed.WriteMessage("\n========================================");
+                ed.WriteMessage("\n       가시선 필터링 상세 통계");
+                ed.WriteMessage("\n========================================");
+                ed.WriteMessage($"\n기준점: X={basePoint.X:F2}, Y={basePoint.Y:F2}, Z={basePoint.Z:F2}");
+                ed.WriteMessage($"\n전체 라인 수: {lines.Count}개");
+                ed.WriteMessage($"\n가시선 라인: {visibleLines.Count}개 ({(double)visibleLines.Count / lines.Count * 100:F1}%)");
+                ed.WriteMessage($"\n차단된 라인: {blockedLines.Count}개 ({(double)blockedLines.Count / lines.Count * 100:F1}%)");
+
+                if (blockedLines.Count > 0)
+                {
+                    ed.WriteMessage("\n");
+                    ed.WriteMessage("\n--- 차단된 라인 상세 ---");
+                    for (int i = 0; i < Math.Min(10, blockedLines.Count); i++)
+                    {
+                        var item = blockedLines[i];
+                        ed.WriteMessage($"\n라인 {i + 1}: {item.reason}");
+                    }
+                    if (blockedLines.Count > 10)
+                    {
+                        ed.WriteMessage($"\n... 외 {blockedLines.Count - 10}개");
+                    }
+                }
+
+                ed.WriteMessage("\n========================================\n");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+    }
+
 }
