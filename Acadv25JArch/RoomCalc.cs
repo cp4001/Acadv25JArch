@@ -1047,7 +1047,7 @@ namespace Acadv25JArch
                             JXdata.SetXdata(br, "Arch", "Window");
                             JXdata.SetXdata(br, "Window", "Window");
                             JXdata.SetXdata(br, "Type", "Window");
-                            JXdata.SetXdata(br, "Disp", "wd");
+                            JXdata.SetXdata(br, "Disp", "WD");
 
                             //ed.WriteMessage("\n폴리라인이 닫혀있지 않습니다. 닫힌 폴리라인만 처리할 수 있습니다.");
                             //continue;
@@ -1108,7 +1108,65 @@ namespace Acadv25JArch
                             JXdata.SetXdata(br, "Arch", "Door");
                             JXdata.SetXdata(br, "Door", "Door");
                             JXdata.SetXdata(br, "Type", "Door");
-                            JXdata.SetXdata(br, "Disp", "dr");
+                            JXdata.SetXdata(br, "Disp", "DR");
+                        }
+
+                    }
+
+
+                    tr.Commit();
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+
+
+    }
+
+    //기둥 Column 도우미 클래스
+    public class Column_helper
+    {
+        /// <summary>
+        /// 선택된 block을 Window 지정
+        /// </summary>
+        [CommandMethod(Jdf.Cmd.선택블럭문지정, CommandFlags.UsePickSet)]
+        public void Cmd_Blocks_To_Column()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // 1. Room Polyline 선택
+                    List<BlockReference> targets = JEntity.GetEntityByTpye<BlockReference>("기둥 Block 를 선택 하세요?", JSelFilter.MakeFilterTypes("INSERT"));
+                    if (targets.Count() == 0) return;
+
+                    var btr = tr.GetModelSpaceBlockTableRecord(db);
+
+                    tr.CheckRegName("Arch,Column,Disp,Type"); //LL(Line)
+                    //Create layerfor Wall Center Line
+                    tr.CreateLayer(Jdf.Layer.Room, Jdf.Color.Red, LineWeight.LineWeight040);
+
+                    foreach (var br in targets)
+                    {
+
+                        // 3. 폴리라인이 닫혀있는지 확인
+                        if (br != null)
+                        {
+                            br.UpgradeOpen();
+                            JXdata.DeleteAll(br);
+                            JXdata.SetXdata(br, "Arch", "Column");
+                            JXdata.SetXdata(br, "Column", "Column");
+                            JXdata.SetXdata(br, "Type", "Column");
+                            JXdata.SetXdata(br, "Disp", "CL");
                         }
 
                     }
