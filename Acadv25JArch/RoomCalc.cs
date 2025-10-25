@@ -1074,7 +1074,7 @@ namespace Acadv25JArch
     public class Door_helper
     {
         /// <summary>
-        /// 선택된 block을 Window 지정
+        /// 선택된 block을 Door 지정
         /// </summary>
         [CommandMethod(Jdf.Cmd.선택블럭문지정, CommandFlags.UsePickSet)]
         public void Cmd_Blocks_To_Door()
@@ -1132,9 +1132,9 @@ namespace Acadv25JArch
     public class Column_helper
     {
         /// <summary>
-        /// 선택된 block을 Window 지정
+        /// 선택된 block을 기둥 지정
         /// </summary>
-        [CommandMethod(Jdf.Cmd.선택블럭문지정, CommandFlags.UsePickSet)]
+        [CommandMethod(Jdf.Cmd.선택블럭기둥지정, CommandFlags.UsePickSet)]
         public void Cmd_Blocks_To_Column()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;

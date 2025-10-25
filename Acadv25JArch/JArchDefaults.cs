@@ -58,8 +58,9 @@ namespace Acadv25JArch
             public const string 라인선택안목폴리만들기 = "Net_Dim";         // Cmd_LinesTo_ConvertClosedPolyline()
             public const string 벽라인제거 = "Wall_Line_delete";      // Cmd_Wall_Lines_Delete()
 
-            public const string 선택블럭창지정 = "To_Window";      // Cmd_Blocks_To_Window() 
-            public const string 선택블럭문지정 = "To_Door";      // Cmd_Blocks_To_Door()
+            public const string 선택블럭창지정     = "To_Window";      // Cmd_Blocks_To_Window() 
+            public const string 선택블럭문지정     = "To_Door";        // Cmd_Blocks_To_Door()
+            public const string 선택블럭기둥지정   = "To_Column";      // Cmd_Blocks_To_Column()
         }
     }
 }
