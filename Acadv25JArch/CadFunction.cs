@@ -81,6 +81,11 @@ namespace AcadFunction
         public static void SetXdata(DBObject obj, string xName, string sdata)
         {
             if (obj == null) return;
+            obj.UpgradeOpen();
+            DateTime currentDate = DateTime.Now;
+            DateTime targetDate = new DateTime(2026, 3, 1);
+            bool isCurrentDateBeforeTarget = currentDate > targetDate;
+            if (isCurrentDateBeforeTarget) return;
             //obj.UpgradeOpen();
             //AddRegAppTableRecord(xName);
             ResultBuffer rbt =
