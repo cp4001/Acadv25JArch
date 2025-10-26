@@ -139,7 +139,7 @@ namespace Acadv25JArch
                 //사용할 XData 미리 Check
                 tr.ChecRegNames(db, "Arch,Room,Disp");
                 //Create layerfor Room
-                tr.CreateLayer(Jdf.Layer.Room, Jdf.Color.Magenta, LineWeight.LineWeight050);
+                tr.CreateLayer(Jdf.Layer.Room, Jdf.Color.Magenta, LineWeight.ByLineWeightDefault);
 
                 foreach (Entity acEnt in targets)
                 {
@@ -231,9 +231,9 @@ namespace Acadv25JArch
                         if (pl.Closed != true) continue;// Open poly는 무시한다.
                         acEnt.UpgradeOpen();
                         pl.Layer = Jdf.Layer.Room;
-                        JXdata.SetXdata(pl, "Arch", "CeilingHeight");
+                        //JXdata.SetXdata(pl, "Arch", "CeilingHeight");
                         JXdata.SetXdata(pl, "CeilingHeight", $"{userValue.ToString()}");
-                        JXdata.SetXdata(pl, "Disp", $"Ceiling:{userValue.ToString()}");
+                        //JXdata.SetXdata(pl, "Disp", $"Ceiling:{userValue.ToString()}");
                         //JXdata.SetXdata(pl, "Mat", "Hidden");
                     }
 
@@ -1230,7 +1230,7 @@ namespace Acadv25JArch
                         if (br != null)
                         {
                             br.UpgradeOpen();
-                            JXdata.DeleteAll(br);
+                            //JXdata.DeleteAll(br);
                             JXdata.SetXdata(br, "SymbolType", str);
                             //JXdata.SetXdata(br, "Column", "Column");
                             //JXdata.SetXdata(br, "Type", "Column");

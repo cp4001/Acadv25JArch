@@ -40,19 +40,26 @@
             dgvRoom = new DataGridView();
             btnRooms = new Button();
             tabPage3 = new TabPage();
-            tabPage4 = new TabPage();
             dgvWindow = new DataGridView();
             btnWindows = new Button();
+            tabPage4 = new TabPage();
             dgvDoor = new DataGridView();
             btnDoors = new Button();
+            Col1 = new DataGridViewTextBoxColumn();
+            Column1 = new DataGridViewImageColumn();
+            Column2 = new DataGridViewTextBoxColumn();
+            Column3 = new DataGridViewTextBoxColumn();
+            Column4 = new DataGridViewTextBoxColumn();
+            Column5 = new DataGridViewTextBoxColumn();
+            Column6 = new DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)dgvBlock).BeginInit();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
             tabPage2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvRoom).BeginInit();
             tabPage3.SuspendLayout();
-            tabPage4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvWindow).BeginInit();
+            tabPage4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvDoor).BeginInit();
             SuspendLayout();
             // 
@@ -69,6 +76,7 @@
             // dgvBlock
             // 
             dgvBlock.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvBlock.Columns.AddRange(new DataGridViewColumn[] { Col1, Column1, Column2, Column3, Column4, Column5, Column6 });
             dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle1.BackColor = SystemColors.Window;
             dataGridViewCellStyle1.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
@@ -81,7 +89,7 @@
             dgvBlock.Name = "dgvBlock";
             dgvBlock.RowHeadersWidth = 62;
             dgvBlock.RowTemplate.Height = 50;
-            dgvBlock.Size = new Size(1164, 428);
+            dgvBlock.Size = new Size(1386, 428);
             dgvBlock.TabIndex = 1;
             // 
             // tabControl1
@@ -94,7 +102,7 @@
             tabControl1.Location = new Point(0, 0);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(1376, 690);
+            tabControl1.Size = new Size(1585, 690);
             tabControl1.TabIndex = 2;
             // 
             // tabPage1
@@ -104,7 +112,7 @@
             tabPage1.Location = new Point(4, 34);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(1368, 652);
+            tabPage1.Size = new Size(1577, 652);
             tabPage1.TabIndex = 0;
             tabPage1.Text = "Blocks";
             tabPage1.UseVisualStyleBackColor = true;
@@ -116,7 +124,7 @@
             tabPage2.Location = new Point(4, 34);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(1368, 652);
+            tabPage2.Size = new Size(1577, 652);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "Rooms";
             tabPage2.UseVisualStyleBackColor = true;
@@ -156,22 +164,10 @@
             tabPage3.Location = new Point(4, 34);
             tabPage3.Name = "tabPage3";
             tabPage3.Padding = new Padding(3);
-            tabPage3.Size = new Size(1368, 652);
+            tabPage3.Size = new Size(1577, 652);
             tabPage3.TabIndex = 2;
             tabPage3.Text = "Windows";
             tabPage3.UseVisualStyleBackColor = true;
-            // 
-            // tabPage4
-            // 
-            tabPage4.Controls.Add(dgvDoor);
-            tabPage4.Controls.Add(btnDoors);
-            tabPage4.Location = new Point(4, 34);
-            tabPage4.Name = "tabPage4";
-            tabPage4.Padding = new Padding(3);
-            tabPage4.Size = new Size(1368, 652);
-            tabPage4.TabIndex = 3;
-            tabPage4.Text = "Doors";
-            tabPage4.UseVisualStyleBackColor = true;
             // 
             // dgvWindow
             // 
@@ -200,6 +196,18 @@
             btnWindows.Text = "All Windows";
             btnWindows.UseVisualStyleBackColor = true;
             // 
+            // tabPage4
+            // 
+            tabPage4.Controls.Add(dgvDoor);
+            tabPage4.Controls.Add(btnDoors);
+            tabPage4.Location = new Point(4, 34);
+            tabPage4.Name = "tabPage4";
+            tabPage4.Padding = new Padding(3);
+            tabPage4.Size = new Size(1577, 652);
+            tabPage4.TabIndex = 3;
+            tabPage4.Text = "Doors";
+            tabPage4.UseVisualStyleBackColor = true;
+            // 
             // dgvDoor
             // 
             dgvDoor.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -227,11 +235,67 @@
             btnDoors.Text = "All Doors";
             btnDoors.UseVisualStyleBackColor = true;
             // 
+            // Col1
+            // 
+            Col1.DataPropertyName = "Index";
+            Col1.HeaderText = "Index";
+            Col1.MinimumWidth = 8;
+            Col1.Name = "Col1";
+            Col1.Width = 80;
+            // 
+            // Column1
+            // 
+            Column1.DataPropertyName = "Img";
+            Column1.HeaderText = "Img";
+            Column1.MinimumWidth = 8;
+            Column1.Name = "Column1";
+            Column1.Width = 80;
+            // 
+            // Column2
+            // 
+            Column2.DataPropertyName = "Name";
+            Column2.HeaderText = "Name";
+            Column2.MinimumWidth = 8;
+            Column2.Name = "Column2";
+            Column2.Width = 500;
+            // 
+            // Column3
+            // 
+            Column3.DataPropertyName = "Count";
+            Column3.HeaderText = "Count";
+            Column3.MinimumWidth = 8;
+            Column3.Name = "Column3";
+            Column3.Width = 80;
+            // 
+            // Column4
+            // 
+            Column4.DataPropertyName = "PartName";
+            Column4.HeaderText = "PartName";
+            Column4.MinimumWidth = 8;
+            Column4.Name = "Column4";
+            Column4.Width = 150;
+            // 
+            // Column5
+            // 
+            Column5.DataPropertyName = "Type";
+            Column5.HeaderText = "Type";
+            Column5.MinimumWidth = 8;
+            Column5.Name = "Column5";
+            Column5.Width = 150;
+            // 
+            // Column6
+            // 
+            Column6.DataPropertyName = "SymbolType";
+            Column6.HeaderText = "Symbol";
+            Column6.MinimumWidth = 8;
+            Column6.Name = "Column6";
+            Column6.Width = 150;
+            // 
             // FormBlockPart
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1376, 690);
+            ClientSize = new Size(1585, 690);
             Controls.Add(tabControl1);
             Name = "FormBlockPart";
             Text = "BlocksForm";
@@ -241,8 +305,8 @@
             tabPage2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgvRoom).EndInit();
             tabPage3.ResumeLayout(false);
-            tabPage4.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgvWindow).EndInit();
+            tabPage4.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgvDoor).EndInit();
             ResumeLayout(false);
         }
@@ -262,5 +326,12 @@
         private Button btnWindows;
         private DataGridView dgvDoor;
         private Button btnDoors;
+        private DataGridViewTextBoxColumn Col1;
+        private DataGridViewImageColumn Column1;
+        private DataGridViewTextBoxColumn Column2;
+        private DataGridViewTextBoxColumn Column3;
+        private DataGridViewTextBoxColumn Column4;
+        private DataGridViewTextBoxColumn Column5;
+        private DataGridViewTextBoxColumn Column6;
     }
 }

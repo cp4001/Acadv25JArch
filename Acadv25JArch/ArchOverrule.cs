@@ -205,8 +205,15 @@ namespace AutoCADMultiEntityOverrule
             // Polyline의 중심점 계산 (GeometricExtents 사용)
             Point3d centerPoint = GetEntityCenter(polyline);
 
+            //polyline 의  높이 계산 
+            var hh = polyline.GetLength() / polyline.NumberOfVertices / 20;
+
+            //천정고 반영
+            string ch = JXdata.GetXdata(polyline, "Arch") ?? "" +" "; 
+            string ch1 = JXdata.GetXdata(polyline, "CeilingHeight") ?? "";  
+            ch = ch+ ch1;   
             // "Aach" 텍스트 표시 (수평으로)
-            DrawTextAtCenter(centerPoint, wd);
+            DrawTextAtCenter(centerPoint, wd, ch,hh);
         }
 
         /// <summary>
@@ -311,7 +318,7 @@ namespace AutoCADMultiEntityOverrule
                 //);
 
                 // "Aach" 텍스트 표시 (수평으로)
-                DrawTextAtCenter(polyline.GetEntiyGeoCenter(), wd);
+                DrawTextAtCenter(polyline.GetEntiyGeoCenter(), wd,JXdata.GetXdata(blockRef,"Arch"),300);
             }
             catch (System.Exception ex)
             {
@@ -378,16 +385,16 @@ namespace AutoCADMultiEntityOverrule
         /// <summary>
         /// 중심점에 "Aach" 텍스트 표시 (Polyline, Block용 - 수평)
         /// </summary>
-        private void DrawTextAtCenter(Point3d centerPoint, WorldDraw wd)
+        private void DrawTextAtCenter(Point3d centerPoint, WorldDraw wd,string txt,double txthgt)
         {
-            double textHeight = 2.5;
+            //double textHeight = 100;
 
             using (MText mtext = new MText())
             {
                 mtext.SetDatabaseDefaults();
                 mtext.Location = centerPoint;
-                mtext.TextHeight = textHeight;
-                mtext.Contents = "Aach";
+                mtext.TextHeight = txthgt;
+                mtext.Contents = txt;
                 mtext.Rotation = 0;  // 수평
                 mtext.Attachment = AttachmentPoint.MiddleCenter;
                 mtext.Color = Color.FromRgb(255, 0, 0);
