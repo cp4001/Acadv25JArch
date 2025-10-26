@@ -191,7 +191,7 @@ namespace Acadv25JArch
                 //Grouping Block
                 //Dynamic Block이 있어서 Grouping에 문제가 있다.
                 //Block Grouping 시  Block의 SymbolType을  같이 고려한다.
-                var bgrGrps = blockrefs.GroupBy(x => x.GetName() + JXdata.GetXdata(x, "Type") ?? ""+JXdata.GetXdata(x, "SymbolType") ?? "");
+                var bgrGrps = blockrefs.GroupBy(x =>( x.GetName() +( JXdata.GetXdata(x, "Type") ?? "")+(JXdata.GetXdata(x, "SymbolType") ?? "")));
 
                 foreach (var brg in bgrGrps)
                 {

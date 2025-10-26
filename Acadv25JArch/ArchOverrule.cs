@@ -318,7 +318,7 @@ namespace AutoCADMultiEntityOverrule
                 //);
 
                 // "Aach" 텍스트 표시 (수평으로)
-                DrawTextAtCenter(polyline.GetEntiyGeoCenter(), wd,JXdata.GetXdata(blockRef,"Arch"),300);
+                DrawTextAtCenter(polyline.GetEntiyGeoCenter(), wd,JXdata.GetXdata(blockRef,"Disp"),300);
             }
             catch (System.Exception ex)
             {
