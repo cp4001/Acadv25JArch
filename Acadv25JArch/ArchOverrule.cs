@@ -499,7 +499,7 @@ namespace AutoCADMultiEntityOverrule
 
                  if (entity is Polyline polyline)
                 {
-                    DrawPolyline3D(polyline, wd);
+                    DrawHybrid(polyline, wd);
                 }
                 else
                 {
@@ -516,14 +516,11 @@ namespace AutoCADMultiEntityOverrule
             }
         }
 
-
-
         /// <summary>
-        /// Polyline을 빨간색으로 그리고 중앙에 "Aach" 표시
+        /// Hybrid 형태로 그리기 (면 + 선)
         /// </summary>
-        private void DrawPolyline3D(Polyline polyline, WorldDraw wd)
+        private void DrawHybrid(Polyline polyline, WorldDraw wd)
         {
-            // Closed Polyline만 처리
             if (!polyline.Closed)
                 return;
 
@@ -531,37 +528,35 @@ namespace AutoCADMultiEntityOverrule
             if (vertexCount < 3)
                 return;
 
-            // 정점 추출
             List<Point3d> bottomVertices = new List<Point3d>();
             List<Point3d> topVertices = new List<Point3d>();
 
             for (int i = 0; i < vertexCount; i++)
             {
                 Point2d pt2d = polyline.GetPoint2dAt(i);
-
-                // 하단 정점 (Z=0)
                 bottomVertices.Add(new Point3d(pt2d.X, pt2d.Y, 0));
-
-                // 상단 정점 (Z=EXTRUSION_HEIGHT)
                 topVertices.Add(new Point3d(pt2d.X, pt2d.Y, 300));
             }
 
-            // SubEntityTraits 설정 (반투명 효과)
+            // 1단계: 채워진 면 그리기
             wd.SubEntityTraits.FillType = FillType.FillAlways;
-            wd.SubEntityTraits.Color = 150; // 연한 청록색
+            wd.SubEntityTraits.Color = 150;
 
-            // 하단 면 그리기 (Z=0)
             DrawPolygonFace(wd.Geometry, bottomVertices, true);
-
-            // 상단 면 그리기 (Z=300)
             DrawPolygonFace(wd.Geometry, topVertices, false);
-
-            // 측면 그리기
             DrawSideWalls(wd.Geometry, bottomVertices, topVertices);
+
+            // 2단계: 테두리 선 그리기
+            wd.SubEntityTraits.FillType = FillType.FillNever;
+            wd.SubEntityTraits.Color = 7; // 흰색/검정 자동
+
+            DrawEdgeLoop(wd.Geometry, bottomVertices);
+            DrawEdgeLoop(wd.Geometry, topVertices);
+            DrawVerticalLines(wd.Geometry, bottomVertices, topVertices);
         }
 
         /// <summary>
-        /// 다각형 면 그리기
+        /// Polyline을 빨간색으로 그리고 중앙에 "Aach" 표시
         /// </summary>
         private void DrawPolygonFace(WorldGeometry geometry, List<Point3d> vertices, bool reverseNormal)
         {
@@ -572,7 +567,6 @@ namespace AutoCADMultiEntityOverrule
 
             if (reverseNormal)
             {
-                // 하단 면: 법선이 아래를 향하도록 역순
                 for (int i = vertices.Count - 1; i >= 0; i--)
                 {
                     points.Add(vertices[i]);
@@ -580,20 +574,15 @@ namespace AutoCADMultiEntityOverrule
             }
             else
             {
-                // 상단 면: 정순
                 foreach (var pt in vertices)
                 {
                     points.Add(pt);
                 }
             }
 
-            // Polygon으로 면 그리기
             geometry.Polygon(points);
         }
 
-        /// <summary>
-        /// 측면 벽 그리기
-        /// </summary>
         private void DrawSideWalls(WorldGeometry geometry, List<Point3d> bottomVertices, List<Point3d> topVertices)
         {
             int count = bottomVertices.Count;
@@ -602,7 +591,6 @@ namespace AutoCADMultiEntityOverrule
             {
                 int nextIndex = (i + 1) % count;
 
-                // 각 측면은 4개 정점의 사각형
                 Point3dCollection sidePoints = new Point3dCollection
                 {
                     bottomVertices[i],
@@ -614,6 +602,24 @@ namespace AutoCADMultiEntityOverrule
                 geometry.Polygon(sidePoints);
             }
         }
+
+        private void DrawEdgeLoop(WorldGeometry geometry, List<Point3d> vertices)
+        {
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                int nextIndex = (i + 1) % vertices.Count;
+                geometry.WorldLine(vertices[i], vertices[nextIndex]);
+            }
+        }
+
+        private void DrawVerticalLines(WorldGeometry geometry, List<Point3d> bottomVertices, List<Point3d> topVertices)
+        {
+            for (int i = 0; i < bottomVertices.Count; i++)
+            {
+                geometry.WorldLine(bottomVertices[i], topVertices[i]);
+            }
+        }
+    
         
 
         /// <summary>
