@@ -1186,4 +1186,72 @@ namespace Acadv25JArch
 
     }
 
+    //Entity Symbol 도우미 클래스
+    public class Entity_Symbol_helper
+    {
+        /// <summary>
+        /// 선택된 block Poly 을 Symbol 지정
+        /// </summary>
+        [CommandMethod(Jdf.Cmd.선택개체구분지정, CommandFlags.UsePickSet)]
+        public void Cmd_Entitys_To_Symbol()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // 1. Room Polyline 선택
+                    List<Entity> targets = JEntity.GetEntityByTpye<Entity>("Symbol 구분 Entity를 선택 하세요?", JSelFilter.MakeFilterTypes("INSERT,LWPOLYLINE"));
+                    if (targets.Count() == 0) return;
+
+                    PromptStringOptions pStrOpts = new PromptStringOptions("\nEnter Symbol  Name? ");
+                    PromptResult pStrRes = doc.Editor.GetString(pStrOpts);
+
+                    string str = "";
+                    if (pStrRes.Status == PromptStatus.OK)
+                    {
+                        str = pStrRes.StringResult;
+                    }
+
+
+                    var btr = tr.GetModelSpaceBlockTableRecord(db);
+
+                    tr.CheckRegName("Arch,SymbolType,Disp,Type"); //LL(Line)
+                    //Create layerfor Wall Center Line
+                    tr.CreateLayer(Jdf.Layer.Room, Jdf.Color.Red, LineWeight.LineWeight040);
+
+                    foreach (var br in targets)
+                    {
+
+                        // 3. 폴리라인이 닫혀있는지 확인
+                        if (br != null)
+                        {
+                            br.UpgradeOpen();
+                            JXdata.DeleteAll(br);
+                            JXdata.SetXdata(br, "SymbolType", str);
+                            //JXdata.SetXdata(br, "Column", "Column");
+                            //JXdata.SetXdata(br, "Type", "Column");
+                            //JXdata.SetXdata(br, "Disp", "CL");
+                        }
+
+                    }
+
+
+                    tr.Commit();
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+
+
+    }
+
 }

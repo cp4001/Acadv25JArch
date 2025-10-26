@@ -61,6 +61,7 @@ namespace Acadv25JArch
             public const string 선택블럭창지정     = "To_Window";      // Cmd_Blocks_To_Window() 
             public const string 선택블럭문지정     = "To_Door";        // Cmd_Blocks_To_Door()
             public const string 선택블럭기둥지정   = "To_Column";      // Cmd_Blocks_To_Column()
+            public const string 선택개체구분지정   = "To_Symbol";      // Cmd_Entitys_To_Symbol()
         }
     }
 }
