@@ -396,7 +396,301 @@ namespace AutoCADMultiEntityOverrule
         }
     }
 
+    /// <summary>
+    /// SetXDataFilter를 사용하여 RoomPoly  poly 에 3차원   Solid  그리기
+    /// - BlockReference: Block의 회전 각도를 고려한 3D Solid 
+    /// - 모든 Entity 중앙에 "Room" 텍스트 표시
+    /// </summary>
+    public class XDataFilterDrawOverrule3d : DrawableOverrule
+    {
+        private static XDataFilterDrawOverrule3d _instance;
+        private const string XDATA_REGAPP_NAME = "Room";
+        public static bool IsRegistered => (_instance != null);
 
+        public static void Register()
+        {
+            if (_instance == null)
+            {
+                _instance = new XDataFilterDrawOverrule3d();
+
+                // Line, Polyline, BlockReference에 대해 Overrule 등록
+               // RXClass lineClass = RXObject.GetClass(typeof(Line));
+                RXClass polylineClass = RXObject.GetClass(typeof(Polyline));
+               // RXClass blockRefClass = RXObject.GetClass(typeof(BlockReference));
+
+                // 각 클래스에 Overrule 추가
+                //Overrule.AddOverrule(lineClass, _instance, false);
+                Overrule.AddOverrule(polylineClass, _instance, false);
+                //Overrule.AddOverrule(blockRefClass, _instance, false);
+
+                // 핵심: SetXDataFilter 설정
+                _instance.SetXDataFilter(XDATA_REGAPP_NAME);
+
+                // Overruling 활성화
+                Overrule.Overruling = true;
+                //IsRegistered = true;
+
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                if (doc != null)
+                {
+                    doc.Editor.WriteMessage("\n========================================");
+                    doc.Editor.WriteMessage("\n[XDataFilter] Multi-Entity Overrule 등록 완료");
+                    doc.Editor.WriteMessage("\n========================================");
+                    doc.Editor.WriteMessage($"\n✓ 대상: Line, Polyline, BlockReference");
+                    doc.Editor.WriteMessage($"\n✓ Xdata 필터: '{XDATA_REGAPP_NAME}'");
+                    doc.Editor.WriteMessage("\n✓ Line/Polyline: Red 색상으로 변경");
+                    doc.Editor.WriteMessage("\n✓ Block: 회전 각도를 고려한 GeometryExtents 박스 표시 (Cyan, LineWeight 30)");
+                    doc.Editor.WriteMessage("\n✓ 모든 Entity 중앙에 'Aach' 표시");
+                    doc.Editor.WriteMessage("\n========================================");
+                }
+            }
+        }
+
+        public static void Unregister()
+        {
+            if (_instance != null)
+            {
+                //RXClass lineClass = RXObject.GetClass(typeof(Line));
+                RXClass polylineClass = RXObject.GetClass(typeof(Polyline));
+                //RXClass blockRefClass = RXObject.GetClass(typeof(BlockReference));
+
+                // Overrule 제거
+                //Overrule.RemoveOverrule(lineClass, _instance);
+                Overrule.RemoveOverrule(polylineClass, _instance);
+                //Overrule.RemoveOverrule(blockRefClass, _instance);
+
+                _instance = null;
+                //IsRegistered = false;
+
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                if (doc != null)
+                {
+                    doc.Editor.WriteMessage("\n[XDataFilter] Multi-Entity Overrule 제거 완료");
+                }
+            }
+        }
+
+        public override bool IsApplicable(RXObject overruledSubject)
+        {
+            // SetXDataFilter가 이미 필터링했으므로
+            // 여기 도달한 객체는 모두 Xdata가 있는 객체임
+            Entity entity = overruledSubject as Entity;
+            if (entity == null)
+                return false;
+
+            if (entity.ObjectId.IsNull || entity.ObjectId.IsErased)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// WorldDraw - Entity 타입별로 다른 처리
+        /// </summary>
+        public override bool WorldDraw(Drawable drawable, WorldDraw wd)
+        {
+            Entity entity = drawable as Entity;
+            if (entity == null)
+                return base.WorldDraw(drawable, wd);
+
+            try
+            {
+                // Entity 타입별 처리
+
+                 if (entity is Polyline polyline)
+                {
+                    DrawPolyline3D(polyline, wd);
+                }
+                else
+                {
+                    // 기타 Entity는 기본 그리기
+                    return base.WorldDraw(drawable, wd);
+                }
+
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"WorldDraw Error: {ex.Message}");
+                return base.WorldDraw(drawable, wd);
+            }
+        }
+
+
+
+        /// <summary>
+        /// Polyline을 빨간색으로 그리고 중앙에 "Aach" 표시
+        /// </summary>
+        private void DrawPolyline3D(Polyline polyline, WorldDraw wd)
+        {
+            // Closed Polyline만 처리
+            if (!polyline.Closed)
+                return;
+
+            int vertexCount = polyline.NumberOfVertices;
+            if (vertexCount < 3)
+                return;
+
+            // 정점 추출
+            List<Point3d> bottomVertices = new List<Point3d>();
+            List<Point3d> topVertices = new List<Point3d>();
+
+            for (int i = 0; i < vertexCount; i++)
+            {
+                Point2d pt2d = polyline.GetPoint2dAt(i);
+
+                // 하단 정점 (Z=0)
+                bottomVertices.Add(new Point3d(pt2d.X, pt2d.Y, 0));
+
+                // 상단 정점 (Z=EXTRUSION_HEIGHT)
+                topVertices.Add(new Point3d(pt2d.X, pt2d.Y, 300));
+            }
+
+            // SubEntityTraits 설정 (반투명 효과)
+            wd.SubEntityTraits.FillType = FillType.FillAlways;
+            wd.SubEntityTraits.Color = 150; // 연한 청록색
+
+            // 하단 면 그리기 (Z=0)
+            DrawPolygonFace(wd.Geometry, bottomVertices, true);
+
+            // 상단 면 그리기 (Z=300)
+            DrawPolygonFace(wd.Geometry, topVertices, false);
+
+            // 측면 그리기
+            DrawSideWalls(wd.Geometry, bottomVertices, topVertices);
+        }
+
+        /// <summary>
+        /// 다각형 면 그리기
+        /// </summary>
+        private void DrawPolygonFace(WorldGeometry geometry, List<Point3d> vertices, bool reverseNormal)
+        {
+            if (vertices.Count < 3)
+                return;
+
+            Point3dCollection points = new Point3dCollection();
+
+            if (reverseNormal)
+            {
+                // 하단 면: 법선이 아래를 향하도록 역순
+                for (int i = vertices.Count - 1; i >= 0; i--)
+                {
+                    points.Add(vertices[i]);
+                }
+            }
+            else
+            {
+                // 상단 면: 정순
+                foreach (var pt in vertices)
+                {
+                    points.Add(pt);
+                }
+            }
+
+            // Polygon으로 면 그리기
+            geometry.Polygon(points);
+        }
+
+        /// <summary>
+        /// 측면 벽 그리기
+        /// </summary>
+        private void DrawSideWalls(WorldGeometry geometry, List<Point3d> bottomVertices, List<Point3d> topVertices)
+        {
+            int count = bottomVertices.Count;
+
+            for (int i = 0; i < count; i++)
+            {
+                int nextIndex = (i + 1) % count;
+
+                // 각 측면은 4개 정점의 사각형
+                Point3dCollection sidePoints = new Point3dCollection
+                {
+                    bottomVertices[i],
+                    bottomVertices[nextIndex],
+                    topVertices[nextIndex],
+                    topVertices[i]
+                };
+
+                geometry.Polygon(sidePoints);
+            }
+        }
+        
+
+        /// <summary>
+        /// Entity의 중심점 계산 (GeometricExtents 사용)
+        /// </summary>
+        private Point3d GetEntityCenter(Entity entity)
+        {
+            try
+            {
+                Extents3d extents = entity.GeometricExtents;
+                return new Point3d(
+                    (extents.MinPoint.X + extents.MaxPoint.X) / 2,
+                    (extents.MinPoint.Y + extents.MaxPoint.Y) / 2,
+                    (extents.MinPoint.Z + extents.MaxPoint.Z) / 2
+                );
+            }
+            catch
+            {
+                return Point3d.Origin;
+            }
+        }
+
+        /// <summary>
+        /// 중심점에 "Aach" 텍스트 표시 (Line용 - 각도 계산)
+        /// </summary>
+        private void DrawTextAtCenter(Point3d centerPoint, Point3d startPoint, Point3d endPoint, WorldDraw wd)
+        {
+            Vector3d direction = (endPoint - startPoint).GetNormal();
+
+            // 수직 방향 계산
+            Vector3d perpendicular = new Vector3d(-direction.Y, direction.X, 0);
+            if (perpendicular.Length > 0.0001)
+                perpendicular = perpendicular.GetNormal();
+            else
+                perpendicular = Vector3d.YAxis;
+
+            double textHeight = 2.5;
+            Point3d textPosition = centerPoint + perpendicular * textHeight * 0.5;
+
+            // 텍스트 각도 계산
+            double angle = Math.Atan2(direction.Y, direction.X);
+            if (angle > Math.PI / 2 || angle < -Math.PI / 2)
+                angle += Math.PI;
+
+            using (MText mtext = new MText())
+            {
+                mtext.SetDatabaseDefaults();
+                mtext.Location = textPosition;
+                mtext.TextHeight = textHeight;
+                mtext.Contents = "Aach";
+                mtext.Rotation = angle;
+                mtext.Attachment = AttachmentPoint.MiddleCenter;
+                mtext.Color = Color.FromRgb(255, 0, 0);
+                mtext.WorldDraw(wd);
+            }
+        }
+
+        /// <summary>
+        /// 중심점에 "Aach" 텍스트 표시 (Polyline, Block용 - 수평)
+        /// </summary>
+        private void DrawTextAtCenter(Point3d centerPoint, WorldDraw wd)
+        {
+            double textHeight = 2.5;
+
+            using (MText mtext = new MText())
+            {
+                mtext.SetDatabaseDefaults();
+                mtext.Location = centerPoint;
+                mtext.TextHeight = textHeight;
+                mtext.Contents = "Aach";
+                mtext.Rotation = 0;  // 수평
+                mtext.Attachment = AttachmentPoint.MiddleCenter;
+                mtext.Color = Color.FromRgb(255, 0, 0);
+                mtext.WorldDraw(wd);
+            }
+        }
+    }
 
 
 
@@ -732,6 +1026,58 @@ namespace AutoCADMultiEntityOverrule
             catch (System.Exception ex)
             {
                 ed.WriteMessage($"\n오류: {ex.Message}");
+            }
+        }
+
+        private void RegisterXdataApp(string appName)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                RegAppTable rat = tr.GetObject(db.RegAppTableId, OpenMode.ForRead) as RegAppTable;
+                if (!rat.Has(appName))
+                {
+                    rat.UpgradeOpen();
+                    RegAppTableRecord ratr = new RegAppTableRecord();
+                    ratr.Name = appName;
+                    rat.Add(ratr);
+                    tr.AddNewlyCreatedDBObject(ratr, true);
+                }
+                tr.Commit();
+            }
+        }
+    }
+
+    /// <summary>
+    /// 명령어 클래스
+    /// </summary>
+    public class XDataFilterCommands3D
+    {
+        private const string XDATA_REGAPP_NAME = "Arch";
+
+
+        [CommandMethod("aag3")] // Wire Graphic
+        public void ToggleOverrule()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+            // Initialize Overrule if first time run
+            if (XDataFilterDrawOverrule3d.IsRegistered == false)
+            {
+
+                RegisterXdataApp(XDATA_REGAPP_NAME);
+                XDataFilterDrawOverrule3d.Register();
+                doc.Editor.Regen();
+            }
+            else
+            {
+                //Turn Overruling off
+                XDataFilterDrawOverrule3d.Unregister();
+                ed.WriteMessage("\nSetXDataFilter Overrule이 제거되었습니다.");
+                doc.Editor.Regen();
+
             }
         }
 
