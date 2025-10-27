@@ -314,7 +314,7 @@ namespace Acadv25JArch
 
                 var btr = tr.GetModelSpaceBlockTableRecord(db);
 
-                tr.CheckRegName("Arch,WallWidth");
+                tr.CheckRegName("Arch,Wall,WallWidth");
                 //Create layerfor Wall Center Line
                 tr.CreateLayer(Jdf.Layer.Wall, Jdf.Color.Red, LineWeight.LineWeight040);
                 
@@ -455,7 +455,7 @@ namespace Acadv25JArch
 
                 var btr = tr.GetModelSpaceBlockTableRecord(db);
 
-                tr.CheckRegName("Arch,WallWidth");
+                tr.CheckRegName("Arch,Wall,Width");
                 //Create layerfor Wall Center Line
                 tr.CreateLayer(Jdf.Layer.Wall, Jdf.Color.Red, LineWeight.LineWeight040);
 

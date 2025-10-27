@@ -81,7 +81,7 @@ namespace AcadFunction
         public static void SetXdata(DBObject obj, string xName, string sdata)
         {
             if (obj == null) return;
-            obj.UpgradeOpen();
+            //if(obj.AcadObject != null) obj.UpgradeOpen();
             DateTime currentDate = DateTime.Now;
             DateTime targetDate = new DateTime(2026, 3, 1);
             bool isCurrentDateBeforeTarget = currentDate > targetDate;
