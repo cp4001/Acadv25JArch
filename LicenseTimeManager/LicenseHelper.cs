@@ -9,17 +9,12 @@ namespace ProgramLicenseManager
 {
     /// <summary>
     /// 프로그램 사용 기한을 관리하는 Helper 클래스
-    /// 라이선스 파일: C:\Jarch25\license.dat
+    /// 라이선스 파일: 프로그램 실행 위치의 license.dat
     /// </summary>
     public class LicenseHelper
     {
-        // 방법 1: 절대 경로로 직접 지정 (간단!)
-        private const string LICENSE_FILE = @"C:\Jarch25\license.dat";
-
-        // 방법 2: 폴더와 파일명을 분리 (더 유연함)
-        // private const string LICENSE_FOLDER = @"C:\Jarch25";
-        // private const string LICENSE_FILE_NAME = "license.dat";
-        // private static string LICENSE_FILE => Path.Combine(LICENSE_FOLDER, LICENSE_FILE_NAME);
+        // 프로그램 실행 위치에서 license.dat 파일 사용
+        private static string LICENSE_FILE => Path.Combine(Directory.GetCurrentDirectory(), "license.dat");
 
         private const string ENCRYPTION_KEY = "YourSecretKey123"; // 실제 사용시 변경하세요
 
@@ -33,16 +28,12 @@ namespace ProgramLicenseManager
 
         /// <summary>
         /// 라이선스 파일이 저장될 폴더를 확인하고 없으면 생성합니다.
+        /// (현재 디렉토리를 사용하므로 별도 폴더 생성 불필요)
         /// </summary>
         private static void EnsureLicenseDirectoryExists()
         {
-            string directory = Path.GetDirectoryName(LICENSE_FILE);
-
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-                Console.WriteLine($"폴더 생성됨: {directory}");
-            }
+            // 현재 디렉토리를 사용하므로 별도 폴더 생성 불필요
+            // 필요시 여기에 추가 검증 로직을 넣을 수 있음
         }
 
         /// <summary>

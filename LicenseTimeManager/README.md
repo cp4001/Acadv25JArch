@@ -113,7 +113,7 @@ class YourProgram
 
 - **LicenseHelper.cs**: 라이선스 관리 핵심 로직
 - **Program.cs**: 사용 예제 및 테스트 프로그램
-- **license.dat**: 생성된 라이선스 파일 (암호화됨)
+- **license.dat**: 생성된 라이선스 파일 (암호화됨, 프로그램 실행 위치에 생성)
 
 ## 주의사항
 
