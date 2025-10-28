@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="LicenseManagerNet8">
+      <HintPath>..\LicenseManagerNet8\x64\$(Configuration)\LicenseManagerNet8.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

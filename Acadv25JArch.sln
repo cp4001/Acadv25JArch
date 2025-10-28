@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiskSerialChecker", "DiskSe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LicenseTimeManager", "LicenseTimeManager\LicenseTimeManager.csproj", "{7739C3D8-B464-433C-9137-B2F727269FFB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LicenseManagerNet8", "LicenseManagerCore\LicenseManagerNet8\LicenseManagerNet8.vcxproj", "{D7F8A5B3-1234-4567-89AB-CDEF01234567}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LicenseManager", "LicenseManagerFrameWork\LicenseManager.vcxproj", "{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +55,22 @@ Global
 		{7739C3D8-B464-433C-9137-B2F727269FFB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7739C3D8-B464-433C-9137-B2F727269FFB}.Release|x64.ActiveCfg = Release|Any CPU
 		{7739C3D8-B464-433C-9137-B2F727269FFB}.Release|x64.Build.0 = Release|Any CPU
+		{D7F8A5B3-1234-4567-89AB-CDEF01234567}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{D7F8A5B3-1234-4567-89AB-CDEF01234567}.Debug|Any CPU.Build.0 = Debug|x64
+		{D7F8A5B3-1234-4567-89AB-CDEF01234567}.Debug|x64.ActiveCfg = Debug|x64
+		{D7F8A5B3-1234-4567-89AB-CDEF01234567}.Debug|x64.Build.0 = Debug|x64
+		{D7F8A5B3-1234-4567-89AB-CDEF01234567}.Release|Any CPU.ActiveCfg = Release|x64
+		{D7F8A5B3-1234-4567-89AB-CDEF01234567}.Release|Any CPU.Build.0 = Release|x64
+		{D7F8A5B3-1234-4567-89AB-CDEF01234567}.Release|x64.ActiveCfg = Release|x64
+		{D7F8A5B3-1234-4567-89AB-CDEF01234567}.Release|x64.Build.0 = Release|x64
+		{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}.Debug|Any CPU.Build.0 = Debug|Win32
+		{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}.Debug|x64.ActiveCfg = Debug|Win32
+		{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}.Debug|x64.Build.0 = Debug|Win32
+		{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}.Release|Any CPU.ActiveCfg = Release|Win32
+		{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}.Release|Any CPU.Build.0 = Release|Win32
+		{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}.Release|x64.ActiveCfg = Release|Win32
+		{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}.Release|x64.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
