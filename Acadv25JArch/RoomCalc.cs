@@ -127,6 +127,12 @@ namespace Acadv25JArch
                 return;
             }
 
+            //Check License Days
+
+            var days = LicenseHelper.GetDateTime();
+
+            ed.WriteMessage($"\n {days} ");
+
             //UCS Elevation to World
             doc.Editor.CurrentUserCoordinateSystem = Matrix3d.Identity;
             doc.Editor.Regen();

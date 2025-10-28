@@ -71,8 +71,8 @@
       <HintPath>C:\Users\junhoi\.nuget\packages\autocad.net\25.0.1\lib\net8.0\AcMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="LicenseTimeManager">
-      <HintPath>..\LicenseTimeManager\bin\Debug\net8.0\LicenseTimeManager.dll</HintPath>
+    <Reference Include="LicenseManagerNet8">
+      <HintPath>..\..\Tmp\LicenseManagerCore\x64\Debug\LicenseManagerNet8.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>

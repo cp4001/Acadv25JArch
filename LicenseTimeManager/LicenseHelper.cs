@@ -109,6 +109,48 @@ namespace ProgramLicenseManager
                 return false;
             }
         }
+        /// <summary>
+        /// 프로그램 사용 가능 여부를 체크합니다.
+        /// </summary>
+        /// <returns>사용 가능하면 true, 만료되었으면 false</returns>
+        public static String  GetDateTime()
+        {
+            try
+            {
+                // 1. 라이선스 파일 확인
+                if (!File.Exists(LICENSE_FILE))
+                {
+                    Console.WriteLine($"라이선스 파일이 없습니다: {LICENSE_FILE}");
+                    return "라이선스 파일이 없습니다";
+                }
+
+                // 2. 라이선스 파일 읽기
+                string encrypted = File.ReadAllText(LICENSE_FILE);
+                string decrypted = DecryptString(encrypted);
+                DateTime expirationDate = DateTime.Parse(decrypted);
+
+                // 3. 인터넷 시간 가져오기
+                DateTime internetTime = GetInternetTime();
+
+                // 4. 만료 확인
+                if (internetTime > expirationDate)
+                {
+                    Console.WriteLine($"라이선스가 만료되었습니다. 만료일: {expirationDate:yyyy-MM-dd}");
+                    return "라이선스가 만료";
+                }
+
+                // 5. 남은 기간 표시
+                TimeSpan remaining = expirationDate - internetTime;
+                Console.WriteLine($"라이선스 유효 - 남은 기간: {remaining.Days}일");
+                return $"라이선스 유효 - 남은 기간: {remaining.Days}일";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"라이선스 체크 실패: {ex.Message}");
+                return "라이센스 확인 불가";
+            }
+        }
+
 
         /// <summary>
         /// 라이선스 정보를 조회합니다.
