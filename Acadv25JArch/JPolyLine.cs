@@ -9,6 +9,7 @@ using Autodesk.AutoCAD.Internal;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows.Data;
 using CADExtension;
+using RoomUtil;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -237,16 +238,20 @@ namespace Acadv25JArch
                 // colinear line 제거 
                 var selines = Func.RemoveColinearLinesKeepShortest(selectedLines,pt);
 
-                // 방위각 기준으로 선을 만들떄  내측에  교차하는 선이 있으면 삭제 
-                List<Line> selines1 = new List<Line>(); 
-                foreach (var line in selines)
-                {
-                    var lindir = new Line(pt, line.GetCentor());
-                    if (line.IsInterSect(selines)) continue;
-                    selines1.Add(line);
-                }   
+                // 기준점 에서 볼때 보이는 Line만 선택
+                // 4단계: 필터링 수행
+                selines =    LineVisibilityFilter.FilterLinesByVisibility(pt, selines);
 
+                //// 방위각 기준으로 선을 만들떄  내측에  교차하는 선이 있으면 삭제 
+                List<Line> selines1 = new List<Line>();
+                //foreach (var line in selines)
+                //{
+                //    var lindir = new Line(pt, line.GetCentor());
+                //    if (line.IsInterSect(selines)) continue;
+                //    selines1.Add(line);
+                //}   
 
+                selines1 = selines;
 
                 var groupedLines = GroupLinesByAzimuth(selines1, pt);
                 // 그룹별로 처리 기준점에서 가장 가까운 라인 선택   
@@ -473,7 +478,7 @@ namespace Acadv25JArch
             return intersection;
         }
 
-        private void CreateClosedPolyline(List<Point3d> points, Database db)
+        private void CreateClosedPolyline(List<Point3d> points, Database db,string layerName="RoomPoly")
         {
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {

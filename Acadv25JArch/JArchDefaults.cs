@@ -29,6 +29,7 @@ namespace Acadv25JArch
         {
             public const string Wall = "!Arch_Wall";
             public const string Room = "!Arch_Room";
+            public const string RoomPoly = "!Arch_RoomPoly";
             public const string Block = "!Arch_Block"; // Window Door 
         }
 
