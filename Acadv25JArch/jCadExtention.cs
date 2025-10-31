@@ -15,6 +15,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using LayerManager;
 using System.Windows.Shapes;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Color = Autodesk.AutoCAD.Colors.Color;
@@ -2139,6 +2140,7 @@ namespace CADExtension  //tr Editor Block
             Database db = doc.Database;
             //Editor ed = doc.Editor;
 
+     
 
             //Database db = HostApplicationServices.WorkingDatabase;
             LayerTable lt = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
@@ -2146,6 +2148,9 @@ namespace CADExtension  //tr Editor Block
 
             if (lt.Has(layerName))
             {
+                //  도면서 Display를 On  시킨다.
+                LayerFunction.LayerDisplayOn(tr, layerName);
+
                 //throw new System.Exception($"Layer '{layerName}' already exists.");
                 return false;
             }
@@ -2156,10 +2161,16 @@ namespace CADExtension  //tr Editor Block
             ltr.Name = layerName;
             ltr.Color = color;
             ltr.LineWeight = lineWeight;
+            
 
             lt.UpgradeOpen();
             ObjectId layerId = lt.Add(ltr);
             tr.AddNewlyCreatedDBObject(ltr, true);
+
+            //  도면서 Display를 On  시킨다.
+            LayerFunction.LayerDisplayOn(tr, layerName);
+
+
             //tr.Commit();   
             return true;
         }

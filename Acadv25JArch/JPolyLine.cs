@@ -42,6 +42,8 @@ namespace Acadv25JArch
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
 
+                    tr.CheckRegName("Arch,Room,Disp");
+
                     // 3개 이상의 라인 선택
                     List<Line> selectedLines = SelectLines1(ed, db);
                     selectedLines = selectedLines.Where(l => l.Length > 300.0).ToList();
@@ -189,7 +191,13 @@ namespace Acadv25JArch
                     // 교차점들이 이미 올바른 순서로 생성됨 (선택 순서 = 이웃 순서)
 
                     // 닫힌 폴리라인 생성
-                    CreateClosedPolyline(intersectionPoints, db);
+                    var pl =CreateClosedPolyline(tr,intersectionPoints, db,Jdf.Layer.RoomPoly);
+
+                    // rommPoly 지정 
+                    pl.UpgradeOpen();
+                    JXdata.SetXdata(pl, "Arch", "Room");
+                    JXdata.SetXdata(pl, "Room", "Room");
+                    JXdata.SetXdata(pl, "Disp", "room");
 
                     //ed.WriteMessage($"\n{intersectionPoints.Count}개의 교차점으로 닫힌 폴리라인이 생성되었습니다.");
 
@@ -221,7 +229,7 @@ namespace Acadv25JArch
                 }
 
 
-                          // GroupLinesBySlope(selines);  
+                // GroupLinesBySlope(selines);  
 
                 // 기준점 선택
                 Point3d? referencePoint = GetReferencePoint(ed);
@@ -231,69 +239,77 @@ namespace Acadv25JArch
                     return;
                 }
 
-                // 같은 방위각 line 으로 Grouping
-                var pt = (Point3d)referencePoint;
-
-
-                // colinear line 제거 
-                var selines = Func.RemoveColinearLinesKeepShortest(selectedLines,pt);
-
-                // 기준점 에서 볼때 보이는 Line만 선택
-                // 4단계: 필터링 수행
-                selines =    LineVisibilityFilter.FilterLinesByVisibility(pt, selines);
-
-                //// 방위각 기준으로 선을 만들떄  내측에  교차하는 선이 있으면 삭제 
-                List<Line> selines1 = new List<Line>();
-                //foreach (var line in selines)
-                //{
-                //    var lindir = new Line(pt, line.GetCentor());
-                //    if (line.IsInterSect(selines)) continue;
-                //    selines1.Add(line);
-                //}   
-
-                selines1 = selines;
-
-                var groupedLines = GroupLinesByAzimuth(selines1, pt);
-                // 그룹별로 처리 기준점에서 가장 가까운 라인 선택   
-                List<Line> glines = new List<Line>();
-                foreach (var group in groupedLines)
+                using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    if (group.Count == 1)
+                    // 같은 방위각 line 으로 Grouping
+                    var pt = (Point3d)referencePoint;
+
+                    // colinear line 제거 
+                    var selines = Func.RemoveColinearLinesKeepShortest(selectedLines, pt);
+
+                    // 기준점 에서 볼때 보이는 Line만 선택
+                    // 4단계: 필터링 수행
+                    selines = LineVisibilityFilter.FilterLinesByVisibility(pt, selines);
+
+                    //// 방위각 기준으로 선을 만들떄  내측에  교차하는 선이 있으면 삭제 
+                    List<Line> selines1 = new List<Line>();
+                    //foreach (var line in selines)
+                    //{
+                    //    var lindir = new Line(pt, line.GetCentor());
+                    //    if (line.IsInterSect(selines)) continue;
+                    //    selines1.Add(line);
+                    //}   
+
+                    selines1 = selines;
+
+                    var groupedLines = GroupLinesByAzimuth(selines1, pt);
+                    // 그룹별로 처리 기준점에서 가장 가까운 라인 선택   
+                    List<Line> glines = new List<Line>();
+                    foreach (var group in groupedLines)
                     {
-                        glines.Add(group[0]);
-                        continue;
+                        if (group.Count == 1)
+                        {
+                            glines.Add(group[0]);
+                            continue;
+                        }
+                        // 그룹에서 가장 기준점에 가까운 라인 선택
+                        var shortestLine = group
+                            .OrderBy(item => item.GetCentor().DistanceTo(pt))
+                            .First();
+
+                        glines.Add(shortestLine);
                     }
-                    // 그룹에서 가장 기준점에 가까운 라인 선택
-                    var shortestLine = group
-                        .OrderBy(item => item.GetCentor().DistanceTo(pt))
-                        .First();
 
-                    glines.Add(shortestLine);
+
+                    // 기준점을 사용하여 라인들을 각도 순서로 정렬
+                    List<Line> sortedLines = SortLinesByAngle(glines, pt);
+                    ed.WriteMessage($"\n기준점에서 각도 순서로 {sortedLines.Count}개의 라인을 정렬했습니다.");
+
+                    // 정렬된 순서로 순환적 이웃 관계 형성
+                    List<Point3d> intersectionPoints = CalculateIntersectionPoints(sortedLines);
+
+                    ed.WriteMessage($"\n{sortedLines.Count}개의 라인에서 {intersectionPoints.Count}개의 교차점을 찾았습니다.");
+
+                    if (intersectionPoints.Count != sortedLines.Count)
+                    {
+                        ed.WriteMessage("\n예상된 교차점 수와 일치하지 않습니다.");
+                        return;
+                    }
+
+                    // 교차점들이 이미 올바른 순서로 생성됨 (선택 순서 = 이웃 순서)
+
+                    // 닫힌 폴리라인 생성
+                    var pl = CreateClosedPolyline(tr,intersectionPoints, db, Jdf.Layer.RoomPoly);
+                    //
+                    JXdata.SetXdata(pl, "Arch", "Room");
+                    JXdata.SetXdata(pl, "Room", "Room");
+                    JXdata.SetXdata(pl, "Disp", "room");
+
+                    ed.WriteMessage($"\n{intersectionPoints.Count}개의 교차점으로 닫힌 폴리라인이 생성되었습니다.");
+
+                    tr.Commit();
                 }
-
-
-                // 기준점을 사용하여 라인들을 각도 순서로 정렬
-                List<Line> sortedLines = SortLinesByAngle(glines, pt);
-                ed.WriteMessage($"\n기준점에서 각도 순서로 {sortedLines.Count}개의 라인을 정렬했습니다.");
-
-                // 정렬된 순서로 순환적 이웃 관계 형성
-                List<Point3d> intersectionPoints = CalculateIntersectionPoints(sortedLines);
-
-                ed.WriteMessage($"\n{sortedLines.Count}개의 라인에서 {intersectionPoints.Count}개의 교차점을 찾았습니다.");
-
-                if (intersectionPoints.Count != sortedLines.Count)
-                {
-                    ed.WriteMessage("\n예상된 교차점 수와 일치하지 않습니다.");
-                    return;
-                }
-
-                // 교차점들이 이미 올바른 순서로 생성됨 (선택 순서 = 이웃 순서)
-
-                // 닫힌 폴리라인 생성
-                CreateClosedPolyline(intersectionPoints, db);
-
-                ed.WriteMessage($"\n{intersectionPoints.Count}개의 교차점으로 닫힌 폴리라인이 생성되었습니다.");
-            }
+             }
             catch (System.Exception ex)
             {
                 ed.WriteMessage($"\n오류 발생: {ex.Message}");
@@ -478,15 +494,16 @@ namespace Acadv25JArch
             return intersection;
         }
 
-        private void CreateClosedPolyline(List<Point3d> points, Database db,string layerName="RoomPoly")
+        private Polyline CreateClosedPolyline(Transaction tr ,List<Point3d> points, Database db,string layerName)
         {
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
+            //using (Transaction tr = db.TransactionManager.StartTransaction())
+            //{
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                tr.CreateLayer(layerName, 45, LineWeight.LineWeight020);
 
-                using (Polyline poly = new Polyline())
-                {
+                 Polyline poly = new Polyline();
+                
                     // 각 점을 폴리라인에 추가
                     for (int i = 0; i < points.Count; i++)
                     {
@@ -497,14 +514,14 @@ namespace Acadv25JArch
                     poly.Closed = true;
 
                     // 현재 레이어와 색상 사용
-                    poly.SetDatabaseDefaults();
+                    poly.Layer = layerName;
 
                     btr.AppendEntity(poly);
                     tr.AddNewlyCreatedDBObject(poly, true);
-                }
-
-                tr.Commit();
-            }
+                    //tr.Commit();
+                    return poly;    
+                
+            //}
         }
 
         // 같은 기울기 line으로 Grouping

@@ -1925,4 +1925,50 @@ namespace Acadv25JArch
 
 
 
+    public class LayerFunction
+    {
+        /// <summary>
+        /// 지정된 레이어를 Display On 상태로 변경 (IsOff = false, IsFrozen = false)
+        /// </summary>
+        /// <param name="layerName">표시할 레이어 이름</param>
+        /// <returns>성공시 true, 레이어가 없거나 실패시 false</returns>
+        public static  bool LayerDisplayOn(Transaction tr,string layerName)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+
+            try
+            {
+                //using var tr = db.TransactionManager.StartTransaction();
+
+                // LayerTable 가져오기
+                var layerTable = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                // 레이어 존재 여부 확인
+                if (!layerTable.Has(layerName))
+                {
+                    tr.Commit();
+                    return false; // 레이어가 존재하지 않음
+                }
+
+                // LayerTableRecord 가져오기 (ForWrite로 열기)
+                var layerId = layerTable[layerName];
+                var layerRecord = tr.GetObject(layerId, OpenMode.ForWrite) as LayerTableRecord;
+
+                // Display On 설정
+                layerRecord.IsOff = false;      // 레이어 켜기
+                layerRecord.IsFrozen = false;   // 동결 해제
+
+                //tr.Commit();
+                return true; // 성공
+            }
+            catch (System.Exception)
+            {
+                return false; // 예외 발생시 실패
+            }
+        }
+
+    }
+
+
 }
