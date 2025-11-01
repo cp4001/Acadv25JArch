@@ -1301,8 +1301,10 @@ namespace CADExtension //Curve Line Poly Geometry Point
             double dist = 0;
             if (useTrueSegmentDistance == false)
             {
+                var (ptA,ptB) =     lineA.FindNearestPoints(lineB);
+
                 // lineA의 시작점을 기준으로 합니다.
-                Point3d ptOnA = lineA.StartPoint;
+                Point3d ptOnA = ptA;// lineA.StartPoint;
 
                 // ptOnA에서 lineB의 "무한 연장선" (extend: true)에 가장 가까운 점을 찾습니다.
                 // 두 선이 평행하므로, 이 점은 수선의 발이 됩니다.
@@ -1314,8 +1316,10 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
             if (useTrueSegmentDistance == true)
             {
+                var (ptA, ptB) = lineA.FindNearestPoints(lineB);
+
                 // lineA의 시작점을 기준으로 합니다.
-                Point3d ptOnA = lineA.StartPoint;
+                Point3d ptOnA = ptA;// lineA.StartPoint;
 
                 // ptOnA에서 lineB의 "무한 연장선" (extend: true)에 가장 가까운 점을 찾습니다.
                 // 두 선이 평행하므로, 이 점은 수선의 발이 됩니다.
