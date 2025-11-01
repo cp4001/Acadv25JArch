@@ -1296,7 +1296,7 @@ namespace CADExtension //Curve Line Poly Geometry Point
         /// <param name="lineA">첫 번째 Line</param>
         /// <param name="lineB">두 번째 Line</param>
         /// <returns>수직 거리</returns>
-        public static double GetPerpendicularDistance(this Line lineA, Line lineB, bool useTrueSegmentDistance) // '진짜 선분 거리'를 사용할지 여부
+        public static double GetShortestDistance(this Line lineA, Line lineB, bool useTrueSegmentDistance) // '진짜 선분 거리'를 사용할지 여부
         {
             double dist = 0;
             if (useTrueSegmentDistance == false)
