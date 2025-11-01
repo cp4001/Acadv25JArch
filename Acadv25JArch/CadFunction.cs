@@ -2651,5 +2651,69 @@ namespace AcadFunction
 
             return result;
         }
+
+
+        /// <summary>
+        /// 두 Line의 4개 끝점(Start/End) 중에서
+        /// "서로 다른 Line에 속하는" 가장 가까운 두 점의 쌍을 찾습니다.
+        /// </summary>
+        /// <param name="lineA">첫 번째 Line</param>
+        /// <param name="lineB">두 번째 Line</param>
+        /// <returns>가장 가까운 (lineA의 끝점, lineB의 끝점) 쌍</returns>
+        public static Tuple<Point3d, Point3d> GetClosestEndpointPair(Line lineA, Line lineB)
+        {
+            if (lineA == null || lineB == null)
+            {
+                throw new ArgumentNullException("입력 Line이 null일 수 없습니다.");
+            }
+
+            // 1. 4개의 끝점을 모두 가져옵니다.
+            Point3d aStart = lineA.StartPoint;
+            Point3d aEnd = lineA.EndPoint;
+            Point3d bStart = lineB.StartPoint;
+            Point3d bEnd = lineB.EndPoint;
+
+            // 2. 최소 거리를 추적할 변수들을 준비합니다.
+            double minDistance = double.MaxValue;
+            Tuple<Point3d, Point3d> closestPair = null;
+
+            // 3. 제약 조건에 맞는 4가지 조합의 거리를 모두 계산합니다.
+
+            // 조합 1: (A-Start, B-Start)
+            double dist_AStart_BStart = aStart.DistanceTo(bStart);
+            if (dist_AStart_BStart < minDistance)
+            {
+                minDistance = dist_AStart_BStart;
+                closestPair = new Tuple<Point3d, Point3d>(aStart, bStart);
+            }
+
+            // 조합 2: (A-Start, B-End)
+            double dist_AStart_BEnd = aStart.DistanceTo(bEnd);
+            if (dist_AStart_BEnd < minDistance)
+            {
+                minDistance = dist_AStart_BEnd;
+                closestPair = new Tuple<Point3d, Point3d>(aStart, bEnd);
+            }
+
+            // 조합 3: (A-End, B-Start)
+            double dist_AEnd_BStart = aEnd.DistanceTo(bStart);
+            if (dist_AEnd_BStart < minDistance)
+            {
+                minDistance = dist_AEnd_BStart;
+                closestPair = new Tuple<Point3d, Point3d>(aEnd, bStart);
+            }
+
+            // 조합 4: (A-End, B-End)
+            double dist_AEnd_BEnd = aEnd.DistanceTo(bEnd);
+            if (dist_AEnd_BEnd < minDistance)
+            {
+                minDistance = dist_AEnd_BEnd;
+                closestPair = new Tuple<Point3d, Point3d>(aEnd, bEnd);
+            }
+
+            // 4. 가장 거리가 짧았던 쌍을 반환합니다.
+            return closestPair;
+        }
+
     }
 }

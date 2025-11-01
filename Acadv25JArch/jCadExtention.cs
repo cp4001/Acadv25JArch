@@ -1263,6 +1263,25 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
         }
 
+        /// <summary>
+        /// 두 Line의 4개 끝점 중 "서로 다른 Line에 속하는" 가장 먼 두 점의 쌍을 찾습니다.
+        /// </summary>
+        public static (Point3d, Point3d) FindFarthestPoints(this Line line1, Line line2)
+        {
+            var distances = new[]
+            {
+            (line1.StartPoint.DistanceTo(line2.StartPoint), (line1.StartPoint, line2.StartPoint)),
+            (line1.StartPoint.DistanceTo(line2.EndPoint), (line1.StartPoint, line2.EndPoint)),
+            (line1.EndPoint.DistanceTo(line2.StartPoint), (line1.EndPoint, line2.StartPoint)),
+            (line1.EndPoint.DistanceTo(line2.EndPoint), (line1.EndPoint, line2.EndPoint))
+        };
+
+            // 거리를 기준으로 내림차순 정렬(OrderByDescending) 후 첫 번째 항목(First) 선택
+            var maxDistance = distances.OrderByDescending(d => d.Item1).First();
+            return maxDistance.Item2;
+        }
+
+
         // 2 line에서 가장 가까운 2 점사이의 거리
         public static double FindNearestPointsDicetance(this Line line1, Line line2)
         {
