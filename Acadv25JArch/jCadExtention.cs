@@ -1420,7 +1420,8 @@ namespace CADExtension //Curve Line Poly Geometry Point
             // 각도를 도(degree) 단위로 계산
             double northAngle = NorthLine.GetVector().GetAngleInDegrees();
             //
-            var   lineDir = new Line(pt, line.GetCentor());
+            //var   lineDir = new Line(pt, line.GetCentor());
+            var   lineDir = new Line(pt, line.GetClosestPointTo(pt,true));
             double targetAngle = lineDir.GetVector().GetAngleInDegrees();
 
             // 상대 각도 계산 (북쪽을 0°로 기준)

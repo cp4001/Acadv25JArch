@@ -107,8 +107,27 @@ namespace Acadv25JArch
                     // colinear line 제거 
                     selines = Func.RemoveColinearLinesKeepShortest(selines, pt);
 
-                    selines = selines.OrderBy(ll => ll.GetAzimuth(pt)).ToList();
+                    
 
+                    var groupedLines = GroupLinesByAzimuth(selines, pt);
+                    // 그룹별로 처리 기준점에서 가장 가까운 라인 선택   
+                    List<Line> glines = new List<Line>();
+                    foreach (var group in groupedLines)
+                    {
+                        if (group.Count == 1)
+                        {
+                            glines.Add(group[0]);
+                            continue;
+                        }
+                        // 그룹에서 가장 기준점에 가까운 라인 선택
+                        var shortestLine = group
+                            .OrderBy(item => item.GetCentor().DistanceTo(pt))
+                            .First();
+
+                        glines.Add(shortestLine);
+                    }
+
+                    selines = glines.OrderBy(ll => ll.GetAzimuth(pt)).ToList();
 
 
                     // selines 순환 페어 
@@ -165,23 +184,6 @@ namespace Acadv25JArch
                    
 
 
-                    //var groupedLines = GroupLinesByAzimuth(selines, pt);
-                    //// 그룹별로 처리 기준점에서 가장 가까운 라인 선택   
-                    //List<Line> glines = new List<Line>();
-                    //foreach (var group in groupedLines)
-                    //{
-                    //    if (group.Count == 1)
-                    //    {
-                    //        glines.Add(group[0]);
-                    //        continue;
-                    //    }
-                    //    // 그룹에서 가장 기준점에 가까운 라인 선택
-                    //    var shortestLine = group
-                    //        .OrderBy(item => item.GetCentor().DistanceTo(pt))
-                    //        .First();
-
-                    //    glines.Add(shortestLine);
-                    //}
 
 
                     // 기준점을 사용하여 라인들을 각도 순서로 정렬
