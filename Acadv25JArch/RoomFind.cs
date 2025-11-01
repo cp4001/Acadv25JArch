@@ -1148,8 +1148,10 @@ public class LineVisibilityFilter
         {
             foreach (var otherLine in allLines)
             {
-                // 자기 자신은 제외
-                if (otherLine.Handle == targetLine.Handle)
+                // 자기 자신은 제외 임시 line은  db 등록전이라서 전부 0  이다.
+                //if (otherLine.Handle== targetLine.Handle)
+                //    continue;
+                if (otherLine == targetLine)
                     continue;
 
                 // 교차 검사
@@ -1172,10 +1174,13 @@ public class LineVisibilityFilter
         {
             Point3dCollection intersectionPoints = new Point3dCollection();
 
+            var ll1 = new Line(new Point3d(line1.StartPoint.X, line1.StartPoint.Y, 0.0), new Point3d(line1.EndPoint.X, line1.EndPoint.Y, 0.0));
+            var ll2 = new Line(new Point3d(line2.StartPoint.X, line2.StartPoint.Y, 0.0), new Point3d(line2.EndPoint.X, line2.EndPoint.Y, 0.0));
+
             // IntersectWith 메서드로 교차점 검사
             // Intersect.OnBothOperands: 두 선분이 실제로 교차하는 경우만
-            line1.IntersectWith(
-                line2,
+            ll1.IntersectWith(
+                ll2,
                 Intersect.OnBothOperands,
                 intersectionPoints,
                 IntPtr.Zero,

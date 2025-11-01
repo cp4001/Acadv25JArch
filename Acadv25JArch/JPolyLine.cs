@@ -53,6 +53,15 @@ namespace Acadv25JArch
                         return;
                     }
 
+                    //Selected lines 평탄화 
+                    var sellines1 = new List<Line>();
+                    foreach (var ll in selectedLines)
+                    {
+                        var sp = new Point3d(ll.StartPoint.X, ll.StartPoint.Y, 0.0);
+                        var ep = new Point3d(ll.EndPoint.X, ll.EndPoint.Y, 0.0);
+                        sellines1.Add(new Line(sp, ep));
+
+                    }
 
                     // GroupLinesBySlope(selines);  
 
@@ -67,25 +76,32 @@ namespace Acadv25JArch
                     // 같은 방위각 line 으로 Grouping
                     var pt = (Point3d)referencePoint;
 
-                    // line 을 긴것부터 우선 처리 평행 Grouping
-                    selectedLines = selectedLines.OrderByDescending(line => line.Length).ToList();
-                    var lineGroups = LineGrouping.GroupLinesByAngleAndDistance(selectedLines, 1, 300);
-
+                    //기준점 에서 볼때 보이는 Line만 선택
+                    //// 4단계: 필터링 수행
                     List<Line> selines = new List<Line>();
-                    foreach (var group in lineGroups)
-                    {
-                        if (group.Count == 1)
-                        {
-                            selines.Add(group[0]);
-                            continue;
-                        }
-                        if (group.Count >= 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
-                        {
-                            // 길이 기준 오름차순 (긴 것부터)
-                            var group1 = group.OrderBy(line => line.GetCentor().DistanceTo(pt)).ToList();
-                            selines.Add(group1[0]); // 기준점에 가장 가까운 라인 추가
-                        }
-                    }
+                    selines = LineVisibilityFilter.FilterLinesByVisibility(pt, sellines1);
+
+                    //// line 을 긴것부터 우선 처리 평행 Grouping
+                    //selectedLines = selectedLines.OrderByDescending(line => line.Length).ToList();
+                    //var lineGroups = LineGrouping.GroupLinesByAngleAndDistance(selectedLines, 1, 300);
+
+                    
+                    //foreach (var group in lineGroups)
+                    //{
+                    //    if (group.Count == 1)
+                    //    {
+                    //        selines.Add(group[0]);
+                    //        continue;
+                    //    }
+                    //    if (group.Count >= 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
+                    //    {
+                    //        // 길이 기준 오름차순 (긴 것부터)
+                    //        var group1 = group.OrderBy(line => line.GetCentor().DistanceTo(pt)).ToList();
+                    //        selines.Add(group1[0]); // 기준점에 가장 가까운 라인 추가
+                    //    }
+                    //}
+
+
 
 
                     // colinear line 제거 
