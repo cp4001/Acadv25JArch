@@ -1290,7 +1290,43 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
         }
 
+        /// <summary>
+        /// 두 평행한 *무한선* 사이의 "수직 거리" (Perpendicular Distance)를 계산합니다.
+        /// </summary>
+        /// <param name="lineA">첫 번째 Line</param>
+        /// <param name="lineB">두 번째 Line</param>
+        /// <returns>수직 거리</returns>
+        public static double GetPerpendicularDistance(this Line lineA, Line lineB, bool useTrueSegmentDistance) // '진짜 선분 거리'를 사용할지 여부
+        {
+            double dist = 0;
+            if (useTrueSegmentDistance == false)
+            {
+                // lineA의 시작점을 기준으로 합니다.
+                Point3d ptOnA = lineA.StartPoint;
 
+                // ptOnA에서 lineB의 "무한 연장선" (extend: true)에 가장 가까운 점을 찾습니다.
+                // 두 선이 평행하므로, 이 점은 수선의 발이 됩니다.
+                Point3d closestPtOnB = lineB.GetClosestPointTo(ptOnA, true);
+
+                // 두 점 사이의 거리가 곧 수직 거리입니다.
+                dist = ptOnA.DistanceTo(closestPtOnB);
+            }
+
+            if (useTrueSegmentDistance == true)
+            {
+                // lineA의 시작점을 기준으로 합니다.
+                Point3d ptOnA = lineA.StartPoint;
+
+                // ptOnA에서 lineB의 "무한 연장선" (extend: true)에 가장 가까운 점을 찾습니다.
+                // 두 선이 평행하므로, 이 점은 수선의 발이 됩니다.
+                Point3d closestPtOnB = lineB.GetClosestPointTo(ptOnA, false);
+
+                // 두 점 사이의 거리가 곧 수직 거리입니다.
+                dist = ptOnA.DistanceTo(closestPtOnB);
+            }
+
+            return dist;
+        }
 
         public static bool Check2LineAngle(this Line line1, Line line2, double angleThreshold)
         {
