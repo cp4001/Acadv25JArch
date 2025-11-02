@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using CADExtension;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -673,7 +674,8 @@ namespace Acadv25JArch
             this.Index = IdCounter;
             this.Poly = poly;
             this.WallLines = poly.GetLines();
-            this.CeilingHeight = JXdata.GetXdata(poly, "CeilingHeight");
+            this.CeilingHeight = JXdata.GetXdata(poly, "CeilingHeight").ToDouble();
+            this.FloorArea = Math.Round(poly.Area, 0).ToString(); 
             IdCounter++;
         }
 

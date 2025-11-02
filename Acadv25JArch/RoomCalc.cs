@@ -175,8 +175,7 @@ namespace Acadv25JArch
         #endregion
 
         #region Poly To Ceiling Height
-        // 선택 Line Poly XData Wire 지정
-        //TO DuctLine
+        // 선택 Line Poly 천정고 지정
         [CommandMethod("To_CeilingHeight", CommandFlags.UsePickSet)] //ToRoom
                                                                       //Text 에  Room 지정                                                    
         public void Cmd_Poly_Set_CeilingHeight()
@@ -239,6 +238,86 @@ namespace Acadv25JArch
                         pl.Layer = Jdf.Layer.Room;
                         //JXdata.SetXdata(pl, "Arch", "CeilingHeight");
                         JXdata.SetXdata(pl, "CeilingHeight", $"{userValue.ToString()}");
+                        //JXdata.SetXdata(pl, "Disp", $"Ceiling:{userValue.ToString()}");
+                        //JXdata.SetXdata(pl, "Mat", "Hidden");
+                    }
+
+
+
+                    // Dispose of the transaction
+                }
+
+                // Save the new object to the database
+                tr.Commit();
+            }
+        }
+
+        #endregion
+
+        #region Poly To Floor Height
+        // 선택 Line Poly 천정고 지정
+        [CommandMethod("To_FloorHeight", CommandFlags.UsePickSet)] //ToRoom
+                                                                     //Text 에  Room 지정                                                    
+        public void Cmd_Poly_Set_FloorHeight()
+        {
+            // Get the current database and start a transaction
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            //UCS Elevation to World
+            doc.Editor.CurrentUserCoordinateSystem = Matrix3d.Identity;
+            doc.Editor.Regen();
+
+            // 정수 입력 받기
+            PromptIntegerOptions pio = new PromptIntegerOptions("\n층고높이(mm)를 입력하세요: ");
+
+            // 옵션 설정 (선택사항)
+            pio.AllowNegative = true;  // 음수 허용
+            pio.AllowZero = true;      // 0 허용
+            pio.AllowNone = false;     // Enter만 누르는 것 방지
+
+            // 기본값 설정 (선택사항)
+            pio.DefaultValue = 10;
+            pio.UseDefaultValue = true;
+
+            PromptIntegerResult pir = ed.GetInteger(pio);
+
+            int userValue = 0;
+            if (pir.Status == PromptStatus.OK)
+            {
+                userValue = pir.Value;
+                ed.WriteMessage($"\n입력된 값: {userValue}");
+            }
+            else if (pir.Status == PromptStatus.Cancel)
+            {
+                ed.WriteMessage("\n입력이 취소되었습니다.");
+                return;
+            }
+
+
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                List<Polyline> targets = JEntityFunc.GetEntityByTpye<Polyline>("Room 대상  poly를  선택 하세요?", JSelFilter.MakeFilterTypes("LWPOLYLINE"));//, JSelFilter.MakeFilterTypes("LINE,POLYLINE,LWPOYLINE"));   //DBText-> Text  Mtext-> Mtext  
+                if (targets == null) return;
+                var btr = tr.GetModelSpaceBlockTableRecord(db);
+                //사용할 XData 미리 Check
+                tr.ChecRegNames(db, "Arch,FloorHeight,Disp");
+                //Create layerfor Room
+                tr.CreateLayer(Jdf.Layer.Room, Jdf.Color.Magenta, LineWeight.LineWeight050);
+
+                foreach (Entity acEnt in targets)
+                {
+                    LayerTableRecord layer = tr.GetObject(acEnt.LayerId, OpenMode.ForRead) as LayerTableRecord;
+                    if (!layer.IsLocked)
+                    {
+                        var pl = (Polyline)acEnt;
+                        if (pl.Closed != true) continue;// Open poly는 무시한다.
+                        acEnt.UpgradeOpen();
+                        pl.Layer = Jdf.Layer.Room;
+                        //JXdata.SetXdata(pl, "Arch", "CeilingHeight");
+                        JXdata.SetXdata(pl, "FloorHeight", $"{userValue.ToString()}");
                         //JXdata.SetXdata(pl, "Disp", $"Ceiling:{userValue.ToString()}");
                         //JXdata.SetXdata(pl, "Mat", "Hidden");
                     }
