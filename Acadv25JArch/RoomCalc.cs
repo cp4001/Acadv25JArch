@@ -109,7 +109,7 @@ namespace Acadv25JArch
         #region Poly To Room
         // 선택 Line Poly XData Wire 지정
         //TO DuctLine
-        [CommandMethod("To_RoomPoly", CommandFlags.UsePickSet)] //ToRoom
+        [CommandMethod(Jdf.Cmd.선택폴리룸지정, CommandFlags.UsePickSet)] //ToRoom
                                                                       //Text 에  Room 지정                                                    
         public void Cmd_Poly_Set_RoomPoly()
         {
@@ -190,7 +190,7 @@ namespace Acadv25JArch
             doc.Editor.Regen();
 
             // 정수 입력 받기
-            PromptIntegerOptions pio = new PromptIntegerOptions("\n천정높이(mm)를 입력하세요: ");
+            PromptIntegerOptions pio = new PromptIntegerOptions("\n천정높이(Meter)를 입력하세요: ");
 
             // 옵션 설정 (선택사항)
             pio.AllowNegative = true;  // 음수 허용
@@ -270,7 +270,7 @@ namespace Acadv25JArch
             doc.Editor.Regen();
 
             // 정수 입력 받기
-            PromptIntegerOptions pio = new PromptIntegerOptions("\n층고높이(mm)를 입력하세요: ");
+            PromptIntegerOptions pio = new PromptIntegerOptions("\n층고높이(Meter)를 입력하세요: ");
 
             // 옵션 설정 (선택사항)
             pio.AllowNegative = true;  // 음수 허용

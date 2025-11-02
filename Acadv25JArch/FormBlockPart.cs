@@ -17,6 +17,7 @@ namespace Acadv25JArch
         public static List<ObjectId> selids = new List<ObjectId>();            // 선택된 Blocks
         public static List<BlockPart> blockparts = new List<BlockPart>();      // Group화된 BlockPart
         public static BindingSource bs = new BindingSource();
+        public static BindingSource bs_room = new BindingSource();
         public static BindingSource bsNumDia = new BindingSource();
 
         public FormBlockPart()
@@ -48,7 +49,17 @@ namespace Acadv25JArch
 
         private void btnRooms_Click(object sender, EventArgs e)
         {
+            var roomparts = RoomPart.GetAllRoomParts();  
 
+            if (roomparts == null)
+            {
+                MessageBox.Show(" room  이 없습니다.");
+                return;
+            }
+            SortableBindingList<RoomPart>  drbl = new SortableBindingList<RoomPart>(roomparts);
+            bs_room.DataSource = drbl;
+
+            dgvRoom .DataSource = bs_room;
         }
     }
 

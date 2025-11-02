@@ -649,13 +649,14 @@ namespace Acadv25JArch
         public int Index { get; set; }
         
         private Polyline Poly { get; set; }     //
-        public System.Drawing.Image Img { get; set; }      // picBoxBr.Image =   btr.PreviewIcon?.GetThumbnailImage(192, 192, () => false, IntPtr.Zero);
+        //public System.Drawing.Image Img { get; set; }      // picBoxBr.Image =   btr.PreviewIcon?.GetThumbnailImage(192, 192, () => false, IntPtr.Zero);
 
         public string Name { get; set; }  // Room Name
         public Double CeilingHeight { get; set; }   // 천장 높이
         public double FloorHeight { get; set; }   // 층고 높이
         public string RoofArea { get; set; } // 지붕  면적
         public string FloorArea { get; set; } // 바닥 면적
+        public string Volumn { get; set; } // 룸체적 룸면적 x 층고
         public string WallText { get; set; } // 벽체 텍스트  
 
         private List<Line> WallLines { get; set; } // 벽 Line List
@@ -674,8 +675,12 @@ namespace Acadv25JArch
             this.Index = IdCounter;
             this.Poly = poly;
             this.WallLines = poly.GetLines();
+            this.FloorHeight = JXdata.GetXdata(poly, "FloorHeight").ToDouble();
             this.CeilingHeight = JXdata.GetXdata(poly, "CeilingHeight").ToDouble();
-            this.FloorArea = Math.Round(poly.Area, 0).ToString(); 
+            var aa = poly.Area * double.E - 6;
+            this.FloorArea = Math.Round(aa, 0).ToString();
+            this.RoofArea = Math.Round(aa, 0).ToString();
+            this.Volumn = Math.Round(aa* FloorHeight, 0).ToString(); 
             IdCounter++;
         }
 

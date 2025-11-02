@@ -50,6 +50,7 @@ namespace Acadv25JArch
 
             public const string 벽라인정리 = "Wall_Line_Arrange";                   //Cmd_Wall_Line_Arrange()
 
+            public const string 선택폴리룸지정 = "To_RoomPoly";                    //Cmd_Poly_Set_RoomPoly()
             public const string 선택폴리룸계산 = "Room_Poly_Calc";                         //Cmd_RoomPoly_Calc()
 
             public const string 룸폴리전체계산 = "Room_Poly_ALL_Calc";                        //Cmd_RoomPoly_All_Calc()
