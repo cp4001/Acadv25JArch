@@ -539,7 +539,8 @@ namespace AutoCADMultiEntityOverrule
             List<Point3d> topVertices = new List<Point3d>();
 
             var romhh = (JXdata.GetXdata(polyline, "CeilingHeight")??"1").ToDouble()*1000.0;
-
+            var colorIndex= (int)(romhh / 8);
+            var co1 = (short)(colorIndex % 8 +1);
             for (int i = 0; i < vertexCount; i++)
             {
                 Point2d pt2d = polyline.GetPoint2dAt(i);
@@ -549,7 +550,7 @@ namespace AutoCADMultiEntityOverrule
 
             // 1단계: 채워진 면 그리기
             wd.SubEntityTraits.FillType = FillType.FillAlways;
-            wd.SubEntityTraits.Color = 150;
+            wd.SubEntityTraits.Color = co1;
 
             DrawPolygonFace(wd.Geometry, bottomVertices, true);
             DrawPolygonFace(wd.Geometry, topVertices, false);
