@@ -677,7 +677,7 @@ namespace Acadv25JArch
             this.WallLines = poly.GetLines();
             this.FloorHeight = JXdata.GetXdata(poly, "FloorHeight").ToDouble();
             this.CeilingHeight = JXdata.GetXdata(poly, "CeilingHeight").ToDouble();
-            var aa = poly.Area * double.E - 6;
+            var aa = poly.Area *0.000001;
             this.FloorArea = Math.Round(aa, 0).ToString();
             this.RoofArea = Math.Round(aa, 0).ToString();
             this.Volumn = Math.Round(aa* FloorHeight, 0).ToString(); 

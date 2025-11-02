@@ -538,11 +538,13 @@ namespace AutoCADMultiEntityOverrule
             List<Point3d> bottomVertices = new List<Point3d>();
             List<Point3d> topVertices = new List<Point3d>();
 
+            var romhh = (JXdata.GetXdata(polyline, "CeilingHeight")??"1").ToDouble()*1000.0;
+
             for (int i = 0; i < vertexCount; i++)
             {
                 Point2d pt2d = polyline.GetPoint2dAt(i);
                 bottomVertices.Add(new Point3d(pt2d.X, pt2d.Y, 0));
-                topVertices.Add(new Point3d(pt2d.X, pt2d.Y, 300));
+                topVertices.Add(new Point3d(pt2d.X, pt2d.Y, romhh));
             }
 
             // 1단계: 채워진 면 그리기
