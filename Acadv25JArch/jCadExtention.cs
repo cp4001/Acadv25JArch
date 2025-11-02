@@ -566,6 +566,8 @@ namespace CADExtension //Graphic JEntity JDBtext JObjectID JDouble
             res = (Math.Round(dd / 1000.0) / 2).ToString(); //(Math.Ceiling(dd * 10 / 1000) / 10).ToString();
             return res;
         }
+
+ 
     }
 
 }
@@ -3069,6 +3071,13 @@ namespace CADExtension
 
             return false;
 
+        }
+
+
+        //string to Double
+        public static double ToDouble(this string value, double defaultValue = 0)
+        {
+            return double.TryParse(value, out double result) ? result : defaultValue;
         }
 
     }

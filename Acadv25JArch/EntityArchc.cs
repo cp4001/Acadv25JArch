@@ -651,7 +651,7 @@ namespace Acadv25JArch
         public System.Drawing.Image Img { get; set; }      // picBoxBr.Image =   btr.PreviewIcon?.GetThumbnailImage(192, 192, () => false, IntPtr.Zero);
 
         public string Name { get; set; }  // Room Name
-        public double CeilingHeight { get; set; }   // 천장 높이
+        public Double CeilingHeight { get; set; }   // 천장 높이
         public double FloorHeight { get; set; }   // 층고 높이
         public string RoofArea { get; set; } // 지붕  면적
         public string FloorArea { get; set; } // 바닥 면적
@@ -673,6 +673,7 @@ namespace Acadv25JArch
             this.Index = IdCounter;
             this.Poly = poly;
             this.WallLines = poly.GetLines();
+            this.CeilingHeight = JXdata.GetXdata(poly, "CeilingHeight");
             IdCounter++;
         }
 
