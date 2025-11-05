@@ -35,11 +35,8 @@ namespace LicenseAdminApp
                 // BindingSource에 데이터 설정
                 bindingSource.DataSource = allLicenses;
                 
-                // 컬럼 설정 (첫 로드 시에만)
-                if (dataGridView1.Columns.Count > 0)
-                {
-                    ConfigureDataGridColumns();
-                }
+                // 컬럼 설정
+                ConfigureDataGridColumns();
 
                 SetStatus("Ready");
                 lblCount.Text = $"{allLicenses.Count} licenses";
@@ -58,17 +55,27 @@ namespace LicenseAdminApp
 
         private void ConfigureDataGridColumns()
         {
-            // 보이지 않을 컬럼 숨기기
-            if (dataGridView1.Columns["RegisteredAt"] != null)
-                dataGridView1.Columns["RegisteredAt"].Visible = false;
-            if (dataGridView1.Columns["ExpiresAt"] != null)
-                dataGridView1.Columns["ExpiresAt"].Visible = false;
-            if (dataGridView1.Columns["UpdatedAt"] != null)
-                dataGridView1.Columns["UpdatedAt"].Visible = false;
-            if (dataGridView1.Columns["Valid"] != null)
-                dataGridView1.Columns["Valid"].Visible = false;
-            if (dataGridView1.Columns["DaysRemaining"] != null)
-                dataGridView1.Columns["DaysRemaining"].Visible = false;
+            // 먼저 모든 컬럼 확인 (디버깅용)
+            System.Diagnostics.Debug.WriteLine("=== Available Columns ===");
+            foreach (DataGridViewColumn col in dataGridView1.Columns)
+            {
+                System.Diagnostics.Debug.WriteLine($"Column: {col.Name}");
+            }
+
+            // 원본 속성 컬럼 숨기기 (표시용 속성만 보이게)
+            var columnsToHide = new[] { 
+                "RegisteredAt", "ExpiresAt", "UpdatedAt", 
+                "Valid", "DaysRemaining", 
+                "Product", "Username"  // 원본 속성 숨김
+            };
+            
+            foreach (var colName in columnsToHide)
+            {
+                if (dataGridView1.Columns[colName] != null)
+                {
+                    dataGridView1.Columns[colName].Visible = false;
+                }
+            }
 
             // 컬럼 순서 및 헤더 설정
             int colIndex = 0;
@@ -77,43 +84,60 @@ namespace LicenseAdminApp
             {
                 dataGridView1.Columns["Id"].DisplayIndex = colIndex++;
                 dataGridView1.Columns["Id"].HeaderText = "Machine ID";
-                dataGridView1.Columns["Id"].FillWeight = 200;
+                dataGridView1.Columns["Id"].Width = 200;
+            }
+
+            if (dataGridView1.Columns["ProductName"] != null)
+            {
+                dataGridView1.Columns["ProductName"].DisplayIndex = colIndex++;
+                dataGridView1.Columns["ProductName"].HeaderText = "제품";
+                dataGridView1.Columns["ProductName"].Width = 120;
+            }
+
+            if (dataGridView1.Columns["UserName"] != null)
+            {
+                dataGridView1.Columns["UserName"].DisplayIndex = colIndex++;
+                dataGridView1.Columns["UserName"].HeaderText = "사용자";
+                dataGridView1.Columns["UserName"].Width = 120;
             }
 
             if (dataGridView1.Columns["Status"] != null)
             {
                 dataGridView1.Columns["Status"].DisplayIndex = colIndex++;
                 dataGridView1.Columns["Status"].HeaderText = "상태";
-                dataGridView1.Columns["Status"].FillWeight = 80;
+                dataGridView1.Columns["Status"].Width = 100;
             }
 
             if (dataGridView1.Columns["ExpiryDate"] != null)
             {
                 dataGridView1.Columns["ExpiryDate"].DisplayIndex = colIndex++;
                 dataGridView1.Columns["ExpiryDate"].HeaderText = "만료일";
-                dataGridView1.Columns["ExpiryDate"].FillWeight = 100;
+                dataGridView1.Columns["ExpiryDate"].Width = 120;
             }
 
             if (dataGridView1.Columns["DaysLeft"] != null)
             {
                 dataGridView1.Columns["DaysLeft"].DisplayIndex = colIndex++;
                 dataGridView1.Columns["DaysLeft"].HeaderText = "남은 기간";
-                dataGridView1.Columns["DaysLeft"].FillWeight = 80;
+                dataGridView1.Columns["DaysLeft"].Width = 100;
             }
 
             if (dataGridView1.Columns["RegisteredDate"] != null)
             {
                 dataGridView1.Columns["RegisteredDate"].DisplayIndex = colIndex++;
                 dataGridView1.Columns["RegisteredDate"].HeaderText = "등록일";
-                dataGridView1.Columns["RegisteredDate"].FillWeight = 120;
+                dataGridView1.Columns["RegisteredDate"].Width = 150;
             }
 
             if (dataGridView1.Columns["UpdatedDate"] != null)
             {
                 dataGridView1.Columns["UpdatedDate"].DisplayIndex = colIndex++;
                 dataGridView1.Columns["UpdatedDate"].HeaderText = "수정일";
-                dataGridView1.Columns["UpdatedDate"].FillWeight = 120;
+                dataGridView1.Columns["UpdatedDate"].Width = 150;
             }
+
+            // 자동 크기 조정 비활성화 (고정 너비 사용)
+            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
         }
 
         private async void btnRefresh_Click(object sender, EventArgs e)
@@ -132,7 +156,9 @@ namespace LicenseAdminApp
                         SetStatus("추가 중...");
                         
                         await VercelApiClient.RegisterLicenseAsync(
-                            dialog.MachineId, 
+                            dialog.MachineId,
+                            dialog.Product,
+                            dialog.Username,
                             dialog.ExpiryDate);
                         
                         MessageBox.Show("라이선스가 추가되었습니다!", 
@@ -161,7 +187,11 @@ namespace LicenseAdminApp
 
             var selectedLicense = (VercelApiClient.LicenseInfo)dataGridView1.SelectedRows[0].DataBoundItem;
 
-            using (var dialog = new AddEditDialog(selectedLicense.Id, selectedLicense.ExpiresAt))
+            using (var dialog = new AddEditDialog(
+                selectedLicense.Id, 
+                selectedLicense.Product,
+                selectedLicense.Username,
+                selectedLicense.ExpiresAt))
             {
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
@@ -172,6 +202,8 @@ namespace LicenseAdminApp
                         await VercelApiClient.UpdateLicenseAsync(
                             selectedLicense.Id,
                             dialog.MachineId,
+                            dialog.Product,
+                            dialog.Username,
                             dialog.ExpiryDate);
                         
                         MessageBox.Show("라이선스가 수정되었습니다!", 
@@ -239,7 +271,9 @@ namespace LicenseAdminApp
             else
             {
                 var filtered = allLicenses.Where(l => 
-                    l.Id.ToLower().Contains(searchText)).ToList();
+                    l.Id.ToLower().Contains(searchText) ||
+                    (l.Product != null && l.Product.ToLower().Contains(searchText)) ||
+                    (l.Username != null && l.Username.ToLower().Contains(searchText))).ToList();
                 
                 bindingSource.DataSource = filtered;
             }
@@ -261,12 +295,15 @@ namespace LicenseAdminApp
                     {
                         var lines = new List<string>
                         {
-                            "Machine ID,Status,Registered,Expires,Days Left,Updated"
+                            "Machine ID,Product,Username,Status,Registered,Expires,Days Left,Updated"
                         };
 
                         foreach (var license in allLicenses)
                         {
-                            lines.Add($"\"{license.Id}\",\"{license.Status}\"," +
+                            lines.Add($"\"{license.Id}\"," +
+                                     $"\"{license.ProductName}\"," +
+                                     $"\"{license.UserName}\"," +
+                                     $"\"{license.Status}\"," +
                                      $"\"{license.RegisteredDate}\"," +
                                      $"\"{license.ExpiryDate}\"," +
                                      $"\"{license.DaysLeft}\"," +

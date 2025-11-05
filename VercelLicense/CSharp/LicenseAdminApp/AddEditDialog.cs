@@ -6,13 +6,15 @@ namespace LicenseAdminApp
     public partial class AddEditDialog : Form
     {
         public string MachineId => txtMachineId.Text.Trim();
+        public string? Product => string.IsNullOrWhiteSpace(txtProduct.Text) ? null : txtProduct.Text.Trim();
+        public string? Username => string.IsNullOrWhiteSpace(txtUsername.Text) ? null : txtUsername.Text.Trim();
         public DateTime? ExpiryDate => chkNoExpiry.Checked ? null : dtpExpiryDate.Value.Date;
 
-        public AddEditDialog() : this(null, null)
+        public AddEditDialog() : this(null, null, null, null)
         {
         }
 
-        public AddEditDialog(string? machineId, DateTime? expiryDate)
+        public AddEditDialog(string? machineId, string? product, string? username, DateTime? expiryDate)
         {
             InitializeComponent();
 
@@ -21,6 +23,8 @@ namespace LicenseAdminApp
             {
                 this.Text = "라이선스 수정";
                 txtMachineId.Text = machineId;
+                txtProduct.Text = product ?? "";
+                txtUsername.Text = username ?? "";
                 
                 if (expiryDate.HasValue)
                 {

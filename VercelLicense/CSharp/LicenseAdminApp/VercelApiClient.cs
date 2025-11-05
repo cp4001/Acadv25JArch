@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace LicenseAdminApp
 {
@@ -18,18 +19,50 @@ namespace LicenseAdminApp
         /// </summary>
         public class LicenseInfo
         {
+            [JsonPropertyName("id")]
             public string Id { get; set; } = "";
+            
+            [JsonPropertyName("product")]
+            public string? Product { get; set; }
+            
+            [JsonPropertyName("username")]
+            public string? Username { get; set; }
+            
+            [JsonPropertyName("valid")]
             public bool Valid { get; set; }
+            
+            [JsonPropertyName("registered_at")]
             public DateTime? RegisteredAt { get; set; }
+            
+            [JsonPropertyName("expires_at")]
             public DateTime? ExpiresAt { get; set; }
+            
+            [JsonPropertyName("updated_at")]
             public DateTime? UpdatedAt { get; set; }
 
-            // 표시용 속성
+            // 표시용 속성 (JSON 역직렬화에서 제외)
+            [JsonIgnore]
             public string Status => Valid ? "✅ Valid" : "❌ Invalid";
+            
+            [JsonIgnore]
+            public string ProductName => Product ?? "-";
+            
+            [JsonIgnore]
+            public string UserName => Username ?? "-";
+            
+            [JsonIgnore]
             public string RegisteredDate => RegisteredAt?.ToString("yyyy-MM-dd HH:mm") ?? "-";
+            
+            [JsonIgnore]
             public string ExpiryDate => ExpiresAt?.ToString("yyyy-MM-dd") ?? "No Expiry";
+            
+            [JsonIgnore]
             public string UpdatedDate => UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "-";
+            
+            [JsonIgnore]
             public int? DaysRemaining => ExpiresAt.HasValue ? (ExpiresAt.Value - DateTime.Now).Days : null;
+            
+            [JsonIgnore]
             public string DaysLeft => DaysRemaining.HasValue ? $"{DaysRemaining} days" : "∞";
         }
 
@@ -49,7 +82,11 @@ namespace LicenseAdminApp
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<ListResponse>(resultJson);
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    var result = JsonSerializer.Deserialize<ListResponse>(resultJson, options);
                     return result?.licenses ?? new List<LicenseInfo>();
                 }
                 else
@@ -66,7 +103,11 @@ namespace LicenseAdminApp
         /// <summary>
         /// 새 라이선스 등록
         /// </summary>
-        public static async Task RegisterLicenseAsync(string id, DateTime? expiresAt = null)
+        public static async Task RegisterLicenseAsync(
+            string id, 
+            string? product = null, 
+            string? username = null, 
+            DateTime? expiresAt = null)
         {
             try
             {
@@ -74,6 +115,8 @@ namespace LicenseAdminApp
                 {
                     adminKey = ADMIN_KEY,
                     id = id,
+                    product = product,
+                    username = username,
                     expiresAt = expiresAt?.ToString("yyyy-MM-dd")
                 };
                 
@@ -85,7 +128,11 @@ namespace LicenseAdminApp
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var error = JsonSerializer.Deserialize<ErrorResponse>(resultJson);
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    var error = JsonSerializer.Deserialize<ErrorResponse>(resultJson, options);
                     throw new Exception(error?.error ?? "Unknown error");
                 }
             }
@@ -116,7 +163,11 @@ namespace LicenseAdminApp
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var error = JsonSerializer.Deserialize<ErrorResponse>(resultJson);
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    var error = JsonSerializer.Deserialize<ErrorResponse>(resultJson, options);
                     throw new Exception(error?.error ?? "Unknown error");
                 }
             }
@@ -129,7 +180,12 @@ namespace LicenseAdminApp
         /// <summary>
         /// 라이선스 수정 (삭제 후 재등록)
         /// </summary>
-        public static async Task UpdateLicenseAsync(string oldId, string newId, DateTime? expiresAt = null)
+        public static async Task UpdateLicenseAsync(
+            string oldId, 
+            string newId, 
+            string? product = null, 
+            string? username = null, 
+            DateTime? expiresAt = null)
         {
             try
             {
@@ -140,7 +196,7 @@ namespace LicenseAdminApp
                 }
                 
                 // 새로 등록
-                await RegisterLicenseAsync(newId, expiresAt);
+                await RegisterLicenseAsync(newId, product, username, expiresAt);
             }
             catch (Exception ex)
             {

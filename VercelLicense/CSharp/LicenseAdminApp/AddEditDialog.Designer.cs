@@ -17,8 +17,12 @@ namespace LicenseAdminApp
         {
             this.lblMachineId = new System.Windows.Forms.Label();
             this.txtMachineId = new System.Windows.Forms.TextBox();
+            this.lblProduct = new System.Windows.Forms.Label();
+            this.txtProduct = new System.Windows.Forms.TextBox();
+            this.lblUsername = new System.Windows.Forms.Label();
+            this.txtUsername = new System.Windows.Forms.TextBox();
             this.lblExpiryDate = new System.Windows.Forms.Label();
-            this.dateTimePicker1 = new System.Windows.Forms.DateTimePicker();
+            this.dtpExpiryDate = new System.Windows.Forms.DateTimePicker();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.chkNoExpiry = new System.Windows.Forms.CheckBox();
@@ -40,28 +44,60 @@ namespace LicenseAdminApp
             this.txtMachineId.Size = new System.Drawing.Size(360, 27);
             this.txtMachineId.TabIndex = 1;
             // 
+            // lblProduct
+            // 
+            this.lblProduct.AutoSize = true;
+            this.lblProduct.Location = new System.Drawing.Point(20, 95);
+            this.lblProduct.Name = "lblProduct";
+            this.lblProduct.Size = new System.Drawing.Size(66, 20);
+            this.lblProduct.TabIndex = 2;
+            this.lblProduct.Text = "Product:";
+            // 
+            // txtProduct
+            // 
+            this.txtProduct.Location = new System.Drawing.Point(20, 118);
+            this.txtProduct.Name = "txtProduct";
+            this.txtProduct.Size = new System.Drawing.Size(360, 27);
+            this.txtProduct.TabIndex = 3;
+            // 
+            // lblUsername
+            // 
+            this.lblUsername.AutoSize = true;
+            this.lblUsername.Location = new System.Drawing.Point(20, 160);
+            this.lblUsername.Name = "lblUsername";
+            this.lblUsername.Size = new System.Drawing.Size(79, 20);
+            this.lblUsername.TabIndex = 4;
+            this.lblUsername.Text = "Username:";
+            // 
+            // txtUsername
+            // 
+            this.txtUsername.Location = new System.Drawing.Point(20, 183);
+            this.txtUsername.Name = "txtUsername";
+            this.txtUsername.Size = new System.Drawing.Size(360, 27);
+            this.txtUsername.TabIndex = 5;
+            // 
             // lblExpiryDate
             // 
             this.lblExpiryDate.AutoSize = true;
-            this.lblExpiryDate.Location = new System.Drawing.Point(20, 100);
+            this.lblExpiryDate.Location = new System.Drawing.Point(20, 225);
             this.lblExpiryDate.Name = "lblExpiryDate";
             this.lblExpiryDate.Size = new System.Drawing.Size(91, 20);
-            this.lblExpiryDate.TabIndex = 2;
+            this.lblExpiryDate.TabIndex = 6;
             this.lblExpiryDate.Text = "Expiry Date:";
             // 
-            // dateTimePicker1
+            // dtpExpiryDate
             // 
-            this.dateTimePicker1.Location = new System.Drawing.Point(20, 123);
-            this.dateTimePicker1.Name = "dateTimePicker1";
-            this.dateTimePicker1.Size = new System.Drawing.Size(250, 27);
-            this.dateTimePicker1.TabIndex = 3;
+            this.dtpExpiryDate.Location = new System.Drawing.Point(20, 248);
+            this.dtpExpiryDate.Name = "dtpExpiryDate";
+            this.dtpExpiryDate.Size = new System.Drawing.Size(250, 27);
+            this.dtpExpiryDate.TabIndex = 7;
             // 
             // btnOK
             // 
-            this.btnOK.Location = new System.Drawing.Point(150, 200);
+            this.btnOK.Location = new System.Drawing.Point(150, 335);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(100, 35);
-            this.btnOK.TabIndex = 4;
+            this.btnOK.TabIndex = 8;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
@@ -69,20 +105,20 @@ namespace LicenseAdminApp
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(256, 200);
+            this.btnCancel.Location = new System.Drawing.Point(256, 335);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(100, 35);
-            this.btnCancel.TabIndex = 5;
+            this.btnCancel.TabIndex = 9;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // chkNoExpiry
             // 
             this.chkNoExpiry.AutoSize = true;
-            this.chkNoExpiry.Location = new System.Drawing.Point(20, 160);
+            this.chkNoExpiry.Location = new System.Drawing.Point(20, 285);
             this.chkNoExpiry.Name = "chkNoExpiry";
             this.chkNoExpiry.Size = new System.Drawing.Size(98, 24);
-            this.chkNoExpiry.TabIndex = 6;
+            this.chkNoExpiry.TabIndex = 10;
             this.chkNoExpiry.Text = "No Expiry";
             this.chkNoExpiry.UseVisualStyleBackColor = true;
             this.chkNoExpiry.CheckedChanged += new System.EventHandler(this.chkNoExpiry_CheckedChanged);
@@ -93,12 +129,16 @@ namespace LicenseAdminApp
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(400, 260);
+            this.ClientSize = new System.Drawing.Size(400, 390);
             this.Controls.Add(this.chkNoExpiry);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
-            this.Controls.Add(this.dateTimePicker1);
+            this.Controls.Add(this.dtpExpiryDate);
             this.Controls.Add(this.lblExpiryDate);
+            this.Controls.Add(this.txtUsername);
+            this.Controls.Add(this.lblUsername);
+            this.Controls.Add(this.txtProduct);
+            this.Controls.Add(this.lblProduct);
             this.Controls.Add(this.txtMachineId);
             this.Controls.Add(this.lblMachineId);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -115,8 +155,12 @@ namespace LicenseAdminApp
 
         private Label lblMachineId;
         private TextBox txtMachineId;
+        private Label lblProduct;
+        private TextBox txtProduct;
+        private Label lblUsername;
+        private TextBox txtUsername;
         private Label lblExpiryDate;
-        private DateTimePicker dateTimePicker1;
+        private DateTimePicker dtpExpiryDate;
         private Button btnOK;
         private Button btnCancel;
         private CheckBox chkNoExpiry;

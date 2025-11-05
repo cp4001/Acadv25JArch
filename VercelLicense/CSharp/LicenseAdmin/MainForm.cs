@@ -33,20 +33,20 @@ namespace LicenseAdmin
                 // BindingSource에 데이터 설정
                 bindingSource.DataSource = allLicenses;
                 
-                // 컬럼 헤더 이름 설정
-                if (dataGridView1.Columns.Count > 0)
-                {
-                    dataGridView1.Columns["Id"].HeaderText = "Machine ID";
-                    dataGridView1.Columns["Valid"].HeaderText = "Valid";
-                    dataGridView1.Columns["RegisteredAt"].HeaderText = "Registered";
-                    dataGridView1.Columns["ExpiresAt"].HeaderText = "Expires";
-                    dataGridView1.Columns["UpdatedAt"].HeaderText = "Updated";
+                //// 컬럼 헤더 이름 설정
+                //if (dataGridView1.Columns.Count > 0)
+                //{
+                //    dataGridView1.Columns["Id"].HeaderText = "Machine ID";
+                //    dataGridView1.Columns["Valid"].HeaderText = "Valid";
+                //    dataGridView1.Columns["RegisteredAt"].HeaderText = "Registered";
+                //    dataGridView1.Columns["ExpiresAt"].HeaderText = "Expires";
+                //    dataGridView1.Columns["UpdatedAt"].HeaderText = "Updated";
                     
-                    // 날짜 형식 지정
-                    dataGridView1.Columns["RegisteredAt"].DefaultCellStyle.Format = "yyyy-MM-dd HH:mm";
-                    dataGridView1.Columns["ExpiresAt"].DefaultCellStyle.Format = "yyyy-MM-dd";
-                    dataGridView1.Columns["UpdatedAt"].DefaultCellStyle.Format = "yyyy-MM-dd HH:mm";
-                }
+                //    // 날짜 형식 지정
+                //    dataGridView1.Columns["RegisteredAt"].DefaultCellStyle.Format = "yyyy-MM-dd HH:mm";
+                //    dataGridView1.Columns["ExpiresAt"].DefaultCellStyle.Format = "yyyy-MM-dd";
+                //    dataGridView1.Columns["UpdatedAt"].DefaultCellStyle.Format = "yyyy-MM-dd HH:mm";
+                //}
 
                 SetStatus($"Loaded {allLicenses.Count} licenses");
             }
