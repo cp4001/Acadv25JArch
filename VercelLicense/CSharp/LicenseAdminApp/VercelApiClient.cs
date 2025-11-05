@@ -178,7 +178,7 @@ namespace LicenseAdminApp
         }
 
         /// <summary>
-        /// 라이선스 수정 (삭제 후 재등록)
+        /// 라이선스 수정 (UPDATE API 사용)
         /// </summary>
         public static async Task UpdateLicenseAsync(
             string oldId, 
@@ -189,14 +189,40 @@ namespace LicenseAdminApp
         {
             try
             {
-                // 기존 ID와 다르면 삭제
+                // ID가 변경되면 삭제 후 재등록
                 if (oldId != newId)
                 {
                     await DeleteLicenseAsync(oldId);
+                    await RegisterLicenseAsync(newId, product, username, expiresAt);
                 }
-                
-                // 새로 등록
-                await RegisterLicenseAsync(newId, product, username, expiresAt);
+                else
+                {
+                    // ID가 같으면 UPDATE API 사용 (registered_at 유지)
+                    var requestBody = new
+                    {
+                        adminKey = ADMIN_KEY,
+                        id = newId,
+                        product = product,
+                        username = username,
+                        expiresAt = expiresAt?.ToString("yyyy-MM-dd")
+                    };
+                    
+                    var json = JsonSerializer.Serialize(requestBody);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                    var response = await httpClient.PostAsync($"{BASE_URL}/api/update-id", content);
+                    var resultJson = await response.Content.ReadAsStringAsync();
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var options = new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        };
+                        var error = JsonSerializer.Deserialize<ErrorResponse>(resultJson, options);
+                        throw new Exception(error?.error ?? "Unknown error");
+                    }
+                }
             }
             catch (Exception ex)
             {
