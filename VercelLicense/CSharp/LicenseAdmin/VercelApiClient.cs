@@ -2,6 +2,7 @@ using System.Configuration;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;  // ✅ 추가
 using System.Diagnostics;
 
 namespace LicenseAdmin
@@ -19,10 +20,10 @@ namespace LicenseAdmin
         static VercelApiClient()
         {
             // App.config에서 설정 읽기
-            BASE_URL = ConfigurationManager.AppSettings["ApiBaseUrl"] 
+            BASE_URL = ConfigurationManager.AppSettings["ApiBaseUrl"]
                 ?? throw new Exception("ApiBaseUrl not configured in App.config");
-            
-            ADMIN_KEY = ConfigurationManager.AppSettings["AdminKey"] 
+
+            ADMIN_KEY = ConfigurationManager.AppSettings["AdminKey"]
                 ?? throw new Exception("AdminKey not configured in App.config");
 
             // HttpClient 설정
@@ -32,23 +33,33 @@ namespace LicenseAdmin
             };
             httpClient.DefaultRequestHeaders.Add("User-Agent", "LicenseAdmin/1.0");
 
-            // JSON 직렬화 옵션 (개선됨)
+            // JSON 직렬화 옵션
             jsonOptions = new JsonSerializerOptions
             {
-                PropertyNameCaseInsensitive = true,  // 대소문자 구분 안함 (중요!)
+                PropertyNameCaseInsensitive = true,
                 WriteIndented = false
             };
         }
 
         /// <summary>
         /// 라이선스 정보 모델
+        /// ✅ JsonPropertyName으로 API의 snake_case와 매핑
         /// </summary>
         public class LicenseInfo
         {
+            [JsonPropertyName("id")]
             public string Id { get; set; } = "";
+
+            [JsonPropertyName("valid")]
             public bool Valid { get; set; }
+
+            [JsonPropertyName("registered_at")]  // ✅ API의 snake_case와 매핑
             public DateTime? RegisteredAt { get; set; }
+
+            [JsonPropertyName("expires_at")]     // ✅ API의 snake_case와 매핑
             public DateTime? ExpiresAt { get; set; }
+
+            [JsonPropertyName("updated_at")]     // ✅ API의 snake_case와 매핑
             public DateTime? UpdatedAt { get; set; }
         }
 
@@ -73,7 +84,7 @@ namespace LicenseAdmin
                 if (response.IsSuccessStatusCode)
                 {
                     var result = JsonSerializer.Deserialize<ListResponse>(resultJson, jsonOptions);
-                    
+
                     // 디버깅: 파싱된 데이터 확인
                     if (result?.licenses != null)
                     {
@@ -86,7 +97,7 @@ namespace LicenseAdmin
                                           $"Updated: {lic.UpdatedAt?.ToString() ?? "null"}");
                         }
                     }
-                    
+
                     return result?.licenses ?? new List<LicenseInfo>();
                 }
                 else
@@ -122,7 +133,7 @@ namespace LicenseAdmin
                     id = id,
                     expiresAt = expiresAt?.ToString("yyyy-MM-dd")
                 };
-                
+
                 var json = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -173,7 +184,7 @@ namespace LicenseAdmin
                     adminKey = ADMIN_KEY,
                     id = id
                 };
-                
+
                 var json = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -220,7 +231,7 @@ namespace LicenseAdmin
                 {
                     await DeleteLicenseAsync(oldId);
                 }
-                
+
                 // 새로 등록
                 return await RegisterLicenseAsync(newId, expiresAt);
             }
