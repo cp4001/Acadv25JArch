@@ -18,10 +18,11 @@ void LicenseHelper::EnsureLicenseDirectoryExists() {
     // No folder creation needed as we use the current directory.
 }
 
-bool LicenseHelper::CreateLicense(DateTime expirationDate) {
+bool LicenseHelper::CreateLicense(String^ id, DateTime expirationDate) {
     try {
         EnsureLicenseDirectoryExists();
-        String^ licenseData = expirationDate.ToString("yyyy-MM-dd HH:mm:ss");
+        // ID와 만료일을 구분자로 연결
+        String^ licenseData = String::Format("{0}|{1}", id, expirationDate.ToString("yyyy-MM-dd HH:mm:ss"));
         String^ encrypted = EncryptString(licenseData);
         System::IO::File::WriteAllText(LICENSE_FILE(), encrypted);
         Console::WriteLine("✓ License file created: {0}", LICENSE_FILE());
@@ -38,7 +39,7 @@ bool LicenseHelper::CreateLicense(DateTime expirationDate) {
     }
 }
 
-bool LicenseHelper::CheckLicense() {
+bool LicenseHelper::CheckLicense(String^ id) {
     try {
         if (!System::IO::File::Exists(LICENSE_FILE())) {
             Console::WriteLine("License file not found: {0}", LICENSE_FILE());
@@ -47,7 +48,22 @@ bool LicenseHelper::CheckLicense() {
 
         String^ encrypted = System::IO::File::ReadAllText(LICENSE_FILE());
         String^ decrypted = DecryptString(encrypted);
-        DateTime expirationDate = DateTime::Parse(decrypted);
+        
+        // ID와 만료일 분리
+        array<String^>^ parts = decrypted->Split('|');
+        if (parts->Length != 2) {
+            Console::WriteLine("Invalid license format");
+            return false;
+        }
+        
+        String^ storedId = parts[0];
+        DateTime expirationDate = DateTime::Parse(parts[1]);
+        
+        // ID 확인
+        if (storedId != id) {
+            Console::WriteLine("License ID mismatch");
+            return false;
+        }
 
         DateTime internetTime = GetInternetTime();
 
@@ -75,7 +91,14 @@ String^ LicenseHelper::GetDateTime() {
 
         String^ encrypted = System::IO::File::ReadAllText(LICENSE_FILE());
         String^ decrypted = DecryptString(encrypted);
-        DateTime expirationDate = DateTime::Parse(decrypted);
+        
+        // ID와 만료일 분리
+        array<String^>^ parts = decrypted->Split('|');
+        if (parts->Length != 2) {
+            return "Invalid license format";
+        }
+        
+        DateTime expirationDate = DateTime::Parse(parts[1]);
 
         DateTime internetTime = GetInternetTime();
 
@@ -102,7 +125,14 @@ Nullable<DateTime> LicenseHelper::GetLicenseInfo() {
 
         String^ encrypted = System::IO::File::ReadAllText(LICENSE_FILE());
         String^ decrypted = DecryptString(encrypted);
-        return DateTime::Parse(decrypted);
+        
+        // ID와 만료일 분리
+        array<String^>^ parts = decrypted->Split('|');
+        if (parts->Length != 2) {
+            return Nullable<DateTime>();
+        }
+        
+        return DateTime::Parse(parts[1]);
     }
     catch (Exception^) {
         return Nullable<DateTime>();
@@ -157,7 +187,7 @@ unsigned int LicenseHelper::SwapEndianness(unsigned __int64 x) {
 }
 
 String^ LicenseHelper::EncryptString(String^ text) {
-    array<Byte>^ keyBytes = SHA256::Create()->ComputeHash(Encoding::UTF8->GetBytes(KeyStrings::ENCRYPTION_KEY));
+    array<Byte>^ keyBytes = SHA256::Create()->ComputeHash(Encoding::UTF8->GetBytes(KeyStrings::GetEncryptionKey()));
     array<Byte>^ iv = gcnew array<Byte>(16);
     Array::Copy(keyBytes, iv, 16);
 
@@ -182,7 +212,7 @@ String^ LicenseHelper::EncryptString(String^ text) {
 }
 
 String^ LicenseHelper::DecryptString(String^ cipherText) {
-    array<Byte>^ keyBytes = SHA256::Create()->ComputeHash(Encoding::UTF8->GetBytes(KeyStrings::ENCRYPTION_KEY));
+    array<Byte>^ keyBytes = SHA256::Create()->ComputeHash(Encoding::UTF8->GetBytes(KeyStrings::GetEncryptionKey()));
     array<Byte>^ iv = gcnew array<Byte>(16);
     Array::Copy(keyBytes, iv, 16);
 

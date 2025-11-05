@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <appSettings>
+        <!-- 
+            ⚠️ 이 파일을 'App.config'로 복사하고 실제 값으로 변경하세요
+            
+            사용 방법:
+            1. 이 파일을 'App.config'로 복사
+            2. AdminKey를 실제 관리자 키로 변경
+            3. 필요시 ApiBaseUrl 변경
+        -->
+        
+        <!-- Vercel License Server의 관리자 키 -->
+        <add key="AdminKey" value="your-admin-key-here" />
+        
+        <!-- API 서버 URL -->
+        <add key="ApiBaseUrl" value="https://elec-license.vercel.app" />
+    </appSettings>
+</configuration>

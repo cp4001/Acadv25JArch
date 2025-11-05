@@ -1,0 +1,16 @@
+{
+  "name": "vercel-license-server",
+  "version": "1.0.0",
+  "description": "License management server using Neon PostgreSQL",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@vercel/postgres": "^0.10.0"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.0"
+  }
+}

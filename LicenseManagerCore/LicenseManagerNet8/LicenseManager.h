@@ -5,8 +5,8 @@ namespace ProgramLicenseManager {
     public ref class LicenseHelper
     {
     public:
-        static bool CreateLicense(DateTime expirationDate);
-        static bool CheckLicense();
+        static bool CreateLicense(String^ id, DateTime expirationDate);
+        static bool CheckLicense(String^ id);
         static String^ GetDateTime();
         static Nullable<DateTime> GetLicenseInfo();
         static String^ GetLicenseFilePath();
