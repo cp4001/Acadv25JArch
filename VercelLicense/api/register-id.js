@@ -6,7 +6,9 @@ import { sql } from '@vercel/postgres';
  * Body: { 
  *   "adminKey": "your-admin-key",
  *   "id": "MACHINE-ABC-123",
- *   "expiresAt": "2025-12-31"  // 선택사항
+ *   "product": "ProductName",     // 선택사항
+ *   "username": "UserName",        // 선택사항
+ *   "expiresAt": "2025-12-31"      // 선택사항
  * }
  */
 export default async function handler(req, res) {
@@ -32,7 +34,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { adminKey, id, expiresAt } = req.body;
+    const { adminKey, id, product, username, expiresAt } = req.body;
 
     // 관리자 키 확인
     if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
@@ -61,15 +63,10 @@ export default async function handler(req, res) {
       }
     }
 
-    // PostgreSQL에 ID 등록 (UPSERT)
+    // PostgreSQL의 jlicense 테이블에 ID 등록 (중복 시 에러 발생)
     const result = await sql`
-      INSERT INTO licenses (machine_id, valid, expires_at, registered_at)
-      VALUES (${id}, true, ${expiresAt || null}, NOW())
-      ON CONFLICT (machine_id) 
-      DO UPDATE SET 
-        valid = true,
-        expires_at = ${expiresAt || null},
-        updated_at = NOW()
+      INSERT INTO jlicense (machine_id, product, username, valid, expires_at, registered_at)
+      VALUES (${id}, ${product || null}, ${username || null}, true, ${expiresAt || null}, NOW())
       RETURNING *
     `;
 
@@ -80,6 +77,8 @@ export default async function handler(req, res) {
       message: 'ID registered successfully',
       id: id,
       data: {
+        product: license.product,
+        username: license.username,
         valid: license.valid,
         registeredAt: license.registered_at,
         expiresAt: license.expires_at
@@ -88,6 +87,16 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Registration error:', error);
+    
+    // 중복 키 에러 처리
+    if (error.code === '23505') { // PostgreSQL unique violation error code
+      return res.status(409).json({ 
+        success: false,
+        error: 'ID already exists',
+        details: 'This machine ID is already registered'
+      });
+    }
+    
     return res.status(500).json({ 
       success: false,
       error: 'Internal server error',

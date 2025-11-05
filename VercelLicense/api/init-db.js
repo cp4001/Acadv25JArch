@@ -41,11 +41,13 @@ export default async function handler(req, res) {
       });
     }
 
-    // licenses 테이블 생성
+    // jlicense 테이블 생성 (product, username 필드 추가)
     await sql`
-      CREATE TABLE IF NOT EXISTS licenses (
+      CREATE TABLE IF NOT EXISTS jlicense (
         id SERIAL PRIMARY KEY,
         machine_id VARCHAR(255) UNIQUE NOT NULL,
+        product VARCHAR(100),
+        username VARCHAR(100),
         valid BOOLEAN DEFAULT true,
         registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         expires_at DATE,
@@ -55,17 +57,22 @@ export default async function handler(req, res) {
 
     // 인덱스 생성 (성능 향상)
     await sql`
-      CREATE INDEX IF NOT EXISTS idx_machine_id ON licenses(machine_id)
+      CREATE INDEX IF NOT EXISTS idx_machine_id ON jlicense(machine_id)
     `;
 
     await sql`
-      CREATE INDEX IF NOT EXISTS idx_valid ON licenses(valid)
+      CREATE INDEX IF NOT EXISTS idx_valid ON jlicense(valid)
+    `;
+
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_product ON jlicense(product)
     `;
 
     return res.status(200).json({ 
       success: true,
       message: 'Database initialized successfully',
-      table: 'licenses'
+      table: 'jlicense',
+      fields: ['id', 'machine_id', 'product', 'username', 'valid', 'registered_at', 'expires_at', 'updated_at']
     });
 
   } catch (error) {

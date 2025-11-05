@@ -49,9 +49,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // PostgreSQL에서 ID 삭제
+    // PostgreSQL의 jlicense 테이블에서 ID 삭제
     const result = await sql`
-      DELETE FROM licenses 
+      DELETE FROM jlicense 
       WHERE machine_id = ${id}
       RETURNING *
     `;

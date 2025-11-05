@@ -37,9 +37,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // PostgreSQL에서 ID 확인
+    // PostgreSQL의 jlicense 테이블에서 ID 확인
     const result = await sql`
-      SELECT * FROM licenses 
+      SELECT * FROM jlicense 
       WHERE machine_id = ${id} 
       AND valid = true
     `;

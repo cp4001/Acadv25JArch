@@ -113,9 +113,13 @@ Invoke-RestMethod -Uri "https://your-project.vercel.app/api/init-db" `
 {
   "adminKey": "your-admin-key",
   "id": "MACHINE-ABC-123",
+  "product": "MyApplication",
+  "username": "John Doe",
   "expiresAt": "2025-12-31"
 }
 ```
+
+**참고:** `product`, `username`, `expiresAt`는 선택사항입니다.
 
 ### 4. ID 삭제 (관리자 전용)
 **POST** `/api/delete-id`
@@ -135,6 +139,25 @@ Invoke-RestMethod -Uri "https://your-project.vercel.app/api/init-db" `
 ```json
 {
   "adminKey": "your-admin-key"
+}
+```
+
+**응답:**
+```json
+{
+  "success": true,
+  "count": 2,
+  "licenses": [
+    {
+      "id": "MACHINE-ABC-123",
+      "product": "MyApplication",
+      "username": "John Doe",
+      "valid": true,
+      "registered_at": "2025-01-01T00:00:00Z",
+      "expires_at": "2025-12-31",
+      "updated_at": "2025-01-01T00:00:00Z"
+    }
+  ]
 }
 ```
 
@@ -161,6 +184,8 @@ string key = await LicenseHelper.GetEncryptionKeyFromServer(machineId);
 CREATE TABLE licenses (
     id SERIAL PRIMARY KEY,
     machine_id VARCHAR(255) UNIQUE NOT NULL,
+    product VARCHAR(100),
+    username VARCHAR(100),
     valid BOOLEAN DEFAULT true,
     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at DATE,
@@ -168,15 +193,35 @@ CREATE TABLE licenses (
 );
 ```
 
+**필드 설명:**
+- `id`: 자동 증가 고유 ID
+- `machine_id`: 머신/클라이언트 고유 식별자 (필수, 유니크)
+- `product`: 제품명 (선택사항)
+- `username`: 사용자명 (선택사항)
+- `valid`: 라이선스 유효 여부
+- `registered_at`: 등록 일시
+- `expires_at`: 만료 날짜 (선택사항)
+- `updated_at`: 마지막 수정 일시
+
 ---
 
 ## 🔧 관리 명령어
 
 ### ID 등록
 ```powershell
+# 기본 등록
 $body = @{
     adminKey = "your-admin-key"
     id = "MACHINE-ABC-123"
+    expiresAt = "2025-12-31"
+} | ConvertTo-Json
+
+# 제품명과 사용자명 포함 등록
+$body = @{
+    adminKey = "your-admin-key"
+    id = "MACHINE-ABC-123"
+    product = "MyApplication"
+    username = "John Doe"
     expiresAt = "2025-12-31"
 } | ConvertTo-Json
 
@@ -244,3 +289,5 @@ Invoke-RestMethod -Uri "https://your-project.vercel.app/api/list-ids" `
 ## 📄 라이선스
 
 MIT License
+
+

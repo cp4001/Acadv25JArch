@@ -40,15 +40,17 @@ export default async function handler(req, res) {
       });
     }
 
-    // PostgreSQL에서 모든 라이선스 조회
+    // PostgreSQL의 jlicense 테이블에서 모든 라이선스 조회 (product, username 포함)
     const result = await sql`
       SELECT 
         machine_id as id,
+        product,
+        username,
         valid,
         registered_at,
         expires_at,
         updated_at
-      FROM licenses 
+      FROM jlicense 
       ORDER BY registered_at DESC
     `;
 
