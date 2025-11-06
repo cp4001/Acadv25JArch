@@ -110,7 +110,52 @@ ADMIN_KEY=super-secret-admin-key-change-me-12345
 }
 ```
 
-### 3. 라이선스 목록 조회 (관리자)
+### 3. 라이선스 수정 (관리자) ⭐ NEW
+**POST** `https://elec-license.vercel.app/api/update-id`
+
+```json
+{
+  "adminKey": "super-secret-admin-key-change-me-12345",
+  "id": "MACHINE-ABC-123",
+  "product": "UpdatedApplication",
+  "username": "Jane Doe",
+  "expiresAt": "2026-12-31"
+}
+```
+
+**성공 응답:**
+```json
+{
+  "success": true,
+  "message": "License updated successfully",
+  "id": "MACHINE-ABC-123",
+  "data": {
+    "product": "UpdatedApplication",
+    "username": "Jane Doe",
+    "valid": true,
+    "registeredAt": "2025-11-05T12:11:36Z",
+    "expiresAt": "2026-12-31",
+    "updatedAt": "2025-11-05T14:30:00Z"
+  }
+}
+```
+
+**실패 응답 (ID 없음):**
+```json
+{
+  "success": false,
+  "error": "License not found",
+  "details": "The specified machine ID does not exist"
+}
+```
+
+**특징:**
+- ✅ `registered_at`은 유지됨 (등록 일시 변경 안 됨)
+- ✅ `updated_at`만 현재 시각으로 갱신
+- ✅ `product`, `username`, `expiresAt` 선택적 업데이트
+- ✅ 기존 ID를 찾아서 UPDATE (DELETE+INSERT 아님)
+
+### 4. 라이선스 목록 조회 (관리자)
 **POST** `https://elec-license.vercel.app/api/list-ids`
 
 ```json
@@ -119,7 +164,7 @@ ADMIN_KEY=super-secret-admin-key-change-me-12345
 }
 ```
 
-### 4. 라이선스 확인 (클라이언트)
+### 5. 라이선스 확인 (클라이언트)
 **POST** `https://elec-license.vercel.app/api/check-license`
 
 ```json
@@ -139,7 +184,7 @@ ADMIN_KEY=super-secret-admin-key-change-me-12345
 }
 ```
 
-### 5. 라이선스 삭제 (관리자)
+### 6. 라이선스 삭제 (관리자)
 **POST** `https://elec-license.vercel.app/api/delete-id`
 
 ```json
@@ -180,6 +225,16 @@ C:\Users\junhoi\Desktop\Work\Acadv25JArch\VercelLicense
     -AdminKey "super-secret-admin-key-change-me-12345"
 ```
 
+#### 라이선스 수정 ⭐ NEW
+```powershell
+.\neon-db-query.ps1 -Update `
+    -Id "MACHINE-001" `
+    -Product "MyApp v2.0" `
+    -Username "John Doe" `
+    -ExpiresAt "2026-12-31" `
+    -AdminKey "super-secret-admin-key-change-me-12345"
+```
+
 #### 목록 조회
 ```powershell
 .\neon-db-query.ps1 -List -AdminKey "super-secret-admin-key-change-me-12345"
@@ -211,11 +266,16 @@ C:\Users\junhoi\Desktop\Work\Acadv25JArch\VercelLicense
   - TEST-MACHINE-002 (PowerSuite, Jane Smith)
   - TEST-MACHINE-003 (AutoTool, Mike Johnson)
 
-#### 3. 중복 방지
+#### 3. 라이선스 수정 ⭐ NEW
+- ✅ Product 수정 시 `registered_at` 유지 확인
+- ✅ Username 수정 시 `updated_at`만 갱신 확인
+- ✅ 존재하지 않는 ID 수정 시 404 에러 확인
+
+#### 4. 중복 방지
 - ✅ 동일 ID 재등록 시 에러 발생 확인
 - ✅ "ID already exists" 메시지 정상 출력
 
-#### 4. 목록 조회
+#### 5. 목록 조회
 - ✅ 3개 라이선스 정상 조회
 - ✅ product, username 필드 정상 표시
 
@@ -227,6 +287,7 @@ C:\Users\junhoi\Desktop\Work\Acadv25JArch\VercelLicense
 - ✅ 고유 ID 기반 라이선스 등록
 - ✅ 제품명, 사용자명 추가 정보 관리
 - ✅ 만료일 설정
+- ✅ **라이선스 정보 수정 (UPDATE)** ⭐ NEW
 - ✅ 중복 방지 (DB 레벨 + API 레벨)
 
 ### 2. 보안
@@ -249,11 +310,14 @@ VercelLicense/
 ├── api/
 │   ├── init-db.js          # DB 초기화
 │   ├── register-id.js      # 라이선스 등록 (중복 방지)
+│   ├── update-id.js        # 라이선스 수정 ⭐ NEW
 │   ├── list-ids.js         # 목록 조회
 │   ├── check-license.js    # 라이선스 확인
 │   └── delete-id.js        # 라이선스 삭제
 ├── client-examples/
 │   └── CSharpClient.cs     # C# 클라이언트 예제
+├── CSharp/
+│   └── LicenseAdminApp/    # C# 관리자 앱 (WinForms)
 ├── test-scripts/
 │   └── test-api.ps1        # API 테스트 스크립트
 ├── deploy-vercel.ps1       # Vercel 배포 스크립트
@@ -267,6 +331,41 @@ VercelLicense/
 ├── VercelNeon.md           # 사용 가이드
 └── FINAL-SETUP.md          # 최종 구성 문서 (이 파일)
 ```
+
+---
+
+## 🔄 UPDATE vs DELETE+INSERT 비교
+
+### UPDATE API 방식 (권장) ⭐ NEW
+```javascript
+UPDATE jlicense 
+SET 
+  product = 'NewProduct',
+  username = 'NewUser',
+  expires_at = '2026-12-31',
+  updated_at = NOW()
+WHERE machine_id = 'MACHINE-001'
+```
+
+**장점:**
+- ✅ `registered_at` 유지 (등록 일시 보존)
+- ✅ `id` (시리얼 번호) 유지
+- ✅ 데이터 연속성 유지
+- ✅ 정상적인 DB 작업
+
+### DELETE+INSERT 방식 (ID 변경 시만 사용)
+```javascript
+DELETE FROM jlicense WHERE machine_id = 'OLD-ID'
+INSERT INTO jlicense VALUES (...)
+```
+
+**단점:**
+- ❌ `registered_at`이 현재 시각으로 변경됨
+- ❌ `id` (시리얼 번호)가 새로 할당됨
+- ❌ 잠깐 동안 데이터가 없는 순간 존재
+
+**사용 시나리오:**
+- Machine ID 자체를 변경할 때만 사용
 
 ---
 
@@ -325,6 +424,16 @@ ENCRYPTION_KEY=YourSecretKey123
     -AdminKey "your-key"
 ```
 
+#### 라이선스 정보 수정 ⭐ NEW
+```powershell
+.\neon-db-query.ps1 -Update `
+    -Id "CLIENT-ID" `
+    -Product "UpdatedProduct" `
+    -Username "UpdatedUser" `
+    -ExpiresAt "2027-12-31" `
+    -AdminKey "your-key"
+```
+
 #### 상태 확인
 ```powershell
 .\neon-db-query.ps1 -List -AdminKey "your-key"
@@ -359,6 +468,10 @@ Neon Console에서:
 ### "ID already exists" 에러
 → 정상 동작 (중복 방지)
 → 다른 ID 사용 또는 기존 ID 삭제 후 재등록
+
+### "License not found" 에러 (UPDATE 시)
+→ 존재하지 않는 ID를 수정하려고 함
+→ 목록 조회로 ID 확인
 
 ### "Invalid admin key" 에러
 → Vercel 환경 변수의 ADMIN_KEY 확인
@@ -398,14 +511,16 @@ Neon Console에서:
 - [✅] 중복 방지 확인
 
 ### 코드
-- [✅] API 파일 수정 (5개)
+- [✅] API 파일 작성 (6개) ⭐ update-id.js 추가
 - [✅] 스크립트 작성 (2개)
+- [✅] C# 관리자 앱 (WinForms)
 - [✅] 문서 작성 (3개)
 - [✅] .gitignore, .vercelignore 설정
 
 ### 테스트
 - [✅] 초기화 테스트
 - [✅] 등록 테스트
+- [✅] 수정 테스트 ⭐ NEW
 - [✅] 조회 테스트
 - [✅] 중복 방지 테스트
 
@@ -420,5 +535,6 @@ Neon Console에서:
 ---
 
 **문서 작성일:** 2025년 11월 5일  
+**최종 업데이트:** 2025년 11월 5일 (update-id API 추가)  
 **프로젝트 경로:** `C:\Users\junhoi\Desktop\Work\Acadv25JArch\VercelLicense`  
 **배포 URL:** https://elec-license.vercel.app
