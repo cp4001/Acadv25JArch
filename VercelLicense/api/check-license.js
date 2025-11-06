@@ -69,13 +69,15 @@ export default async function handler(req, res) {
       }
     }
 
-    // 유효한 라이선스 - 암호화 키 반환
+    // 유효한 라이선스 - 암호화 키 및 추가 정보 반환
     return res.status(200).json({ 
       success: true,
       valid: true,
       key: process.env.ENCRYPTION_KEY || 'YourSecretKey123',
       expiresAt: license.expires_at,
-      registeredAt: license.registered_at
+      registeredAt: license.registered_at,
+      username: license.username,
+      product: license.product
     });
 
   } catch (error) {

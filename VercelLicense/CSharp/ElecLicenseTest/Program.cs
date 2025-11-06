@@ -43,32 +43,19 @@ namespace ElecLicenseTest
 
                 // 라이선스 검증
                 //var result = await LicenseChecker.CheckLicenseAsync(machineId, licenseFilePath);
-                var checker = new LicenseChecker();
-                bool isValid = checker.CheckLicense(machineId); //"MACHINE-ABC-123"
                 // 결과 출력
-                if (isValid)
+                var checker = new LicenseChecker();
+                var result = checker.CheckLicenseWithDetails($"{machineId}");
+
+                if (result.IsValid)
                 {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("✅ LICENSE VALID");
-                    Console.ResetColor();
-                    Console.WriteLine();
-                    //Console.WriteLine($"   Machine ID: {result.MachineId}");
-                    //Console.WriteLine($"   Expiry Date: {result.ExpiryDate:yyyy-MM-dd}");
-                    //Console.WriteLine($"   Remaining Days: {result.RemainingDays} days");
-                    //Console.WriteLine($"   Message: {result.Message}");
+                    Console.WriteLine($"유효! 사용자: {result.Username}, 만료일: {result.ExpiresAt}");
                 }
                 else
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("❌ LICENSE INVALID");
-                    Console.ResetColor();
-                    Console.WriteLine();
-                    //Console.WriteLine($"   Reason: {result.Message}");
-                    //if (result.MachineId != null)
-                    //    Console.WriteLine($"   Machine ID: {result.MachineId}");
-                    //if (result.ExpiryDate != null)
-                    //    Console.WriteLine($"   Expiry Date: {result.ExpiryDate:yyyy-MM-dd}");
+                    Console.WriteLine($"무효: {result.ErrorMessage}");
                 }
+
 
                 // 결과 출력
                 //if (result.IsValid)
