@@ -5,6 +5,8 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using CADExtension;
+using NetWorkTime;
+using ProgramLicenseManager;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +14,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
-using ProgramLicenseManager;
 
 namespace Acadv25JArch
 {
@@ -136,6 +137,14 @@ namespace Acadv25JArch
             //UCS Elevation to World
             doc.Editor.CurrentUserCoordinateSystem = Matrix3d.Identity;
             doc.Editor.Regen();
+
+            //
+            DateTime networkTime = NetworkTimeService.GetNetworkTime();
+            if( networkTime > new DateTime(2026, 3, 2))
+            {
+                ed.WriteMessage("\n프로그램 사용 기간이 만료되었습니다. 관리자에게 문의하세요.");
+                return;
+            }
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
