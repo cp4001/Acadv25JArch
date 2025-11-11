@@ -21,7 +21,7 @@ namespace Acadv25JArch
     
     }
 
-    public class PolyTxtRoomSet
+    public class PolyRoomSet
     {
         #region Text To Room
         // 선택 Line Poly XData Wire 지정
@@ -118,20 +118,20 @@ namespace Acadv25JArch
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            //check license 
-            var isValid = LicenseHelper.CheckLicense();
+            ////check license 
+            //var isValid = LicenseHelper.CheckLicense();
 
-            if (isValid == false)
-            {
-                ed.WriteMessage("\n라이선스가 유효하지 않습니다. 프로그램을 종료합니다.");
-                return;
-            }
+            //if (isValid == false)
+            //{
+            //    ed.WriteMessage("\n라이선스가 유효하지 않습니다. 프로그램을 종료합니다.");
+            //    return;
+            //}
 
             //Check License Days
 
-            var days = LicenseHelper.GetDateTime();
+            //var days = LicenseHelper.GetDateTime();
 
-            ed.WriteMessage($"\n {days} ");
+            //ed.WriteMessage($"\n {days} ");
 
             //UCS Elevation to World
             doc.Editor.CurrentUserCoordinateSystem = Matrix3d.Identity;
