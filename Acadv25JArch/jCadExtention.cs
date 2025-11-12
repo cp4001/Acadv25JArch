@@ -786,19 +786,31 @@ namespace CADExtension //Curve Line Poly Geometry Point
             //  SelectCrossingPolygon을 사용하여 근처 Entity 선택    
             var selectionResult = ed.SelectCrossingPolygon(polygonpts);//, filter);
 
-            List<Entity> ents = new List<Entity>();
 
-            if (selectionResult.Status == PromptStatus.OK && selectionResult.Value != null)
-            {
-                var selectedIds = selectionResult.Value.GetObjectIds();
+            PromptSelectionResult psr2 = ed.SelectCrossingPolygon(polygonpts, JSelFilter.MakeFilterTypes("LINE,LWPOLYLINE"));
+            SelectionSet ss = psr2.Value;
+            var ids1 = new ObjectIdCollection(psr2.Value.GetObjectIds());
 
-                // 4단계: 선택된 ObjectId들을 Entity 객체로 변환
-                foreach (ObjectId objId in selectedIds)
-                {
-                    ents.Add(objId.GetObject(OpenMode.ForRead) as Entity);
+            var ents = ids1.OfType<ObjectId>().Select(x => x.GetObject(OpenMode.ForRead) as Entity).ToList();
 
-                }
-            }
+
+
+
+            //List<Entity> ents = new List<Entity>();
+
+            //if (selectionResult.Status == PromptStatus.OK && selectionResult.Value != null)
+            //{
+            //    var selectedIds = selectionResult.Value.GetObjectIds();
+
+            //    // 4단계: 선택된 ObjectId들을 Entity 객체로 변환
+            //    foreach (ObjectId objId in selectedIds)
+            //    {
+            //        if (objId == ObjectId.Null) continue;
+            //        var obj = objId.GetObject(OpenMode.ForRead);
+            //        ents.Add((Entity)obj);
+
+            //    }
+            //}
 
             // 교차점 기준 가장 가까운 Entity return  
             // Line과 Eitity 간 교차 확인 (완전히 유효)
