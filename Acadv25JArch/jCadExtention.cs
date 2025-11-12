@@ -775,6 +775,44 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
             return ents.First();
         }
+        public static Entity GetFirstEntity(this Line line,Point3d bpt) //  기준 point에서  
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            var polygonpts = line.GetPoly().GetPointCollections(true);
+
+            //  SelectCrossingPolygon을 사용하여 근처 Entity 선택    
+            var selectionResult = ed.SelectCrossingPolygon(polygonpts);//, filter);
+
+            List<Entity> ents = new List<Entity>();
+
+            if (selectionResult.Status == PromptStatus.OK && selectionResult.Value != null)
+            {
+                var selectedIds = selectionResult.Value.GetObjectIds();
+
+                // 4단계: 선택된 ObjectId들을 Entity 객체로 변환
+                foreach (ObjectId objId in selectedIds)
+                {
+                    ents.Add(objId.GetObject(OpenMode.ForRead) as Entity);
+
+                }
+            }
+
+            // 교차점 기준 가장 가까운 Entity return  
+            // Line과 Eitity 간 교차 확인 (완전히 유효)
+            //line.IntersectWith(EnntityRef, Intersect.OnBothOperands, intersectionPoints, IntPtr.Zero, IntPtr.Zero);
+
+            if (ents.Count == 0) return ents.First();
+            //line의 StartPoint 기준으로 가장 가까운 위치에 있는 Entity
+            ents = ents.Select(ent => new { Ent = ent, Po = (Point3d)line.GetFirstIntersectPoint(ent) })
+                   .OrderBy(x => x.Po.DistanceTo(bpt))
+                   .Select(x => x.Ent)
+                   .ToList();
+
+            return ents.First();
+        }
 
 
         public static Vector3d GetVector(this Line line)
