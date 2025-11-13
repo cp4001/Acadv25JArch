@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.Internal;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows.Data;
@@ -14,6 +15,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Exception = System.Exception;
+using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 
 namespace AcadFunction
 {
@@ -2580,7 +2582,7 @@ namespace AcadFunction
 
 
 
-    public class Func
+    public class CadFunc
     {
         /// <summary>
         /// colinear한 선분들 중 가장 짧은 것만 남기고 나머지를 제거합니다.
@@ -2714,6 +2716,46 @@ namespace AcadFunction
             // 4. 가장 거리가 짧았던 쌍을 반환합니다.
             return closestPair;
         }
+
+        /// <summary>
+        /// 
+        public static void LinesDrawGraphic(Line ll,Transaction tr)
+        {
+
+            var transientManager = TransientManager.CurrentTransientManager;
+            var intCol = new IntegerCollection(); // 빈 IntegerCollection
+            // 4단계: 선택된 Line들을 Transient Graphics로 표시
+
+                    // 가상 Line 생성 (DB에 추가하지 않음!)
+                    var transientLine = new Line(
+                        ll.StartPoint,
+                        ll.EndPoint
+                    );
+
+                    // ✅ 중요: ColorIndex 직접 설정 (AutoCAD Blue = 5)
+                    transientLine.ColorIndex = 5;
+
+                    // ✅ LineWeight 설정
+                    transientLine.LineWeight = LineWeight.LineWeight050; // 0.30mm
+
+                    // ✅ Layer를 "0"으로 설정 (DEFPOINTS 아님!)
+                    transientLine.Layer = "0";
+
+                    // ✅ Transient Graphics로 화면에 표시 (DirectTopmost 사용!)
+                    transientManager.AddTransient(
+                        transientLine,
+                        TransientDrawingMode.DirectTopmost, // 최상위에 표시
+                        128,
+                        intCol
+                    );
+                
+           
+
+
+         }//--
+
+
+
 
     }
 }

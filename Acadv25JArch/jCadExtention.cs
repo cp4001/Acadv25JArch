@@ -787,15 +787,28 @@ namespace CADExtension //Curve Line Poly Geometry Point
             var selectionResult = ed.SelectCrossingPolygon(polygonpts);//, filter);
 
 
-            PromptSelectionResult psr2 = ed.SelectCrossingPolygon(polygonpts, JSelFilter.MakeFilterTypes("LINE"));
+            PromptSelectionResult psr2 = ed.SelectCrossingPolygon(polygonpts, JSelFilter.MakeFilterTypes("LINE,LWPOLYLINE"));
             SelectionSet ss = psr2.Value;
             if(ss == null) return null;
             var ids1 = new ObjectIdCollection(psr2.Value.GetObjectIds());
 
-            List<Line> ents = ids1.OfType<ObjectId>().Select(x => x.GetObject(OpenMode.ForRead) as Line).ToList();
+            List<Entity> ents = ids1.OfType<ObjectId>().Select(x => x.GetObject(OpenMode.ForRead) as Entity).ToList();
             // 방법 3: RemoveAll (기존 리스트 직접 수정)
             ents.RemoveAll(lineEnt => lineEnt == null);
 
+            List<Line> lls = new List<Line>();
+            foreach(var ent in ents)
+            {
+                if (ent is Line)
+                {
+                    lls.Add(ent as Line);
+                }
+                else if (ent is Polyline)
+                {
+                    var pl = ent as Polyline;
+                    pl.GetLines();
+                }
+            }
 
 
             //List<Entity> ents = new List<Entity>();
@@ -818,9 +831,9 @@ namespace CADExtension //Curve Line Poly Geometry Point
             // Line과 Eitity 간 교차 확인 (완전히 유효)
             //line.IntersectWith(EnntityRef, Intersect.OnBothOperands, intersectionPoints, IntPtr.Zero, IntPtr.Zero);
 
-            if (ents.Count == 0) return ents.First();
+            if (lls.Count == 0) return lls.First();
             //line의 StartPoint 기준으로 가장 가까운 위치에 있는 Entity
-            var fent = ents.Select(ll => new { Ent = ll, Dist =  ll.GetClosestPointTo(bpt,false).DistanceTo(bpt) })
+            var fent = lls.Select(ll => new { Ent = ll, Dist =  ll.GetClosestPointTo(bpt,false).DistanceTo(bpt) })
                    .OrderBy(x =>x.Dist)
                    .Select(x => x.Ent)
                    .ToList().First();

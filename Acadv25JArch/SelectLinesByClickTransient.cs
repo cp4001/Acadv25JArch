@@ -1,3 +1,4 @@
+using AcadFunction;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
@@ -277,17 +278,22 @@ namespace AutoCADCommands
                         // 3단계: Line에 교차되는 Entity 선택 
                         var lls = new List<ObjectId>();
                         
-                        var ent = lline.GetFirstLine(clickPoint);
-                        if (ent != null)
-                        {
-                            ent.Highlight();
-                            // 화면 업데이트
-                            ed.UpdateScreen();
-                        }
-                        if (ent is Line l)
-                        {
-                            lls.Add(l.ObjectId);
-                        }
+                        var sel_ll = lline.GetFirstLine(clickPoint);
+                        sel_ll.Highlight();
+                        ed.UpdateScreen();
+
+                        //CadFunc.LinesDrawGraphic(sel_ll, tr);   
+
+                        //if (ent != null)
+                        //{
+                        //    ent.Highlight();
+                        //    // 화면 업데이트
+                        //    ed.UpdateScreen();
+                        //}
+                        //if (ent is Line l)
+                        //{
+                        //    lls.Add(l.ObjectId);
+                        //}
 
                         //ent = sline.GetFirstLine(clickPoint);
                         //if (ent is Line l1)
@@ -364,23 +370,23 @@ namespace AutoCADCommands
                     }
 
                     // 5단계: 종료 - 모든 Transient Graphics 제거
-                    ed.WriteMessage($"\n\n=== 선택 종료 ===");
-                    ed.WriteMessage($"\n총 {clickCount}번 클릭했습니다.");
-                    ed.WriteMessage($"\n총 {allSelectedLineIds.Count}개의 Line이 선택되었습니다.");
-                    ed.WriteMessage("\n가상 그래픽을 제거합니다...");
+                    //ed.WriteMessage($"\n\n=== 선택 종료 ===");
+                    //ed.WriteMessage($"\n총 {clickCount}번 클릭했습니다.");
+                    //ed.WriteMessage($"\n총 {allSelectedLineIds.Count}개의 Line이 선택되었습니다.");
+                    //ed.WriteMessage("\n가상 그래픽을 제거합니다...");
 
-                    foreach (var transientLine in transientLines)
-                    {
-                        try
-                        {
-                            transientManager.EraseTransient(transientLine, intCol);
-                            transientLine.Dispose();
-                        }
-                        catch (System.Exception)
-                        {
-                            // 이미 제거된 경우 무시
-                        }
-                    }
+                    //foreach (var transientLine in transientLines)
+                    //{
+                    //    try
+                    //    {
+                    //        transientManager.EraseTransient(transientLine, intCol);
+                    //        transientLine.Dispose();
+                    //    }
+                    //    catch (System.Exception)
+                    //    {
+                    //        // 이미 제거된 경우 무시
+                    //    }
+                    //}
                     tr.Commit();
                     // 화면 갱신
                     ed.UpdateScreen();

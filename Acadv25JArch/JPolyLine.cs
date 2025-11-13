@@ -111,7 +111,7 @@ namespace Acadv25JArch
 
 
                     // colinear line 제거 
-                    selines = Func.RemoveColinearLinesKeepShortest(selines, pt);
+                    selines = CadFunc.RemoveColinearLinesKeepShortest(selines, pt);
 
                     //Dispplay LIne 
                     foreach (var ll in selines)
@@ -277,7 +277,7 @@ namespace Acadv25JArch
                     var pt = (Point3d)referencePoint;
 
                     // colinear line 제거 
-                    var selines = Func.RemoveColinearLinesKeepShortest(selectedLines, pt);
+                    var selines = CadFunc.RemoveColinearLinesKeepShortest(selectedLines, pt);
 
                     // 기준점 에서 볼때 보이는 Line만 선택
                     //// 4단계: 필터링 수행
