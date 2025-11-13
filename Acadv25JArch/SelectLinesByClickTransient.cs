@@ -220,166 +220,174 @@ namespace AutoCADCommands
                 ];
                 var filter = new SelectionFilter(filterList);
 
-                while (true)
+                using (var tr = db.TransactionManager.StartTransaction())
                 {
-                    // 1단계: 사용자로부터 클릭 점 받기
-                    var pointPrompt = new PromptPointOptions($"\n선택할 중심점을 클릭하세요 (Enter=종료): ")
+                    while (true)
                     {
-                        AllowNone = true // Enter 허용
-                    };
-
-                    var pointResult = ed.GetPoint(pointPrompt);
-
-                    // Enter 입력 시 종료
-                    if (pointResult.Status == PromptStatus.Cancel ||
-                        pointResult.Status == PromptStatus.None)
-                    {
-                        break; // while 루프 종료
-                    }
-
-                    if (pointResult.Status != PromptStatus.OK)
-                        continue;
-
-                    Point3d clickPoint = pointResult.Value;
-                    clickCount++;
-
-
-                    // click Point 로 부터  좌 하  line  생성 
-                    var lline = new Line(
-                            clickPoint,
-                            new Point3d(clickPoint.X - SELECTION_RADIUS, clickPoint.Y , clickPoint.Z)
-                    );
-                    var sline = new Line(
-                            clickPoint,
-                            new Point3d(clickPoint.X , clickPoint.Y - SELECTION_RADIUS, clickPoint.Z)
-                        );
-
-
-                    //// 2단계: 클릭점 기준 반경 300의 정사각형 영역 계산
-                    //Point3d corner1 = new Point3d(
-                    //    clickPoint.X - SELECTION_RADIUS,
-                    //    clickPoint.Y - SELECTION_RADIUS,
-                    //    clickPoint.Z
-                    //);
-
-                    //Point3d corner2 = new Point3d(
-                    //    clickPoint.X + SELECTION_RADIUS,
-                    //    clickPoint.Y + SELECTION_RADIUS,
-                    //    clickPoint.Z
-                    //);
-
-                    //// 3단계: SelectCrossingWindow로 Line 선택
-                    //var selectionResult = ed.SelectCrossingWindow(corner1, corner2, filter);
-
-
-                    // 3단계: Line에 교차되는 Entity 선택 
-                    var lls = new List<ObjectId>();
-                    
-                    var ent =  lline.GetFirstEntity(clickPoint);
-                    if(ent is Line l)
-                    {
-                        lls.Add(l.ObjectId);
-                    }
-
-                    ent = sline.GetFirstEntity(clickPoint);
-                    if (ent is Line l1)
-                    {
-                        lls.Add(l1.ObjectId);
-                    }
-
-
-
-                    //var selectionResult = ed.SelectCrossingWindow(corner1, corner2, filter);
-
-
-                    // 4단계: 선택된 Line들을 Transient Graphics로 표시
-                    if (lls.Count >=1)
-                    {
-                        //var selectedIds = selectionResult.Value.GetObjectIds();
-                        int newLinesCount = 0;
-
-                        using (var tr = db.TransactionManager.StartTransaction())
+                        // 1단계: 사용자로부터 클릭 점 받기
+                        var pointPrompt = new PromptPointOptions($"\n선택할 중심점을 클릭하세요 (Enter=종료): ")
                         {
-                            foreach (var  id  in lls)
-                            {
-                                // 이미 선택된 Line은 건너뛰기 (중복 방지)
-                                if (allSelectedLineIds.Contains(id))
-                                    continue;
+                            AllowNone = true // Enter 허용
+                        };
 
-                                // 원본 Line 읽기 (ForRead만 사용 - 원본 수정 안 함!)
-                                var originalLine = tr.GetObject(id, OpenMode.ForRead) as Line;
-                                if (originalLine == null)
-                                    continue;
+                        var pointResult = ed.GetPoint(pointPrompt);
 
-                                // 가상 Line 생성 (DB에 추가하지 않음!)
-                                var transientLine = new Line(
-                                    originalLine.StartPoint,
-                                    originalLine.EndPoint
-                                );
-
-                                // ✅ 중요: ColorIndex 직접 설정 (AutoCAD Blue = 5)
-                                transientLine.ColorIndex = 5;
-
-                                // ✅ LineWeight 설정
-                                transientLine.LineWeight = LineWeight.LineWeight030; // 0.30mm
-
-                                // ✅ Layer를 "0"으로 설정 (DEFPOINTS 아님!)
-                                transientLine.Layer = "0";
-
-                                // ✅ Transient Graphics로 화면에 표시 (DirectTopmost 사용!)
-                                transientManager.AddTransient(
-                                    transientLine,
-                                    TransientDrawingMode.DirectTopmost, // 최상위에 표시
-                                    128,
-                                    intCol
-                                );
-
-                                // 관리 목록에 추가
-                                transientLines.Add(transientLine);
-                                allSelectedLineIds.Add(id);
-                                newLinesCount++;
-                            }
-
-                            tr.Commit();
+                        // Enter 입력 시 종료
+                        if (pointResult.Status == PromptStatus.Cancel ||
+                            pointResult.Status == PromptStatus.None)
+                        {
+                            break; // while 루프 종료
                         }
 
-                        ed.WriteMessage($"\n[클릭 #{clickCount}] 위치: ({clickPoint.X:F2}, {clickPoint.Y:F2})");
-                        ed.WriteMessage($" → {newLinesCount}개 새로운 Line 선택됨 (누적: {allSelectedLineIds.Count}개)");
+                        if (pointResult.Status != PromptStatus.OK)
+                            continue;
 
-                        // ✅ 강제 화면 갱신
-                        ed.UpdateScreen();
-                        ed.Regen();
+                        Point3d clickPoint = pointResult.Value;
+                        clickCount++;
+
+
+                        // click Point 로 부터  좌 하  line  생성 
+                        var lline = new Line(
+                                clickPoint,
+                                new Point3d(clickPoint.X - SELECTION_RADIUS, clickPoint.Y, clickPoint.Z)
+                        );
+                        var sline = new Line(
+                                clickPoint,
+                                new Point3d(clickPoint.X, clickPoint.Y - SELECTION_RADIUS, clickPoint.Z)
+                            );
+
+
+                        //// 2단계: 클릭점 기준 반경 300의 정사각형 영역 계산
+                        //Point3d corner1 = new Point3d(
+                        //    clickPoint.X - SELECTION_RADIUS,
+                        //    clickPoint.Y - SELECTION_RADIUS,
+                        //    clickPoint.Z
+                        //);
+
+                        //Point3d corner2 = new Point3d(
+                        //    clickPoint.X + SELECTION_RADIUS,
+                        //    clickPoint.Y + SELECTION_RADIUS,
+                        //    clickPoint.Z
+                        //);
+
+                        //// 3단계: SelectCrossingWindow로 Line 선택
+                        //var selectionResult = ed.SelectCrossingWindow(corner1, corner2, filter);
+
+
+                        // 3단계: Line에 교차되는 Entity 선택 
+                        var lls = new List<ObjectId>();
+                        
+                        var ent = lline.GetFirstLine(clickPoint);
+                        if (ent != null)
+                        {
+                            ent.Highlight();
+                            // 화면 업데이트
+                            ed.UpdateScreen();
+                        }
+                        if (ent is Line l)
+                        {
+                            lls.Add(l.ObjectId);
+                        }
+
+                        //ent = sline.GetFirstLine(clickPoint);
+                        //if (ent is Line l1)
+                        //{
+                        //    lls.Add(l1.ObjectId);
+                        //}
+
+
+
+                        //var selectionResult = ed.SelectCrossingWindow(corner1, corner2, filter);
+
+
+                        //// 4단계: 선택된 Line들을 Transient Graphics로 표시
+                        //if (lls.Count >= 1)
+                        //{
+                        //    //var selectedIds = selectionResult.Value.GetObjectIds();
+                        //    int newLinesCount = 0;
+
+
+                        //    foreach (var id in lls)
+                        //    {
+                        //        // 이미 선택된 Line은 건너뛰기 (중복 방지)
+                        //        if (allSelectedLineIds.Contains(id))
+                        //            continue;
+
+                        //        // 원본 Line 읽기 (ForRead만 사용 - 원본 수정 안 함!)
+                        //        var originalLine = tr.GetObject(id, OpenMode.ForRead) as Line;
+                        //        if (originalLine == null)
+                        //            continue;
+
+                        //        // 가상 Line 생성 (DB에 추가하지 않음!)
+                        //        var transientLine = new Line(
+                        //            originalLine.StartPoint,
+                        //            originalLine.EndPoint
+                        //        );
+
+                        //        // ✅ 중요: ColorIndex 직접 설정 (AutoCAD Blue = 5)
+                        //        transientLine.ColorIndex = 5;
+
+                        //        // ✅ LineWeight 설정
+                        //        transientLine.LineWeight = LineWeight.LineWeight050; // 0.30mm
+
+                        //        // ✅ Layer를 "0"으로 설정 (DEFPOINTS 아님!)
+                        //        transientLine.Layer = "0";
+
+                        //        // ✅ Transient Graphics로 화면에 표시 (DirectTopmost 사용!)
+                        //        transientManager.AddTransient(
+                        //            transientLine,
+                        //            TransientDrawingMode.DirectTopmost, // 최상위에 표시
+                        //            128,
+                        //            intCol
+                        //        );
+
+                        //        // 관리 목록에 추가
+                        //        transientLines.Add(transientLine);
+                        //        allSelectedLineIds.Add(id);
+                        //        newLinesCount++;
+                        //    }
+
+
+                        //    ed.WriteMessage($"\n[클릭 #{clickCount}] 위치: ({clickPoint.X:F2}, {clickPoint.Y:F2})");
+                        //    ed.WriteMessage($" → {newLinesCount}개 새로운 Line 선택됨 (누적: {allSelectedLineIds.Count}개)");
+
+                        //    // ✅ 강제 화면 갱신
+                        //    ed.UpdateScreen();
+                        //    ed.Regen();
+                        //}
+                        //else
+                        //{
+                        //    ed.WriteMessage($"\n[클릭 #{clickCount}] 위치: ({clickPoint.X:F2}, {clickPoint.Y:F2})");
+                        //    ed.WriteMessage(" → 선택된 Line 없음");
+                        //}
+
                     }
-                    else
+
+                    // 5단계: 종료 - 모든 Transient Graphics 제거
+                    ed.WriteMessage($"\n\n=== 선택 종료 ===");
+                    ed.WriteMessage($"\n총 {clickCount}번 클릭했습니다.");
+                    ed.WriteMessage($"\n총 {allSelectedLineIds.Count}개의 Line이 선택되었습니다.");
+                    ed.WriteMessage("\n가상 그래픽을 제거합니다...");
+
+                    foreach (var transientLine in transientLines)
                     {
-                        ed.WriteMessage($"\n[클릭 #{clickCount}] 위치: ({clickPoint.X:F2}, {clickPoint.Y:F2})");
-                        ed.WriteMessage(" → 선택된 Line 없음");
+                        try
+                        {
+                            transientManager.EraseTransient(transientLine, intCol);
+                            transientLine.Dispose();
+                        }
+                        catch (System.Exception)
+                        {
+                            // 이미 제거된 경우 무시
+                        }
                     }
+                    tr.Commit();
+                    // 화면 갱신
+                    ed.UpdateScreen();
+                    ed.Regen();
+                    ed.WriteMessage("\n가상 그래픽 제거 완료!");
                 }
-
-                // 5단계: 종료 - 모든 Transient Graphics 제거
-                ed.WriteMessage($"\n\n=== 선택 종료 ===");
-                ed.WriteMessage($"\n총 {clickCount}번 클릭했습니다.");
-                ed.WriteMessage($"\n총 {allSelectedLineIds.Count}개의 Line이 선택되었습니다.");
-                ed.WriteMessage("\n가상 그래픽을 제거합니다...");
-
-                foreach (var transientLine in transientLines)
-                {
-                    try
-                    {
-                        transientManager.EraseTransient(transientLine, intCol);
-                        transientLine.Dispose();
-                    }
-                    catch (System.Exception)
-                    {
-                        // 이미 제거된 경우 무시
-                    }
-                }
-
-                // 화면 갱신
-                ed.UpdateScreen();
-                ed.Regen();
-                ed.WriteMessage("\n가상 그래픽 제거 완료!");
+                
             }
             catch (System.Exception ex)
             {
@@ -387,6 +395,7 @@ namespace AutoCADCommands
                 ed.WriteMessage($"\n스택 트레이스: {ex.StackTrace}");
             }
         }
+        
 
 
         /// <summary>

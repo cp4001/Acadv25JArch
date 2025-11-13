@@ -775,7 +775,7 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
             return ents.First();
         }
-        public static Entity GetFirstEntity(this Line line,Point3d bpt) //  기준 point에서  
+        public static Line GetFirstLine(this Line line,Point3d bpt) //  기준 point에서  
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -787,12 +787,14 @@ namespace CADExtension //Curve Line Poly Geometry Point
             var selectionResult = ed.SelectCrossingPolygon(polygonpts);//, filter);
 
 
-            PromptSelectionResult psr2 = ed.SelectCrossingPolygon(polygonpts, JSelFilter.MakeFilterTypes("LINE,LWPOLYLINE"));
+            PromptSelectionResult psr2 = ed.SelectCrossingPolygon(polygonpts, JSelFilter.MakeFilterTypes("LINE"));
             SelectionSet ss = psr2.Value;
+            if(ss == null) return null;
             var ids1 = new ObjectIdCollection(psr2.Value.GetObjectIds());
 
-            var ents = ids1.OfType<ObjectId>().Select(x => x.GetObject(OpenMode.ForRead) as Entity).ToList();
-
+            List<Line> ents = ids1.OfType<ObjectId>().Select(x => x.GetObject(OpenMode.ForRead) as Line).ToList();
+            // 방법 3: RemoveAll (기존 리스트 직접 수정)
+            ents.RemoveAll(lineEnt => lineEnt == null);
 
 
 
@@ -818,12 +820,12 @@ namespace CADExtension //Curve Line Poly Geometry Point
 
             if (ents.Count == 0) return ents.First();
             //line의 StartPoint 기준으로 가장 가까운 위치에 있는 Entity
-            ents = ents.Select(ent => new { Ent = ent, Po = (Point3d)line.GetFirstIntersectPoint(ent) })
-                   .OrderBy(x => x.Po.DistanceTo(bpt))
+            var fent = ents.Select(ll => new { Ent = ll, Dist =  ll.GetClosestPointTo(bpt,false).DistanceTo(bpt) })
+                   .OrderBy(x =>x.Dist)
                    .Select(x => x.Ent)
-                   .ToList();
+                   .ToList().First();
 
-            return ents.First();
+            return fent; 
         }
 
 
