@@ -2353,8 +2353,28 @@ namespace CADExtension  //tr Editor Block
             }
         }
 
+        /// <summary>
+        /// LIne를  tempGraphic 레이어 에 등록
+        /// </summary>
+        public static void RegisterTempGraphic(this Transaction tr, Database db,Line line)
+        {
+            BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+            BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],OpenMode.ForWrite) as BlockTableRecord;
+            tr.EnsureTempGraphicLayer(db);
+            // Line 생성
+            Line newLine = new Line(line.StartPoint, line.EndPoint);
+            
+                // tempGraphic 레이어 할당
+                newLine.Layer = "tempGraphic";
 
+                // 빨간색으로 표시
+                newLine.ColorIndex = 1;
 
+                // Database에 추가
+                btr.AppendEntity(newLine);
+                tr.AddNewlyCreatedDBObject(newLine, true);
+
+        }
 
     }
     public static class EditorExtension
