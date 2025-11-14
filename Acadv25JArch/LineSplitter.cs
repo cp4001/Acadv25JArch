@@ -16,8 +16,8 @@ namespace Acadv25JArch
         private const double TOLERANCE = 60.0;
         
         // 분할 가능 구간 비율 (10% ~ 90%)
-        private const double MIN_SPLIT_RATIO = 0.1;
-        private const double MAX_SPLIT_RATIO = 0.9;
+        private const double MIN_SPLIT_RATIO = 0.03;
+        private const double MAX_SPLIT_RATIO = 0.97;
 
         /// <summary>
         /// 라인들 중 연결점이 다른 라인의 중간에 위치하면 해당 라인을 분할
@@ -279,6 +279,238 @@ namespace Acadv25JArch
             }
 
             return lineIds;
+        }
+    }
+
+    public class LineIntersectionFinder
+    {
+        private const double TOLERANCE = 1e-6; // 중복점 판단 허용 오차
+
+        [CommandMethod("FindIntersections")]
+        public void FindIntersections()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // Step 1: Line 선택
+                var selectedLines = SelectLines(ed, db);
+                if (selectedLines.Count < 2)
+                {
+                    ed.WriteMessage("\n최소 2개 이상의 Line을 선택해야 합니다.");
+                    return;
+                }
+
+                ed.WriteMessage($"\n{selectedLines.Count}개의 Line이 선택되었습니다.");
+
+                // Step 2-3: 각 Line별 교차점 찾기
+                var allIntersectionPoints = new List<Point3d>();
+
+                foreach (var line in selectedLines)
+                {
+                    // StartPoint에서 가장 가까운 Line 찾기
+                    var closestLineFromStart = FindClosestLineFromPoint(line.StartPoint, line, selectedLines);
+                    if (closestLineFromStart != null)
+                    {
+                        var intersectPoints = FindIntersectionPoints(line, closestLineFromStart);
+                        allIntersectionPoints.AddRange(intersectPoints);
+                    }
+
+                    // EndPoint에서 가장 가까운 Line 찾기
+                    var closestLineFromEnd = FindClosestLineFromPoint(line.EndPoint, line, selectedLines);
+                    if (closestLineFromEnd != null)
+                    {
+                        var intersectPoints = FindIntersectionPoints(line, closestLineFromEnd);
+                        allIntersectionPoints.AddRange(intersectPoints);
+                    }
+                }
+
+                // Step 4: 중복점 제거
+                var uniquePoints = RemoveDuplicatePoints(allIntersectionPoints);
+
+                // 결과 출력
+                ed.WriteMessage($"\n\n=== 결과 ===");
+                ed.WriteMessage($"\n총 교차점 수 (중복 포함): {allIntersectionPoints.Count}");
+                ed.WriteMessage($"\n고유 교차점 수 (중복 제거): {uniquePoints.Count}");
+                ed.WriteMessage($"\n\n교차점 좌표:");
+
+                for (int i = 0; i < uniquePoints.Count; i++)
+                {
+                    var pt = uniquePoints[i];
+                    ed.WriteMessage($"\n  점 {i + 1}: ({pt.X:F3}, {pt.Y:F3}, {pt.Z:F3})");
+                }
+
+                // 선택 사항: 교차점에 Circle 표시
+                DrawIntersectionMarkers(uniquePoints, db);
+                ed.WriteMessage($"\n\n교차점 위치에 원(Circle)이 표시되었습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Line 선택 메서드
+        /// </summary>
+        private List<Line> SelectLines(Editor ed, Database db)
+        {
+            var lines = new List<Line>();
+
+            // Line만 선택하도록 필터 설정
+            TypedValue[] filterList = [
+                new TypedValue((int)DxfCode.Start, "LINE")
+            ];
+            var filter = new SelectionFilter(filterList);
+
+            var opts = new PromptSelectionOptions
+            {
+                MessageForAdding = "\n교차점을 찾을 Line들을 선택하세요: "
+            };
+
+            var psr = ed.GetSelection(opts, filter);
+
+            if (psr.Status == PromptStatus.OK && psr.Value != null)
+            {
+                using var tr = db.TransactionManager.StartTransaction();
+
+                foreach (ObjectId id in psr.Value.GetObjectIds())
+                {
+                    if (tr.GetObject(id, OpenMode.ForRead) is Line line)
+                    {
+                        // Line 객체를 복사하여 리스트에 추가 (Transaction 외부에서 사용하기 위해)
+                        lines.Add(line);
+                    }
+                }
+
+                tr.Commit();
+            }
+
+            return lines;
+        }
+
+        /// <summary>
+        /// 특정 점에서 가장 가까운 Line 찾기 (자기 자신 제외)
+        /// </summary>
+        private Line FindClosestLineFromPoint(Point3d point, Line currentLine, List<Line> allLines)
+        {
+            Line closestLine = null;
+            double minDistance = double.MaxValue;
+
+            foreach (var line in allLines)
+            {
+                // 자기 자신은 제외
+                if (line.Handle == currentLine.Handle)
+                    continue;
+
+                // GetClosestPointTo를 사용하여 점에서 Line까지의 최단 거리 계산
+                Point3d closestPoint = line.GetClosestPointTo(point, false); // false: 연장선 포함
+                double distance = point.DistanceTo(closestPoint);
+
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    closestLine = line;
+                }
+            }
+
+            return closestLine;
+        }
+
+        /// <summary>
+        /// 두 Line의 교차점 찾기 (연장선 포함)
+        /// </summary>
+        private List<Point3d> FindIntersectionPoints(Line line1, Line line2)
+        {
+            var points = new List<Point3d>();
+
+            try
+            {
+                var intersectPoints = new Point3dCollection();
+
+                // IntersectWith 메서드 사용 (Intersect.ExtendBoth: 양쪽 연장선 포함)
+                line1.IntersectWith(
+                    line2,
+                    Intersect.ExtendBoth,  // 양쪽 Line 모두 연장하여 교차점 찾기
+                    new Plane(),           // XY 평면
+                    intersectPoints,
+                    IntPtr.Zero,
+                    IntPtr.Zero
+                );
+
+                // Point3dCollection을 List<Point3d>로 변환
+                foreach (Point3d pt in intersectPoints)
+                {
+                    points.Add(pt);
+                }
+            }
+            catch (System.Exception)
+            {
+                // 교차점이 없거나 오류 발생 시 빈 리스트 반환
+            }
+
+            return points;
+        }
+
+        /// <summary>
+        /// 중복점 제거 (허용 오차 범위 내의 점들을 하나로 통합)
+        /// </summary>
+        private List<Point3d> RemoveDuplicatePoints(List<Point3d> points)
+        {
+            var uniquePoints = new List<Point3d>();
+
+            foreach (var point in points)
+            {
+                bool isDuplicate = false;
+
+                // 기존 고유 점들과 비교
+                foreach (var uniquePoint in uniquePoints)
+                {
+                    double distance = point.DistanceTo(uniquePoint);
+                    if (distance < TOLERANCE)
+                    {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+
+                // 중복이 아니면 추가
+                if (!isDuplicate)
+                {
+                    uniquePoints.Add(point);
+                }
+            }
+
+            return uniquePoints;
+        }
+
+        /// <summary>
+        /// 교차점 위치에 Circle 마커 표시 (선택 사항)
+        /// </summary>
+        private void DrawIntersectionMarkers(List<Point3d> points, Database db)
+        {
+            using var tr = db.TransactionManager.StartTransaction();
+
+            var bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+            var btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+
+            foreach (var point in points)
+            {
+                // 작은 원 생성 (반지름 5)
+                var circle = new Circle
+                {
+                    Center = point,
+                    Radius = 5.0,
+                    ColorIndex = 1 // 빨간색
+                };
+
+                btr.AppendEntity(circle);
+                tr.AddNewlyCreatedDBObject(circle, true);
+            }
+
+            tr.Commit();
         }
     }
 }

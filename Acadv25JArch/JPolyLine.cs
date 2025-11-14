@@ -311,45 +311,16 @@ namespace Acadv25JArch
                         if(clickPoint != null ) bpts.Add(clickPoint);   
                     }
 
-
-
-                        //// 같은 방위각 line 으로 Grouping
-                        //var pt = (Point3d)referencePoint;
+                  var sslines=  LineSplitter.SplitLinesAtConnections(sellines1);
 
 
                     List<Line> selines = new List<Line>();
 
 
-                    //// line 을 긴것부터 우선 처리 평행 Grouping
-                    //selectedLines = selectedLines.OrderByDescending(line => line.Length).ToList();
-                    //var lineGroups = LineGrouping.GroupLinesByAngleAndDistance(selectedLines, 1, 300);
-
-                    //var gll = new List<Line>();
-
-                    //foreach (var group in lineGroups)
-                    //{
-                    //    if (group.Count == 1)
-                    //    {
-                    //        gll.Add(group[0]);
-                    //        continue;
-                    //    }
-                    //    if (group.Count >= 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
-                    //    {
-                    //        // 길이 기준 오름차순 (긴 것부터)
-                    //        var group1 = group.OrderBy(line => line.GetCentor().DistanceTo(pt)).ToList();
-                    //        gll.Add(group1[0]); // 기준점에 가장 가까운 라인 추가
-                    //    }
-                    //}
-                    //selines = gll;
-
-                    //기준점 에서 볼때 보이는 Line만 선택
-                    //// 4단계: 필터링 수행
-                    ///
-
                     List<Line> visibleLines = new List<Line>();
                     foreach (var bpt in bpts)
                     {
-                        var slines = LineVisibilityFilter.FilterLinesByVisibility1(bpt, sellines1);
+                        var slines = LineVisibilityFilter.FilterLinesByVisibility1(bpt, sslines);
                         visibleLines.AddRange(slines);  
                     }
 
