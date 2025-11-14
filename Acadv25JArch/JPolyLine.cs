@@ -242,6 +242,238 @@ namespace Acadv25JArch
             }
         }
 
+        // 선택된 라인과  멀티 선택 기준 Point 로  Visible Line  필터링 후 하여 대상을 찾고 
+        // 이웃한 라인들의 교차점을 찾아 닫힌 폴리라인을 생성
+        [CommandMethod("c_visibleline_to_Poly")]
+        public void Cmd_VisibleLinesTo_ConvertClosedPolyline()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+            Database db = doc.Database;
+
+            try
+            {
+
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+
+                    BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                    BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+
+                    tr.CheckRegName("Arch,Room,Disp");
+
+                    // 3개 이상의 라인 선택
+                    List<Line> selectedLines = SelectLines1(ed, db);
+                    selectedLines = selectedLines.Where(l => l.Length > 300.0).ToList();
+                    if (selectedLines == null || selectedLines.Count < 3)
+                    {
+                        ed.WriteMessage("\n3개 이상의 라인을 선택해야 합니다.");
+                        return;
+                    }
+
+                    //Selected lines 평탄화 
+                    var sellines1 = new List<Line>();
+                    foreach (var ll in selectedLines)
+                    {
+                        var sp = new Point3d(ll.StartPoint.X, ll.StartPoint.Y, 0.0);
+                        var ep = new Point3d(ll.EndPoint.X, ll.EndPoint.Y, 0.0);
+                        sellines1.Add(new Line(sp, ep));
+
+                    }
+
+                    // GroupLinesBySlope(selines);  
+
+                    // 기준점  멀티 선택
+
+                    List<Point3d> bpts = new List<Point3d>();   
+                    while (true)
+                    {
+                        // 1단계: 사용자로부터 클릭 점 받기
+                        var pointPrompt = new PromptPointOptions($"\n선택할 중심점을 클릭하세요 (Enter=종료): ")
+                        {
+                            AllowNone = true // Enter 허용
+                        };
+
+                        var pointResult = ed.GetPoint(pointPrompt);
+
+                        // Enter 입력 시 종료
+                        if (pointResult.Status == PromptStatus.Cancel ||
+                            pointResult.Status == PromptStatus.None)
+                        {
+                            break; // while 루프 종료
+                        }
+
+                        if (pointResult.Status != PromptStatus.OK)
+                            continue;
+
+                        Point3d clickPoint = pointResult.Value;
+                        //clickCount++;
+                        if(clickPoint != null ) bpts.Add(clickPoint);   
+                    }
+
+
+
+                        //// 같은 방위각 line 으로 Grouping
+                        //var pt = (Point3d)referencePoint;
+
+
+                    List<Line> selines = new List<Line>();
+
+
+                    //// line 을 긴것부터 우선 처리 평행 Grouping
+                    //selectedLines = selectedLines.OrderByDescending(line => line.Length).ToList();
+                    //var lineGroups = LineGrouping.GroupLinesByAngleAndDistance(selectedLines, 1, 300);
+
+                    //var gll = new List<Line>();
+
+                    //foreach (var group in lineGroups)
+                    //{
+                    //    if (group.Count == 1)
+                    //    {
+                    //        gll.Add(group[0]);
+                    //        continue;
+                    //    }
+                    //    if (group.Count >= 2) // 그룹에 2개 이상의 라인이 있을 때만 센터 라인 생성
+                    //    {
+                    //        // 길이 기준 오름차순 (긴 것부터)
+                    //        var group1 = group.OrderBy(line => line.GetCentor().DistanceTo(pt)).ToList();
+                    //        gll.Add(group1[0]); // 기준점에 가장 가까운 라인 추가
+                    //    }
+                    //}
+                    //selines = gll;
+
+                    //기준점 에서 볼때 보이는 Line만 선택
+                    //// 4단계: 필터링 수행
+                    ///
+
+                    List<Line> visibleLines = new List<Line>();
+                    foreach (var bpt in bpts)
+                    {
+                        var slines = LineVisibilityFilter.FilterLinesByVisibility1(bpt, sellines1);
+                        visibleLines.AddRange(slines);  
+                    }
+
+                    visibleLines = visibleLines.Distinct().ToList();    
+
+                    //// colinear line 제거 
+                    ////selines = CadFunc.RemoveColinearLinesKeepShortest(selines, pt);
+
+                    ////Dispplay LIne 
+                    //foreach (var ll in selines)
+                    //{
+                    //    btr.AppendEntity(ll);
+                    //    ll.ColorIndex = 1;
+                    //    ll.LineWeight = LineWeight.LineWeight030;
+                    //    tr.AddNewlyCreatedDBObject(ll, true);
+                    //}
+
+
+                    //var groupedLines = GroupLinesByAzimuth(selines, pt);
+                    //// 그룹별로 처리 기준점에서 가장 가까운 라인 선택   
+                    //List<Line> glines = new List<Line>();
+                    //foreach (var group in groupedLines)
+                    //{
+                    //    if (group.Count == 1)
+                    //    {
+                    //        glines.Add(group[0]);
+                    //        continue;
+                    //    }
+                    //    // 그룹에서 가장 기준점에 가까운 라인 선택
+                    //    var shortestLine = group
+                    //        .OrderBy(item => item.GetCentor().DistanceTo(pt))
+                    //        .First();
+
+                    //    glines.Add(shortestLine);
+                    //}
+
+                    //selines = glines.OrderBy(ll => ll.GetAzimuth(pt)).ToList();
+
+
+                    //// selines 순환 페어 
+
+                    //List<Line> lll = new List<Line>();
+
+                    //var selines1 = selines.SkipLast(1).Prepend(selines.Last()).ToList();
+                    //var selines2 = selines.Skip(1).Append(selines.First()).ToList();
+                    //var gg = selines.Zip(selines2, (line1, line2) =>  // line2가  index 이후 것이다.
+                    //{
+                    //    var lin1 = new Line(line2.GetClosestPointTo(pt, true), pt);  //line2.GetClosestPointTo(pt,true)
+                    //    var lin2 = new Line(line2.GetClosestPointTo(pt, true), line1.GetCentor());
+                    //    lin1 = line1;
+                    //    lin2 = line2;
+                    //    //line2.GetCentor()
+                    //    var ang = lin1.GetAngle(lin2);
+                    //    if ((ang > 70) && (ang < 160))
+                    //    {
+                    //        lll.Add(line1);
+                    //    }
+                    //    return (lin1, lin2);
+                    //}).ToList();
+
+                    //foreach (var g in gg)
+                    //{
+                    //    var ang = g.lin1.GetAngle();
+                    //    var ang1 = g.lin2.GetAngle();
+                    //    var def = ang - ang1;
+                    //    var dd = g.lin1.GetAngle(g.lin2);
+                    //    var ang2 = g.lin1.GetAzimuth(pt);
+                    //}
+
+
+
+
+                    //int ic = 0;
+                    //foreach (var line in lll)
+                    //{
+                    //    line.AddTextAtCen(tr, pt, ic.ToString()); ic++;
+                    //}
+
+
+
+
+
+
+                    //// 기준점을 사용하여 라인들을 각도 순서로 정렬
+
+                    ////List <Line> sortedLines = SortLinesByAngle(glines, pt);
+
+                    //List<Line> sortedLines = lll.OrderBy(ll => ll.GetAzimuth(pt)).ToList();
+
+
+                    //ed.WriteMessage($"\n기준점에서 각도 순서로 {sortedLines.Count}개의 라인을 정렬했습니다.");
+
+                    //// 정렬된 순서로 순환적 이웃 관계 형성
+                    //List<Point3d> intersectionPoints = CalculateIntersectionPoints(sortedLines);
+
+                    //ed.WriteMessage($"\n{sortedLines.Count}개의 라인에서 {intersectionPoints.Count}개의 교차점을 찾았습니다.");
+
+                    //if (intersectionPoints.Count != sortedLines.Count)
+                    //{
+                    //    ed.WriteMessage("\n예상된 교차점 수와 일치하지 않습니다.");
+                    //    return;
+                    //}
+
+                    // 교차점들이 이미 올바른 순서로 생성됨 (선택 순서 = 이웃 순서)
+
+                    //// 닫힌 폴리라인 생성
+                    //var pl = CreateClosedPolyline(tr, intersectionPoints, db, Jdf.Layer.RoomPoly);
+
+                    //// rommPoly 지정 
+                    //pl.UpgradeOpen();
+                    //JXdata.SetXdata(pl, "Arch", "Room");
+                    //JXdata.SetXdata(pl, "Room", "Room");
+                    //JXdata.SetXdata(pl, "Disp", "room");
+
+                    //ed.WriteMessage($"\n{intersectionPoints.Count}개의 교차점으로 닫힌 폴리라인이 생성되었습니다.");
+
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
 
         [CommandMethod(Jdf.Cmd.벽센터라인선택폴리만들기)]
         public void Cmd_Wall_LinesTo_ConvertClosedPolyline()

@@ -1137,6 +1137,24 @@ public class LineVisibilityFilter
 
         return visibleLines;
     }
+    public static List<Line> FilterLinesByVisibility1(Point3d basePoint, List<Line> lines)
+    {
+        var visibleLines = new List<Line>();
+
+        foreach (var targetLine in lines)
+        {
+            // StartPoint 체크
+            bool startPointBlocked = IsLineBlocked1(basePoint,  targetLine, lines);
+
+            // 둘 다 교차하지 않으면(false) 유지
+            if (!startPointBlocked )
+            {
+                visibleLines.Add(targetLine);
+            }
+        }
+
+        return visibleLines;
+    }
 
     /// <summary>
     /// 기준점에서 목표점까지의 라인이 다른 라인들과 교차하는지 검사
@@ -1161,6 +1179,37 @@ public class LineVisibilityFilter
                 }
             }
         }
+
+        return false; // 교차 없음 (가시선 확보)
+    }
+    private static bool IsLineBlocked1(Point3d basePoint, Line targetLine, List<Line> allLines)
+    {
+        // 임시 라인 생성 (기준점 → 목표점)
+        var p1 = targetLine.GetPointAtDist(targetLine.Length / 3);
+        var p2 = targetLine.GetPointAtDist(targetLine.Length * 2 / 3);
+
+        Line tLine1 = new Line(basePoint, p1); var len1 = basePoint.DistanceTo(p1); Line tLine11 = new Line(basePoint, tLine1.GetPointAtDist(len1 - 2));
+        Line tLine2 = new Line(basePoint, p2); var len2 = basePoint.DistanceTo(p2); Line tline22 = new Line(basePoint, tLine2.GetPointAtDist(len2 - 2));
+
+        //tLine11 교차 검사
+        foreach (var otherLine in allLines)
+        {
+            // 교차 검사
+            if (DoLinesIntersect(tLine11, otherLine))
+            {
+                return true; // 교차함 (차단됨)
+            }
+        }
+        //tline22 교차 검사 
+        foreach (var otherLine in allLines)
+        {
+            // 교차 검사
+            if (DoLinesIntersect(tline22, otherLine))
+            {
+                return true; // 교차함 (차단됨)
+            }
+        }
+
 
         return false; // 교차 없음 (가시선 확보)
     }

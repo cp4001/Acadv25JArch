@@ -3,7 +3,6 @@
     "Acadv25JArch": {
       "commandName": "Executable",
       "executablePath": "C:\\Program Files\\Autodesk\\AutoCAD 2025\\acad.exe",
-      "commandLineArgs": "/nologo /b \"C:\\Users\\junhoi\\Desktop\\Work\\Acadv25JArch\\Acadv25JArch\\start.scr\"",
       "workingDirectory": "$(ProjectDir)",
       "nativeDebugging": false
     }

@@ -14,14 +14,17 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Windows.Shapes;
+using static System.Windows.Forms.LinkLabel;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Color = Autodesk.AutoCAD.Colors.Color;
 using Exception = System.Exception;
+using Line = Autodesk.AutoCAD.DatabaseServices.Line;
 namespace AutoCADCommands
 {
     public class SelectLinesByClickTransient
     {
-        private const double SELECTION_RADIUS = 500.0; // 선택 반경
+        private const double SELECTION_RADIUS = 10000.0; // 선택 반경
         private const string COMMAND_NAME = "c_SELECTBYCLICK";
         private const string COMMAND_NAME1 = "c_SELECTBYCLICKFirst";
         /// <summary>
@@ -247,15 +250,15 @@ namespace AutoCADCommands
                         clickCount++;
 
 
-                        // click Point 로 부터  좌 하  line  생성 
-                        var lline = new Line(
+                        // click Point 로 부터  수평좌   line  생성 
+                        var baseline = new Line(
                                 clickPoint,
                                 new Point3d(clickPoint.X - SELECTION_RADIUS, clickPoint.Y, clickPoint.Z)
                         );
-                        var sline = new Line(
-                                clickPoint,
-                                new Point3d(clickPoint.X, clickPoint.Y - SELECTION_RADIUS, clickPoint.Z)
-                            );
+                        //var sline = new Line(
+                        //        clickPoint,
+                        //        new Point3d(clickPoint.X, clickPoint.Y - SELECTION_RADIUS, clickPoint.Z)
+                        //    );
 
 
                         //// 2단계: 클릭점 기준 반경 300의 정사각형 영역 계산
@@ -278,9 +281,38 @@ namespace AutoCADCommands
                         // 3단계: Line에 교차되는 Entity 선택 
                         var lls = new List<ObjectId>();
                         
-                        var sel_ll = lline.GetFirstLine(clickPoint);
-                        sel_ll.Highlight();
-                        ed.UpdateScreen();
+                        //var sel_ll = baseline.GetFirstLine(clickPoint);
+
+                        // 회전 횟수 계산 (360도 채우기)
+                        // 3단계: 회전 전 정보 저장
+                        Point3d centerPoint = baseline.StartPoint;
+                        Point3d originalEndPoint = baseline.EndPoint;
+                        double originalLength = baseline.Length;
+                        // 4단계: 회전 각도를 라디안으로 변환 (반시계 방향 = 양수)
+                        var customAngle = 30.0;
+                        double angleRadians = 30 * Math.PI / 180.0;
+                        int rotationCount = (int)(360.0 / customAngle) - 1;
+                        // 5단계: Z축 기준 회전 행렬 생성
+                        Matrix3d rotationMatrix = Matrix3d.Rotation(
+                            angleRadians,       // 회전 각도 (라디안) - 양수 = 반시계
+                            Vector3d.ZAxis,     // 회전 축 (Z축)
+                            centerPoint         // 회전 중심점 (StartPoint)
+                        );
+                        
+                        for (int i = 1; i <= rotationCount; i++)
+                        {
+                            var sel_ll = baseline.GetFirstLine(clickPoint);
+                            if (sel_ll != null) lls.Add(sel_ll.ObjectId);
+
+                            // 6단계: EndPoint를 회전 변환
+                            Point3d rotatedEndPoint = baseline.EndPoint.TransformBy(rotationMatrix);
+                            // 7단계: Line의 EndPoint 업데이트
+                            baseline.EndPoint = rotatedEndPoint;
+
+                        }
+
+                        //    sel_ll.Highlight();
+                        //ed.UpdateScreen();
 
                         //CadFunc.LinesDrawGraphic(sel_ll, tr);   
 
@@ -312,47 +344,48 @@ namespace AutoCADCommands
                         //    //var selectedIds = selectionResult.Value.GetObjectIds();
                         //    int newLinesCount = 0;
 
+                        lls = lls.Distinct().ToList();
+                        foreach (var id in lls)
+                        {
+                            // 이미 선택된 Line은 건너뛰기 (중복 방지)
+                            if (allSelectedLineIds.Contains(id))
+                                continue;
 
-                        //    foreach (var id in lls)
-                        //    {
-                        //        // 이미 선택된 Line은 건너뛰기 (중복 방지)
-                        //        if (allSelectedLineIds.Contains(id))
-                        //            continue;
+                            // 원본 Line 읽기 (ForRead만 사용 - 원본 수정 안 함!)
+                            var originalLine = tr.GetObject(id, OpenMode.ForRead) as Line;
+                            if (originalLine == null)
+                                continue;
 
-                        //        // 원본 Line 읽기 (ForRead만 사용 - 원본 수정 안 함!)
-                        //        var originalLine = tr.GetObject(id, OpenMode.ForRead) as Line;
-                        //        if (originalLine == null)
-                        //            continue;
+                            // 가상 Line 생성 (DB에 추가하지 않음!)
+                            var transientLine = new Line(
+                                originalLine.StartPoint,
+                                originalLine.EndPoint
+                            );
 
-                        //        // 가상 Line 생성 (DB에 추가하지 않음!)
-                        //        var transientLine = new Line(
-                        //            originalLine.StartPoint,
-                        //            originalLine.EndPoint
-                        //        );
+                            // ✅ 중요: ColorIndex 직접 설정 (AutoCAD Blue = 5)
+                            transientLine.ColorIndex = 5;
 
-                        //        // ✅ 중요: ColorIndex 직접 설정 (AutoCAD Blue = 5)
-                        //        transientLine.ColorIndex = 5;
+                            // ✅ LineWeight 설정
+                            transientLine.LineWeight = LineWeight.LineWeight050; // 0.30mm
 
-                        //        // ✅ LineWeight 설정
-                        //        transientLine.LineWeight = LineWeight.LineWeight050; // 0.30mm
+                            // ✅ Layer를 "0"으로 설정 (DEFPOINTS 아님!)
+                            transientLine.Layer = "0";
 
-                        //        // ✅ Layer를 "0"으로 설정 (DEFPOINTS 아님!)
-                        //        transientLine.Layer = "0";
+                            // ✅ Transient Graphics로 화면에 표시 (DirectTopmost 사용!)
+                            transientManager.AddTransient(
+                                transientLine,
+                                TransientDrawingMode.DirectTopmost, // 최상위에 표시
+                                128,
+                                intCol
+                            );
 
-                        //        // ✅ Transient Graphics로 화면에 표시 (DirectTopmost 사용!)
-                        //        transientManager.AddTransient(
-                        //            transientLine,
-                        //            TransientDrawingMode.DirectTopmost, // 최상위에 표시
-                        //            128,
-                        //            intCol
-                        //        );
+                            // 관리 목록에 추가
+                            transientLines.Add(transientLine);
+                            allSelectedLineIds.Add(id);
+                            //newLinesCount++;
+                        }
 
-                        //        // 관리 목록에 추가
-                        //        transientLines.Add(transientLine);
-                        //        allSelectedLineIds.Add(id);
-                        //        newLinesCount++;
-                        //    }
-
+                        ed.UpdateScreen();
 
                         //    ed.WriteMessage($"\n[클릭 #{clickCount}] 위치: ({clickPoint.X:F2}, {clickPoint.Y:F2})");
                         //    ed.WriteMessage($" → {newLinesCount}개 새로운 Line 선택됨 (누적: {allSelectedLineIds.Count}개)");
@@ -544,6 +577,186 @@ namespace AutoCADCommands
                 }
 
                 tr.Commit();
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+    }
+
+    public class TransientLineCommands
+    {
+        /// <summary>
+        /// 사용자로부터 2점을 입력받아 임시 그래픽으로 Line을 그립니다.
+        /// Database에는 등록하지 않습니다.
+        /// </summary>
+        [CommandMethod("DRAWTEMPLINE")]
+        public void DrawTemporaryLine()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // Step 1: 첫 번째 점 입력
+                PromptPointOptions ppo1 = new PromptPointOptions("\n첫 번째 점을 지정하세요: ");
+                PromptPointResult ppr1 = ed.GetPoint(ppo1);
+
+                if (ppr1.Status != PromptStatus.OK)
+                {
+                    ed.WriteMessage("\n명령이 취소되었습니다.");
+                    return;
+                }
+
+                Point3d pt1 = ppr1.Value;
+
+                // Step 2: 두 번째 점 입력 (첫 번째 점 기준)
+                PromptPointOptions ppo2 = new PromptPointOptions("\n두 번째 점을 지정하세요: ")
+                {
+                    UseBasePoint = true,
+                    BasePoint = pt1,
+                    UseDashedLine = true // 입력 중 점선으로 미리보기
+                };
+
+                PromptPointResult ppr2 = ed.GetPoint(ppo2);
+
+                if (ppr2.Status != PromptStatus.OK)
+                {
+                    ed.WriteMessage("\n명령이 취소되었습니다.");
+                    return;
+                }
+
+                Point3d pt2 = ppr2.Value;
+
+                // Step 3: Line 객체 생성 (Database에 추가하지 않음)
+                using (Line tempLine = new Line(pt1, pt2))
+                {
+                    // 임시 Line 색상 설정 (빨간색으로 구분)
+                    tempLine.ColorIndex = 1; // Red
+
+                    // Step 4: TransientManager를 사용하여 화면에 표시
+                    TransientManager tm = TransientManager.CurrentTransientManager;
+
+                    // AddTransient(DBObject, TransientDrawingMode, subEntityMarker, IntCollection)
+                    tm.AddTransient(
+                        tempLine,
+                        TransientDrawingMode.DirectTopmost, // 최상단에 표시
+                        128, // 모든 서브엔티티
+                        new IntegerCollection() // 빈 컬렉션
+                    );
+
+                    ed.WriteMessage($"\n임시 Line이 생성되었습니다. (길이: {tempLine.Length:F3})");
+                    ed.WriteMessage("\n제거하려면 CLEARTEMPLINES 명령을 실행하세요.");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 모든 임시 그래픽(Transient Graphics)을 화면에서 제거합니다.
+        /// </summary>
+        [CommandMethod("CLEARTEMPLINES")]
+        public void ClearTemporaryLines()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // TransientManager를 통해 모든 임시 그래픽 제거
+                TransientManager tm = TransientManager.CurrentTransientManager;
+
+                // EraseTransients(TransientDrawingMode, subEntityMarker, IntCollection)
+                tm.EraseTransients(
+                    TransientDrawingMode.DirectTopmost, // AddTransient와 동일한 모드
+                    128, // 모든 서브엔티티
+                    new IntegerCollection() // 빈 컬렉션
+                );
+
+                // 화면 갱신
+                ed.UpdateScreen();
+
+                ed.WriteMessage("\n모든 임시 Line이 제거되었습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 임시 Line을 연속으로 여러 개 그리는 명령어 (옵션)
+        /// </summary>
+        [CommandMethod("DRAWTEMPLINES")]
+        public void DrawMultipleTemporaryLines()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                int count = 0;
+
+                while (true)
+                {
+                    // 첫 번째 점 입력
+                    PromptPointOptions ppo1 = new PromptPointOptions(
+                        count == 0
+                        ? "\n첫 번째 점을 지정하세요 (Enter로 종료): "
+                        : "\n다음 Line의 첫 번째 점을 지정하세요 (Enter로 종료): "
+                    );
+                    ppo1.AllowNone = true; // Enter 키로 종료 가능
+
+                    PromptPointResult ppr1 = ed.GetPoint(ppo1);
+
+                    if (ppr1.Status == PromptStatus.None || ppr1.Status != PromptStatus.OK)
+                    {
+                        if (count > 0)
+                            ed.WriteMessage($"\n총 {count}개의 임시 Line이 생성되었습니다.");
+                        break;
+                    }
+
+                    Point3d pt1 = ppr1.Value;
+
+                    // 두 번째 점 입력
+                    PromptPointOptions ppo2 = new PromptPointOptions("\n두 번째 점을 지정하세요: ")
+                    {
+                        UseBasePoint = true,
+                        BasePoint = pt1,
+                        UseDashedLine = true
+                    };
+
+                    PromptPointResult ppr2 = ed.GetPoint(ppo2);
+
+                    if (ppr2.Status != PromptStatus.OK)
+                        break;
+
+                    Point3d pt2 = ppr2.Value;
+
+                    // Line 생성 및 임시 표시
+                    using (Line tempLine = new Line(pt1, pt2))
+                    {
+                        tempLine.ColorIndex = 1; // Red
+
+                        TransientManager tm = TransientManager.CurrentTransientManager;
+                        tm.AddTransient(
+                            tempLine,
+                            TransientDrawingMode.DirectTopmost,
+                            128,
+                            new IntegerCollection()
+                        );
+
+                        count++;
+                        ed.WriteMessage($"\n임시 Line #{count} 생성 (길이: {tempLine.Length:F3})");
+                    }
+                }
+
+                if (count > 0)
+                    ed.WriteMessage("\n제거하려면 CLEARTEMPLINES 명령을 실행하세요.");
             }
             catch (System.Exception ex)
             {
