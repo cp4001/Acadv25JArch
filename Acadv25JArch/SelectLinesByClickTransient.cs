@@ -585,21 +585,32 @@ namespace AutoCADCommands
         }
     }
 
-    public class TransientLineCommands
+    public class TempGraphicLayerCommands
     {
+        private const string TEMP_LAYER_NAME = "tempGraphic";
+
         /// <summary>
-        /// 사용자로부터 2점을 입력받아 임시 그래픽으로 Line을 그립니다.
-        /// Database에는 등록하지 않습니다.
+        /// tempGraphic 레이어에 임시 Line을 생성합니다.
+        /// 레이어가 없으면 생성하고, 있으면 Display On만 시킵니다.
         /// </summary>
         [CommandMethod("DRAWTEMPLINE")]
         public void DrawTemporaryLine()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
             Editor ed = doc.Editor;
 
             try
             {
-                // Step 1: 첫 번째 점 입력
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // Step 1: tempGraphic 레이어 확인 및 생성/활성화
+                    EnsureTempGraphicLayer(tr, db);
+
+                    tr.Commit();
+                }
+
+                // Step 2: 첫 번째 점 입력
                 PromptPointOptions ppo1 = new PromptPointOptions("\n첫 번째 점을 지정하세요: ");
                 PromptPointResult ppr1 = ed.GetPoint(ppo1);
 
@@ -611,12 +622,12 @@ namespace AutoCADCommands
 
                 Point3d pt1 = ppr1.Value;
 
-                // Step 2: 두 번째 점 입력 (첫 번째 점 기준)
+                // Step 3: 두 번째 점 입력
                 PromptPointOptions ppo2 = new PromptPointOptions("\n두 번째 점을 지정하세요: ")
                 {
                     UseBasePoint = true,
                     BasePoint = pt1,
-                    UseDashedLine = true // 입력 중 점선으로 미리보기
+                    UseDashedLine = true
                 };
 
                 PromptPointResult ppr2 = ed.GetPoint(ppo2);
@@ -629,25 +640,88 @@ namespace AutoCADCommands
 
                 Point3d pt2 = ppr2.Value;
 
-                // Step 3: Line 객체 생성 (Database에 추가하지 않음)
-                using (Line tempLine = new Line(pt1, pt2))
+                // Step 4: Line 생성 및 tempGraphic 레이어에 추가
+                using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    // 임시 Line 색상 설정 (빨간색으로 구분)
-                    tempLine.ColorIndex = 1; // Red
+                    BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                    BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],
+                        OpenMode.ForWrite) as BlockTableRecord;
 
-                    // Step 4: TransientManager를 사용하여 화면에 표시
-                    TransientManager tm = TransientManager.CurrentTransientManager;
+                    // Line 생성
+                    using (Line newLine = new Line(pt1, pt2))
+                    {
+                        // tempGraphic 레이어 할당
+                        newLine.Layer = TEMP_LAYER_NAME;
 
-                    // AddTransient(DBObject, TransientDrawingMode, subEntityMarker, IntCollection)
-                    tm.AddTransient(
-                        tempLine,
-                        TransientDrawingMode.DirectTopmost, // 최상단에 표시
-                        128, // 모든 서브엔티티
-                        new IntegerCollection() // 빈 컬렉션
-                    );
+                        // 빨간색으로 표시
+                        newLine.ColorIndex = 1;
 
-                    ed.WriteMessage($"\n임시 Line이 생성되었습니다. (길이: {tempLine.Length:F3})");
-                    ed.WriteMessage("\n제거하려면 CLEARTEMPLINES 명령을 실행하세요.");
+                        // Database에 추가
+                        btr.AppendEntity(newLine);
+                        tr.AddNewlyCreatedDBObject(newLine, true);
+
+                        ed.WriteMessage($"\ntempGraphic 레이어에 Line이 생성되었습니다. (길이: {newLine.Length:F3})");
+                    }
+
+                    tr.Commit();
+                }
+
+                ed.WriteMessage("\n제거하려면 CLEARTEMPLINES 명령을 실행하세요.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// tempGraphic 레이어의 모든 Entity를 제거합니다.
+        /// </summary>
+        [CommandMethod("CLEARTEMPLINES")]
+        public void ClearTemporaryLines()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // Step 1: tempGraphic 레이어 존재 확인
+                    LayerTable lt = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                    if (!lt.Has(TEMP_LAYER_NAME))
+                    {
+                        ed.WriteMessage($"\n{TEMP_LAYER_NAME} 레이어가 존재하지 않습니다.");
+                        tr.Commit();
+                        return;
+                    }
+
+                    // Step 2: ModelSpace의 모든 Entity 순회
+                    BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                    BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],
+                        OpenMode.ForRead) as BlockTableRecord;
+
+                    int deleteCount = 0;
+
+                    // Step 3: tempGraphic 레이어의 Entity만 필터링하여 삭제
+                    foreach (ObjectId objId in btr)
+                    {
+                        Entity ent = tr.GetObject(objId, OpenMode.ForRead) as Entity;
+
+                        if (ent != null && ent.Layer == TEMP_LAYER_NAME)
+                        {
+                            // Step 4: Erase() 호출
+                            ent.UpgradeOpen();
+                            ent.Erase();
+                            deleteCount++;
+                        }
+                    }
+
+                    tr.Commit();
+
+                    ed.WriteMessage($"\n{deleteCount}개의 임시 객체가 제거되었습니다.");
                 }
             }
             catch (System.Exception ex)
@@ -657,48 +731,24 @@ namespace AutoCADCommands
         }
 
         /// <summary>
-        /// 모든 임시 그래픽(Transient Graphics)을 화면에서 제거합니다.
-        /// </summary>
-        [CommandMethod("CLEARTEMPLINES")]
-        public void ClearTemporaryLines()
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Editor ed = doc.Editor;
-
-            try
-            {
-                // TransientManager를 통해 모든 임시 그래픽 제거
-                TransientManager tm = TransientManager.CurrentTransientManager;
-
-                // EraseTransients(TransientDrawingMode, subEntityMarker, IntCollection)
-                tm.EraseTransients(
-                    TransientDrawingMode.DirectTopmost, // AddTransient와 동일한 모드
-                    128, // 모든 서브엔티티
-                    new IntegerCollection() // 빈 컬렉션
-                );
-
-                // 화면 갱신
-                ed.UpdateScreen();
-
-                ed.WriteMessage("\n모든 임시 Line이 제거되었습니다.");
-            }
-            catch (System.Exception ex)
-            {
-                ed.WriteMessage($"\n오류 발생: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 임시 Line을 연속으로 여러 개 그리는 명령어 (옵션)
+        /// 연속으로 여러 개의 임시 Line을 생성합니다.
         /// </summary>
         [CommandMethod("DRAWTEMPLINES")]
         public void DrawMultipleTemporaryLines()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
             Editor ed = doc.Editor;
 
             try
             {
+                // tempGraphic 레이어 확인 및 생성
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    EnsureTempGraphicLayer(tr, db);
+                    tr.Commit();
+                }
+
                 int count = 0;
 
                 while (true)
@@ -709,7 +759,7 @@ namespace AutoCADCommands
                         ? "\n첫 번째 점을 지정하세요 (Enter로 종료): "
                         : "\n다음 Line의 첫 번째 점을 지정하세요 (Enter로 종료): "
                     );
-                    ppo1.AllowNone = true; // Enter 키로 종료 가능
+                    ppo1.AllowNone = true;
 
                     PromptPointResult ppr1 = ed.GetPoint(ppo1);
 
@@ -737,26 +787,120 @@ namespace AutoCADCommands
 
                     Point3d pt2 = ppr2.Value;
 
-                    // Line 생성 및 임시 표시
-                    using (Line tempLine = new Line(pt1, pt2))
+                    // Line 생성 및 추가
+                    using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
-                        tempLine.ColorIndex = 1; // Red
+                        BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                        BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],
+                            OpenMode.ForWrite) as BlockTableRecord;
 
-                        TransientManager tm = TransientManager.CurrentTransientManager;
-                        tm.AddTransient(
-                            tempLine,
-                            TransientDrawingMode.DirectTopmost,
-                            128,
-                            new IntegerCollection()
-                        );
+                        using (Line newLine = new Line(pt1, pt2))
+                        {
+                            newLine.Layer = TEMP_LAYER_NAME;
+                            newLine.ColorIndex = 1;
 
-                        count++;
-                        ed.WriteMessage($"\n임시 Line #{count} 생성 (길이: {tempLine.Length:F3})");
+                            btr.AppendEntity(newLine);
+                            tr.AddNewlyCreatedDBObject(newLine, true);
+
+                            count++;
+                            ed.WriteMessage($"\nLine #{count} 생성 (길이: {newLine.Length:F3})");
+                        }
+
+                        tr.Commit();
                     }
                 }
 
                 if (count > 0)
                     ed.WriteMessage("\n제거하려면 CLEARTEMPLINES 명령을 실행하세요.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// tempGraphic 레이어가 존재하는지 확인하고, 없으면 생성, 있으면 Display On 시킵니다.
+        /// </summary>
+        private void EnsureTempGraphicLayer(Transaction tr, Database db)
+        {
+            LayerTable lt = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+            if (lt.Has(TEMP_LAYER_NAME))
+            {
+                // 레이어가 이미 존재하면 Display On만 확인
+                LayerTableRecord ltr = tr.GetObject(lt[TEMP_LAYER_NAME], OpenMode.ForWrite) as LayerTableRecord;
+
+                if (ltr.IsOff)
+                {
+                    ltr.IsOff = false;
+                    Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(
+                        $"\n{TEMP_LAYER_NAME} 레이어가 활성화되었습니다.");
+                }
+            }
+            else
+            {
+                // 레이어가 없으면 새로 생성
+                lt.UpgradeOpen();
+
+                using (LayerTableRecord ltr = new LayerTableRecord())
+                {
+                    ltr.Name = TEMP_LAYER_NAME;
+                    ltr.Color = Autodesk.AutoCAD.Colors.Color.FromColorIndex(
+                        Autodesk.AutoCAD.Colors.ColorMethod.ByAci, 1); // 빨간색
+
+                    lt.Add(ltr);
+                    tr.AddNewlyCreatedDBObject(ltr, true);
+
+                    Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(
+                        $"\n{TEMP_LAYER_NAME} 레이어가 생성되었습니다.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// tempGraphic 레이어의 Entity 개수를 확인합니다.
+        /// </summary>
+        [CommandMethod("COUNTTEMPLINES")]
+        public void CountTemporaryLines()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    LayerTable lt = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                    if (!lt.Has(TEMP_LAYER_NAME))
+                    {
+                        ed.WriteMessage($"\n{TEMP_LAYER_NAME} 레이어가 존재하지 않습니다.");
+                        tr.Commit();
+                        return;
+                    }
+
+                    BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                    BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],
+                        OpenMode.ForRead) as BlockTableRecord;
+
+                    int count = 0;
+
+                    foreach (ObjectId objId in btr)
+                    {
+                        Entity ent = tr.GetObject(objId, OpenMode.ForRead) as Entity;
+
+                        if (ent != null && ent.Layer == TEMP_LAYER_NAME)
+                        {
+                            count++;
+                        }
+                    }
+
+                    tr.Commit();
+
+                    ed.WriteMessage($"\n{TEMP_LAYER_NAME} 레이어에 {count}개의 객체가 있습니다.");
+                }
             }
             catch (System.Exception ex)
             {

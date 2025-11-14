@@ -2311,7 +2311,50 @@ namespace CADExtension  //tr Editor Block
             if (!lt.Has(layerName)) return null;
             LayerTableRecord ltr = tr.GetObject(lt[layerName], OpenMode.ForWrite) as LayerTableRecord;
             return ltr;
-        }   
+        }
+
+        /// <summary>
+        /// tempGraphic 레이어가 존재하는지 확인하고, 없으면 생성, 있으면 Display On 시킵니다.
+        /// </summary>
+        public static  void EnsureTempGraphicLayer(this Transaction tr, Database db)
+        {
+            const string TEMP_LAYER_NAME = "tempGraphic";
+            LayerTable lt = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+            if (lt.Has(TEMP_LAYER_NAME))
+            {
+                // 레이어가 이미 존재하면 Display On만 확인
+                LayerTableRecord ltr = tr.GetObject(lt[TEMP_LAYER_NAME], OpenMode.ForWrite) as LayerTableRecord;
+
+                if (ltr.IsOff)
+                {
+                    ltr.IsOff = false;
+                    Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(
+                        $"\n{TEMP_LAYER_NAME} 레이어가 활성화되었습니다.");
+                }
+            }
+            else
+            {
+                // 레이어가 없으면 새로 생성
+                lt.UpgradeOpen();
+
+                using (LayerTableRecord ltr = new LayerTableRecord())
+                {
+                    ltr.Name = TEMP_LAYER_NAME;
+                    ltr.Color = Autodesk.AutoCAD.Colors.Color.FromColorIndex(
+                        Autodesk.AutoCAD.Colors.ColorMethod.ByAci, 1); // 빨간색
+
+                    lt.Add(ltr);
+                    tr.AddNewlyCreatedDBObject(ltr, true);
+
+                    Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(
+                        $"\n{TEMP_LAYER_NAME} 레이어가 생성되었습니다.");
+                }
+            }
+        }
+
+
+
 
     }
     public static class EditorExtension
