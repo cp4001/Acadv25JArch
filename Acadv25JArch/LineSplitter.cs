@@ -311,18 +311,18 @@ namespace Acadv25JArch
                 foreach (var line in selectedLines)
                 {
                     // StartPoint에서 가장 가까운 Line 찾기
-                    var closestLineFromStart = FindClosestLineFromPoint(line.StartPoint, line, selectedLines);
-                    if (closestLineFromStart != null)
+                    var closestFromStart = FindClosestLineFromPoint(line.StartPoint, line, selectedLines);
+                    if (closestFromStart.line != null)
                     {
-                        var intersectPoints = FindIntersectionPoints(line, closestLineFromStart);
+                        var intersectPoints = FindIntersectionPoints(line, closestFromStart.line);
                         allIntersectionPoints.AddRange(intersectPoints);
                     }
 
                     // EndPoint에서 가장 가까운 Line 찾기
-                    var closestLineFromEnd = FindClosestLineFromPoint(line.EndPoint, line, selectedLines);
-                    if (closestLineFromEnd != null)
+                    var closestFromEnd = FindClosestLineFromPoint(line.EndPoint, line, selectedLines);
+                    if (closestFromEnd.line != null)
                     {
-                        var intersectPoints = FindIntersectionPoints(line, closestLineFromEnd);
+                        var intersectPoints = FindIntersectionPoints(line, closestFromEnd.line);
                         allIntersectionPoints.AddRange(intersectPoints);
                     }
                 }
@@ -353,7 +353,7 @@ namespace Acadv25JArch
         }
 
         /// <summary>
-        /// 새로운 커맨드: Line들을 교차점까지 연장
+        /// Line들을 교차점까지 연장 (개선 버전)
         /// </summary>
         [CommandMethod("ExtendToIntersections")]
         public void ExtendToIntersections()
@@ -375,6 +375,7 @@ namespace Acadv25JArch
                 ed.WriteMessage($"\n{selectedLineIds.Count}개의 Line이 선택되었습니다.");
 
                 int extendedCount = 0;
+                int conflictResolvedCount = 0; // 충돌 해결 카운트
 
                 // Transaction으로 Line 수정
                 using var tr = db.TransactionManager.StartTransaction();
@@ -397,21 +398,70 @@ namespace Acadv25JArch
 
                     bool isModified = false;
 
-                    // StartPoint에서 가장 가까운 Line과의 교차점으로 연장
-                    var closestLineFromStart = FindClosestLineFromPoint(line.StartPoint, line, lines);
-                    if (closestLineFromStart != null)
+                    // StartPoint와 EndPoint에서 가장 가까운 Line 찾기
+                    var closestFromStart = FindClosestLineFromPoint(line.StartPoint, line, lines);
+                    var closestFromEnd = FindClosestLineFromPoint(line.EndPoint, line, lines);
+
+                    Line targetLineForStart = closestFromStart.line;
+                    Line targetLineForEnd = closestFromEnd.line;
+
+                    // 중요: StartPoint와 EndPoint에서 같은 Line을 찾은 경우 처리
+                    if (targetLineForStart != null && targetLineForEnd != null &&
+                        targetLineForStart.Handle == targetLineForEnd.Handle)
                     {
-                        var intersectPoints = FindIntersectionPoints(line, closestLineFromStart);
+                        conflictResolvedCount++;
+                        ed.WriteMessage($"\n[충돌 감지] Line의 양쪽 끝점이 같은 Line(Handle: {targetLineForStart.Handle})을 찾았습니다.");
+
+                        // 어느 쪽이 더 가까운지 비교
+                        if (closestFromStart.distance <= closestFromEnd.distance)
+                        {
+                            // StartPoint가 더 가까움 → StartPoint는 그대로, EndPoint는 다음 가까운 Line 찾기
+                            ed.WriteMessage($"\n  → StartPoint가 더 가까움 (거리: {closestFromStart.distance:F3})");
+                            ed.WriteMessage($"\n  → EndPoint는 두 번째로 가까운 Line을 찾습니다...");
+
+                            targetLineForEnd = FindNextClosestLine(line.EndPoint, line, lines, targetLineForStart);
+
+                            if (targetLineForEnd != null)
+                            {
+                                ed.WriteMessage($"\n  → EndPoint의 대체 Line 찾음 (Handle: {targetLineForEnd.Handle})");
+                            }
+                            else
+                            {
+                                ed.WriteMessage($"\n  → EndPoint의 대체 Line을 찾지 못했습니다.");
+                            }
+                        }
+                        else
+                        {
+                            // EndPoint가 더 가까움 → EndPoint는 그대로, StartPoint는 다음 가까운 Line 찾기
+                            ed.WriteMessage($"\n  → EndPoint가 더 가까움 (거리: {closestFromEnd.distance:F3})");
+                            ed.WriteMessage($"\n  → StartPoint는 두 번째로 가까운 Line을 찾습니다...");
+
+                            targetLineForStart = FindNextClosestLine(line.StartPoint, line, lines, targetLineForEnd);
+
+                            if (targetLineForStart != null)
+                            {
+                                ed.WriteMessage($"\n  → StartPoint의 대체 Line 찾음 (Handle: {targetLineForStart.Handle})");
+                            }
+                            else
+                            {
+                                ed.WriteMessage($"\n  → StartPoint의 대체 Line을 찾지 못했습니다.");
+                            }
+                        }
+                    }
+
+                    // StartPoint 연장 처리
+                    if (targetLineForStart != null)
+                    {
+                        var intersectPoints = FindIntersectionPoints(line, targetLineForStart);
                         if (intersectPoints.Count > 0)
                         {
                             var intersectPt = intersectPoints[0];
 
-                            // StartPoint를 연장해야 하는지 판단
                             if (ShouldExtendStart(line, intersectPt))
                             {
                                 if (!isModified)
                                 {
-                                    line.UpgradeOpen(); // ForWrite로 업그레이드
+                                    line.UpgradeOpen();
                                     isModified = true;
                                 }
                                 line.StartPoint = intersectPt;
@@ -420,21 +470,19 @@ namespace Acadv25JArch
                         }
                     }
 
-                    // EndPoint에서 가장 가까운 Line과의 교차점으로 연장
-                    var closestLineFromEnd = FindClosestLineFromPoint(line.EndPoint, line, lines);
-                    if (closestLineFromEnd != null)
+                    // EndPoint 연장 처리
+                    if (targetLineForEnd != null)
                     {
-                        var intersectPoints = FindIntersectionPoints(line, closestLineFromEnd);
+                        var intersectPoints = FindIntersectionPoints(line, targetLineForEnd);
                         if (intersectPoints.Count > 0)
                         {
                             var intersectPt = intersectPoints[0];
 
-                            // EndPoint를 연장해야 하는지 판단
                             if (ShouldExtendEnd(line, intersectPt))
                             {
                                 if (!isModified)
                                 {
-                                    line.UpgradeOpen(); // ForWrite로 업그레이드
+                                    line.UpgradeOpen();
                                     isModified = true;
                                 }
                                 line.EndPoint = intersectPt;
@@ -448,6 +496,10 @@ namespace Acadv25JArch
 
                 ed.WriteMessage($"\n\n=== 연장 완료 ===");
                 ed.WriteMessage($"\n총 {extendedCount}개의 끝점이 연장되었습니다.");
+                if (conflictResolvedCount > 0)
+                {
+                    ed.WriteMessage($"\n{conflictResolvedCount}개의 충돌이 자동으로 해결되었습니다.");
+                }
             }
             catch (System.Exception ex)
             {
@@ -460,17 +512,9 @@ namespace Acadv25JArch
         /// </summary>
         private bool ShouldExtendStart(Line line, Point3d intersectPoint)
         {
-            // Line의 방향 벡터
             Vector3d lineDirection = line.EndPoint - line.StartPoint;
-
-            // StartPoint에서 교차점으로의 벡터
             Vector3d toIntersect = intersectPoint - line.StartPoint;
-
-            // 내적을 이용해 방향 판단
-            // 내적이 음수면 교차점이 StartPoint 반대 방향 (연장 필요)
             double dotProduct = lineDirection.DotProduct(toIntersect);
-
-            // 교차점까지의 거리가 충분히 큰 경우만 연장 (너무 가까우면 이미 그 위치)
             double distance = line.StartPoint.DistanceTo(intersectPoint);
 
             return dotProduct < 0 && distance > TOLERANCE;
@@ -481,20 +525,66 @@ namespace Acadv25JArch
         /// </summary>
         private bool ShouldExtendEnd(Line line, Point3d intersectPoint)
         {
-            // Line의 방향 벡터
             Vector3d lineDirection = line.EndPoint - line.StartPoint;
-
-            // EndPoint에서 교차점으로의 벡터
             Vector3d toIntersect = intersectPoint - line.EndPoint;
-
-            // 내적을 이용해 방향 판단
-            // 내적이 양수면 교차점이 EndPoint 연장 방향 (연장 필요)
             double dotProduct = lineDirection.DotProduct(toIntersect);
-
-            // 교차점까지의 거리가 충분히 큰 경우만 연장
             double distance = line.EndPoint.DistanceTo(intersectPoint);
 
             return dotProduct > 0 && distance > TOLERANCE;
+        }
+
+        /// <summary>
+        /// 특정 점에서 가장 가까운 Line 찾기 (거리 정보 포함)
+        /// </summary>
+        private (Line line, double distance) FindClosestLineFromPoint(Point3d point, Line currentLine, List<Line> allLines)
+        {
+            Line closestLine = null;
+            double minDistance = double.MaxValue;
+
+            foreach (var line in allLines)
+            {
+                // 자기 자신은 제외
+                if (line.Handle == currentLine.Handle)
+                    continue;
+
+                Point3d closestPoint = line.GetClosestPointTo(point, false);
+                double distance = point.DistanceTo(closestPoint);
+
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    closestLine = line;
+                }
+            }
+
+            return (closestLine, minDistance);
+        }
+
+        /// <summary>
+        /// 특정 Line을 제외하고 다음으로 가까운 Line 찾기
+        /// </summary>
+        private Line FindNextClosestLine(Point3d point, Line currentLine, List<Line> allLines, Line excludeLine)
+        {
+            Line nextClosestLine = null;
+            double minDistance = double.MaxValue;
+
+            foreach (var line in allLines)
+            {
+                // 자기 자신과 제외할 Line은 스킵
+                if (line.Handle == currentLine.Handle || line.Handle == excludeLine.Handle)
+                    continue;
+
+                Point3d closestPoint = line.GetClosestPointTo(point, false);
+                double distance = point.DistanceTo(closestPoint);
+
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    nextClosestLine = line;
+                }
+            }
+
+            return nextClosestLine;
         }
 
         /// <summary>
@@ -504,7 +594,6 @@ namespace Acadv25JArch
         {
             var lines = new List<Line>();
 
-            // Line만 선택하도록 필터 설정
             TypedValue[] filterList = [
                 new TypedValue((int)DxfCode.Start, "LINE")
             ];
@@ -536,7 +625,7 @@ namespace Acadv25JArch
         }
 
         /// <summary>
-        /// Line 선택 메서드 (ObjectId 반환) - 수정용
+        /// Line 선택 메서드 (ObjectId 반환)
         /// </summary>
         private List<ObjectId> SelectLinesAsObjectIds(Editor ed)
         {
@@ -563,34 +652,6 @@ namespace Acadv25JArch
         }
 
         /// <summary>
-        /// 특정 점에서 가장 가까운 Line 찾기 (자기 자신 제외)
-        /// </summary>
-        private Line FindClosestLineFromPoint(Point3d point, Line currentLine, List<Line> allLines)
-        {
-            Line closestLine = null;
-            double minDistance = double.MaxValue;
-
-            foreach (var line in allLines)
-            {
-                // 자기 자신은 제외
-                if (line.Handle == currentLine.Handle)
-                    continue;
-
-                // GetClosestPointTo를 사용하여 점에서 Line까지의 최단 거리 계산
-                Point3d closestPoint = line.GetClosestPointTo(point, false);
-                double distance = point.DistanceTo(closestPoint);
-
-                if (distance < minDistance)
-                {
-                    minDistance = distance;
-                    closestLine = line;
-                }
-            }
-
-            return closestLine;
-        }
-
-        /// <summary>
         /// 두 Line의 교차점 찾기 (연장선 포함)
         /// </summary>
         private List<Point3d> FindIntersectionPoints(Line line1, Line line2)
@@ -601,7 +662,6 @@ namespace Acadv25JArch
             {
                 var intersectPoints = new Point3dCollection();
 
-                // IntersectWith 메서드 사용 (Intersect.ExtendBoth: 양쪽 연장선 포함)
                 line1.IntersectWith(
                     line2,
                     Intersect.ExtendBoth,
@@ -611,7 +671,6 @@ namespace Acadv25JArch
                     IntPtr.Zero
                 );
 
-                // Point3dCollection을 List<Point3d>로 변환
                 foreach (Point3d pt in intersectPoints)
                 {
                     points.Add(pt);
@@ -626,7 +685,7 @@ namespace Acadv25JArch
         }
 
         /// <summary>
-        /// 중복점 제거 (허용 오차 범위 내의 점들을 하나로 통합)
+        /// 중복점 제거
         /// </summary>
         private List<Point3d> RemoveDuplicatePoints(List<Point3d> points)
         {
