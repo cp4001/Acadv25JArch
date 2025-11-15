@@ -87,6 +87,10 @@ namespace InnerBoundaryTracking
                 // Step 6: 경계선 추적
                // var tracedPath = TraceBoundary(allLines, startLine, startPoint, basePoint, ed);
                 var tracedPath = TraceBoundary1(allLines, startLine,ed);
+                foreach (var line in tracedPath)
+                {
+                    tr.RegisterTempGraphic(db, line);   
+                }
 
                 tr.Commit();
 
