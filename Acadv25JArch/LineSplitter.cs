@@ -353,7 +353,152 @@ namespace Acadv25JArch
         }
 
         /// <summary>
-        /// Line 선택 메서드
+        /// 새로운 커맨드: Line들을 교차점까지 연장
+        /// </summary>
+        [CommandMethod("ExtendToIntersections")]
+        public void ExtendToIntersections()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // Step 1: Line 선택 (ObjectId로 저장)
+                var selectedLineIds = SelectLinesAsObjectIds(ed);
+                if (selectedLineIds.Count < 2)
+                {
+                    ed.WriteMessage("\n최소 2개 이상의 Line을 선택해야 합니다.");
+                    return;
+                }
+
+                ed.WriteMessage($"\n{selectedLineIds.Count}개의 Line이 선택되었습니다.");
+
+                int extendedCount = 0;
+
+                // Transaction으로 Line 수정
+                using var tr = db.TransactionManager.StartTransaction();
+
+                // 모든 Line 객체를 먼저 로드 (읽기 전용)
+                var lines = new List<Line>();
+                foreach (var id in selectedLineIds)
+                {
+                    if (tr.GetObject(id, OpenMode.ForRead) is Line line)
+                    {
+                        lines.Add(line);
+                    }
+                }
+
+                // 각 Line을 순회하며 연장 처리
+                foreach (var lineId in selectedLineIds)
+                {
+                    var line = tr.GetObject(lineId, OpenMode.ForRead) as Line;
+                    if (line == null) continue;
+
+                    bool isModified = false;
+
+                    // StartPoint에서 가장 가까운 Line과의 교차점으로 연장
+                    var closestLineFromStart = FindClosestLineFromPoint(line.StartPoint, line, lines);
+                    if (closestLineFromStart != null)
+                    {
+                        var intersectPoints = FindIntersectionPoints(line, closestLineFromStart);
+                        if (intersectPoints.Count > 0)
+                        {
+                            var intersectPt = intersectPoints[0];
+
+                            // StartPoint를 연장해야 하는지 판단
+                            if (ShouldExtendStart(line, intersectPt))
+                            {
+                                if (!isModified)
+                                {
+                                    line.UpgradeOpen(); // ForWrite로 업그레이드
+                                    isModified = true;
+                                }
+                                line.StartPoint = intersectPt;
+                                extendedCount++;
+                            }
+                        }
+                    }
+
+                    // EndPoint에서 가장 가까운 Line과의 교차점으로 연장
+                    var closestLineFromEnd = FindClosestLineFromPoint(line.EndPoint, line, lines);
+                    if (closestLineFromEnd != null)
+                    {
+                        var intersectPoints = FindIntersectionPoints(line, closestLineFromEnd);
+                        if (intersectPoints.Count > 0)
+                        {
+                            var intersectPt = intersectPoints[0];
+
+                            // EndPoint를 연장해야 하는지 판단
+                            if (ShouldExtendEnd(line, intersectPt))
+                            {
+                                if (!isModified)
+                                {
+                                    line.UpgradeOpen(); // ForWrite로 업그레이드
+                                    isModified = true;
+                                }
+                                line.EndPoint = intersectPt;
+                                extendedCount++;
+                            }
+                        }
+                    }
+                }
+
+                tr.Commit();
+
+                ed.WriteMessage($"\n\n=== 연장 완료 ===");
+                ed.WriteMessage($"\n총 {extendedCount}개의 끝점이 연장되었습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// StartPoint를 연장해야 하는지 판단
+        /// </summary>
+        private bool ShouldExtendStart(Line line, Point3d intersectPoint)
+        {
+            // Line의 방향 벡터
+            Vector3d lineDirection = line.EndPoint - line.StartPoint;
+
+            // StartPoint에서 교차점으로의 벡터
+            Vector3d toIntersect = intersectPoint - line.StartPoint;
+
+            // 내적을 이용해 방향 판단
+            // 내적이 음수면 교차점이 StartPoint 반대 방향 (연장 필요)
+            double dotProduct = lineDirection.DotProduct(toIntersect);
+
+            // 교차점까지의 거리가 충분히 큰 경우만 연장 (너무 가까우면 이미 그 위치)
+            double distance = line.StartPoint.DistanceTo(intersectPoint);
+
+            return dotProduct < 0 && distance > TOLERANCE;
+        }
+
+        /// <summary>
+        /// EndPoint를 연장해야 하는지 판단
+        /// </summary>
+        private bool ShouldExtendEnd(Line line, Point3d intersectPoint)
+        {
+            // Line의 방향 벡터
+            Vector3d lineDirection = line.EndPoint - line.StartPoint;
+
+            // EndPoint에서 교차점으로의 벡터
+            Vector3d toIntersect = intersectPoint - line.EndPoint;
+
+            // 내적을 이용해 방향 판단
+            // 내적이 양수면 교차점이 EndPoint 연장 방향 (연장 필요)
+            double dotProduct = lineDirection.DotProduct(toIntersect);
+
+            // 교차점까지의 거리가 충분히 큰 경우만 연장
+            double distance = line.EndPoint.DistanceTo(intersectPoint);
+
+            return dotProduct > 0 && distance > TOLERANCE;
+        }
+
+        /// <summary>
+        /// Line 선택 메서드 (Line 객체 반환)
         /// </summary>
         private List<Line> SelectLines(Editor ed, Database db)
         {
@@ -380,7 +525,6 @@ namespace Acadv25JArch
                 {
                     if (tr.GetObject(id, OpenMode.ForRead) is Line line)
                     {
-                        // Line 객체를 복사하여 리스트에 추가 (Transaction 외부에서 사용하기 위해)
                         lines.Add(line);
                     }
                 }
@@ -389,6 +533,33 @@ namespace Acadv25JArch
             }
 
             return lines;
+        }
+
+        /// <summary>
+        /// Line 선택 메서드 (ObjectId 반환) - 수정용
+        /// </summary>
+        private List<ObjectId> SelectLinesAsObjectIds(Editor ed)
+        {
+            var lineIds = new List<ObjectId>();
+
+            TypedValue[] filterList = [
+                new TypedValue((int)DxfCode.Start, "LINE")
+            ];
+            var filter = new SelectionFilter(filterList);
+
+            var opts = new PromptSelectionOptions
+            {
+                MessageForAdding = "\n연장할 Line들을 선택하세요: "
+            };
+
+            var psr = ed.GetSelection(opts, filter);
+
+            if (psr.Status == PromptStatus.OK && psr.Value != null)
+            {
+                lineIds.AddRange(psr.Value.GetObjectIds());
+            }
+
+            return lineIds;
         }
 
         /// <summary>
@@ -406,7 +577,7 @@ namespace Acadv25JArch
                     continue;
 
                 // GetClosestPointTo를 사용하여 점에서 Line까지의 최단 거리 계산
-                Point3d closestPoint = line.GetClosestPointTo(point, false); // false: 연장선 포함
+                Point3d closestPoint = line.GetClosestPointTo(point, false);
                 double distance = point.DistanceTo(closestPoint);
 
                 if (distance < minDistance)
@@ -433,8 +604,8 @@ namespace Acadv25JArch
                 // IntersectWith 메서드 사용 (Intersect.ExtendBoth: 양쪽 연장선 포함)
                 line1.IntersectWith(
                     line2,
-                    Intersect.ExtendBoth,  // 양쪽 Line 모두 연장하여 교차점 찾기
-                    new Plane(),           // XY 평면
+                    Intersect.ExtendBoth,
+                    new Plane(),
                     intersectPoints,
                     IntPtr.Zero,
                     IntPtr.Zero
@@ -465,7 +636,6 @@ namespace Acadv25JArch
             {
                 bool isDuplicate = false;
 
-                // 기존 고유 점들과 비교
                 foreach (var uniquePoint in uniquePoints)
                 {
                     double distance = point.DistanceTo(uniquePoint);
@@ -476,7 +646,6 @@ namespace Acadv25JArch
                     }
                 }
 
-                // 중복이 아니면 추가
                 if (!isDuplicate)
                 {
                     uniquePoints.Add(point);
@@ -487,7 +656,7 @@ namespace Acadv25JArch
         }
 
         /// <summary>
-        /// 교차점 위치에 Circle 마커 표시 (선택 사항)
+        /// 교차점 위치에 Circle 마커 표시
         /// </summary>
         private void DrawIntersectionMarkers(List<Point3d> points, Database db)
         {
@@ -498,12 +667,11 @@ namespace Acadv25JArch
 
             foreach (var point in points)
             {
-                // 작은 원 생성 (반지름 5)
                 var circle = new Circle
                 {
                     Center = point,
                     Radius = 5.0,
-                    ColorIndex = 1 // 빨간색
+                    ColorIndex = 1
                 };
 
                 btr.AppendEntity(circle);
