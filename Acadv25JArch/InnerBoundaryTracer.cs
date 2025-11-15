@@ -1,3 +1,4 @@
+using Acadv25JArch;
 using AutoCADPlugin;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
@@ -87,10 +88,18 @@ namespace InnerBoundaryTracking
                 // Step 6: 경계선 추적
                // var tracedPath = TraceBoundary(allLines, startLine, startPoint, basePoint, ed);
                 var tracedPath = TraceBoundary1(allLines, startLine,ed);
-                foreach (var line in tracedPath)
-                {
-                    tr.RegisterTempGraphic(db, line);   
-                }
+
+                // 정렬된 순서로 순환적 이웃 관계 형성
+                List<Point3d> intersectionPoints =  LineToPolylineConverter.CalculateIntersectionPoints(tracedPath);
+
+                // 닫힌 폴리라인 생성
+                var pl = LineToPolylineConverter.CreateClosedPolyline(tr, intersectionPoints, db, Jdf.Layer.RoomPoly);
+
+
+                //foreach (var line in tracedPath)
+                //{
+                //    tr.RegisterTempGraphic(db, line);   
+                //}
 
                 tr.Commit();
 

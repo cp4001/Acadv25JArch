@@ -578,7 +578,7 @@ namespace Acadv25JArch
             );
         }
 
-        private List<Point3d> CalculateIntersectionPoints(List<Line> lines)
+        public static  List<Point3d> CalculateIntersectionPoints(List<Line> lines)
         {
             List<Point3d> intersections = new List<Point3d>();
             int lineCount = lines.Count;
@@ -603,7 +603,7 @@ namespace Acadv25JArch
             return intersections;
         }
 
-        private Point3d? FindLineIntersection(Line line1, Line line2)
+        private static Point3d? FindLineIntersection(Line line1, Line line2)
         {
             // 두 직선의 교차점을 찾는 함수 (직선을 무한히 연장한 교차점)
             // 평행한 직선들은 교차점이 없으므로 null 반환
@@ -623,7 +623,7 @@ namespace Acadv25JArch
             return intersection;
         }
 
-        private Polyline CreateClosedPolyline(Transaction tr ,List<Point3d> points, Database db,string layerName)
+        public static  Polyline CreateClosedPolyline(Transaction tr ,List<Point3d> points, Database db,string layerName)
         {
             //using (Transaction tr = db.TransactionManager.StartTransaction())
             //{
