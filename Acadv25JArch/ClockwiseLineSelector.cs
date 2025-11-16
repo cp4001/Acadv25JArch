@@ -193,7 +193,7 @@ namespace AutoCADPlugin
         /// <summary>
         /// 테스트용 커맨드: 라인 선택 후 시계방향 각도가 가장 작은 라인 강조
         /// </summary>
-        [CommandMethod("FINDMINANGLE")]
+        [CommandMethod("FindMinimumAngleLine")]
         public void FindMinimumAngleLine()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
