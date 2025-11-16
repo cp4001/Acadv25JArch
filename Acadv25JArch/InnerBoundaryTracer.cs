@@ -33,7 +33,7 @@ namespace InnerBoundaryTracking
         /// <summary>
         /// 내측 경계선 추적 메인 커맨드
         /// </summary>
-        [CommandMethod("TRACEINNER")]
+        [CommandMethod("TraceInnerBoundary")]
         public void TraceInnerBoundary()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
