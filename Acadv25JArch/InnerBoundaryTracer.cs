@@ -87,7 +87,7 @@ namespace InnerBoundaryTracking
 
                 // Step 6: 경계선 추적
                // var tracedPath = TraceBoundary(allLines, startLine, startPoint, basePoint, ed);
-                var tracedPath = TraceBoundary1(allLines, startLine,ed);
+                var tracedPath = TraceBoundary1(allLines, startLine,clickPoint,ed);
 
                 // 정렬된 순서로 순환적 이웃 관계 형성
                 List<Point3d> intersectionPoints =  LineToPolylineConverter.CalculateIntersectionPoints(tracedPath);
@@ -283,13 +283,13 @@ namespace InnerBoundaryTracking
 
             return tracedPath;
         }
-        private List<Line> TraceBoundary1(List<Line> allLines, Line startLine, Editor ed)
+        private List<Line> TraceBoundary1(List<Line> allLines, Line startLine, Point3d sp,Editor ed)
         {
             var tracedPath = new List<Line>();
             //var visitedHandles = new HashSet<Handle>();
 
             Line currentLine = startLine;
-            Point3d currentPoint  =     startLine.StartPoint.X > startLine.EndPoint.X ?  startLine.StartPoint : startLine.EndPoint;
+            Point3d currentPoint = sp;// startLine.StartPoint.X > startLine.EndPoint.X ?  startLine.StartPoint : startLine.EndPoint;
             //Point3d currentPoint = startLine.Start  
             //Point3d currentPoint = startPoint;
             //Point3d previousPoint = GetOtherEnd(startLine, startPoint); // 진행 방향 결정용
