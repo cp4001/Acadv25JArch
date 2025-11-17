@@ -42,6 +42,8 @@ namespace InnerBoundaryTracking
 
             try
             {
+                // Step 4: Transaction으로 Line 객체들 로드 및 추적
+                using var tr = db.TransactionManager.StartTransaction();
                 // Step 1: 전체 대상 Line들 선택
                 var allLineIds = SelectAllLines(ed);
                 if (allLineIds.Count == 0)
@@ -51,12 +53,12 @@ namespace InnerBoundaryTracking
                 }
                 ed.WriteMessage($"\n총 {allLineIds.Count}개의 Line이 선택되었습니다.");
 
-                // Step 2: Base Point 선택
-                Point3d basePoint = SelectBasePoint(ed);
-                if (basePoint == Point3d.Origin && basePoint.X == 0 && basePoint.Y == 0)
-                    return;
+                //// Step 2: Base Point 선택
+                //Point3d basePoint = SelectBasePoint(ed);
+                //if (basePoint == Point3d.Origin && basePoint.X == 0 && basePoint.Y == 0)
+                //    return;
 
-                ed.WriteMessage($"\nBase Point: ({basePoint.X:F3}, {basePoint.Y:F3})");
+                //ed.WriteMessage($"\nBase Point: ({basePoint.X:F3}, {basePoint.Y:F3})");
 
                 // Step 3: 시작 Line 선택 (선택된 Line들 중에서만)
                 var startLineResult = SelectStartLine(ed, allLineIds);
@@ -66,8 +68,7 @@ namespace InnerBoundaryTracking
                 ObjectId startLineId = startLineResult.lineId;
                 Point3d clickPoint = startLineResult.clickPoint;
 
-                // Step 4: Transaction으로 Line 객체들 로드 및 추적
-                using var tr = db.TransactionManager.StartTransaction();
+               
 
                 var allLines = allLineIds
                     .Select(id => tr.GetObject(id, OpenMode.ForRead) as Line)
@@ -87,7 +88,7 @@ namespace InnerBoundaryTracking
 
                 // Step 6: 경계선 추적
                // var tracedPath = TraceBoundary(allLines, startLine, startPoint, basePoint, ed);
-                var tracedPath = TraceBoundary1(allLines, startLine,clickPoint,ed);
+                var tracedPath = TraceBoundary1(allLines, startLine, startPoint, ed);
 
                 // 정렬된 순서로 순환적 이웃 관계 형성
                 List<Point3d> intersectionPoints =  LineToPolylineConverter.CalculateIntersectionPoints(tracedPath);

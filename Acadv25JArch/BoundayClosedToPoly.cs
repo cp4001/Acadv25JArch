@@ -594,6 +594,7 @@ namespace Acadv25JArch
                         ed.WriteMessage($"\nError during transaction: {ex.Message}");
                         tr.Abort();
                     }
+                    tr.Commit();
                 }
             }
             catch (System.Exception ex)
