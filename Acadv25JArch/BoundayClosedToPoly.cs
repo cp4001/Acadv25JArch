@@ -443,6 +443,18 @@ namespace Acadv25JArch
             {
                 // Get the objects making up our boundary using TraceBoundary
                 DBObjectCollection objs = ed.TraceBoundary(seedPoint, true);
+                // 현재 공차 값 확인
+                ed.WriteMessage($"\n현재 EqualPoint: {Tolerance.Global.EqualPoint}");
+                ed.WriteMessage($"\n현재 EqualVector: {Tolerance.Global.EqualVector}");
+
+                // 기존 값 백업
+                Tolerance oldTolerance = Tolerance.Global;
+
+                // 새로운 공차 값 설정 (예: 더 정밀하게)
+                Tolerance.Global = new Tolerance(1e-1, 1e-1);
+
+                ed.WriteMessage($"\n\n변경된 EqualPoint: {Tolerance.Global.EqualPoint}");
+                ed.WriteMessage($"\n변경된 EqualVector: {Tolerance.Global.EqualVector}");
 
                 if (objs.Count == 0)
                 {
@@ -521,12 +533,14 @@ namespace Acadv25JArch
                         ent.Dispose();
                     }
                 }
-
+                Tolerance.Global = oldTolerance;
                 return true;
             }
             catch (System.Exception ex)
             {
                 ed.WriteMessage($"\nError in ProcessRoomPoly: {ex.Message}");
+                //Tolerance.Global = oldTolerance;
+
                 return false;
             }
         }
