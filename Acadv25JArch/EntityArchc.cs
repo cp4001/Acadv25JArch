@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using CADExtension;
 using Newtonsoft.Json.Linq;
 using System;
@@ -10,7 +11,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Shapes;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
+using Line = Autodesk.AutoCAD.DatabaseServices.Line;
+using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 
 namespace Acadv25JArch
 {
@@ -680,9 +684,33 @@ namespace Acadv25JArch
             var aa = poly.Area *0.000001;
             this.FloorArea = Math.Round(aa, 0).ToString();
             this.RoofArea = Math.Round(aa, 0).ToString();
-            this.Volumn = Math.Round(aa* FloorHeight, 0).ToString(); 
+            this.Volumn = Math.Round(aa* FloorHeight, 1, MidpointRounding.AwayFromZero).ToString(); 
+            this.WallText = GetWallText(poly);
             IdCounter++;
         }
+
+        public string GetWallText(Polyline poly)
+        {
+            var lines = poly.GetLines();
+            var cp = poly.CenterPoint();
+            string rtxts = "";
+            foreach (var line in lines)
+            {
+                var lineAvglength = lines.Average(x => x.Length);
+                if (line.Length < lineAvglength * 0.5) continue;
+                //North Vector
+               // var northVecor = new Vector3d(0, 1, 0);
+                var northVecor = new Line(cp, new Point3d(cp.X, cp.Y + 10, cp.Z));
+                var cp1 = line.GetClosestPointTo(cp, false);
+                var lineDirection = new Line(cp, cp1);
+                var lineVec2 = lineDirection.GetVector();
+                var dir = RoomCalc.AnalyzeDirectionRelativeToNorth(northVecor, lineDirection);
+                var lineText = dir.direction.ToString() + ":" + (Math.Round(line.Length/1000,1, MidpointRounding.AwayFromZero)).ToString();
+                    lineText = lineText.PadRight(6);    
+                rtxts += lineText + " ";
+            }
+           return rtxts;    
+        }   
 
         //
         public event PropertyChangedEventHandler PropertyChanged;

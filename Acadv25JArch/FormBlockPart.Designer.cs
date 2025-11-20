@@ -34,6 +34,13 @@
             DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
             btnAllBlocks = new Button();
             dgvBlock = new DataGridView();
+            Col1 = new DataGridViewTextBoxColumn();
+            Column1 = new DataGridViewImageColumn();
+            Column2 = new DataGridViewTextBoxColumn();
+            Column3 = new DataGridViewTextBoxColumn();
+            Column4 = new DataGridViewTextBoxColumn();
+            Column5 = new DataGridViewTextBoxColumn();
+            Column6 = new DataGridViewTextBoxColumn();
             tabControl1 = new TabControl();
             tabPage1 = new TabPage();
             tabPage2 = new TabPage();
@@ -45,13 +52,6 @@
             tabPage4 = new TabPage();
             dgvDoor = new DataGridView();
             btnDoors = new Button();
-            Col1 = new DataGridViewTextBoxColumn();
-            Column1 = new DataGridViewImageColumn();
-            Column2 = new DataGridViewTextBoxColumn();
-            Column3 = new DataGridViewTextBoxColumn();
-            Column4 = new DataGridViewTextBoxColumn();
-            Column5 = new DataGridViewTextBoxColumn();
-            Column6 = new DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)dgvBlock).BeginInit();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -92,6 +92,62 @@
             dgvBlock.Size = new Size(1386, 428);
             dgvBlock.TabIndex = 1;
             // 
+            // Col1
+            // 
+            Col1.DataPropertyName = "Index";
+            Col1.HeaderText = "Index";
+            Col1.MinimumWidth = 8;
+            Col1.Name = "Col1";
+            Col1.Width = 80;
+            // 
+            // Column1
+            // 
+            Column1.DataPropertyName = "Img";
+            Column1.HeaderText = "Img";
+            Column1.MinimumWidth = 8;
+            Column1.Name = "Column1";
+            Column1.Width = 80;
+            // 
+            // Column2
+            // 
+            Column2.DataPropertyName = "Name";
+            Column2.HeaderText = "Name";
+            Column2.MinimumWidth = 8;
+            Column2.Name = "Column2";
+            Column2.Width = 500;
+            // 
+            // Column3
+            // 
+            Column3.DataPropertyName = "Count";
+            Column3.HeaderText = "Count";
+            Column3.MinimumWidth = 8;
+            Column3.Name = "Column3";
+            Column3.Width = 80;
+            // 
+            // Column4
+            // 
+            Column4.DataPropertyName = "PartName";
+            Column4.HeaderText = "PartName";
+            Column4.MinimumWidth = 8;
+            Column4.Name = "Column4";
+            Column4.Width = 150;
+            // 
+            // Column5
+            // 
+            Column5.DataPropertyName = "Type";
+            Column5.HeaderText = "Type";
+            Column5.MinimumWidth = 8;
+            Column5.Name = "Column5";
+            Column5.Width = 150;
+            // 
+            // Column6
+            // 
+            Column6.DataPropertyName = "SymbolType";
+            Column6.HeaderText = "Symbol";
+            Column6.MinimumWidth = 8;
+            Column6.Name = "Column6";
+            Column6.Width = 150;
+            // 
             // tabControl1
             // 
             tabControl1.Controls.Add(tabPage1);
@@ -102,7 +158,7 @@
             tabControl1.Location = new Point(0, 0);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(1585, 690);
+            tabControl1.Size = new Size(2131, 690);
             tabControl1.TabIndex = 2;
             // 
             // tabPage1
@@ -124,7 +180,7 @@
             tabPage2.Location = new Point(4, 34);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(1577, 652);
+            tabPage2.Size = new Size(2123, 652);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "Rooms";
             tabPage2.UseVisualStyleBackColor = true;
@@ -144,7 +200,7 @@
             dgvRoom.Name = "dgvRoom";
             dgvRoom.RowHeadersWidth = 62;
             dgvRoom.RowTemplate.Height = 50;
-            dgvRoom.Size = new Size(1164, 428);
+            dgvRoom.Size = new Size(2021, 428);
             dgvRoom.TabIndex = 2;
             // 
             // btnRooms
@@ -235,67 +291,11 @@
             btnDoors.Text = "All Doors";
             btnDoors.UseVisualStyleBackColor = true;
             // 
-            // Col1
-            // 
-            Col1.DataPropertyName = "Index";
-            Col1.HeaderText = "Index";
-            Col1.MinimumWidth = 8;
-            Col1.Name = "Col1";
-            Col1.Width = 80;
-            // 
-            // Column1
-            // 
-            Column1.DataPropertyName = "Img";
-            Column1.HeaderText = "Img";
-            Column1.MinimumWidth = 8;
-            Column1.Name = "Column1";
-            Column1.Width = 80;
-            // 
-            // Column2
-            // 
-            Column2.DataPropertyName = "Name";
-            Column2.HeaderText = "Name";
-            Column2.MinimumWidth = 8;
-            Column2.Name = "Column2";
-            Column2.Width = 500;
-            // 
-            // Column3
-            // 
-            Column3.DataPropertyName = "Count";
-            Column3.HeaderText = "Count";
-            Column3.MinimumWidth = 8;
-            Column3.Name = "Column3";
-            Column3.Width = 80;
-            // 
-            // Column4
-            // 
-            Column4.DataPropertyName = "PartName";
-            Column4.HeaderText = "PartName";
-            Column4.MinimumWidth = 8;
-            Column4.Name = "Column4";
-            Column4.Width = 150;
-            // 
-            // Column5
-            // 
-            Column5.DataPropertyName = "Type";
-            Column5.HeaderText = "Type";
-            Column5.MinimumWidth = 8;
-            Column5.Name = "Column5";
-            Column5.Width = 150;
-            // 
-            // Column6
-            // 
-            Column6.DataPropertyName = "SymbolType";
-            Column6.HeaderText = "Symbol";
-            Column6.MinimumWidth = 8;
-            Column6.Name = "Column6";
-            Column6.Width = 150;
-            // 
             // FormBlockPart
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1585, 690);
+            ClientSize = new Size(2131, 690);
             Controls.Add(tabControl1);
             Name = "FormBlockPart";
             Text = "BlocksForm";
