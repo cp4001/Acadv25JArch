@@ -784,11 +784,10 @@ namespace Acadv25JArch
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            List<RoomPart> blockParts = new List<RoomPart>();
+            List<RoomPart> roomParts = new List<RoomPart>();
 
             ResetCounter();
 
-            List<RoomPart> rooms = new List<RoomPart>();
             //List<BlockReference> blockrefs = new List<BlockReference>();
             //LightPart.ResetCounter();
             // 문서 잠금 및 트랜잭션 시작
@@ -800,12 +799,12 @@ namespace Acadv25JArch
                 foreach (var po in polys)
                 {
                     var room = new RoomPart(po);
-                    rooms.Add(room);
+                    roomParts.Add(room);
                     //blockrefs.Add(ent as BlockReference);
                 }
 
             }
-            return rooms;
+            return roomParts;
         }
 
         public static List<BlockPart> GetZoneBlockParts(ComboBox cb)
