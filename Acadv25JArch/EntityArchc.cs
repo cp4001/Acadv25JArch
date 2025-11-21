@@ -716,12 +716,15 @@ namespace Acadv25JArch
                     var brpoly = br.GetPoly1();
                     blocklength += line.GetDistFromPolyIntersect(brpoly);
                 }
-                var linelength = line.Length - blocklength;
-                var walllengthStr = (Math.Round(linelength / 1000, 1, MidpointRounding.AwayFromZero)).ToString(); 
-                var directionStr = dir.direction.ToString().PadRight(2);
-                var lineText = directionStr + ":" + walllengthStr;
-                lineText = lineText.PadRight(6);
-                rtxts += lineText + " ";
+                var blockArea = blocklength/1000.0*this.CeilingHeight;
+                var blockAreaStr = Math.Round(blockArea, 1, MidpointRounding.AwayFromZero).ToString();  
+                var wallArea = (line.Length / 1000.0) * this.CeilingHeight;
+                var wallAreaStr = Math.Round(wallArea, 1, MidpointRounding.AwayFromZero).ToString();    
+                var walllengthStr = (Math.Round(line.Length / 1000, 1, MidpointRounding.AwayFromZero)).ToString(); 
+                var directionStr = dir.direction.ToString().PadLeft(2);
+                var lineText = directionStr + ":" + $"W[{wallAreaStr}]B[{blockAreaStr}]";   
+                lineText = lineText.PadRight(10);
+                rtxts += lineText + "  ";
 
 
             }
