@@ -664,8 +664,8 @@ namespace Acadv25JArch
         public string WallText { get; set; } // 벽체 텍스트  
 
         private List<Line> WallLines { get; set; } // 벽 Line List
-        private List<BlockReference> Windows { get; set; } // 창 List
-        private List<BlockReference> Doors { get; set; } // 문 List
+        private List<BlockReference> Blocks { get; set; } // 창 또는 문 List
+        //private List<BlockReference> Doors { get; set; } // 문 List
 
         //Roomtxts 지정   
         public static void SetRoomTexts(List<DBText> txts)
@@ -705,9 +705,25 @@ namespace Acadv25JArch
                 var lineDirection = new Line(cp, cp1);
                 var lineVec2 = lineDirection.GetVector();
                 var dir = RoomCalc.AnalyzeDirectionRelativeToNorth(northVecor, lineDirection);
-                var lineText = dir.direction.ToString() + ":" + (Math.Round(line.Length/1000,1, MidpointRounding.AwayFromZero)).ToString();
-                    lineText = lineText.PadRight(6);    
+
+
+                //Check Blocks 
+                var brs = SelSet.GetEntitys(line, JSelFilter.MakeFilterTypesRegs("INSERT", "Door,Window"))?
+                    .OfType<Entity>().Select(xx => xx as BlockReference).ToList();
+                var blocklength = 0.0;
+                foreach (var br in brs)
+                {
+                    var brpoly = br.GetPoly1();
+                    blocklength += line.GetDistFromPolyIntersect(brpoly);
+                }
+                var linelength = line.Length - blocklength;
+                var walllengthStr = (Math.Round(linelength / 1000, 1, MidpointRounding.AwayFromZero)).ToString(); 
+                var directionStr = dir.direction.ToString().PadRight(2);
+                var lineText = directionStr + ":" + walllengthStr;
+                lineText = lineText.PadRight(6);
                 rtxts += lineText + " ";
+
+
             }
            return rtxts;    
         }   

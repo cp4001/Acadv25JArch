@@ -1315,8 +1315,8 @@ namespace AcadFunction
             List<Entity> ents = new List<Entity>();
             //var ids = GetCrossWindowSelectIDs(P1, sf);
             var ids = GetCrossFence(ln, sf, width);
+            if (ids.Count == 0) { return ents; }
             ids.OfType<ObjectId>().ToList().ForEach(x => ents.Add(x.GetObject(OpenMode.ForRead) as Entity));
-            if (ids.Count == 0) { return null; }
             return ents;
         }
 
