@@ -1584,6 +1584,57 @@ namespace CADExtension //Curve Line Poly Geometry Point
             tr.AddNewlyCreatedDBObject(textEntity, true);
         }
 
+        /// <summary>
+        /// Line 객체와 Polyline 객체 사이에 교차점이 정확히 2개 있을 경우,
+        /// 그 두 교차점 사이의 3D 거리를 반환합니다.
+        /// </summary>
+        /// <param name="line">기준이 되는 Line 객체입니다 (확장 메서드).</param>
+        /// <param name="polyline">교차점을 찾을 Polyline 객체입니다.</param>
+        /// <returns>두 교차점 사이의 거리 (Point3d.DistanceTo() 사용). 
+        /// 교차점이 2개가 아니면 0.0을 반환합니다.</returns>
+        public static double GetDistFromPolyIntersect(this Line line, Polyline polyline)
+        {
+            // 1. 교차점들을 저장할 컬렉션을 생성합니다.
+            Point3dCollection intersectionPoints = new Point3dCollection();
+
+            if (line == null || polyline == null)
+            {
+                return 0.0;
+            }
+
+            // 2. IntersectWith 메서드를 사용하여 교차점을 계산합니다.
+            line.IntersectWith(
+                polyline,
+                Intersect.OnBothOperands,
+                intersectionPoints,
+                System.IntPtr.Zero,
+                System.IntPtr.Zero
+            );
+
+            // 3. 교차점 개수를 확인합니다.
+            if (intersectionPoints.Count == 2)
+            {
+                // 4. 교차점이 2개일 경우, 첫 번째 점과 두 번째 점 사이의 3D 거리를 계산합니다.
+                Point3d point1 = intersectionPoints[0];
+                Point3d point2 = intersectionPoints[1];
+
+                // Point3d 구조체의 DistanceTo 메서드를 사용합니다.
+                double distance = point1.DistanceTo(point2);
+
+                // Point3dCollection은 IDisposable을 구현하지 않으므로 using을 사용할 필요는 없지만,
+                // 명시적으로 Dispose 해주는 것도 좋습니다. (AutoCAD API의 메모리 관리 지침에 따름)
+                intersectionPoints.Dispose();
+
+                return distance;
+            }
+            else
+            {
+                // 교차점이 2개가 아닐 경우 (0개, 1개 또는 3개 이상) 0.0을 반환합니다.
+                intersectionPoints.Dispose();
+                return 0.0;
+            }
+        }
+
     }
 
     public static class jPolyLineExtension
@@ -2500,7 +2551,12 @@ namespace CADExtension  //tr Editor Block
             return pl;
         }
 
-        public  static Polyline GetPoly1(this BlockReference bref)
+        /// <summary>
+        /// block 회전을 고려한   외각 Poly 구하기 
+        /// </summary>
+        /// <param name="bref"></param>
+        /// <returns></returns>
+        public static Polyline GetPoly1(this BlockReference bref)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
