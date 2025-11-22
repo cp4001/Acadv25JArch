@@ -717,7 +717,8 @@ namespace Acadv25JArch
                     var brpoly = br.GetPoly1();
                     //blocklength += line.GetDistFromPolyIntersect(brpoly);
                     blocklength = line.GetDistFromPolyIntersect(brpoly);
-                    bbs.Add( $"{blocklength.DmText(1)} *{JXdata.GetXdata(brpoly,"Height")}" );
+                    var bh = JXdata.GetXdata(br, "Height");
+                    bbs.Add( $"{blocklength.DmText(1)}*{bh}" );
                 }
                 var blockArea = blocklength/1000.0*this.CeilingHeight;
                 var blockAreaStr = blockArea.DmText(1);         //Math.Round(blockArea, 1, MidpointRounding.AwayFromZero).ToString();  
@@ -733,7 +734,7 @@ namespace Acadv25JArch
                 var directionStr = dir.direction.ToString().PadLeft(2);
                 var lineText = directionStr + ":" + $"W[{wallAreaStr}]B[{blockAreaStr}]";
                 var lineText1 = directionStr + ":" + wallAreaStr1;
-                lineText = lineText1.PadRight(10);
+                lineText = lineText1.PadRight(10+ bbs.Count*8);
                 rtxts += lineText + "  ";
 
 

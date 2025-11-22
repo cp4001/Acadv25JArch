@@ -401,6 +401,7 @@ namespace Acadv25JArch
                     LayerTableRecord layer = tr.GetObject(acEnt.LayerId, OpenMode.ForRead) as LayerTableRecord;
                     if (!layer.IsLocked)
                     {
+                        acEnt.UpgradeOpen();
                         //JXdata.SetXdata(pl, "Arch", "CeilingHeight");
                         JXdata.SetXdata(acEnt, "Height", $"{userValue.ToString()}");
                         //JXdata.SetXdata(pl, "Disp", $"Ceiling:{userValue.ToString()}");
