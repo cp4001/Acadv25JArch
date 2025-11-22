@@ -402,8 +402,10 @@ namespace Acadv25JArch
                     if (!layer.IsLocked)
                     {
                         acEnt.UpgradeOpen();
-                        //JXdata.SetXdata(pl, "Arch", "CeilingHeight");
                         JXdata.SetXdata(acEnt, "Height", $"{userValue.ToString()}");
+                        //Get Disp value
+                        var disp = JXdata.GetXdata(acEnt, "Disp") ?? "";
+                        JXdata.SetXdata(acEnt, "Disp", $" {disp}:H{userValue.ToString()}");
                         //JXdata.SetXdata(pl, "Disp", $"Ceiling:{userValue.ToString()}");
                         //JXdata.SetXdata(pl, "Mat", "Hidden");
                     }
