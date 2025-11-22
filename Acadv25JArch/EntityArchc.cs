@@ -682,9 +682,9 @@ namespace Acadv25JArch
             this.FloorHeight = JXdata.GetXdata(poly, "FloorHeight").ToDouble();
             this.CeilingHeight = JXdata.GetXdata(poly, "CeilingHeight").ToDouble();
             var aa = poly.Area *0.000001;
-            this.FloorArea = Math.Round(aa, 0).ToString();
-            this.RoofArea = Math.Round(aa, 0).ToString();
-            this.Volumn = Math.Round(aa* FloorHeight, 1, MidpointRounding.AwayFromZero).ToString(); 
+            this.FloorArea = Math.Round(aa, 1).ToString();
+            this.RoofArea = Math.Round(aa, 1).ToString();
+            this.Volumn = Math.Round(aa* CeilingHeight, 1, MidpointRounding.AwayFromZero).ToString(); 
             this.WallText = GetWallText(poly);
             IdCounter++;
         }
@@ -723,7 +723,7 @@ namespace Acadv25JArch
                 var blockAreaStr = blockArea.DmText(1);         //Math.Round(blockArea, 1, MidpointRounding.AwayFromZero).ToString();  
                 var wallArea = (line.Length / 1000.0) * this.FloorHeight;
                 var wallAreaStr = wallArea.DmText(1);      //Math.Round(wallArea, 1, MidpointRounding.AwayFromZero).ToString();  
-                var wallAreaStr1 = $"{line.Length.DmText(1)}*{FloorHeight.DmText(1)}";
+                var wallAreaStr1 = $"{line.Length.DmText(1)}*{FloorHeight}";
                 var blockAreaStr1 = $"{(blocklength/1000.0).DmText(1)}*{CeilingHeight.DmText(1)}";
                 foreach(var txt in bbs)
                 {
