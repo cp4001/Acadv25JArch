@@ -711,19 +711,29 @@ namespace Acadv25JArch
                 var brs = SelSet.GetEntitys(line, JSelFilter.MakeFilterTypesRegs("INSERT", "Door,Window"))?
                     .OfType<Entity>().Select(xx => xx as BlockReference).ToList();
                 var blocklength = 0.0;
+                List<string> bbs = new List<string>();
                 foreach (var br in brs)
                 {
                     var brpoly = br.GetPoly1();
-                    blocklength += line.GetDistFromPolyIntersect(brpoly);
+                    //blocklength += line.GetDistFromPolyIntersect(brpoly);
+                    blocklength = line.GetDistFromPolyIntersect(brpoly);
+                    bbs.Add( $"{blocklength.DmText(1)} *{JXdata.GetXdata(brpoly,"Height")}" );
                 }
                 var blockArea = blocklength/1000.0*this.CeilingHeight;
-                var blockAreaStr = Math.Round(blockArea, 1, MidpointRounding.AwayFromZero).ToString();  
-                var wallArea = (line.Length / 1000.0) * this.CeilingHeight;
-                var wallAreaStr = Math.Round(wallArea, 1, MidpointRounding.AwayFromZero).ToString();    
+                var blockAreaStr = blockArea.DmText(1);         //Math.Round(blockArea, 1, MidpointRounding.AwayFromZero).ToString();  
+                var wallArea = (line.Length / 1000.0) * this.FloorHeight;
+                var wallAreaStr = wallArea.DmText(1);      //Math.Round(wallArea, 1, MidpointRounding.AwayFromZero).ToString();  
+                var wallAreaStr1 = $"{line.Length.DmText(1)}*{FloorHeight.DmText(1)}";
+                var blockAreaStr1 = $"{(blocklength/1000.0).DmText(1)}*{CeilingHeight.DmText(1)}";
+                foreach(var txt in bbs)
+                {
+                    wallAreaStr1 = wallAreaStr1 +$"-({txt})"; 
+                }
                 var walllengthStr = (Math.Round(line.Length / 1000, 1, MidpointRounding.AwayFromZero)).ToString(); 
                 var directionStr = dir.direction.ToString().PadLeft(2);
-                var lineText = directionStr + ":" + $"W[{wallAreaStr}]B[{blockAreaStr}]";   
-                lineText = lineText.PadRight(10);
+                var lineText = directionStr + ":" + $"W[{wallAreaStr}]B[{blockAreaStr}]";
+                var lineText1 = directionStr + ":" + wallAreaStr1;
+                lineText = lineText1.PadRight(10);
                 rtxts += lineText + "  ";
 
 

@@ -9,14 +9,15 @@ using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.Internal;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows.Data;
+using LayerManager;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using LayerManager;
 using System.Windows.Shapes;
+using static System.Windows.Forms.LinkLabel;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Color = Autodesk.AutoCAD.Colors.Color;
 using Exception = System.Exception;
@@ -567,7 +568,14 @@ namespace CADExtension //Graphic JEntity JDBtext JObjectID JDouble
             return res;
         }
 
- 
+        public static string DmText(this double value,int di)// double to string meter  소수점 자리 지정
+        {
+            string res = null;
+            if (value == 0.0) return res;
+            res = (Math.Round(value / 1000, di, MidpointRounding.AwayFromZero)).ToString();
+            return res;
+        }
+
     }
 
 }

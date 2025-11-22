@@ -199,7 +199,7 @@ namespace Acadv25JArch
             doc.Editor.Regen();
 
             // 정수 입력 받기
-            PromptIntegerOptions pio = new PromptIntegerOptions("\n천정높이(Meter)를 입력하세요: ");
+            PromptDoubleOptions pio = new PromptDoubleOptions("\n천정높이(Meter)를 입력하세요: ");
 
             // 옵션 설정 (선택사항)
             pio.AllowNegative = true;  // 음수 허용
@@ -210,9 +210,9 @@ namespace Acadv25JArch
             pio.DefaultValue = 10;
             pio.UseDefaultValue = true;
 
-            PromptIntegerResult pir = ed.GetInteger(pio);
+            PromptDoubleResult pir = ed.GetDouble(pio);
 
-            int userValue = 0;
+            double userValue = 0;
             if (pir.Status == PromptStatus.OK)
             {
                 userValue = pir.Value;
@@ -279,7 +279,7 @@ namespace Acadv25JArch
             doc.Editor.Regen();
 
             // 정수 입력 받기
-            PromptIntegerOptions pio = new PromptIntegerOptions("\n층고높이(Meter)를 입력하세요: ");
+            PromptDoubleOptions pio = new PromptDoubleOptions("\n층고높이(Meter)를 입력하세요: ");
 
             // 옵션 설정 (선택사항)
             pio.AllowNegative = true;  // 음수 허용
@@ -290,9 +290,9 @@ namespace Acadv25JArch
             pio.DefaultValue = 10;
             pio.UseDefaultValue = true;
 
-            PromptIntegerResult pir = ed.GetInteger(pio);
+            PromptDoubleResult pir = ed.GetDouble(pio);
 
-            int userValue = 0;
+            double userValue = 0;
             if (pir.Status == PromptStatus.OK)
             {
                 userValue = pir.Value;
@@ -327,6 +327,82 @@ namespace Acadv25JArch
                         pl.Layer = Jdf.Layer.Room;
                         //JXdata.SetXdata(pl, "Arch", "CeilingHeight");
                         JXdata.SetXdata(pl, "FloorHeight", $"{userValue.ToString()}");
+                        //JXdata.SetXdata(pl, "Disp", $"Ceiling:{userValue.ToString()}");
+                        //JXdata.SetXdata(pl, "Mat", "Hidden");
+                    }
+
+
+
+                    // Dispose of the transaction
+                }
+
+                // Save the new object to the database
+                tr.Commit();
+            }
+        }
+
+        #endregion
+
+        #region Block To  Height
+        // 선택 Block Height 지정   
+        [CommandMethod("HH", CommandFlags.UsePickSet)] //ToRoom
+                                                                   //Text 에  Room 지정                                                    
+        public void Cmd_Block_Set_Height()
+        {
+            // Get the current database and start a transaction
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            //UCS Elevation to World
+            doc.Editor.CurrentUserCoordinateSystem = Matrix3d.Identity;
+            doc.Editor.Regen();
+
+            // 정수 입력 받기
+            PromptDoubleOptions pio = new PromptDoubleOptions("\n높이(Meter)를 입력하세요: ");
+
+            // 옵션 설정 (선택사항)
+            pio.AllowNegative = false;  // 음수 허용
+            pio.AllowZero = true;      // 0 허용
+            pio.AllowNone = false;     // Enter만 누르는 것 방지
+
+            // 기본값 설정 (선택사항)
+            pio.DefaultValue = 10;
+            pio.UseDefaultValue = true;
+
+            PromptDoubleResult pir = ed.GetDouble(pio);
+
+            double userValue = 0;
+            if (pir.Status == PromptStatus.OK)
+            {
+                userValue = pir.Value;
+                ed.WriteMessage($"\n입력된 값: {userValue}");
+            }
+            else if (pir.Status == PromptStatus.Cancel)
+            {
+                ed.WriteMessage("\n입력이 취소되었습니다.");
+                return;
+            }
+
+
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                List<BlockReference> targets = JEntityFunc.GetEntityByTpye<BlockReference>("WIndow or Door 대상  Block 를  선택 하세요?", JSelFilter.MakeFilterTypes("INSERT"));
+                if (targets == null) return;
+                var btr = tr.GetModelSpaceBlockTableRecord(db);
+                //사용할 XData 미리 Check
+                tr.ChecRegNames(db, "Arch,FloorHeight,Disp,Height");
+                //Create layerfor Room
+                tr.CreateLayer(Jdf.Layer.Room, Jdf.Color.Magenta, LineWeight.LineWeight050);
+
+                foreach (Entity acEnt in targets)
+                {
+                    LayerTableRecord layer = tr.GetObject(acEnt.LayerId, OpenMode.ForRead) as LayerTableRecord;
+                    if (!layer.IsLocked)
+                    {
+                        //JXdata.SetXdata(pl, "Arch", "CeilingHeight");
+                        JXdata.SetXdata(acEnt, "Height", $"{userValue.ToString()}");
                         //JXdata.SetXdata(pl, "Disp", $"Ceiling:{userValue.ToString()}");
                         //JXdata.SetXdata(pl, "Mat", "Hidden");
                     }
