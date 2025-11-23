@@ -14,6 +14,7 @@ using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Color = Autodesk.AutoCAD.Colors.Color;
 using Line = Autodesk.AutoCAD.DatabaseServices.Line;
 using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
+using Region = Autodesk.AutoCAD.DatabaseServices.Region;
 
 namespace AutoCADMultiEntityOverrule
 {
@@ -211,9 +212,9 @@ namespace AutoCADMultiEntityOverrule
             //천정고 반영
             string ch = JXdata.GetXdata(polyline, "Disp") ?? ""; 
             string ch_ceil = JXdata.GetXdata(polyline, "CeilingHeight");
-            if(ch_ceil !=null) ch = $"{ch}CH:{ch_ceil}";
+            if(ch_ceil !=null) ch = $"{ch} [{ch_ceil}]";
             string ch_floor = JXdata.GetXdata(polyline, "FloorHeight") ;
-            if (ch_floor != null) ch = $"{ch}FL:{ch_floor}";
+            if (ch_floor != null) ch = $"{ch} {ch_floor}";
 
             // "Aach" 텍스트 표시 (수평으로)
             DrawTextAtCenter(centerPoint, wd, ch,hh);
@@ -417,14 +418,14 @@ namespace AutoCADMultiEntityOverrule
         private const string XDATA_REGAPP_NAME = "Room";
         public static bool IsRegistered => (_instance != null);
 
-        public static void Register()
+        public static void Register1()
         {
             if (_instance == null)
             {
                 _instance = new XDataFilterDrawOverrule3d();
 
                 // Line, Polyline, BlockReference에 대해 Overrule 등록
-               // RXClass lineClass = RXObject.GetClass(typeof(Line));
+                // RXClass lineClass = RXObject.GetClass(typeof(Line));
                 RXClass polylineClass = RXObject.GetClass(typeof(Polyline));
                // RXClass blockRefClass = RXObject.GetClass(typeof(BlockReference));
 
@@ -435,6 +436,7 @@ namespace AutoCADMultiEntityOverrule
 
                 // 핵심: SetXDataFilter 설정
                 _instance.SetXDataFilter(XDATA_REGAPP_NAME);
+
 
                 // Overruling 활성화
                 Overrule.Overruling = true;
@@ -455,28 +457,181 @@ namespace AutoCADMultiEntityOverrule
                 }
             }
         }
-
-        public static void Unregister()
+        public static void Register()
         {
-            if (_instance != null)
+            // 이미 등록되어 있다면 중복 실행 방지
+            if (_instance != null) return;
+
+            _instance = new XDataFilterDrawOverrule3d();
+
+            try
             {
-                //RXClass lineClass = RXObject.GetClass(typeof(Line));
                 RXClass polylineClass = RXObject.GetClass(typeof(Polyline));
-                //RXClass blockRefClass = RXObject.GetClass(typeof(BlockReference));
 
-                // Overrule 제거
-                //Overrule.RemoveOverrule(lineClass, _instance);
-                Overrule.RemoveOverrule(polylineClass, _instance);
-                //Overrule.RemoveOverrule(blockRefClass, _instance);
+                // 1. Overrule 등록
+                Overrule.AddOverrule(polylineClass, _instance, false);
 
-                _instance = null;
-                //IsRegistered = false;
+                // 2. 필터 설정
+                _instance.SetXDataFilter(XDATA_REGAPP_NAME);
+
+                // 3. Overruling 활성화
+                Overrule.Overruling = true;
 
                 Document doc = Application.DocumentManager.MdiActiveDocument;
                 if (doc != null)
                 {
+                    // =============================================================
+                    // [핵심 추가] 기존 객체들의 3D 캐시를 강제로 깨우는 로직
+                    // Overrule을 켰으니, 화면에 있는 Polyline들에게 다시 그려달라고 요청해야 함
+                    // =============================================================
+                    using (Transaction tr = doc.TransactionManager.StartTransaction())
+                    {
+                        BlockTableRecord btr = (BlockTableRecord)tr.GetObject(doc.Database.CurrentSpaceId, OpenMode.ForRead);
+
+                        foreach (ObjectId id in btr)
+                        {
+                            if (id.ObjectClass == polylineClass)
+                            {
+                                // 쓰기 모드(ForWrite)로 열어서 그래픽 변경 알림
+                                Entity ent = (Entity)tr.GetObject(id, OpenMode.ForWrite);
+                                ent.RecordGraphicsModified(true);
+                            }
+                        }
+                        tr.Commit();
+                    }
+
+                    // 4. 화면 갱신
+                    doc.TransactionManager.QueueForGraphicsFlush();
+                    doc.Editor.UpdateScreen(); // 뷰포트 즉시 갱신
+                    doc.Editor.Regen();        // 전체 재생성
+
+                    // 등록 메시지 출력
+                    doc.Editor.WriteMessage("\n========================================");
+                    doc.Editor.WriteMessage("\n[XDataFilter] Overrule 등록 및 3D 뷰 갱신 완료");
+                    doc.Editor.WriteMessage("\n========================================");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog($"Register Error: {ex.Message}");
+            }
+        }
+
+        public static void Unregister3()
+        {
+            // 인스턴스가 없어도, 혹시 모를 잔여 Overrule 정리를 위해 로직을 수행하는 것이 안전할 수 있으나,
+            // 현재 구조에서는 _instance가 null이면 해제할 대상(참조)이 없으므로 리턴합니다.
+            if (_instance == null) return;
+
+            try
+            {
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                RXClass polylineClass = RXObject.GetClass(typeof(Polyline));
+
+                // ====================================================
+                // [수정 1] 순서 변경 및 조건문 제거
+                // 전역 스위치(Overruling) 상태와 상관없이, 등록된 '이 인스턴스'는 무조건 제거해야 합니다.
+                // ====================================================
+                Overrule.RemoveOverrule(polylineClass, _instance);
+
+                // 디버깅용 메시지
+                // doc.Editor.WriteMessage($"\n[Debug] Overrule Removed: {isRemoved}");
+
+                // ====================================================
+                // [수정 2] 전역 스위치 끄기 (선택 사항)
+                // 개발 중에는 확실하게 끄는 것이 좋으나, 다른 플러그인에 영향을 줄 수 있습니다.
+                // 여기서는 확실한 해제를 위해 끕니다.
+                // ====================================================
+                if (Overrule.Overruling)
+                {
+                    Overrule.Overruling = false;
+                }
+
+                // 필터 해제
+                _instance.SetXDataFilter(null);
+
+                // 인스턴스 초기화
+                _instance = null;
+
+                // ====================================================
+                // [수정 3] 화면 강제 갱신 (가장 중요)
+                // Regen만으로는 Overrule 캐시가 안 지워질 때가 있습니다.
+                // ====================================================
+                if (doc != null)
+                {
+                    // 그래픽 시스템에 대기 중인 그리기 작업을 모두 비움
+                    doc.TransactionManager.QueueForGraphicsFlush();
+
+                    // 화면 전체 다시 그리기
+                    doc.Editor.Regen();
+
                     doc.Editor.WriteMessage("\n[XDataFilter] Multi-Entity Overrule 제거 완료");
                 }
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog($"Unregister Error: {ex.Message}");
+            }
+        }
+        public static void Unregister()
+        {
+            if (_instance == null) return;
+
+            try
+            {
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                RXClass polylineClass = RXObject.GetClass(typeof(Polyline));
+
+                // 1. 먼저 Overrule 등록 해제
+                Overrule.RemoveOverrule(polylineClass, _instance);
+
+                if (Overrule.Overruling)
+                {
+                    Overrule.Overruling = false;
+                }
+
+                _instance.SetXDataFilter(null);
+                _instance = null;
+
+                if (doc != null)
+                {
+                    // 2. 화면에 있는 Polyline들을 "ForWrite"로 열어서 캐시 강제 폐기
+                    using (Transaction tr = doc.TransactionManager.StartTransaction())
+                    {
+                        BlockTableRecord btr = (BlockTableRecord)tr.GetObject(doc.Database.CurrentSpaceId, OpenMode.ForRead);
+
+                        foreach (ObjectId id in btr)
+                        {
+                            if (id.ObjectClass == polylineClass)
+                            {
+                                // [핵심] ForWrite로 엽니다. (데이터를 안 바꿔도 됨)
+                                // 쓰기 모드로 여는 순간 AutoCAD는 이 객체와 연관된 모든 캐시를 의심하고 폐기 준비를 합니다.
+                                Entity ent = (Entity)tr.GetObject(id, OpenMode.ForWrite);
+
+                                // 그래픽 변경 알림
+                                ent.RecordGraphicsModified(true);
+
+                                // 명시적으로 "수정됨" 플래그를 건드리는 방법 (필요시 주석 해제)
+                                // ent.Visible = !ent.Visible;
+                                // ent.Visible = !ent.Visible;
+                            }
+                        }
+                        tr.Commit();
+                    }
+
+                    // 3. 그래픽 시스템 플러시
+                    doc.TransactionManager.QueueForGraphicsFlush();
+
+                    // 4. Viewport 전체 강제 갱신
+                    doc.Editor.UpdateScreen();
+                    doc.Editor.Regen();
+
+                    doc.Editor.WriteMessage("\n[XDataFilter] 3D Overrule 캐시 완전 제거됨");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog($"Unregister Error: {ex.Message}");
             }
         }
 
@@ -509,7 +664,8 @@ namespace AutoCADMultiEntityOverrule
 
                  if (entity is Polyline polyline)
                 {
-                    DrawHybrid(polyline, wd);
+                      //  DrawHybrid(polyline, wd);
+                        DrawSolid(polyline, wd);
                 }
                 else
                 {
@@ -524,6 +680,67 @@ namespace AutoCADMultiEntityOverrule
                 System.Diagnostics.Debug.WriteLine($"WorldDraw Error: {ex.Message}");
                 return base.WorldDraw(drawable, wd);
             }
+        }
+
+
+        ///<summary>   
+        /// Polyline을 3D Solid 형태로 그리기
+        ///</summary>
+        private void DrawSolid(Polyline pl,WorldDraw wd)
+        {
+            if (!pl.Closed)
+                return;
+            int vertexCount = pl.NumberOfVertices;
+            if (vertexCount < 3)
+                return;
+            List<Point3d> bottomVertices = new List<Point3d>();
+            List<Point3d> topVertices = new List<Point3d>();
+            var romhh = (JXdata.GetXdata(pl, "CeilingHeight") ?? "1").ToDouble() * 1000.0;
+            // 3. 메모리 상에서 가상의 Solid3d 생성 (Try-Catch로 안전하게 처리)
+            try
+            {
+                // 성능 최적화: Region 생성을 위해 Polyline 복제
+                using (Polyline tempPl = (Polyline)pl.Clone())
+                {
+                    // Region 생성을 위한 평탄화 (두께 제거)
+                    tempPl.Thickness = 0.0;
+
+                    using (DBObjectCollection curves = new DBObjectCollection() { tempPl })
+                    using (DBObjectCollection regions = Region.CreateFromCurves(curves))
+                    {
+                        if (regions.Count > 0)
+                        {
+                            using (Region region = (Region)regions[0])
+                            using (Solid3d solid = new Solid3d())
+                            {
+                                // 4. Polyline의 Thickness 만큼 돌출
+                                solid.Extrude(region, romhh, 0.0);
+
+                                // 5. 색상 설정 (원래 객체 색상 따라가기)
+                                // 필요하다면 여기서 wd.SubEntityTraits.Color = 1 (빨강) 처럼 강제 가능
+                                solid.SetDatabaseDefaults(pl.Database);
+                                solid.ColorIndex = pl.ColorIndex;
+
+                                // 6. 가상 Solid 그리기
+                                // 이 메서드는 실제로 DB에 저장하지 않고 화면에만 뿌립니다.
+                                solid.WorldDraw(wd);
+
+                                // true를 반환하여 원래 2D Polyline은 그리지 않게 함
+                                return ;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (System.Exception)
+            {
+                // Solid 생성 실패 시 (예: 자가 교차 등) 원래 Polyline 그림
+                return;//base.WorldDraw(drawable, wd);
+            }
+
+            return; //base.WorldDraw(drawable, wd);
+
+
         }
 
         /// <summary>
