@@ -209,10 +209,12 @@ namespace AutoCADMultiEntityOverrule
             var hh = polyline.GetLength() / polyline.NumberOfVertices / 20;
 
             //천정고 반영
-            string ch = JXdata.GetXdata(polyline, "Disp") ?? "" +" "; 
-            string ch_ceil = JXdata.GetXdata(polyline, "CeilingHeight") ?? "";
-            string ch_floor = JXdata.GetXdata(polyline, "FloorHeight") ?? "";
-            ch = $"{ch}_CH:{ch_ceil} FL:{ch_floor}";
+            string ch = JXdata.GetXdata(polyline, "Disp") ?? ""; 
+            string ch_ceil = JXdata.GetXdata(polyline, "CeilingHeight");
+            if(ch_ceil !=null) ch = $"{ch}CH:{ch_ceil}";
+            string ch_floor = JXdata.GetXdata(polyline, "FloorHeight") ;
+            if (ch_floor != null) ch = $"{ch}FL:{ch_floor}";
+
             // "Aach" 텍스트 표시 (수평으로)
             DrawTextAtCenter(centerPoint, wd, ch,hh);
         }
