@@ -697,7 +697,7 @@ namespace Acadv25JArch
             foreach (var line in lines)
             {
                 var lineAvglength = lines.Average(x => x.Length);
-                if (line.Length < lineAvglength * 0.5) continue;
+                if (line.Length < lineAvglength * 0.1) continue;
                 //North Vector
                // var northVecor = new Vector3d(0, 1, 0);
                 var northVecor = new Line(cp, new Point3d(cp.X, cp.Y + 10, cp.Z));
