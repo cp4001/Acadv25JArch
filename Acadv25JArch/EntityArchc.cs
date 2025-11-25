@@ -665,6 +665,8 @@ namespace Acadv25JArch
 
         private List<Line> WallLines { get; set; } // 벽 Line List
         private List<BlockReference> Blocks { get; set; } // 창 또는 문 List
+        private List<BlockReference> Windows { get; set; } // Outwall  Window List  외벽 창문 
+
         //private List<BlockReference> Doors { get; set; } // 문 List
 
         //Roomtxts 지정   
@@ -706,6 +708,14 @@ namespace Acadv25JArch
                 var lineVec2 = lineDirection.GetVector();
                 var dir = RoomCalc.AnalyzeDirectionRelativeToNorth(northVecor, lineDirection);
 
+                //Check OutWall 
+                var cpl = line.GetPointAtDist(line.Length / 2.0);
+
+                //Check Blocks 
+                bool isOutWall = false;
+                var outs  = SelSet.GetEntitys(cpl, JSelFilter.MakeFilterTypesLayer("LINE,LWPOLYLINE", Jdf.Layer.OutWall),50)?
+                    .OfType<Entity>().Select(xx => xx as BlockReference).ToList();
+                if (outs.Count > 0) isOutWall = true;
 
                 //Check Blocks 
                 var brs = SelSet.GetEntitys(line, JSelFilter.MakeFilterTypesRegs("INSERT", "Door,Window"))?

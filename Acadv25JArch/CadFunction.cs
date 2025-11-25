@@ -987,14 +987,14 @@ namespace AcadFunction
         }
 
         //-- 
-        public static ObjectIdCollection GetCrossFence(Point3d P1, SelectionFilter sf)
+        public static ObjectIdCollection GetCrossFence(Point3d P1, SelectionFilter sf,double offset = 15)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
             var points = new Point3dCollection();
-            double offset = 15.0;
+            //double offset = 15.0;
 
             points.Add(new Point3d(P1.X + offset, P1.Y - offset, 0.0));
             points.Add(new Point3d(P1.X + offset, P1.Y + offset, 0.0));
@@ -1289,11 +1289,11 @@ namespace AcadFunction
         }
 
 
-        public static List<Entity> GetEntitys(Point3d P1, SelectionFilter sf)
+        public static List<Entity> GetEntitys(Point3d P1, SelectionFilter sf,double offset=15)
         {
             List<Entity> ents = new List<Entity>();
             //var ids = GetCrossWindowSelectIDs(P1, sf);
-            var ids = GetCrossFence(P1, sf);
+            var ids = GetCrossFence(P1, sf,offset);
             ids.OfType<ObjectId>().ToList().ForEach(x => ents.Add(x.GetObject(OpenMode.ForRead) as Entity));
             if (ids.Count == 0) { return null; }
             return ents;
@@ -2570,6 +2570,18 @@ namespace AcadFunction
             TypedValue[] filterlist = new TypedValue[2];
             filterlist.SetValue(new TypedValue((int)DxfCode.Start, entitys), 0);
             filterlist.SetValue(new TypedValue((int)DxfCode.ExtendedDataRegAppName, regNames), 1);
+            SelectionFilter filter = new SelectionFilter(filterlist);
+
+            return filter;
+        }
+
+        static public SelectionFilter MakeFilterTypesLayer(string entitys, string layerName) //fire case -> "FirePipe,MainPipe,Unit,T,SidePipe"
+        {
+            //entitys : "LINE,ARC,
+            //regNames " "Pipe,Duct,MainPipe"
+            TypedValue[] filterlist = new TypedValue[2];
+            filterlist.SetValue(new TypedValue((int)DxfCode.Start, entitys), 0);
+            filterlist.SetValue(new TypedValue((int)DxfCode.LayerName, layerName), 1);
             SelectionFilter filter = new SelectionFilter(filterlist);
 
             return filter;
