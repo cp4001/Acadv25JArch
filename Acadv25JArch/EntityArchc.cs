@@ -710,8 +710,6 @@ namespace Acadv25JArch
 
                 //Check OutWall 
                 var cpl = line.GetPointAtDist(line.Length / 2.0);
-
-                //Check Blocks 
                 bool isOutWall = false;
                 var outs  = SelSet.GetEntitys(cpl, JSelFilter.MakeFilterTypesLayer("LINE,LWPOLYLINE", Jdf.Layer.OutWall),50)?
                     .OfType<Entity>().Select(xx => xx as BlockReference).ToList();
