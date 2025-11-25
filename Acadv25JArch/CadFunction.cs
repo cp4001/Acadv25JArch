@@ -2043,6 +2043,17 @@ namespace AcadFunction
             return sf;
         }
 
+        public static SelectionFilter MakeSelFilterLayer(string start, string layerName) //09.05
+        {
+            TypedValue[] filterlist = new TypedValue[3];
+            filterlist[0] = new TypedValue((int)DxfCode.Start, start);
+            filterlist[1] = new TypedValue((int)DxfCode.LayerName, layerName);
+
+            SelectionFilter sf = new SelectionFilter(filterlist);
+
+            return sf;
+        }
+
         public static SelectionFilter MakeSelFilterAndReg(string start, string regName1, string regName2) //24.11.26
         {
             TypedValue[] filterlist =
