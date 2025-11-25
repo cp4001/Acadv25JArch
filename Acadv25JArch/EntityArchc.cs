@@ -711,9 +711,10 @@ namespace Acadv25JArch
                 //Check OutWall 
                 var cpl = line.GetPointAtDist(line.Length / 2.0);
                 bool isOutWall = false;
-                var outs  = SelSet.GetEntitys(cpl, JSelFilter.MakeFilterTypesLayer("LINE,LWPOLYLINE", Jdf.Layer.OutWall),50)?
+                var outs  = SelSet.GetEntitys(cpl, JSelFilter.MakeFilterTypesLayer("LINE,LWPOLYLINE", Jdf.Layer.OutWall),400)?
                     .OfType<Entity>().Select(xx => xx as BlockReference).ToList();
-                if (outs.Count > 0) isOutWall = true;
+                if (outs != null) isOutWall = true;
+                
 
                 //Check Blocks 
                 var brs = SelSet.GetEntitys(line, JSelFilter.MakeFilterTypesRegs("INSERT", "Door,Window"))?
@@ -740,6 +741,7 @@ namespace Acadv25JArch
                 }
                 var walllengthStr = (Math.Round(line.Length / 1000, 1, MidpointRounding.AwayFromZero)).ToString(); 
                 var directionStr = dir.direction.ToString().PadLeft(2);
+                if (isOutWall == false) directionStr = "P".PadLeft(2);
                 var lineText = directionStr + ":" + $"W[{wallAreaStr}]B[{blockAreaStr}]";
                 var lineText1 = directionStr + ":" + wallAreaStr1;
                 lineText = lineText1.PadRight(10+ bbs.Count*8);
