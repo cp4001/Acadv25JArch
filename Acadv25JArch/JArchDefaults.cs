@@ -31,6 +31,7 @@ namespace Acadv25JArch
             public const string Room = "!Arch_Room";
             public const string RoomPoly = "!Arch_RoomPoly";
             public const string Block = "!Arch_Block"; // Window Door 
+            public const string OutWall  = "!Arch_OutWall"; // 외벽지정 layer
         }
 
         public static class Cmd
