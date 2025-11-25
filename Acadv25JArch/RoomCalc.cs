@@ -424,6 +424,69 @@ namespace Acadv25JArch
 
     }
 
+    public class RoomOutWall
+    {
+        #region Define Out Wall  
+        // Line 또는 Poly를 OutWall 로   
+        //TO OutWall
+        [CommandMethod("OutWall", CommandFlags.UsePickSet)] 
+                                                                         
+        public void Cmd_OutWall_LIne()
+        {
+            // Get the current database and start a transaction
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+
+            //UCS Elevation to World
+            doc.Editor.CurrentUserCoordinateSystem = Matrix3d.Identity;
+            doc.Editor.Regen();
+
+            //
+            DateTime networkTime = NetworkTimeService.GetNetworkTime();
+            if (networkTime > new DateTime(2026, 3, 2))
+            {
+                ed.WriteMessage("\n프로그램 사용 기간이 만료되었습니다. 관리자에게 문의하세요.");
+                return;
+            }
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                var btr = tr.GetModelSpaceBlockTableRecord(db);
+                //사용할 XData 미리 Check
+                tr.ChecRegNames(db, "Arch,Room,Disp,OutWall");
+                //Create layerfor Room
+                tr.CreateLayer(Jdf.Layer.OutWall, Jdf.Color.Cyan, LineWeight.LineWeight040);
+
+                // 1. 레이어 테이블 열기
+                LayerTable lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
+                var targetLayerName = Jdf.Layer.OutWall;    
+                // 2. 해당 레이어가 존재하는지 확인
+                if (lt.Has(targetLayerName))
+                {
+                    // 3. 레이어 ID 가져오기
+                    ObjectId layerId = lt[targetLayerName];
+
+                    // 4. 현재 레이어(Clayer)로 설정 (핵심 부분)
+                    db.Clayer = layerId;
+
+                    ed.WriteMessage($"\n현재 레이어가 '{targetLayerName}'(으)로 변경되었습니다.");
+                }
+                else
+                {
+                    ed.WriteMessage($"\n오류: '{targetLayerName}' 레이어를 찾을 수 없습니다.");
+                }
+
+                // Save the new object to the database
+                tr.Commit();
+            }
+        }
+
+        #endregion
+
+    }
+
     public class RoomCalc
     {
         /// <summary>
