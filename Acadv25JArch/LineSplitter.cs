@@ -554,6 +554,9 @@ namespace Acadv25JArch
                 // 2단계: 모든 교차점 수집
                 var intersectPoints = new List<Point3d>();
 
+                // 선언: (string Name, int Age) 형태의 튜플을 담는 리스트
+                var intersectPtLs = new List<(Point3d Pt, Double Dist)>(); // 교차점 대상과  교차점 사이의  거리 
+
                 foreach (var otherLine in lines)
                 {
                     // 자기 자신은 제외
@@ -575,6 +578,8 @@ namespace Acadv25JArch
                         foreach (Point3d pt in points)
                         {
                             intersectPoints.Add(pt);
+                            var dist = otherLine.GetClosestPointTo(pt,false).DistanceTo(pt);
+                            intersectPtLs.Add((pt, dist)); 
                         }
                     }
                 }
