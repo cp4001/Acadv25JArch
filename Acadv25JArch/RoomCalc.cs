@@ -504,6 +504,7 @@ namespace Acadv25JArch
             {
                 // 1단계: 북쪽 방향 벡터를 나타내는 line 선택
                 Line northVectorLine = SelectLine(ed, "\n북쪽 방향 벡터를 나타내는 line을 선택하세요 (시작점→끝점이 북쪽 방향): ");
+                northVectorDrawing = northVectorLine;
                 if (northVectorLine == null)
                 {
                     ed.WriteMessage("\n북쪽 방향 벡터 선택이 취소되었습니다.");
@@ -519,7 +520,7 @@ namespace Acadv25JArch
                 }
 
                 // 3단계: 방향 분석 수행
-                var directionResult = AnalyzeDirectionRelativeToNorth(northVectorLine, targetLine);
+                var directionResult = AnalyzeDirectionRelativeToNorth(northVectorDrawing, targetLine);
 
                 // 4단계: 결과 출력
                 ed.WriteMessage($"\n=== 방향 분석 결과 (기준각: ±10°) ===");
@@ -535,6 +536,53 @@ namespace Acadv25JArch
             }
         }
 
+
+        /// <summary>
+        /// 방향 벡터를 기준으로 선택된 line의 방향을 NW, NE, SE, SW로 분석하는 메인 커맨드
+        /// northVectorDrawing 이용해서 방위각 분석 
+        /// </summary>
+        [CommandMethod("LineDir1")] 
+        public void Cmd_LineDir_AnalyzeLineDirection1()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                //// 1단계: 북쪽 방향 벡터를 나타내는 line 선택
+                //Line northVectorLine = SelectLine(ed, "\n북쪽 방향 벡터를 나타내는 line을 선택하세요 (시작점→끝점이 북쪽 방향): ");
+                //northVectorDrawing = northVectorLine;
+                //if (northVectorLine == null)
+                //{
+                //    ed.WriteMessage("\n북쪽 방향 벡터 선택이 취소되었습니다.");
+                //    return;
+                //}
+
+                // 2단계: 방향을 분석할 line 선택
+                Line targetLine = SelectLine(ed, "\n방향을 분석할 line을 선택하세요: ");
+                if (targetLine == null)
+                {
+                    ed.WriteMessage("\n분석 대상 line 선택이 취소되었습니다.");
+                    return;
+                }
+
+                // 3단계: 방향 분석 수행
+                var directionResult = AnalyzeDirectionRelativeToNorth(northVectorDrawing, targetLine);
+
+                // 4단계: 결과 출력
+                ed.WriteMessage($"\n=== 방향 분석 결과 (기준각: ±10°) ===");
+                ed.WriteMessage($"\n북쪽 기준 벡터 각도: {directionResult.northAngle:F2}°");
+                ed.WriteMessage($"\n분석 대상 line 각도: {directionResult.targetAngle:F2}°");
+                ed.WriteMessage($"\n상대 각도: {directionResult.relativeAngle:F2}°");
+                ed.WriteMessage($"\n방향: {directionResult.direction}");
+                ed.WriteMessage($"\n방향 설명: {GetDirectionDescription(directionResult.direction)}");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
 
         /// <summary>
         /// Polyline 내부에 있는 Line 객체 찾기
