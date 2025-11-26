@@ -701,8 +701,8 @@ namespace Acadv25JArch
                 var lineAvglength = lines.Average(x => x.Length);
                 if (line.Length < lineAvglength * 0.1) continue;
                 //North Vector
-               // var northVecor = new Vector3d(0, 1, 0);
-                var northVecor = new Line(cp, new Point3d(cp.X, cp.Y + 10, cp.Z));
+                // var northVecor = new Vector3d(0, 1, 0);
+                var northVecor = RoomCalc.northVectorDrawing;           //new Line(cp, new Point3d(cp.X, cp.Y + 10, cp.Z));
                 var cp1 = line.GetClosestPointTo(cp, false);
                 var lineDirection = new Line(cp, cp1);
                 var lineVec2 = lineDirection.GetVector();
