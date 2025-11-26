@@ -286,7 +286,7 @@ namespace Acadv25JArch
     public class LineIntersectionFinder
     {
         private const double TOLERANCE = 1e-6; // 중복점 판단 허용 오차
-        private const double MAX_SEARCH_DISTANCE = 500.0; // 최대 탐색 거리
+        private const double MAX_SEARCH_DISTANCE = 300.0; // 최대 탐색 거리
         private const double SNAP_TOLERANCE = 1.0; // 점 감지 공차
 
         [CommandMethod("FindIntersections")]
@@ -548,7 +548,7 @@ namespace Acadv25JArch
                 Point3d centerPoint = new Point3d(
                     (line.StartPoint.X + line.EndPoint.X) / 2.0,
                     (line.StartPoint.Y + line.EndPoint.Y) / 2.0,
-                    (line.StartPoint.Z + line.EndPoint.Z) / 2.0
+                    0.0
                 );
 
                 // 2단계: 모든 교차점 수집
@@ -579,47 +579,52 @@ namespace Acadv25JArch
                         {
                             intersectPoints.Add(pt);
                             var dist = otherLine.GetClosestPointTo(pt,false).DistanceTo(pt);
-                            intersectPtLs.Add((pt, dist)); 
+                            var dist1 = line.GetClosestPointTo(pt, false).DistanceTo(pt);
+                            intersectPtLs.Add((pt, dist>dist1 ? dist:dist1)); 
                         }
                     }
                 }
 
                 // 교차점이 없으면 빈 리스트 반환
-                if (intersectPoints.Count == 0)
+                
+                  if (intersectPoints.Count == 0)
                     return new List<Point3d>();
 
                 // 2.5단계: line 위에 있는 점 제외 (단, StartPoint와 EndPoint는 유지)
                 const double tolerance = 1e-6;
                 var filteredPoints = new List<Point3d>();
-
-                foreach (var pt in intersectPoints)
+                var filteredPointsDists = new List<(Point3d Pt,Double Dist)>();
+                foreach (var inpt in intersectPtLs)
                 {
-                    // StartPoint 또는 EndPoint인지 확인
-                    bool isStartPoint = pt.DistanceTo(line.StartPoint) < tolerance;
-                    bool isEndPoint = pt.DistanceTo(line.EndPoint) < tolerance;
+                    //// StartPoint 또는 EndPoint인지 확인
+                    //Point3d pt = inpt.Pt;
+                    //bool isStartPoint = pt.DistanceTo(line.StartPoint) < tolerance;
+                    //bool isEndPoint = pt.DistanceTo(line.EndPoint) < tolerance;
 
-                    // StartPoint나 EndPoint면 무조건 포함
-                    if (isStartPoint || isEndPoint)
-                    {
-                        filteredPoints.Add(pt);
-                        continue;
-                    }
+                    //// StartPoint나 EndPoint면 무조건 포함
+                    //if (isStartPoint || isEndPoint)
+                    //{
+                    //    filteredPoints.Add(pt);
+                    //    filteredPointsDists.Add((inpt.Pt, inpt.Dist));
+                    //    continue;
+                    //}
 
-                    // line 위의 가장 가까운 점 찾기
-                    Point3d closestPoint = line.GetClosestPointTo(pt, false);
-                    double distanceToLine = pt.DistanceTo(closestPoint);
+                    //// line 위의 가장 가까운 점 찾기
+                    //Point3d closestPoint = line.GetClosestPointTo(pt, false);
+                    //double distanceToLine = pt.DistanceTo(closestPoint);
 
-                    // line 위에 있으면 제외 (확장선 위의 점만 포함)
-                    if (distanceToLine > tolerance)
-                    {
-                        filteredPoints.Add(pt);
-                    }
+                    //// line 위에 있으면 제외 (확장선 위의 점만 포함)
+                    //if (distanceToLine > tolerance)
+                    //{
+                    //    filteredPoints.Add(pt);
+                    //    filteredPointsDists.Add((inpt.Pt, inpt.Dist));    
+                    //}
                     // line 위에 있지만 StartPoint도 EndPoint도 아니면 제외됨
                 }
 
-                // 필터링 후 교차점이 없으면 빈 리스트 반환
-                if (filteredPoints.Count == 0)
-                    return new List<Point3d>();
+                //// 필터링 후 교차점이 없으면 빈 리스트 반환
+                //if (filteredPoints.Count == 0)
+                //    return new List<Point3d>();
 
                 // 3단계: 중심점에서 가까운 순으로 정렬하고 상위 2개 선택
                 var closestPoints = filteredPoints
@@ -627,7 +632,16 @@ namespace Acadv25JArch
                     .Take(Math.Min(2, filteredPoints.Count))  // 최대 2개, 1개일 때는 1개만
                     .ToList();
 
-                return closestPoints;
+                // 3.1단계: 중심점에서 가까운 순으로 정렬하고 상위 2개 선택
+                var closestPoints1 = intersectPtLs
+                    .OrderBy(ptd => ptd.Dist)
+                    .Where(ptd => ptd.Dist <= MAX_SEARCH_DISTANCE) // 최대 탐색 거리 이내
+                    .Take(Math.Min(2, intersectPtLs.Count))  // 최대 2개, 1개일 때는 1개만
+                    .Select(xx => xx.Pt)
+                    .ToList();
+
+                //return closestPoints;
+                return closestPoints1;
             }
             catch (System.Exception)
             {
