@@ -489,6 +489,7 @@ namespace Acadv25JArch
 
     public class RoomCalc
     {
+        public static Line northVectorDrawing = new Line (new Point3d (0,0,0),new Point3d(0,10,0));
         /// <summary>
         /// 방향 벡터를 기준으로 선택된 line의 방향을 NW, NE, SE, SW로 분석하는 메인 커맨드
         /// </summary>
@@ -1210,6 +1211,54 @@ namespace Acadv25JArch
                 ed.WriteMessage($"  상대 각도: {result.relativeAngle:F2}°");
                 ed.WriteMessage($"  판정된 방향: {result.direction}");
                 ed.WriteMessage($"  방향 설명: {GetDirectionDescription(result.direction)}");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Norh Vector 설정 
+        /// </summary>
+        [CommandMethod("Set_North_Vector")]
+        public void Cmd_Set_North_Vector()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                Line northVectorLine = SelectLine(ed, "\n북쪽 방향 벡터를 나타내는 line을 선택하세요: ");
+                if (northVectorLine == null) return;
+
+                //Line targetLine = SelectLine(ed, "\n분석할 line을 선택하세요: ");
+                //if (targetLine == null) return;
+
+                //var result = AnalyzeDirectionRelativeToNorth(northVectorLine, targetLine);
+
+                //Set nothVector RoomCalc  static north vector
+                northVectorDrawing = northVectorLine;   
+
+                // 상세 정보 출력
+                ed.WriteMessage($"\n=== 상세 방향 분석 결과 ===");
+                ed.WriteMessage($"\n북쪽 기준 벡터:");
+                ed.WriteMessage($"  시작점: ({northVectorLine.StartPoint.X:F3}, {northVectorLine.StartPoint.Y:F3})");
+                ed.WriteMessage($"  끝점: ({northVectorLine.EndPoint.X:F3}, {northVectorLine.EndPoint.Y:F3})");
+                ed.WriteMessage($"  길이: {northVectorLine.Length:F3}");
+                //ed.WriteMessage($"  각도: {result.northAngle:F2}°");
+
+                //ed.WriteMessage($"\n분석 대상 line:");
+                //ed.WriteMessage($"  시작점: ({targetLine.StartPoint.X:F3}, {targetLine.StartPoint.Y:F3})");
+                //ed.WriteMessage($"  끝점: ({targetLine.EndPoint.X:F3}, {targetLine.EndPoint.Y:F3})");
+                //ed.WriteMessage($"  길이: {targetLine.Length:F3}");
+                //ed.WriteMessage($"  각도: {result.targetAngle:F2}°");
+
+                //ed.WriteMessage($"\n방향 분석:");
+                //ed.WriteMessage($"  상대 각도: {result.relativeAngle:F2}°");
+                //ed.WriteMessage($"  판정된 방향: {result.direction}");
+                //ed.WriteMessage($"  방향 설명: {GetDirectionDescription(result.direction)}");
             }
             catch (System.Exception ex)
             {
