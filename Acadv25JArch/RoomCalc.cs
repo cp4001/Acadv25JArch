@@ -1587,4 +1587,285 @@ namespace Acadv25JArch
 
     }
 
+    //
+    public class ConvexHullPolyline
+    {
+        private const string COMMAND_NAME = "CONVEXHULL";
+        private const double TOLERANCE = 1e-6; // 중복점 판단 허용 오차
+
+        /// <summary>
+        /// 선택된 Polyline들의 모든 점으로 ConvexHull을 생성하는 메인 커맨드
+        /// </summary>
+        [CommandMethod(COMMAND_NAME)]
+        public void CreateConvexHullFromPolylines()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // Step 1: Polyline들 선택
+                var selectedPolyIds = SelectPolylines(ed);
+                if (selectedPolyIds.Count == 0)
+                {
+                    ed.WriteMessage("\n선택된 Polyline이 없습니다.");
+                    return;
+                }
+
+                ed.WriteMessage($"\n{selectedPolyIds.Count}개의 Polyline이 선택되었습니다.");
+
+                // Step 2: 모든 Vertex 점 수집
+                List<Point3d> allPoints;
+                using (var tr = db.TransactionManager.StartTransaction())
+                {
+                    allPoints = CollectAllVertices(selectedPolyIds, tr);
+                    tr.Commit();
+                }
+
+                if (allPoints.Count < 3)
+                {
+                    ed.WriteMessage($"\n최소 3개 이상의 점이 필요합니다. (현재: {allPoints.Count}개)");
+                    return;
+                }
+
+                ed.WriteMessage($"\n총 {allPoints.Count}개의 점이 수집되었습니다.");
+
+                // Step 3: Graham Scan으로 ConvexHull 계산
+                var hullPoints = GrahamScan(allPoints);
+
+                if (hullPoints.Count < 3)
+                {
+                    ed.WriteMessage("\nConvexHull 생성 실패: 유효한 hull을 만들 수 없습니다.");
+                    return;
+                }
+
+                ed.WriteMessage($"\nConvexHull 점 개수: {hullPoints.Count}개");
+
+                // Step 4: ConvexHull Polyline 생성 및 추가
+                using (var tr = db.TransactionManager.StartTransaction())
+                {
+                    CreateHullPolyline(hullPoints, db, tr);
+                    tr.Commit();
+                }
+
+                ed.WriteMessage("\nConvexHull Polyline이 생성되었습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Polyline 선택 메서드
+        /// </summary>
+        private List<ObjectId> SelectPolylines(Editor ed)
+        {
+            var polyIds = new List<ObjectId>();
+
+            // LWPOLYLINE만 선택하도록 필터 설정
+            TypedValue[] filterList = [
+                new TypedValue((int)DxfCode.Start, "LWPOLYLINE")
+            ];
+            var filter = new SelectionFilter(filterList);
+
+            var opts = new PromptSelectionOptions
+            {
+                MessageForAdding = "\nPolyline들을 선택하세요: "
+            };
+
+            var psr = ed.GetSelection(opts, filter);
+
+            if (psr.Status == PromptStatus.OK && psr.Value != null)
+            {
+                polyIds.AddRange(psr.Value.GetObjectIds());
+            }
+
+            return polyIds;
+        }
+
+        /// <summary>
+        /// 선택된 Polyline들의 모든 Vertex를 수집
+        /// </summary>
+        private List<Point3d> CollectAllVertices(List<ObjectId> polyIds, Transaction tr)
+        {
+            var allPoints = new List<Point3d>();
+
+            foreach (var polyId in polyIds)
+            {
+                if (tr.GetObject(polyId, OpenMode.ForRead) is Polyline poly)
+                {
+                    // Polyline의 모든 vertex 추출
+                    int numVertices = poly.NumberOfVertices;
+                    for (int i = 0; i < numVertices; i++)
+                    {
+                        // 2D 점을 3D로 변환 (Z=0)
+                        Point2d pt2d = poly.GetPoint2dAt(i);
+                        Point3d pt3d = new Point3d(pt2d.X, pt2d.Y, 0.0);
+                        allPoints.Add(pt3d);
+                    }
+                }
+            }
+
+            // 중복 점 제거 (tolerance 기반)
+            return RemoveDuplicatePoints(allPoints);
+        }
+
+        /// <summary>
+        /// 중복 점 제거 (tolerance 기반)
+        /// </summary>
+        private List<Point3d> RemoveDuplicatePoints(List<Point3d> points)
+        {
+            var uniquePoints = new List<Point3d>();
+
+            foreach (var point in points)
+            {
+                bool isDuplicate = uniquePoints.Any(p => p.DistanceTo(point) < TOLERANCE);
+                if (!isDuplicate)
+                {
+                    uniquePoints.Add(point);
+                }
+            }
+
+            return uniquePoints;
+        }
+
+        /// <summary>
+        /// Graham Scan 알고리즘으로 ConvexHull 계산
+        /// </summary>
+        private List<Point3d> GrahamScan(List<Point3d> points)
+        {
+            if (points.Count < 3)
+                return new List<Point3d>();
+
+            // Step 1: 기준점 찾기 (Y 최소, 같으면 X 최소)
+            Point3d pivot = FindLowestPoint(points);
+
+            // Step 2: 기준점 기준으로 극좌표 각도 정렬
+            var sortedPoints = SortByPolarAngle(points, pivot);
+
+            // Step 3: 스택으로 ConvexHull 구성
+            var hull = new List<Point3d>();
+            hull.Add(sortedPoints[0]); // pivot
+            hull.Add(sortedPoints[1]);
+
+            for (int i = 2; i < sortedPoints.Count; i++)
+            {
+                Point3d top = hull[hull.Count - 1];
+                Point3d nextTop = hull[hull.Count - 2];
+                Point3d current = sortedPoints[i];
+
+                // 반시계방향(CCW)이 될 때까지 스택에서 제거
+                while (hull.Count > 1 && !IsCounterClockwise(nextTop, top, current))
+                {
+                    hull.RemoveAt(hull.Count - 1);
+                    if (hull.Count > 1)
+                    {
+                        top = hull[hull.Count - 1];
+                        nextTop = hull[hull.Count - 2];
+                    }
+                }
+
+                hull.Add(current);
+            }
+
+            return hull;
+        }
+
+        /// <summary>
+        /// Y 좌표가 가장 작은 점 찾기 (같으면 X 좌표가 작은 점)
+        /// </summary>
+        private Point3d FindLowestPoint(List<Point3d> points)
+        {
+            Point3d lowest = points[0];
+
+            foreach (var point in points)
+            {
+                if (point.Y < lowest.Y ||
+                    (Math.Abs(point.Y - lowest.Y) < TOLERANCE && point.X < lowest.X))
+                {
+                    lowest = point;
+                }
+            }
+
+            return lowest;
+        }
+
+        /// <summary>
+        /// 기준점(pivot) 기준으로 극좌표 각도로 정렬
+        /// </summary>
+        private List<Point3d> SortByPolarAngle(List<Point3d> points, Point3d pivot)
+        {
+            // pivot을 제외한 나머지 점들을 각도로 정렬
+            var sortedPoints = points
+                .Where(p => p.DistanceTo(pivot) > TOLERANCE) // pivot 자신 제외
+                .OrderBy(p => CalculatePolarAngle(pivot, p))
+                .ThenBy(p => pivot.DistanceTo(p)) // 각도가 같으면 거리순
+                .ToList();
+
+            // pivot을 맨 앞에 추가
+            sortedPoints.Insert(0, pivot);
+
+            return sortedPoints;
+        }
+
+        /// <summary>
+        /// 기준점에서 목표점까지의 극좌표 각도 계산 (라디안)
+        /// </summary>
+        private double CalculatePolarAngle(Point3d pivot, Point3d target)
+        {
+            double dx = target.X - pivot.X;
+            double dy = target.Y - pivot.Y;
+            return Math.Atan2(dy, dx);
+        }
+
+        /// <summary>
+        /// 세 점이 반시계방향(CCW)인지 판단
+        /// Cross Product를 사용: (p2-p1) × (p3-p1)
+        /// </summary>
+        private bool IsCounterClockwise(Point3d p1, Point3d p2, Point3d p3)
+        {
+            Vector3d v1 = p2 - p1;
+            Vector3d v2 = p3 - p1;
+
+            // Cross Product의 Z 성분 (2D 평면에서)
+            double crossProductZ = v1.X * v2.Y - v1.Y * v2.X;
+
+            // crossProductZ > 0: 반시계방향 (CCW)
+            // crossProductZ = 0: 일직선
+            // crossProductZ < 0: 시계방향 (CW)
+            return crossProductZ > TOLERANCE;
+        }
+
+        /// <summary>
+        /// ConvexHull 점들로 Closed Polyline 생성
+        /// </summary>
+        private void CreateHullPolyline(List<Point3d> hullPoints, Database db, Transaction tr)
+        {
+            // 새 Polyline 생성
+            using var hullPoly = new Polyline();
+
+            // Hull 점들을 vertex로 추가
+            for (int i = 0; i < hullPoints.Count; i++)
+            {
+                Point3d pt = hullPoints[i];
+                hullPoly.AddVertexAt(i, new Point2d(pt.X, pt.Y), 0, 0, 0);
+            }
+
+            // Closed Polyline으로 설정
+            hullPoly.Closed = true;
+
+            // 색상 설정 (선택사항 - 빨간색)
+            hullPoly.ColorIndex = 1;
+
+            // Database에 추가
+            BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+            BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace],
+                OpenMode.ForWrite) as BlockTableRecord;
+
+            btr.AppendEntity(hullPoly);
+            tr.AddNewlyCreatedDBObject(hullPoly, true);
+        }
+    }
 }
