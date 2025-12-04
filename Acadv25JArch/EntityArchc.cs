@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.MacroRecorder;
 using CADExtension;
 using Newtonsoft.Json.Linq;
 using System;
@@ -666,8 +667,8 @@ namespace Acadv25JArch
 
         private List<Line> WallLines { get; set; } // 벽 Line List
         private List<BlockReference> Blocks { get; set; } // 창 또는 문 List
-        private List<String> Windows { get; set; } // Outwall  Window List  외벽 창문 방위:면적 필요
-        private List<String> Walls { get; set; } // Wall  외벽 내벽  방위:면적 필요
+        private List<String> Windows = new List<string>(); // Outwall  Window List  외벽 창문 방위:면적 필요
+        private List<String> Walls = new List<string>(); // Wall  외벽 내벽  방위:면적 필요
 
         //private List<BlockReference> Doors { get; set; } // 문 List
 
@@ -675,6 +676,16 @@ namespace Acadv25JArch
         public static void SetRoomTexts(List<DBText> txts)
         {
             RoomPart.Roomtxts = txts;
+        }
+
+        public List<string> GetWindows()
+        {
+            return Windows;    
+        }
+
+        public  List<string> GetWalls()
+        {
+            return Walls;
         }
 
         // 생성자 

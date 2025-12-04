@@ -44,14 +44,8 @@
             tabControl1 = new TabControl();
             tabPage1 = new TabPage();
             tabPage2 = new TabPage();
+            btnExcel = new Button();
             dgvRoom = new DataGridView();
-            btnRooms = new Button();
-            tabPage3 = new TabPage();
-            dgvWindow = new DataGridView();
-            btnWindows = new Button();
-            tabPage4 = new TabPage();
-            dgvDoor = new DataGridView();
-            btnDoors = new Button();
             Col_Index = new DataGridViewTextBoxColumn();
             Col_Name = new DataGridViewTextBoxColumn();
             Col_CeilingHeight = new DataGridViewTextBoxColumn();
@@ -60,7 +54,13 @@
             Col_FloorArea = new DataGridViewTextBoxColumn();
             Col_Volumn = new DataGridViewTextBoxColumn();
             ColWallText = new DataGridViewTextBoxColumn();
-            btnExcel = new Button();
+            btnRooms = new Button();
+            tabPage3 = new TabPage();
+            dgvWindow = new DataGridView();
+            btnWindows = new Button();
+            tabPage4 = new TabPage();
+            dgvDoor = new DataGridView();
+            btnDoors = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvBlock).BeginInit();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -195,6 +195,16 @@
             tabPage2.Text = "Rooms";
             tabPage2.UseVisualStyleBackColor = true;
             // 
+            // btnExcel
+            // 
+            btnExcel.Location = new Point(181, 31);
+            btnExcel.Name = "btnExcel";
+            btnExcel.Size = new Size(112, 34);
+            btnExcel.TabIndex = 3;
+            btnExcel.Text = "To Excel";
+            btnExcel.UseVisualStyleBackColor = true;
+            btnExcel.Click += btnExcel_Click;
+            // 
             // dgvRoom
             // 
             dgvRoom.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -213,6 +223,70 @@
             dgvRoom.RowTemplate.Height = 50;
             dgvRoom.Size = new Size(2021, 428);
             dgvRoom.TabIndex = 2;
+            // 
+            // Col_Index
+            // 
+            Col_Index.DataPropertyName = "Index";
+            Col_Index.HeaderText = "Index";
+            Col_Index.MinimumWidth = 8;
+            Col_Index.Name = "Col_Index";
+            Col_Index.Width = 80;
+            // 
+            // Col_Name
+            // 
+            Col_Name.DataPropertyName = "Name";
+            Col_Name.HeaderText = "Name";
+            Col_Name.MinimumWidth = 8;
+            Col_Name.Name = "Col_Name";
+            Col_Name.Width = 150;
+            // 
+            // Col_CeilingHeight
+            // 
+            Col_CeilingHeight.DataPropertyName = "CeilingHeight";
+            Col_CeilingHeight.HeaderText = "천정고";
+            Col_CeilingHeight.MinimumWidth = 8;
+            Col_CeilingHeight.Name = "Col_CeilingHeight";
+            Col_CeilingHeight.Width = 80;
+            // 
+            // Col_FloorHeight
+            // 
+            Col_FloorHeight.DataPropertyName = "FloorHeight";
+            Col_FloorHeight.HeaderText = "층고";
+            Col_FloorHeight.MinimumWidth = 8;
+            Col_FloorHeight.Name = "Col_FloorHeight";
+            Col_FloorHeight.Width = 80;
+            // 
+            // Col_Roofarea
+            // 
+            Col_Roofarea.DataPropertyName = "RoofArea";
+            Col_Roofarea.HeaderText = "지붕면적";
+            Col_Roofarea.MinimumWidth = 8;
+            Col_Roofarea.Name = "Col_Roofarea";
+            Col_Roofarea.Width = 80;
+            // 
+            // Col_FloorArea
+            // 
+            Col_FloorArea.DataPropertyName = "FloorArea";
+            Col_FloorArea.HeaderText = "바닥면적";
+            Col_FloorArea.MinimumWidth = 8;
+            Col_FloorArea.Name = "Col_FloorArea";
+            Col_FloorArea.Width = 80;
+            // 
+            // Col_Volumn
+            // 
+            Col_Volumn.DataPropertyName = "Volumn";
+            Col_Volumn.HeaderText = "체적";
+            Col_Volumn.MinimumWidth = 8;
+            Col_Volumn.Name = "Col_Volumn";
+            Col_Volumn.Width = 80;
+            // 
+            // ColWallText
+            // 
+            ColWallText.DataPropertyName = "WallText";
+            ColWallText.HeaderText = "벽면정보";
+            ColWallText.MinimumWidth = 8;
+            ColWallText.Name = "ColWallText";
+            ColWallText.Width = 800;
             // 
             // btnRooms
             // 
@@ -302,79 +376,6 @@
             btnDoors.Text = "All Doors";
             btnDoors.UseVisualStyleBackColor = true;
             // 
-            // Col_Index
-            // 
-            Col_Index.DataPropertyName = "Index";
-            Col_Index.HeaderText = "Index";
-            Col_Index.MinimumWidth = 8;
-            Col_Index.Name = "Col_Index";
-            Col_Index.Width = 80;
-            // 
-            // Col_Name
-            // 
-            Col_Name.DataPropertyName = "Name";
-            Col_Name.HeaderText = "Name";
-            Col_Name.MinimumWidth = 8;
-            Col_Name.Name = "Col_Name";
-            Col_Name.Width = 150;
-            // 
-            // Col_CeilingHeight
-            // 
-            Col_CeilingHeight.DataPropertyName = "CeilingHeight";
-            Col_CeilingHeight.HeaderText = "천정고";
-            Col_CeilingHeight.MinimumWidth = 8;
-            Col_CeilingHeight.Name = "Col_CeilingHeight";
-            Col_CeilingHeight.Width = 80;
-            // 
-            // Col_FloorHeight
-            // 
-            Col_FloorHeight.DataPropertyName = "FloorHeight";
-            Col_FloorHeight.HeaderText = "층고";
-            Col_FloorHeight.MinimumWidth = 8;
-            Col_FloorHeight.Name = "Col_FloorHeight";
-            Col_FloorHeight.Width = 80;
-            // 
-            // Col_Roofarea
-            // 
-            Col_Roofarea.DataPropertyName = "RoofArea";
-            Col_Roofarea.HeaderText = "지붕면적";
-            Col_Roofarea.MinimumWidth = 8;
-            Col_Roofarea.Name = "Col_Roofarea";
-            Col_Roofarea.Width = 80;
-            // 
-            // Col_FloorArea
-            // 
-            Col_FloorArea.DataPropertyName = "FloorArea";
-            Col_FloorArea.HeaderText = "바닥면적";
-            Col_FloorArea.MinimumWidth = 8;
-            Col_FloorArea.Name = "Col_FloorArea";
-            Col_FloorArea.Width = 80;
-            // 
-            // Col_Volumn
-            // 
-            Col_Volumn.DataPropertyName = "Volumn";
-            Col_Volumn.HeaderText = "체적";
-            Col_Volumn.MinimumWidth = 8;
-            Col_Volumn.Name = "Col_Volumn";
-            Col_Volumn.Width = 80;
-            // 
-            // ColWallText
-            // 
-            ColWallText.DataPropertyName = "WallText";
-            ColWallText.HeaderText = "벽면정보";
-            ColWallText.MinimumWidth = 8;
-            ColWallText.Name = "ColWallText";
-            ColWallText.Width = 800;
-            // 
-            // btnExcel
-            // 
-            btnExcel.Location = new Point(181, 31);
-            btnExcel.Name = "btnExcel";
-            btnExcel.Size = new Size(112, 34);
-            btnExcel.TabIndex = 3;
-            btnExcel.Text = "To Excel";
-            btnExcel.UseVisualStyleBackColor = true;
-            // 
             // FormBlockPart
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
@@ -383,6 +384,7 @@
             Controls.Add(tabControl1);
             Name = "FormBlockPart";
             Text = "BlocksForm";
+            Load += FormBlockPart_Load;
             ((System.ComponentModel.ISupportInitialize)dgvBlock).EndInit();
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);
