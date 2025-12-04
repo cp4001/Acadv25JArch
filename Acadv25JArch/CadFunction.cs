@@ -1342,11 +1342,11 @@ namespace AcadFunction
                 ply.AddVertexAt(1, new Point2d(arc.EndPoint.X, arc.EndPoint.Y), 0, 0, 0);
                 pl = ply;
             }
-            if (pl == null) return null;
+            if (pl == null) return ents;
 
             var ids = GetCrossPolygonSelectIDs(pl, sf);
             ids.OfType<ObjectId>().ToList().ForEach(x => ents.Add(x.GetObject(OpenMode.ForRead) as Entity));
-            if (ids.Count == 0) { return null; }
+            if (ids.Count == 0) { return ents; }
             return ents;
 
         }

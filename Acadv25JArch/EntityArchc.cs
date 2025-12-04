@@ -681,6 +681,9 @@ namespace Acadv25JArch
         {
             this.Index = IdCounter;
             this.Poly = poly;
+            var ntxts= SelSet.GetEntitysByEntitys(poly, JSelFilter.MakeFilterTypes("TEXT"));
+            if(ntxts.Count > 0) this.Name = (ntxts[0] as DBText).TextString;
+
             this.WallLines = poly.GetLines();
             this.FloorHeight = JXdata.GetXdata(poly, "FloorHeight").ToDouble();
             this.CeilingHeight = JXdata.GetXdata(poly, "CeilingHeight").ToDouble();

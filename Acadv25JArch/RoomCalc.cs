@@ -46,7 +46,7 @@ namespace Acadv25JArch
                 if (targets == null) return;
                 var btr = tr.GetModelSpaceBlockTableRecord(db);
                 //사용할 XData 미리 Check
-                tr.ChecRegNames(db, "Archi,Room,Disp");
+                tr.ChecRegNames(db, "Archi,Room,RoomText,Disp");
                 // Step through the objects in the selection set
                 Line sLine = new Line();
                 foreach (Entity acEnt in targets)
@@ -87,8 +87,9 @@ namespace Acadv25JArch
                         if (acEnt.GetType() == typeof(DBText))
                         {
                             JXdata.DeleteAll(acEnt);
+                            acEnt.UpgradeOpen();    
                             JXdata.SetXdata(acEnt, "Archi", "Room");
-                            JXdata.SetXdata(acEnt, "Room", "Room");
+                            JXdata.SetXdata(acEnt, "RoomText", "RoomText");
                             JXdata.SetXdata(acEnt, "Disp", "__");
                             // JXdata.SetXdata(acEnt, "Mat", "Hidden");
                             //}
