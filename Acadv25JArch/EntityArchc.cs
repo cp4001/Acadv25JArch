@@ -667,6 +667,7 @@ namespace Acadv25JArch
         private List<Line> WallLines { get; set; } // 벽 Line List
         private List<BlockReference> Blocks { get; set; } // 창 또는 문 List
         private List<String> Windows { get; set; } // Outwall  Window List  외벽 창문 방위:면적 필요
+        private List<String> Walls { get; set; } // Wall  외벽 내벽  방위:면적 필요
 
         //private List<BlockReference> Doors { get; set; } // 문 List
 
@@ -755,6 +756,7 @@ namespace Acadv25JArch
                 var lineText = directionStr + ":" + $"W[{wallAreaStr}]B[{blockAreaStr}]";
                 var lineText1 = directionStr + ":" + wallAreaStr1;
                 lineText = lineText1.PadRight(10+ bbs.Count*8);
+                Walls.Add(lineText);
                 rtxts += lineText + "  ";
 
 
