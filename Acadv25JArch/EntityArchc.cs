@@ -662,6 +662,7 @@ namespace Acadv25JArch
         public string FloorArea { get; set; } // 바닥 면적
         public string Volumn { get; set; } // 룸체적 룸면적 x 층고
         public string WallText { get; set; } // 벽체 텍스트  
+        
 
         private List<Line> WallLines { get; set; } // 벽 Line List
         private List<BlockReference> Blocks { get; set; } // 창 또는 문 List
