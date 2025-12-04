@@ -1,5 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using ClosedXML.Excel;
+using OfficeOpenXml;
 
 //using Maroquio;
 using System;
@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LicenseContext = OfficeOpenXml.LicenseContext;
 
 namespace Acadv25JArch
 {
@@ -49,6 +50,9 @@ namespace Acadv25JArch
         public FormBlockPart()
         {
             InitializeComponent();
+            // EPPlus 8 이상에서는 이렇게 설정
+            // EPPlus 8 라이선스 설정 - 개인 비상업용
+            OfficeOpenXml.ExcelPackage.License.SetNonCommercialPersonal("junhoi");
         }
 
         private void btnAllBlocks_Click(object sender, EventArgs e)
@@ -87,6 +91,9 @@ namespace Acadv25JArch
         {
             try
             {
+                //// EPPlus 라이선스 설정 (이 줄 추가!)
+                //ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+
                 // Excel 파일 경로
                 string filePath = "C:\\Jarch25\\load_Calc_org.xlsm";
 
@@ -98,7 +105,6 @@ namespace Acadv25JArch
                 }
 
                 var roomparts = RoomPart.GetAllRoomParts();
-
                 if (roomparts == null || roomparts.Count == 0)
                 {
                     MessageBox.Show("roomparts가 없습니다.");
@@ -106,16 +112,16 @@ namespace Acadv25JArch
                 }
 
                 // 워크북 열기
-                using (var workbook = new XLWorkbook(filePath))
+                FileInfo fileInfo = new FileInfo(filePath);
+                using (var package = new ExcelPackage(fileInfo))
                 {
                     // 시트 존재 확인
-                    if (!workbook.Worksheets.Contains("부하계산"))
+                    var worksheet = package.Workbook.Worksheets["부하계산"];
+                    if (worksheet == null)
                     {
                         MessageBox.Show("'부하계산' 시트가 없습니다.");
                         return;
                     }
-
-                    var worksheet = workbook.Worksheet("부하계산"); 
 
                     foreach (var room in roomparts)
                     {
@@ -127,20 +133,29 @@ namespace Acadv25JArch
                         foreach (var ww in walls)
                         {
                             int windex = 11;
-                            //방위각
-                            worksheet.Cell($"S{windex}").Value = "NW";
-                            // 면적   
-                            worksheet.Cell($"T{windex}").FormulaA1 = "3*3";
+                            // 방위각
+                            worksheet.Cells[$"S{windex}"].Value = "NW";
+                            // 면적 (수식)
+                            worksheet.Cells[$"T{windex}"].Formula = "3*3";
                         }
 
-                        // 1~50행 범위 선택 (전체 열)
-                        var sourceRange = worksheet.Range("1:50");
-                        // 51행 위치로 복사
-                        sourceRange.CopyTo(worksheet.Cell(51, 1));
+                        // 1~50행을 51~100행으로 복사
+                        // EPPlus는 전체 행 범위를 직접 복사
+                        for (int row = 1; row <= 50; row++)
+                        {
+                            int targetRow = row + 50; // 51~100행
+
+                            // 각 행의 사용된 열 범위 복사
+                            var sourceRow = worksheet.Cells[row, 1, row, worksheet.Dimension.End.Column];
+                            var targetCell = worksheet.Cells[targetRow, 1];
+
+                            // 값, 수식, 서식 모두 복사
+                            sourceRow.Copy(targetCell);
+                        }
                     }
 
                     // 저장
-                    workbook.SaveAs(filePath);
+                    package.Save();
                     MessageBox.Show("완료!");
                 }
             }
