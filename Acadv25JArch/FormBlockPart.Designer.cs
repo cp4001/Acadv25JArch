@@ -60,6 +60,7 @@
             Col_FloorArea = new DataGridViewTextBoxColumn();
             Col_Volumn = new DataGridViewTextBoxColumn();
             ColWallText = new DataGridViewTextBoxColumn();
+            btnExcel = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvBlock).BeginInit();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -183,6 +184,7 @@
             // 
             // tabPage2
             // 
+            tabPage2.Controls.Add(btnExcel);
             tabPage2.Controls.Add(dgvRoom);
             tabPage2.Controls.Add(btnRooms);
             tabPage2.Location = new Point(4, 34);
@@ -322,6 +324,7 @@
             Col_CeilingHeight.HeaderText = "천정고";
             Col_CeilingHeight.MinimumWidth = 8;
             Col_CeilingHeight.Name = "Col_CeilingHeight";
+            Col_CeilingHeight.Width = 80;
             // 
             // Col_FloorHeight
             // 
@@ -329,6 +332,7 @@
             Col_FloorHeight.HeaderText = "층고";
             Col_FloorHeight.MinimumWidth = 8;
             Col_FloorHeight.Name = "Col_FloorHeight";
+            Col_FloorHeight.Width = 80;
             // 
             // Col_Roofarea
             // 
@@ -336,6 +340,7 @@
             Col_Roofarea.HeaderText = "지붕면적";
             Col_Roofarea.MinimumWidth = 8;
             Col_Roofarea.Name = "Col_Roofarea";
+            Col_Roofarea.Width = 80;
             // 
             // Col_FloorArea
             // 
@@ -343,6 +348,7 @@
             Col_FloorArea.HeaderText = "바닥면적";
             Col_FloorArea.MinimumWidth = 8;
             Col_FloorArea.Name = "Col_FloorArea";
+            Col_FloorArea.Width = 80;
             // 
             // Col_Volumn
             // 
@@ -350,6 +356,7 @@
             Col_Volumn.HeaderText = "체적";
             Col_Volumn.MinimumWidth = 8;
             Col_Volumn.Name = "Col_Volumn";
+            Col_Volumn.Width = 80;
             // 
             // ColWallText
             // 
@@ -358,6 +365,15 @@
             ColWallText.MinimumWidth = 8;
             ColWallText.Name = "ColWallText";
             ColWallText.Width = 800;
+            // 
+            // btnExcel
+            // 
+            btnExcel.Location = new Point(181, 31);
+            btnExcel.Name = "btnExcel";
+            btnExcel.Size = new Size(112, 34);
+            btnExcel.TabIndex = 3;
+            btnExcel.Text = "To Excel";
+            btnExcel.UseVisualStyleBackColor = true;
             // 
             // FormBlockPart
             // 
@@ -409,5 +425,6 @@
         private DataGridViewTextBoxColumn Col_FloorArea;
         private DataGridViewTextBoxColumn Col_Volumn;
         private DataGridViewTextBoxColumn ColWallText;
+        private Button btnExcel;
     }
 }
