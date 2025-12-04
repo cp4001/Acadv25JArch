@@ -665,7 +665,7 @@ namespace Acadv25JArch
 
         private List<Line> WallLines { get; set; } // 벽 Line List
         private List<BlockReference> Blocks { get; set; } // 창 또는 문 List
-        private List<BlockReference> Windows { get; set; } // Outwall  Window List  외벽 창문 
+        private List<String> Windows { get; set; } // Outwall  Window List  외벽 창문 방위:면적 필요
 
         //private List<BlockReference> Doors { get; set; } // 문 List
 
@@ -707,6 +707,7 @@ namespace Acadv25JArch
                 var lineDirection = new Line(cp, cp1);
                 var lineVec2 = lineDirection.GetVector();
                 var dir = RoomCalc.AnalyzeDirectionRelativeToNorth(northVecor, lineDirection);
+                var directionStr = dir.direction.ToString().PadLeft(2);
 
                 //Check OutWall 
                 var cpl = line.GetPointAtDist(line.Length / 2.0);
@@ -728,6 +729,11 @@ namespace Acadv25JArch
                     blocklength = line.GetDistFromPolyIntersect(brpoly);
                     var bh = JXdata.GetXdata(br, "Height");
                     bbs.Add( $"{blocklength.DmText(1)}*{bh}" );
+                    //Check Windows
+                    if( JXdata.GetXdata(br, "Window") != null)
+                    {
+                        Windows.Add($"{directionStr}:{(blocklength / 1000.0).DmText(1)}*{CeilingHeight.DmText(1)}");
+                    }
                 }
                 var blockArea = blocklength/1000.0*this.CeilingHeight;
                 var blockAreaStr = blockArea.DmText(1);         //Math.Round(blockArea, 1, MidpointRounding.AwayFromZero).ToString();  
@@ -740,7 +746,7 @@ namespace Acadv25JArch
                     wallAreaStr1 = wallAreaStr1 +$"-({txt})"; 
                 }
                 var walllengthStr = (Math.Round(line.Length / 1000, 1, MidpointRounding.AwayFromZero)).ToString(); 
-                var directionStr = dir.direction.ToString().PadLeft(2);
+                
                 if (isOutWall == false) directionStr = "P".PadLeft(2);
                 var lineText = directionStr + ":" + $"W[{wallAreaStr}]B[{blockAreaStr}]";
                 var lineText1 = directionStr + ":" + wallAreaStr1;
