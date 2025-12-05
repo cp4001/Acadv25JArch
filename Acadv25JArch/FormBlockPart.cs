@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using OfficeOpenXml;
 
 //using Maroquio;
@@ -12,6 +13,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using LicenseContext = OfficeOpenXml.LicenseContext;
 
 namespace Acadv25JArch
@@ -91,6 +93,15 @@ namespace Acadv25JArch
         {
             try
             {
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                string fullPath = doc.Database.Filename;
+
+                if (string.IsNullOrEmpty(fullPath)) return;
+
+                // 핵심: 확장자를 .dwg에서 .xlsm으로 변경
+                string excelPath = Path.ChangeExtension(fullPath, ".xlsm");
+
+
                 //// EPPlus 라이선스 설정 (이 줄 추가!)
                 //ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
 
@@ -123,27 +134,17 @@ namespace Acadv25JArch
                         return;
                     }
 
-                    foreach (var room in roomparts)
+                    // int rdex = 50; // room 별로 50 Row 생성 
+                    int rindex = 0; // room 시작 행
+                                    //room 별로  원본 1~50 행 복사 
+
+                    // 1~50행을 51~100행으로 복사
+                    // EPPlus는 전체 행 범위를 직접 복사
+                    for (int roomcnt = 1; roomcnt <= roomparts.Count-1; roomcnt++)
                     {
-                        Console.WriteLine($"Room Name: {room.Name}, Floor Area: {room.FloorArea}");
-
-                        var walls = room.GetWalls();
-                        if (walls == null || walls.Count == 0) continue;
-
-                        foreach (var ww in walls)
-                        {
-                            int windex = 11;
-                            // 방위각
-                            worksheet.Cells[$"S{windex}"].Value = "NW";
-                            // 면적 (수식)
-                            worksheet.Cells[$"T{windex}"].Formula = "3*3";
-                        }
-
-                        // 1~50행을 51~100행으로 복사
-                        // EPPlus는 전체 행 범위를 직접 복사
                         for (int row = 1; row <= 50; row++)
                         {
-                            int targetRow = row + 50; // 51~100행
+                            int targetRow = row + roomcnt*50; // 51~100행
 
                             // 각 행의 사용된 열 범위 복사
                             var sourceRow = worksheet.Cells[row, 1, row, worksheet.Dimension.End.Column];
@@ -152,10 +153,69 @@ namespace Acadv25JArch
                             // 값, 수식, 서식 모두 복사
                             sourceRow.Copy(targetCell);
                         }
+
+                    }
+
+
+                    foreach (var room in roomparts)
+                    {
+                        Console.WriteLine($"Room Name: {room.Name}, Floor Area: {room.FloorArea}");
+
+                        var walls = room.GetWalls();
+                        var windows = room.GetWindows();
+
+
+                        //if (walls == null || walls.Count == 0) continue;
+
+                        foreach (var ww in windows) // 외창 처리 
+                        {
+                            int windex = 11 + rindex * 50;
+                            // 쉼표(',')를 기준으로 자르기
+                            string[] window = ww.Split(':');
+
+                            //항목
+                            worksheet.Cells[$"S{windex}"].Value = "외창";// "NW";
+                            // 방위각
+                            worksheet.Cells[$"T{windex}"].Value = window[0];// "NW";
+                            // 면적 (수식)
+                            worksheet.Cells[$"U{windex}"].Formula = window[1];// "3*3";
+                            windex++;
+                        }
+                        foreach (var wal in walls) // 벽처리 
+                        {
+                            int waldex = 19 + rindex * 50;
+                            //외창 처리
+                            foreach (var ww in windows) // 외창 처리 
+                            {
+                                // 쉼표(',')를 기준으로 자르기
+                                string[] window = ww.Split(':');
+
+                                // 방위각
+                                worksheet.Cells[$"T{waldex}"].Value = window[0];// "NW";
+                                                                                // 면적 (수식)
+                                worksheet.Cells[$"U{waldex}"].Formula = window[1];// "3*3";
+                                waldex++;
+                            }
+
+                            //Wall 처리 
+                            // 쉼표(':')를 기준으로 자르기
+                            string[] wall = wal.Split(':');
+                            //항목
+                            worksheet.Cells[$"S{waldex}"].Value = wall[0].Contains("P") ? "내벽" : "외벽"; //"외벽";   
+                            // 방위각
+                            worksheet.Cells[$"T{waldex}"].Value = wall[0];// "NW" Or P
+                            // 면적 (수식)
+                            worksheet.Cells[$"U{waldex}"].Formula = wall[1];// "3*3";
+                            waldex++;
+                        }
+
+                        rindex++; // 다음 room 으로 
                     }
 
                     // 저장
-                    package.Save();
+                    // 3. FileInfo 객체 생성 (EPPlus는 string 경로 대신 FileInfo를 요구함)
+                    FileInfo excelFile = new FileInfo(excelPath);
+                    package.SaveAs(excelFile);
                     MessageBox.Show("완료!");
                 }
             }
