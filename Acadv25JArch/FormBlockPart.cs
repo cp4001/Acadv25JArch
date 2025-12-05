@@ -181,21 +181,24 @@ namespace Acadv25JArch
                             windex++;
                         }
 
-                        int waldex = 19 + rindex * 50;
-                        foreach (var wal in walls) // 벽처리 
-                        {
-                            //외창 처리
-                            foreach (var ww in windows) // 외창 처리 
-                            {
-                                // 쉼표(',')를 기준으로 자르기
-                                string[] window = ww.Split(':');
-                                // 방위각
-                                worksheet.Cells[$"S{waldex}"].Value = "외  창";// "NW";
-                                worksheet.Cells[$"T{waldex}"].Value = window[0];// "NW";
-                                worksheet.Cells[$"U{waldex}"].Formula = window[1];// "3*3// 면적 (수식)
-                                waldex++;
-                            }
 
+
+
+                        // 벽처리  외벽외창 + 외벽+내벽    
+                        int waldex = 19 + rindex * 50;
+                        //외벽에 걸친 외창 처리
+                        foreach (var ww in windows) // 외창 처리 
+                        {
+                            // 쉼표(',')를 기준으로 자르기
+                            string[] window = ww.Split(':');
+                            // 방위각
+                            worksheet.Cells[$"S{waldex}"].Value = "외  창";// "NW";
+                            worksheet.Cells[$"T{waldex}"].Value = window[0];// "NW";
+                            worksheet.Cells[$"U{waldex}"].Formula = window[1];// "3*3// 면적 (수식)
+                            waldex++;
+                        }
+                        foreach (var wal in walls) 
+                        {
                             //Wall 처리 
                             // 쉼표(':')를 기준으로 자르기
                             string[] wall = wal.Split(':');
