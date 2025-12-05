@@ -746,7 +746,7 @@ namespace Acadv25JArch
                     var bh = JXdata.GetXdata(br, "Height");
                     bbs.Add( $"{blocklength.DmText(1)}*{bh}" );
                     //Check Windows
-                    if( JXdata.GetXdata(br, "Window") != null)
+                    if(( JXdata.GetXdata(br, "Window") != null)&&(!directionStr.Contains("P"))) // Window이고 외벽에 있는 창문인 경우   
                     {
                         Windows.Add($"{directionStr}:{blocklength.DmText(1)}*{bh}");
                     }
