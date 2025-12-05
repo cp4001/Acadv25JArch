@@ -166,34 +166,33 @@ namespace Acadv25JArch
 
 
                         //if (walls == null || walls.Count == 0) continue;
-
+                        int windex = 11 + rindex * 50;
                         foreach (var ww in windows) // 외창 처리 
                         {
-                            int windex = 11 + rindex * 50;
                             // 쉼표(',')를 기준으로 자르기
                             string[] window = ww.Split(':');
 
                             //항목
-                            worksheet.Cells[$"S{windex}"].Value = "외창";// "NW";
+                            worksheet.Cells[$"S{windex}"].Value = "외  창";// "NW";
                             // 방위각
                             worksheet.Cells[$"T{windex}"].Value = window[0];// "NW";
                             // 면적 (수식)
                             worksheet.Cells[$"U{windex}"].Formula = window[1];// "3*3";
                             windex++;
                         }
+
+                        int waldex = 19 + rindex * 50;
                         foreach (var wal in walls) // 벽처리 
                         {
-                            int waldex = 19 + rindex * 50;
                             //외창 처리
                             foreach (var ww in windows) // 외창 처리 
                             {
                                 // 쉼표(',')를 기준으로 자르기
                                 string[] window = ww.Split(':');
-
                                 // 방위각
+                                worksheet.Cells[$"S{waldex}"].Value = "외  창";// "NW";
                                 worksheet.Cells[$"T{waldex}"].Value = window[0];// "NW";
-                                                                                // 면적 (수식)
-                                worksheet.Cells[$"U{waldex}"].Formula = window[1];// "3*3";
+                                worksheet.Cells[$"U{waldex}"].Formula = window[1];// "3*3// 면적 (수식)
                                 waldex++;
                             }
 
@@ -201,7 +200,7 @@ namespace Acadv25JArch
                             // 쉼표(':')를 기준으로 자르기
                             string[] wall = wal.Split(':');
                             //항목
-                            worksheet.Cells[$"S{waldex}"].Value = wall[0].Contains("P") ? "내벽" : "외벽"; //"외벽";   
+                            worksheet.Cells[$"S{waldex}"].Value = wall[0].Contains("P") ? "내   벽" : "외   벽"; //"외벽";   
                             // 방위각
                             worksheet.Cells[$"T{waldex}"].Value = wall[0];// "NW" Or P
                             // 면적 (수식)
