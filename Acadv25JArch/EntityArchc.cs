@@ -748,7 +748,7 @@ namespace Acadv25JArch
                     //Check Windows
                     if( JXdata.GetXdata(br, "Window") != null)
                     {
-                        Windows.Add($"{directionStr}:{(blocklength / 1000.0).DmText(1)}*{CeilingHeight.DmText(1)}");
+                        Windows.Add($"{directionStr}:{blocklength.DmText(1)}*{bh}");
                     }
                 }
                 var blockArea = blocklength/1000.0*this.CeilingHeight;
