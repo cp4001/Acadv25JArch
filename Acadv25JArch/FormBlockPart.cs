@@ -162,8 +162,9 @@ namespace Acadv25JArch
                         Console.WriteLine($"Room Name: {room.Name}, Floor Area: {room.FloorArea}");
 
                         var walls = room.GetWalls();
+                        var walls1 = walls.OrderBy(x => x.StartsWith("P")).ToList(); // P로 시작하지 않는 Wall  앞으로 배치
                         var windows = room.GetWindows();
-                        windows = windows.OrderBy(x => x.StartsWith("P")).ToList(); // P로 시작하지 않는 Wall  앞으로 배치 
+                        //var windows1= windows.OrderBy(x => x.StartsWith("P")).ToList(); // P로 시작하지 않는 Wall  앞으로 배치 
 
                         //if (walls == null || walls.Count == 0) continue;
                         int windex = 11 + rindex * 50;
@@ -197,7 +198,7 @@ namespace Acadv25JArch
                             worksheet.Cells[$"U{waldex}"].Formula = window[1];// "3*3// 면적 (수식)
                             waldex++;
                         }
-                        foreach (var wal in walls) 
+                        foreach (var wal in walls1) 
                         {
                             //Wall 처리 
                             // 쉼표(':')를 기준으로 자르기

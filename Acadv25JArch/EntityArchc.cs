@@ -767,7 +767,7 @@ namespace Acadv25JArch
                 var lineText = directionStr + ":" + $"W[{wallAreaStr}]B[{blockAreaStr}]";
                 var lineText1 = directionStr + ":" + wallAreaStr1;
                 lineText = lineText1.PadRight(10+ bbs.Count*8);
-                Walls.Add(lineText);
+                Walls.Add(lineText.Replace(" ",""));
                 rtxts += lineText + "  ";
 
 
