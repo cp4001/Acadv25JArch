@@ -230,6 +230,7 @@ namespace Acadv25JArch
 
         private void FormBlockPart_Load(object sender, EventArgs e)
         {
+            this.Size = new Size(1800, 750);
         }
     }
 

@@ -29,9 +29,17 @@
         private void InitializeComponent()
         {
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle10 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle7 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle8 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle9 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle11 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle12 = new DataGridViewCellStyle();
             btnAllBlocks = new Button();
             dgvBlock = new DataGridView();
             Col1 = new DataGridViewTextBoxColumn();
@@ -46,13 +54,6 @@
             tabPage2 = new TabPage();
             btnExcel = new Button();
             dgvRoom = new DataGridView();
-            btnRooms = new Button();
-            tabPage3 = new TabPage();
-            dgvWindow = new DataGridView();
-            btnWindows = new Button();
-            tabPage4 = new TabPage();
-            dgvDoor = new DataGridView();
-            btnDoors = new Button();
             Col_Index = new DataGridViewTextBoxColumn();
             Col_Name = new DataGridViewTextBoxColumn();
             Col_CeilingHeight = new DataGridViewTextBoxColumn();
@@ -61,6 +62,13 @@
             Col_FloorArea = new DataGridViewTextBoxColumn();
             Col_Volumn = new DataGridViewTextBoxColumn();
             ColWallText = new DataGridViewTextBoxColumn();
+            btnRooms = new Button();
+            tabPage3 = new TabPage();
+            dgvWindow = new DataGridView();
+            btnWindows = new Button();
+            tabPage4 = new TabPage();
+            dgvDoor = new DataGridView();
+            btnDoors = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvBlock).BeginInit();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -84,6 +92,8 @@
             // 
             // dgvBlock
             // 
+            dgvBlock.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+            dgvBlock.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             dgvBlock.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvBlock.Columns.AddRange(new DataGridViewColumn[] { Col1, Column1, Column2, Column3, Column4, Column5, Column6 });
             dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
@@ -107,7 +117,7 @@
             Col1.HeaderText = "Index";
             Col1.MinimumWidth = 8;
             Col1.Name = "Col1";
-            Col1.Width = 80;
+            Col1.Width = 92;
             // 
             // Column1
             // 
@@ -115,7 +125,7 @@
             Column1.HeaderText = "Img";
             Column1.MinimumWidth = 8;
             Column1.Name = "Column1";
-            Column1.Width = 80;
+            Column1.Width = 50;
             // 
             // Column2
             // 
@@ -123,7 +133,7 @@
             Column2.HeaderText = "Name";
             Column2.MinimumWidth = 8;
             Column2.Name = "Column2";
-            Column2.Width = 500;
+            Column2.Width = 97;
             // 
             // Column3
             // 
@@ -131,7 +141,7 @@
             Column3.HeaderText = "Count";
             Column3.MinimumWidth = 8;
             Column3.Name = "Column3";
-            Column3.Width = 80;
+            Column3.Width = 96;
             // 
             // Column4
             // 
@@ -139,7 +149,7 @@
             Column4.HeaderText = "PartName";
             Column4.MinimumWidth = 8;
             Column4.Name = "Column4";
-            Column4.Width = 150;
+            Column4.Width = 128;
             // 
             // Column5
             // 
@@ -147,7 +157,7 @@
             Column5.HeaderText = "Type";
             Column5.MinimumWidth = 8;
             Column5.Name = "Column5";
-            Column5.Width = 150;
+            Column5.Width = 88;
             // 
             // Column6
             // 
@@ -155,7 +165,7 @@
             Column6.HeaderText = "Symbol";
             Column6.MinimumWidth = 8;
             Column6.Name = "Column6";
-            Column6.Width = 150;
+            Column6.Width = 109;
             // 
             // tabControl1
             // 
@@ -167,7 +177,7 @@
             tabControl1.Location = new Point(0, 0);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(2131, 690);
+            tabControl1.Size = new Size(1811, 690);
             tabControl1.TabIndex = 2;
             // 
             // tabPage1
@@ -177,7 +187,7 @@
             tabPage1.Location = new Point(4, 34);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(2123, 652);
+            tabPage1.Size = new Size(1803, 652);
             tabPage1.TabIndex = 0;
             tabPage1.Text = "Blocks";
             tabPage1.UseVisualStyleBackColor = true;
@@ -190,7 +200,7 @@
             tabPage2.Location = new Point(4, 34);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(2123, 652);
+            tabPage2.Size = new Size(1903, 652);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "Rooms";
             tabPage2.UseVisualStyleBackColor = true;
@@ -207,22 +217,104 @@
             // 
             // dgvRoom
             // 
+            dgvRoom.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+            dgvRoom.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             dgvRoom.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvRoom.Columns.AddRange(new DataGridViewColumn[] { Col_Index, Col_Name, Col_CeilingHeight, Col_FloorHeight, Col_Roofarea, Col_FloorArea, Col_Volumn, ColWallText });
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = SystemColors.Window;
-            dataGridViewCellStyle2.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle2.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
-            dgvRoom.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle10.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle10.BackColor = SystemColors.Window;
+            dataGridViewCellStyle10.Font = new Font("맑은 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle10.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle10.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle10.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle10.WrapMode = DataGridViewTriState.False;
+            dgvRoom.DefaultCellStyle = dataGridViewCellStyle10;
             dgvRoom.Location = new Point(68, 93);
             dgvRoom.Name = "dgvRoom";
             dgvRoom.RowHeadersWidth = 62;
             dgvRoom.RowTemplate.Height = 50;
-            dgvRoom.Size = new Size(2021, 428);
+            dgvRoom.Size = new Size(1729, 471);
             dgvRoom.TabIndex = 2;
+            // 
+            // Col_Index
+            // 
+            Col_Index.DataPropertyName = "Index";
+            dataGridViewCellStyle2.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_Index.DefaultCellStyle = dataGridViewCellStyle2;
+            Col_Index.HeaderText = "Index";
+            Col_Index.MinimumWidth = 8;
+            Col_Index.Name = "Col_Index";
+            Col_Index.Width = 92;
+            // 
+            // Col_Name
+            // 
+            Col_Name.DataPropertyName = "Name";
+            dataGridViewCellStyle3.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_Name.DefaultCellStyle = dataGridViewCellStyle3;
+            Col_Name.HeaderText = "Name";
+            Col_Name.MinimumWidth = 8;
+            Col_Name.Name = "Col_Name";
+            Col_Name.Width = 97;
+            // 
+            // Col_CeilingHeight
+            // 
+            Col_CeilingHeight.DataPropertyName = "CeilingHeight";
+            dataGridViewCellStyle4.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_CeilingHeight.DefaultCellStyle = dataGridViewCellStyle4;
+            Col_CeilingHeight.HeaderText = "천정고";
+            Col_CeilingHeight.MinimumWidth = 8;
+            Col_CeilingHeight.Name = "Col_CeilingHeight";
+            Col_CeilingHeight.Width = 102;
+            // 
+            // Col_FloorHeight
+            // 
+            Col_FloorHeight.DataPropertyName = "FloorHeight";
+            dataGridViewCellStyle5.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_FloorHeight.DefaultCellStyle = dataGridViewCellStyle5;
+            Col_FloorHeight.HeaderText = "층고";
+            Col_FloorHeight.MinimumWidth = 8;
+            Col_FloorHeight.Name = "Col_FloorHeight";
+            Col_FloorHeight.Width = 84;
+            // 
+            // Col_Roofarea
+            // 
+            Col_Roofarea.DataPropertyName = "RoofArea";
+            dataGridViewCellStyle6.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_Roofarea.DefaultCellStyle = dataGridViewCellStyle6;
+            Col_Roofarea.HeaderText = "지붕면적";
+            Col_Roofarea.MinimumWidth = 8;
+            Col_Roofarea.Name = "Col_Roofarea";
+            Col_Roofarea.Width = 120;
+            // 
+            // Col_FloorArea
+            // 
+            Col_FloorArea.DataPropertyName = "FloorArea";
+            dataGridViewCellStyle7.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_FloorArea.DefaultCellStyle = dataGridViewCellStyle7;
+            Col_FloorArea.HeaderText = "바닥면적";
+            Col_FloorArea.MinimumWidth = 8;
+            Col_FloorArea.Name = "Col_FloorArea";
+            Col_FloorArea.Width = 120;
+            // 
+            // Col_Volumn
+            // 
+            Col_Volumn.DataPropertyName = "Volumn";
+            dataGridViewCellStyle8.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_Volumn.DefaultCellStyle = dataGridViewCellStyle8;
+            Col_Volumn.HeaderText = "체적";
+            Col_Volumn.MinimumWidth = 8;
+            Col_Volumn.Name = "Col_Volumn";
+            Col_Volumn.Width = 84;
+            // 
+            // ColWallText
+            // 
+            ColWallText.DataPropertyName = "WallText";
+            dataGridViewCellStyle9.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            ColWallText.DefaultCellStyle = dataGridViewCellStyle9;
+            ColWallText.HeaderText = "벽면정보";
+            ColWallText.MinimumWidth = 8;
+            ColWallText.Name = "ColWallText";
+            ColWallText.Width = 120;
             // 
             // btnRooms
             // 
@@ -241,7 +333,7 @@
             tabPage3.Location = new Point(4, 34);
             tabPage3.Name = "tabPage3";
             tabPage3.Padding = new Padding(3);
-            tabPage3.Size = new Size(2123, 652);
+            tabPage3.Size = new Size(1903, 652);
             tabPage3.TabIndex = 2;
             tabPage3.Text = "Windows";
             tabPage3.UseVisualStyleBackColor = true;
@@ -249,14 +341,14 @@
             // dgvWindow
             // 
             dgvWindow.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = SystemColors.Window;
-            dataGridViewCellStyle3.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle3.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle3.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
-            dgvWindow.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle11.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle11.BackColor = SystemColors.Window;
+            dataGridViewCellStyle11.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle11.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle11.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle11.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle11.WrapMode = DataGridViewTriState.False;
+            dgvWindow.DefaultCellStyle = dataGridViewCellStyle11;
             dgvWindow.Location = new Point(87, 112);
             dgvWindow.Name = "dgvWindow";
             dgvWindow.RowHeadersWidth = 62;
@@ -280,7 +372,7 @@
             tabPage4.Location = new Point(4, 34);
             tabPage4.Name = "tabPage4";
             tabPage4.Padding = new Padding(3);
-            tabPage4.Size = new Size(2123, 652);
+            tabPage4.Size = new Size(1903, 652);
             tabPage4.TabIndex = 3;
             tabPage4.Text = "Doors";
             tabPage4.UseVisualStyleBackColor = true;
@@ -288,14 +380,14 @@
             // dgvDoor
             // 
             dgvDoor.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = SystemColors.Window;
-            dataGridViewCellStyle4.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle4.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle4.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = DataGridViewTriState.False;
-            dgvDoor.DefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle12.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle12.BackColor = SystemColors.Window;
+            dataGridViewCellStyle12.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle12.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle12.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle12.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle12.WrapMode = DataGridViewTriState.False;
+            dgvDoor.DefaultCellStyle = dataGridViewCellStyle12;
             dgvDoor.Location = new Point(105, 112);
             dgvDoor.Name = "dgvDoor";
             dgvDoor.RowHeadersWidth = 62;
@@ -312,74 +404,11 @@
             btnDoors.Text = "All Doors";
             btnDoors.UseVisualStyleBackColor = true;
             // 
-            // Col_Index
-            // 
-            Col_Index.DataPropertyName = "Index";
-            Col_Index.HeaderText = "Index";
-            Col_Index.MinimumWidth = 8;
-            Col_Index.Name = "Col_Index";
-            Col_Index.Width = 80;
-            // 
-            // Col_Name
-            // 
-            Col_Name.DataPropertyName = "Name";
-            Col_Name.HeaderText = "Name";
-            Col_Name.MinimumWidth = 8;
-            Col_Name.Name = "Col_Name";
-            Col_Name.Width = 150;
-            // 
-            // Col_CeilingHeight
-            // 
-            Col_CeilingHeight.DataPropertyName = "CeilingHeight";
-            Col_CeilingHeight.HeaderText = "천정고";
-            Col_CeilingHeight.MinimumWidth = 8;
-            Col_CeilingHeight.Name = "Col_CeilingHeight";
-            Col_CeilingHeight.Width = 120;
-            // 
-            // Col_FloorHeight
-            // 
-            Col_FloorHeight.DataPropertyName = "FloorHeight";
-            Col_FloorHeight.HeaderText = "층고";
-            Col_FloorHeight.MinimumWidth = 8;
-            Col_FloorHeight.Name = "Col_FloorHeight";
-            // 
-            // Col_Roofarea
-            // 
-            Col_Roofarea.DataPropertyName = "RoofArea";
-            Col_Roofarea.HeaderText = "지붕면적";
-            Col_Roofarea.MinimumWidth = 8;
-            Col_Roofarea.Name = "Col_Roofarea";
-            Col_Roofarea.Width = 120;
-            // 
-            // Col_FloorArea
-            // 
-            Col_FloorArea.DataPropertyName = "FloorArea";
-            Col_FloorArea.HeaderText = "바닥면적";
-            Col_FloorArea.MinimumWidth = 8;
-            Col_FloorArea.Name = "Col_FloorArea";
-            Col_FloorArea.Width = 120;
-            // 
-            // Col_Volumn
-            // 
-            Col_Volumn.DataPropertyName = "Volumn";
-            Col_Volumn.HeaderText = "체적";
-            Col_Volumn.MinimumWidth = 8;
-            Col_Volumn.Name = "Col_Volumn";
-            Col_Volumn.Width = 120;
-            // 
-            // ColWallText
-            // 
-            ColWallText.DataPropertyName = "WallText";
-            ColWallText.HeaderText = "벽면정보";
-            ColWallText.MinimumWidth = 8;
-            ColWallText.Name = "ColWallText";
-            ColWallText.Width = 800;
-            // 
             // FormBlockPart
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(2131, 690);
+            ClientSize = new Size(1811, 690);
             Controls.Add(tabControl1);
             Name = "FormBlockPart";
             Text = "BlocksForm";
