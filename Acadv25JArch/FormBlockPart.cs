@@ -163,7 +163,7 @@ namespace Acadv25JArch
 
                         var walls = room.GetWalls();
                         var windows = room.GetWindows();
-
+                        windows = windows.OrderBy(x => x.StartsWith("P")).ToList(); // P로 시작하지 않는 Wall  앞으로 배치 
 
                         //if (walls == null || walls.Count == 0) continue;
                         int windex = 11 + rindex * 50;
