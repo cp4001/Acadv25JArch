@@ -168,8 +168,9 @@ namespace Acadv25JArch
 
                         //if (walls == null || walls.Count == 0) continue;
                         int windex = 11 + rindex * 50;
-                        foreach (var ww in windows) // 외창 처리 
+                        foreach (var ww in windows) // 외창 처리 -- windows 는 내창과 외창이 섞여있음  
                         {
+                            if(ww.Contains("P")) continue; // 내창은 패스  
                             // 쉼표(',')를 기준으로 자르기
                             string[] window = ww.Split(':');
 
@@ -188,12 +189,16 @@ namespace Acadv25JArch
                         // 벽처리  외벽외창 + 외벽+내벽    
                         int waldex = 19 + rindex * 50;
                         //외벽에 걸친 외창 처리
-                        foreach (var ww in windows) // 외창 처리 
+                        foreach (var ww in windows) // 외창 + 내창 처리 
                         {
                             // 쉼표(',')를 기준으로 자르기
                             string[] window = ww.Split(':');
-                            // 방위각
-                            worksheet.Cells[$"S{waldex}"].Value = "외  창";// "NW";
+                            //// 방위각
+                            //worksheet.Cells[$"S{waldex}"].Value = "외  창";// "NW";
+                            //if(ww.StartsWith("P")) worksheet.Cells[$"S{waldex}"].Value = "내  창";
+
+                            //항목
+                            worksheet.Cells[$"S{waldex}"].Value = window[0].Contains("P") ? "내   창" : "외   창"; //"외벽";   
                             worksheet.Cells[$"T{waldex}"].Value = window[0];// "NW";
                             worksheet.Cells[$"U{waldex}"].Formula = window[1];// "3*3// 면적 (수식)
                             waldex++;

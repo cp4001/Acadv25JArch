@@ -731,7 +731,9 @@ namespace Acadv25JArch
                 var outs  = SelSet.GetEntitys(cpl, JSelFilter.MakeFilterTypesLayer("LINE,LWPOLYLINE", Jdf.Layer.OutWall),400)?
                     .OfType<Entity>().Select(xx => xx as BlockReference).ToList();
                 if (outs != null) isOutWall = true;
-                
+
+                if (isOutWall == false) directionStr = "P".PadLeft(2);
+
 
                 //Check Blocks 
                 var brs = SelSet.GetEntitys(line, JSelFilter.MakeFilterTypesRegs("INSERT", "Door,Window"))?
@@ -746,7 +748,7 @@ namespace Acadv25JArch
                     var bh = JXdata.GetXdata(br, "Height");
                     bbs.Add( $"{blocklength.DmText(1)}*{bh}" );
                     //Check Windows
-                    if(( JXdata.GetXdata(br, "Window") != null)&&(!directionStr.Contains("P"))) // Window이고 외벽에 있는 창문인 경우   
+                    if(( JXdata.GetXdata(br, "Window") != null)) // Window이면   외창 내창 구분 없이 추가 
                     {
                         Windows.Add($"{directionStr}:{blocklength.DmText(1)}*{bh}");
                     }
@@ -763,7 +765,7 @@ namespace Acadv25JArch
                 }
                 var walllengthStr = (Math.Round(line.Length / 1000, 1, MidpointRounding.AwayFromZero)).ToString(); 
                 
-                if (isOutWall == false) directionStr = "P".PadLeft(2);
+             
                 var lineText = directionStr + ":" + $"W[{wallAreaStr}]B[{blockAreaStr}]";
                 var lineText1 = directionStr + ":" + wallAreaStr1;
                 lineText = lineText1.PadRight(10+ bbs.Count*8);
