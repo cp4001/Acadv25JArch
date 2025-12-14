@@ -30,8 +30,6 @@
         {
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle10 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle11 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle12 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
@@ -40,6 +38,8 @@
             DataGridViewCellStyle dataGridViewCellStyle7 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle8 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle9 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle11 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle12 = new DataGridViewCellStyle();
             btnAllBlocks = new Button();
             dgvBlock = new DataGridView();
             Col1 = new DataGridViewTextBoxColumn();
@@ -54,13 +54,6 @@
             tabPage2 = new TabPage();
             btnExcel = new Button();
             dgvRoom = new DataGridView();
-            btnRooms = new Button();
-            tabPage3 = new TabPage();
-            dgvWindow = new DataGridView();
-            btnWindows = new Button();
-            tabPage4 = new TabPage();
-            dgvDoor = new DataGridView();
-            btnDoors = new Button();
             Col_Index = new DataGridViewTextBoxColumn();
             Col_Name = new DataGridViewTextBoxColumn();
             Col_Floor = new DataGridViewTextBoxColumn();
@@ -70,6 +63,13 @@
             Col_FloorArea = new DataGridViewTextBoxColumn();
             Col_Volumn = new DataGridViewTextBoxColumn();
             ColWallText = new DataGridViewTextBoxColumn();
+            btnRooms = new Button();
+            tabPage3 = new TabPage();
+            dgvWindow = new DataGridView();
+            btnWindows = new Button();
+            tabPage4 = new TabPage();
+            dgvDoor = new DataGridView();
+            btnDoors = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvBlock).BeginInit();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -237,94 +237,6 @@
             dgvRoom.Size = new Size(1729, 471);
             dgvRoom.TabIndex = 2;
             // 
-            // btnRooms
-            // 
-            btnRooms.Location = new Point(33, 31);
-            btnRooms.Name = "btnRooms";
-            btnRooms.Size = new Size(112, 34);
-            btnRooms.TabIndex = 1;
-            btnRooms.Text = "All Rooms";
-            btnRooms.UseVisualStyleBackColor = true;
-            btnRooms.Click += btnRooms_Click;
-            // 
-            // tabPage3
-            // 
-            tabPage3.Controls.Add(dgvWindow);
-            tabPage3.Controls.Add(btnWindows);
-            tabPage3.Location = new Point(4, 34);
-            tabPage3.Name = "tabPage3";
-            tabPage3.Padding = new Padding(3);
-            tabPage3.Size = new Size(1803, 652);
-            tabPage3.TabIndex = 2;
-            tabPage3.Text = "Windows";
-            tabPage3.UseVisualStyleBackColor = true;
-            // 
-            // dgvWindow
-            // 
-            dgvWindow.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle11.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle11.BackColor = SystemColors.Window;
-            dataGridViewCellStyle11.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle11.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle11.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle11.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle11.WrapMode = DataGridViewTriState.False;
-            dgvWindow.DefaultCellStyle = dataGridViewCellStyle11;
-            dgvWindow.Location = new Point(87, 112);
-            dgvWindow.Name = "dgvWindow";
-            dgvWindow.RowHeadersWidth = 62;
-            dgvWindow.RowTemplate.Height = 50;
-            dgvWindow.Size = new Size(1164, 428);
-            dgvWindow.TabIndex = 4;
-            // 
-            // btnWindows
-            // 
-            btnWindows.Location = new Point(52, 50);
-            btnWindows.Name = "btnWindows";
-            btnWindows.Size = new Size(180, 34);
-            btnWindows.TabIndex = 3;
-            btnWindows.Text = "All Windows";
-            btnWindows.UseVisualStyleBackColor = true;
-            // 
-            // tabPage4
-            // 
-            tabPage4.Controls.Add(dgvDoor);
-            tabPage4.Controls.Add(btnDoors);
-            tabPage4.Location = new Point(4, 34);
-            tabPage4.Name = "tabPage4";
-            tabPage4.Padding = new Padding(3);
-            tabPage4.Size = new Size(1803, 652);
-            tabPage4.TabIndex = 3;
-            tabPage4.Text = "Doors";
-            tabPage4.UseVisualStyleBackColor = true;
-            // 
-            // dgvDoor
-            // 
-            dgvDoor.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle12.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle12.BackColor = SystemColors.Window;
-            dataGridViewCellStyle12.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle12.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle12.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle12.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle12.WrapMode = DataGridViewTriState.False;
-            dgvDoor.DefaultCellStyle = dataGridViewCellStyle12;
-            dgvDoor.Location = new Point(105, 112);
-            dgvDoor.Name = "dgvDoor";
-            dgvDoor.RowHeadersWidth = 62;
-            dgvDoor.RowTemplate.Height = 50;
-            dgvDoor.Size = new Size(1164, 428);
-            dgvDoor.TabIndex = 6;
-            // 
-            // btnDoors
-            // 
-            btnDoors.Location = new Point(70, 50);
-            btnDoors.Name = "btnDoors";
-            btnDoors.Size = new Size(180, 34);
-            btnDoors.TabIndex = 5;
-            btnDoors.Text = "All Doors";
-            btnDoors.UseVisualStyleBackColor = true;
-            // 
             // Col_Index
             // 
             Col_Index.DataPropertyName = "Index";
@@ -412,6 +324,95 @@
             ColWallText.MinimumWidth = 8;
             ColWallText.Name = "ColWallText";
             ColWallText.Width = 120;
+            // 
+            // btnRooms
+            // 
+            btnRooms.Location = new Point(33, 31);
+            btnRooms.Name = "btnRooms";
+            btnRooms.Size = new Size(112, 34);
+            btnRooms.TabIndex = 1;
+            btnRooms.Text = "All Rooms";
+            btnRooms.UseVisualStyleBackColor = true;
+            btnRooms.Click += btnRooms_Click;
+            // 
+            // tabPage3
+            // 
+            tabPage3.Controls.Add(dgvWindow);
+            tabPage3.Controls.Add(btnWindows);
+            tabPage3.Location = new Point(4, 34);
+            tabPage3.Name = "tabPage3";
+            tabPage3.Padding = new Padding(3);
+            tabPage3.Size = new Size(1803, 652);
+            tabPage3.TabIndex = 2;
+            tabPage3.Text = "Windows";
+            tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // dgvWindow
+            // 
+            dgvWindow.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewCellStyle11.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle11.BackColor = SystemColors.Window;
+            dataGridViewCellStyle11.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle11.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle11.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle11.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle11.WrapMode = DataGridViewTriState.False;
+            dgvWindow.DefaultCellStyle = dataGridViewCellStyle11;
+            dgvWindow.Location = new Point(87, 112);
+            dgvWindow.Name = "dgvWindow";
+            dgvWindow.RowHeadersWidth = 62;
+            dgvWindow.RowTemplate.Height = 50;
+            dgvWindow.Size = new Size(1164, 428);
+            dgvWindow.TabIndex = 4;
+            // 
+            // btnWindows
+            // 
+            btnWindows.Location = new Point(52, 50);
+            btnWindows.Name = "btnWindows";
+            btnWindows.Size = new Size(180, 34);
+            btnWindows.TabIndex = 3;
+            btnWindows.Text = "All Windows";
+            btnWindows.UseVisualStyleBackColor = true;
+            btnWindows.Click += btnWindows_Click;
+            // 
+            // tabPage4
+            // 
+            tabPage4.Controls.Add(dgvDoor);
+            tabPage4.Controls.Add(btnDoors);
+            tabPage4.Location = new Point(4, 34);
+            tabPage4.Name = "tabPage4";
+            tabPage4.Padding = new Padding(3);
+            tabPage4.Size = new Size(1803, 652);
+            tabPage4.TabIndex = 3;
+            tabPage4.Text = "Doors";
+            tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // dgvDoor
+            // 
+            dgvDoor.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewCellStyle12.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle12.BackColor = SystemColors.Window;
+            dataGridViewCellStyle12.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle12.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle12.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle12.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle12.WrapMode = DataGridViewTriState.False;
+            dgvDoor.DefaultCellStyle = dataGridViewCellStyle12;
+            dgvDoor.Location = new Point(105, 112);
+            dgvDoor.Name = "dgvDoor";
+            dgvDoor.RowHeadersWidth = 62;
+            dgvDoor.RowTemplate.Height = 50;
+            dgvDoor.Size = new Size(1164, 428);
+            dgvDoor.TabIndex = 6;
+            // 
+            // btnDoors
+            // 
+            btnDoors.Location = new Point(70, 50);
+            btnDoors.Name = "btnDoors";
+            btnDoors.Size = new Size(180, 34);
+            btnDoors.TabIndex = 5;
+            btnDoors.Text = "All Doors";
+            btnDoors.UseVisualStyleBackColor = true;
             // 
             // FormBlockPart
             // 

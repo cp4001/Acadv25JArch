@@ -20,10 +20,12 @@ namespace Acadv25JArch
 {
     public partial class FormBlockPart : Form
     {
-        public static List<ObjectId> selids = new List<ObjectId>();            // 선택된 Blocks
-        public static List<BlockPart> blockparts = new List<BlockPart>();      // Group화된 BlockPart
+        public static List<ObjectId> selids = new List<ObjectId>();                 // 선택된 Blocks
+        public static List<BlockPart> blockparts = new List<BlockPart>();        // Group화된 BlockPart
         public static BindingSource bs = new BindingSource();
         public static BindingSource bs_room = new BindingSource();
+        public static BindingSource bs_window = new BindingSource();          // WindowPart 용
+        public static BindingSource bs_door = new BindingSource();              // DoorPart 용
         public static BindingSource bsNumDia = new BindingSource();
 
         // 어셈블리 리졸브 핸들러 등록
@@ -140,11 +142,11 @@ namespace Acadv25JArch
 
                     // 1~50행을 51~100행으로 복사
                     // EPPlus는 전체 행 범위를 직접 복사
-                    for (int roomcnt = 1; roomcnt <= roomparts.Count-1; roomcnt++)
+                    for (int roomcnt = 1; roomcnt <= roomparts.Count - 1; roomcnt++)
                     {
                         for (int row = 1; row <= 50; row++)
                         {
-                            int targetRow = row + roomcnt*50; // 51~100행
+                            int targetRow = row + roomcnt * 50; // 51~100행
 
                             // 각 행의 사용된 열 범위 복사
                             var sourceRow = worksheet.Cells[row, 1, row, worksheet.Dimension.End.Column];
@@ -170,7 +172,7 @@ namespace Acadv25JArch
                         int windex = 11 + rindex * 50;
                         foreach (var ww in windows) // 외창 처리 -- windows 는 내창과 외창이 섞여있음  
                         {
-                            if(ww.Contains("P")) continue; // 내창은 패스  
+                            if (ww.Contains("P")) continue; // 내창은 패스  
                             // 쉼표(',')를 기준으로 자르기
                             string[] window = ww.Split(':');
 
@@ -203,7 +205,7 @@ namespace Acadv25JArch
                             worksheet.Cells[$"U{waldex}"].Formula = window[1];// "3*3// 면적 (수식)
                             waldex++;
                         }
-                        foreach (var wal in walls1) 
+                        foreach (var wal in walls1)
                         {
                             //Wall 처리 
                             // 쉼표(':')를 기준으로 자르기
@@ -236,6 +238,19 @@ namespace Acadv25JArch
         private void FormBlockPart_Load(object sender, EventArgs e)
         {
             this.Size = new Size(1800, 750);
+        }
+
+        private void btnWindows_Click(object sender, EventArgs e)
+        {
+            var windowparts = WindowPart.GetAllBlockParts();
+            if (windowparts == null)
+            {
+                MessageBox.Show(" Windows가   없습니다.");
+                return;
+            }
+            SortableBindingList<WindowPart> drbl = new SortableBindingList<WindowPart>(windowparts);
+            bs_window.DataSource = drbl;
+            dgvWindow.DataSource = bs_window;
         }
     }
 

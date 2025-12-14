@@ -340,6 +340,7 @@ namespace Acadv25JArch
         public System.Drawing.Image Img { get; set; }      // picBoxBr.Image =   btr.PreviewIcon?.GetThumbnailImage(192, 192, () => false, IntPtr.Zero);
 
         public string Name { get; set; }  // Block Name
+        public string Floor { get; set; } // 층  1층 2층 
         public int Count { get; set; }   // 행당 Block의 개수 
         public string PartName { get; set; } // 부품명 
         public string Type { get; set; } //  Type  // 문{Door}  창문{Windwo} 
@@ -474,30 +475,6 @@ namespace Acadv25JArch
             using (DocumentLock docLock = doc.LockDocument())
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-
-                //var ents = JEntity.GetEntityAllByTpye<Entity>(JEntity.MakeSelFilter("LINE,LWPOLYLINE,INSERT", "LightPart"));
-                //var entids = JEntity.GetEntityAllByTpye(JEntity.MakeSelFilter("LINE,LWPOLYLINE,INSERT", "LightPart"));
-                //var ents = JEntity.GetSelectedEntityByTpye<Entity>();
-                //PreSelected Entity
-                //var entids = JEntity.GetSelectedEntityIds();
-
-                //List<ObjectId> brids = new List<ObjectId>();
-                //if (entids == null)
-                //{
-                //    tr.Commit();
-                //    return null;
-                //}
-
-                ////Filter BlockReferenec 
-                //foreach (var id in entids)
-                //{
-                //    //Check 
-                //    if (id.GetObject(OpenMode.ForRead).GetType() == typeof(BlockReference))
-                //    {
-                //        blockrefs.Add(id.GetObject(OpenMode.ForRead) as BlockReference);
-                //        brids.Add(id);
-                //    }
-                //}
 
                 var ents = JEntity.GetEntityAllByTpye<Entity>(JEntity.MakeSelFilter("INSERT","Window"));                //(JEntity.MakeSelFilter("INSERT", "ElecPart"));
                 if (ents == null) return null;
