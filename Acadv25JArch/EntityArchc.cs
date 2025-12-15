@@ -507,7 +507,7 @@ namespace Acadv25JArch
 
 
                     var Img = btr.PreviewIcon?.GetThumbnailImage(128, 128, () => false, IntPtr.Zero);
-                    if (Img == null) continue; // Img가 없는것은 제외
+                    //if (Img == null) continue; // Img가 없어도 진행   Icon 이미지가 표시 되지   않을 뿐
                     WindowPart jbtr = new WindowPart(btrId);//brg.First().BlockTableRecord);
 
                     //jbtr.Attach = "천장";
@@ -718,7 +718,7 @@ namespace Acadv25JArch
 
 
                     var Img = btr.PreviewIcon?.GetThumbnailImage(128, 128, () => false, IntPtr.Zero);
-                    if (Img == null) continue; // Img가 없는것은 제외
+                    //if (Img == null) continue; // Img가 없으면 표시만 안됨
                     DoorPart jbtr = new DoorPart(btrId);//brg.First().BlockTableRecord);
 
                     //jbtr.Attach = "천장";
