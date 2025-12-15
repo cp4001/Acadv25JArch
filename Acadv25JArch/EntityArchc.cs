@@ -679,7 +679,7 @@ namespace Acadv25JArch
 
             ResetCounter();
 
-            List<WindowPart> parts = new List<WindowPart>();
+            List<DoorPart> parts = new List<DoorPart>();
             List<BlockReference> blockrefs = new List<BlockReference>();
             //LightPart.ResetCounter();
             // 문서 잠금 및 트랜잭션 시작
@@ -719,7 +719,7 @@ namespace Acadv25JArch
 
                     var Img = btr.PreviewIcon?.GetThumbnailImage(128, 128, () => false, IntPtr.Zero);
                     if (Img == null) continue; // Img가 없는것은 제외
-                    WindowPart jbtr = new WindowPart(btrId);//brg.First().BlockTableRecord);
+                    DoorPart jbtr = new DoorPart(btrId);//brg.First().BlockTableRecord);
 
                     //jbtr.Attach = "천장";
                     jbtr.Count = brg.Count();
