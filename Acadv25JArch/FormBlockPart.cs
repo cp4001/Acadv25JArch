@@ -252,6 +252,19 @@ namespace Acadv25JArch
             bs_window.DataSource = drbl;
             dgvWindow.DataSource = bs_window;
         }
+
+        private void btnDoors_Click(object sender, EventArgs e)
+        {
+            var doorparts = DoorPart.GetAllBlockParts();
+            if (doorparts == null)
+            {
+                MessageBox.Show(" Windows가   없습니다.");
+                return;
+            }
+            SortableBindingList<DoorPart> drbl = new SortableBindingList<DoorPart>(doorparts);
+            bs_door.DataSource = drbl;
+            dgvDoor.DataSource = bs_door;
+        }
     }
 
 

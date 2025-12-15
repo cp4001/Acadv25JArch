@@ -413,6 +413,7 @@
             btnDoors.TabIndex = 5;
             btnDoors.Text = "All Doors";
             btnDoors.UseVisualStyleBackColor = true;
+            btnDoors.Click += btnDoors_Click;
             // 
             // FormBlockPart
             // 
