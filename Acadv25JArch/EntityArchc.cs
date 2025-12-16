@@ -343,7 +343,7 @@ namespace Acadv25JArch
         public string Floor { get; set; } // 층  1층 2층 
         public int Count { get; set; }   // 행당 Block의 개수 
         public string PartName { get; set; } // 부품명 
-        public string Type { get; set; } //  Type  // 문{Door}  창문{Windwo} 
+        //public string Type { get; set; } //  Type  // 문{Door}  창문{Windwo} 
         public string SymbolType { get; set; } // 동일 Block이라도 SymbolType이 다르면 구별해서 적용
                                                // SymbolType이 있으면 Name = Name+":+SymbolType 적용 
                                                // 이 정보는 선택된 Block을 Grouping 할 떄 분류 한다.
@@ -423,7 +423,7 @@ namespace Acadv25JArch
                 //Grouping Block
                 //Dynamic Block이 있어서 Grouping에 문제가 있다.
                 //Block Grouping 시  Block의 SymbolType을  같이 고려한다.
-                var bgrGrps = blockrefs.GroupBy(x => x.GetName() + JXdata.GetXdata(x, "SymbolType") ?? "");
+                var bgrGrps = blockrefs.GroupBy(x => x.GetName() +JXdata.GetXdata(x,"Floor")??""+ JXdata.GetXdata(x, "SymbolType") ?? "");
 
                 foreach (var brg in bgrGrps)
                 {
@@ -443,9 +443,10 @@ namespace Acadv25JArch
                     WindowPart jbtr = new WindowPart(btrId);//brg.First().BlockTableRecord);
                     //jbtr.Attach = "천장";
                     jbtr.Count = brg.Count();
+                    jbtr.Floor = JXdata.GetXdata(brg.First(), "Floor"); 
                     jbtr.PartName = JXdata.GetXdata(brg.First(), "PartName");
-                    jbtr.Type = JXdata.GetXdata(brg.First(), "Type");
-                    //jbtr.Attach = JXdata.GetXdata(brg.First(), "Attatch");
+                    //jbtr.Type = JXdata.GetXdata(brg.First(), "Type");
+                 //jbtr.Attach = JXdata.GetXdata(brg.First(), "Attatch");
                     jbtr.SymbolType = JXdata.GetXdata(brg.First(), "SymbolType");
 
                     //if (JXdata.GetXdata(brg.First(), "IsWire") == "True") jbtr.IsWire = true;
@@ -487,7 +488,7 @@ namespace Acadv25JArch
                 //Grouping Block
                 //Dynamic Block이 있어서 Grouping에 문제가 있다.
                 //Block Grouping 시  Block의 SymbolType을  같이 고려한다.
-                var bgrGrps = blockrefs.GroupBy(x => x.GetName() + JXdata.GetXdata(x, "SymbolType") ?? "");
+                var bgrGrps = blockrefs.GroupBy(x => x.GetName()  +JXdata.GetXdata(x, "Floor") ?? ""+JXdata.GetXdata(x, "SymbolType") ?? "");
 
                 foreach (var brg in bgrGrps)
                 {
@@ -513,7 +514,8 @@ namespace Acadv25JArch
                     //jbtr.Attach = "천장";
                     jbtr.Count = brg.Count();
                     jbtr.PartName = JXdata.GetXdata(brg.First(), "PartName");
-                    jbtr.Type = JXdata.GetXdata(brg.First(), "Type");
+                    jbtr.Floor = JXdata.GetXdata(brg.First(), "Floor");
+                    //jbtr.Type = JXdata.GetXdata(brg.First(), "Type");
                     //jbtr.Attach = JXdata.GetXdata(brg.First(), "Attatch");
                     jbtr.SymbolType = JXdata.GetXdata(brg.First(), "SymbolType");
 
@@ -698,7 +700,7 @@ namespace Acadv25JArch
                 //Grouping Block
                 //Dynamic Block이 있어서 Grouping에 문제가 있다.
                 //Block Grouping 시  Block의 SymbolType을  같이 고려한다.
-                var bgrGrps = blockrefs.GroupBy(x => x.GetName() + JXdata.GetXdata(x, "SymbolType") ?? "");
+                var bgrGrps = blockrefs.GroupBy(x => x.GetName() + JXdata.GetXdata(x, "Floor") ?? "" + JXdata.GetXdata(x, "SymbolType") ?? "");
 
                 foreach (var brg in bgrGrps)
                 {
@@ -716,7 +718,6 @@ namespace Acadv25JArch
                     }
                     if (btr.IsLayout || btr.IsAnonymous) continue; // Layout과 Anonymous Block은 제외
 
-
                     var Img = btr.PreviewIcon?.GetThumbnailImage(128, 128, () => false, IntPtr.Zero);
                     //if (Img == null) continue; // Img가 없으면 표시만 안됨
                     DoorPart jbtr = new DoorPart(btrId);//brg.First().BlockTableRecord);
@@ -724,7 +725,8 @@ namespace Acadv25JArch
                     //jbtr.Attach = "천장";
                     jbtr.Count = brg.Count();
                     jbtr.PartName = JXdata.GetXdata(brg.First(), "PartName");
-                    jbtr.Type = JXdata.GetXdata(brg.First(), "Type");
+                    jbtr.Floor = JXdata.GetXdata(brg.First(), "Floor");
+                    //jbtr.Type = JXdata.GetXdata(brg.First(), "Type");
                     //jbtr.Attach = JXdata.GetXdata(brg.First(), "Attatch");
                     jbtr.SymbolType = JXdata.GetXdata(brg.First(), "SymbolType");
 
