@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using OfficeOpenXml;
 
 //using Maroquio;
@@ -96,6 +97,7 @@ namespace Acadv25JArch
             try
             {
                 Document doc = Application.DocumentManager.MdiActiveDocument;
+                Editor ed = doc.Editor;
                 string fullPath = doc.Database.Filename;
 
                 if (string.IsNullOrEmpty(fullPath)) return;
@@ -108,7 +110,7 @@ namespace Acadv25JArch
                 //ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
 
                 // Excel 파일 경로
-                string filePath = "C:\\Jarch25\\load_Calc_org.xlsm";
+                string filePath = @"C:\Jarch25\load_Calc_org.xlsm";
 
                 // 파일 존재 확인
                 if (!File.Exists(filePath))
@@ -116,6 +118,10 @@ namespace Acadv25JArch
                     MessageBox.Show($"파일이 없습니다: {filePath}");
                     return;
                 }
+
+                //copy 원본파일 excelPath 로 복사
+                File.Copy(filePath, excelPath, true);   
+
 
                 var roomparts = RoomPart.GetAllRoomParts();
                 if (roomparts == null || roomparts.Count == 0)
@@ -125,7 +131,7 @@ namespace Acadv25JArch
                 }
 
                 // 워크북 열기
-                FileInfo fileInfo = new FileInfo(filePath);
+                FileInfo fileInfo = new FileInfo(excelPath);
                 using (var package = new ExcelPackage(fileInfo))
                 {
                     // 시트 존재 확인
@@ -170,16 +176,20 @@ namespace Acadv25JArch
 
 
                         int rdex = 2 + rindex * 50; // room 번호, 층 이름 ,층고,실명,천정고
-                        // 실번호
-                        worksheet.Cells[$"U{rdex}"].Value =   room.Index;
-                        // 층 이름  :  1층 2층
-                        worksheet.Cells[$"U{rdex+1}"].Value = room.Floor;
-                        // 층 고 :   FloorHeight  
-                        worksheet.Cells[$"U{rdex + 1}"].Formula = room.FloorHeight.ToString();
-                        // 실 명 :   
-                        worksheet.Cells[$"U{rdex + 1}"].Value = room.Name;
-                        // 천 정 고 :   
-                        worksheet.Cells[$"U{rdex + 1}"].Value = room.CeilingHeight;
+                                                    // 실번호
+                        worksheet.Cells[$"T{rdex}"].Value = room.Index;
+
+                        // 층 이름: 1층 2층
+                        worksheet.Cells[$"T{rdex+1}"].Value = room.Floor;
+
+                        // 층 고: FloorHeight (double)
+                        worksheet.Cells[$"T{rdex + 2}"].Value = room.FloorHeight; // double 직접 할당
+
+                        // 실 명:   
+                        worksheet.Cells[$"T{rdex + 3}"].Value = room.Name;
+
+                        // 천정고: (double)
+                        worksheet.Cells[$"T{rdex + 4}"].Value = room.CeilingHeight; // double 직접 할당
 
                         //if (walls == null || walls.Count == 0) continue;
                         int windex = 11 + rindex * 50;
@@ -234,14 +244,17 @@ namespace Acadv25JArch
 
                     // 저장
                     // 3. FileInfo 객체 생성 (EPPlus는 string 경로 대신 FileInfo를 요구함)
-                    FileInfo excelFile = new FileInfo(excelPath);
-                    package.SaveAs(excelFile);
-                    MessageBox.Show("완료!");
+                    //FileInfo excelFile = new FileInfo(excelPath);
+                    //package.SaveAs(excelFile);
+                    package.Save(); 
+                    MessageBox.Show($"{excelPath} 저장 완료!");
+                    ed.WriteMessage($"\n{excelPath} \n저장 완료!");
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error: {ex.Message}\n\n{ex.StackTrace}");
+                
             }
         }
 
