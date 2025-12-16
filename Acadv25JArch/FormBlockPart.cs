@@ -168,6 +168,19 @@ namespace Acadv25JArch
                         var windows = room.GetWindows();
                         //var windows1= windows.OrderBy(x => x.StartsWith("P")).ToList(); // P로 시작하지 않는 Wall  앞으로 배치 
 
+
+                        int rdex = 2 + rindex * 50; // room 번호, 층 이름 ,층고,실명,천정고
+                        // 실번호
+                        worksheet.Cells[$"U{rdex}"].Value =   room.Index;
+                        // 층 이름  :  1층 2층
+                        worksheet.Cells[$"U{rdex+1}"].Value = room.Floor;
+                        // 층 고 :   FloorHeight  
+                        worksheet.Cells[$"U{rdex + 1}"].Formula = room.FloorHeight.ToString();
+                        // 실 명 :   
+                        worksheet.Cells[$"U{rdex + 1}"].Value = room.Name;
+                        // 천 정 고 :   
+                        worksheet.Cells[$"U{rdex + 1}"].Value = room.CeilingHeight;
+
                         //if (walls == null || walls.Count == 0) continue;
                         int windex = 11 + rindex * 50;
                         foreach (var ww in windows) // 외창 처리 -- windows 는 내창과 외창이 섞여있음  
@@ -184,9 +197,6 @@ namespace Acadv25JArch
                             worksheet.Cells[$"U{windex}"].Formula = window[1];// "3*3";
                             windex++;
                         }
-
-
-
 
                         // 벽처리  외벽외창 + 외벽+내벽    
                         int waldex = 19 + rindex * 50;
