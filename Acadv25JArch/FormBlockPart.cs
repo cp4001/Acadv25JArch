@@ -177,7 +177,7 @@ namespace Acadv25JArch
 
                         int rdex = 2 + rindex * 50; // room 번호, 층 이름 ,층고,실명,천정고
                                                     // 실번호
-                        worksheet.Cells[$"T{rdex}"].Value = room.Index;
+                        worksheet.Cells[$"T{rdex}"].Value = room.RoomIndex;
 
                         // 층 이름: 1층 2층
                         worksheet.Cells[$"T{rdex+1}"].Value = room.Floor;
