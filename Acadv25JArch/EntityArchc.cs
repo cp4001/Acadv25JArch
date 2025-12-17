@@ -848,6 +848,7 @@ namespace Acadv25JArch
 
         public string Name { get; set; }  // Room Name
         public string Floor { get; set; } // 층  1층 2층 
+        public string RoomIndex { get; set; }   // 층별 Room Index   1F001 1F002 2F001 2F002   형식 Floor + 3자리 숫자
         public Double CeilingHeight { get; set; }   // 천장 높이
         public double FloorHeight { get; set; }   // 층고 높이
         public string RoofArea { get; set; } // 지붕  면적
@@ -1089,6 +1090,42 @@ namespace Acadv25JArch
                 }
 
             }
+            //Sort
+            //roomParts = roomParts.Sort(x=>x.Floor).ToList();
+
+
+            // 그룹을 Name으로 정렬
+            var grouped = roomParts.GroupBy(r => r.Floor)
+                            .OrderBy(g => g.Key)  // 그룹 키(Floor)로 정렬
+                            .SelectMany(g => g.Select((room, index) => new
+                            {
+                                Room= room,
+                                Name = g.Key,
+                                Index = index + 1
+                            }))
+                            .ToList();
+
+            foreach (var gr in grouped)
+            {
+                gr.Room.RoomIndex =  gr.Name+ gr.Index.ToString("D3");
+            }
+
+            roomParts =  grouped.Select(g => g.Room).ToList(); 
+
+            //
+            //// 그룹을 Name으로 정렬
+            //var grouped = pp.GroupBy(p => p.Name)
+            //                .OrderBy(g => g.Key)  // 그룹 키(Name)로 정렬
+            //                .SelectMany(g => g.Select((person, index) => new
+            //                {
+            //                    Person = person,
+            //                    Name = g.Key,
+            //                    Index = index + 1
+            //                }))
+            //                .ToList();
+
+
+
             return roomParts;
         }
 
