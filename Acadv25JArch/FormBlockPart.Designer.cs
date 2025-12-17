@@ -236,6 +236,7 @@
             dgvRoom.RowTemplate.Height = 50;
             dgvRoom.Size = new Size(1729, 471);
             dgvRoom.TabIndex = 2;
+            dgvRoom.KeyDown += dgvRoom_KeyDown;
             // 
             // Col_Index
             // 

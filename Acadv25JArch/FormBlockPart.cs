@@ -120,7 +120,7 @@ namespace Acadv25JArch
                 }
 
                 //copy 원본파일 excelPath 로 복사
-                File.Copy(filePath, excelPath, true);   
+                File.Copy(filePath, excelPath, true);
 
 
                 var roomparts = RoomPart.GetAllRoomParts();
@@ -180,7 +180,7 @@ namespace Acadv25JArch
                         worksheet.Cells[$"T{rdex}"].Value = room.RoomIndex;
 
                         // 층 이름: 1층 2층
-                        worksheet.Cells[$"T{rdex+1}"].Value = room.Floor;
+                        worksheet.Cells[$"T{rdex + 1}"].Value = room.Floor;
 
                         // 층 고: FloorHeight (double)
                         worksheet.Cells[$"T{rdex + 2}"].Value = room.FloorHeight; // double 직접 할당
@@ -246,7 +246,7 @@ namespace Acadv25JArch
                     // 3. FileInfo 객체 생성 (EPPlus는 string 경로 대신 FileInfo를 요구함)
                     //FileInfo excelFile = new FileInfo(excelPath);
                     //package.SaveAs(excelFile);
-                    package.Save(); 
+                    package.Save();
                     MessageBox.Show($"{excelPath} 저장 완료!");
                     ed.WriteMessage($"\n{excelPath} \n저장 완료!");
                 }
@@ -254,7 +254,7 @@ namespace Acadv25JArch
             catch (Exception ex)
             {
                 MessageBox.Show($"Error: {ex.Message}\n\n{ex.StackTrace}");
-                
+
             }
         }
 
@@ -287,6 +287,11 @@ namespace Acadv25JArch
             SortableBindingList<DoorPart> drbl = new SortableBindingList<DoorPart>(doorparts);
             bs_door.DataSource = drbl;
             dgvDoor.DataSource = bs_door;
+        }
+
+        private void dgvRoom_KeyDown(object sender, KeyEventArgs e) // Return 입력시 Action 
+        {
+
         }
     }
 
