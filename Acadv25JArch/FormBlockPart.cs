@@ -1,8 +1,11 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
+﻿using AcadFunction;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.GraphicsInterface;
+using CADExtension;
 using OfficeOpenXml;
-
 //using Maroquio;
 using System;
 using System.Collections.Generic;
@@ -28,6 +31,11 @@ namespace Acadv25JArch
         public static BindingSource bs_window = new BindingSource();          // WindowPart 용
         public static BindingSource bs_door = new BindingSource();              // DoorPart 용
         public static BindingSource bsNumDia = new BindingSource();
+
+        //-- Temp Graphic View 
+        private DBObjectCollection m_mrkers = new DBObjectCollection();
+        private IntegerCollection intColl = new IntegerCollection();
+
 
         // 어셈블리 리졸브 핸들러 등록
         static FormBlockPart()
@@ -291,9 +299,85 @@ namespace Acadv25JArch
 
         private void dgvRoom_KeyDown(object sender, KeyEventArgs e) // Return 입력시 Action 
         {
+            e.Handled = true; // 엔터시 row 가 다음으로 가는 것을 방지 
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            ClearMarkers();
+
+            DataGridView dgv = sender as DataGridView;
+            if (dgv != null)
+            {
+
+                RoomPart selectedRoom = (RoomPart)dgvRoom.CurrentRow.DataBoundItem;
+
+
+                if (selectedRoom == null) return;
+
+                //DBText dt = newObjId.GetObject(OpenMode.ForWrite, false) as DBText;
+                //Line dLine = newObjId.GetObject(OpenMode.ForWrite, false) as Line;
+                //Arc dArc = newObjId.GetObject(OpenMode.ForWrite, false) as Arc;
+
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+
+                    //Entity ent = newObjId.GetObject(OpenMode.ForWrite, false) as Entity;
+                    Entity ent = selectedRoom.GetPoly();
+
+                    //dt.ColorIndex = 41;
+                    //string[] Xpos = row.Cells["MidP"].Value.ToString().Split('.');
+                    // Update the display and display an alert message
+                    //doc.Editor.Regen();
+
+                    //Point3d ctrPt = new Point3d(Double.Parse(Xpos[0]), Double.Parse(Xpos[1]), 0);
+                    Point3d ctrPt = new Point3d();
+                    Point3d MarkerCtrpt = new Point3d();
+
+
+                    if (ent != null)
+                    {
+                        ctrPt = ent.GetEntiyGeoCenter();
+                        MarkerCtrpt = ctrPt;
+                    }
+
+                    ZoomExtensionMethods.ZoomCenter(ed, ctrPt, 1);
+
+                    //doc.CommandWillStart += new CommandEventHandler(doc_CommandWillStart);
+
+                    //Entity Temp Graphics Marker
+                    DBText acTExt = new DBText();
+                    //MarkerCtrpt = new Point3d(ctrPt.X + dt.Height / 2, ctrPt.Y, 0.0);
+
+                    //acTExt.Position = MarkerCtrpt; //new Point3d(ctrPt.X , ctrPt.Y, 0.0);
+                    //acTExt.Height = 300;
+                    //acTExt.TextString = "O";
+                    ////acTExt.LineWeight = LineWeight.LineWeight040;
+                    //acTExt.ColorIndex = 131;
+
+                    Circle circ = new Circle(ctrPt, Vector3d.ZAxis, 160);
+                    circ.ColorIndex = 210;
+                    circ.LineWeight = LineWeight.LineWeight040;
+                    //circ.LineWeight = LineWeight.LineWeight030;
+                    TransientManager.CurrentTransientManager.AddTransient(circ, TransientDrawingMode.DirectTopmost, 128, intColl);
+
+                    //m_mrkers.Add(acTExt);
+                    m_mrkers.Add(circ);
+                    tr.Commit();
+                }
+
+            }
+        }
+
+        private void ClearMarkers()
+        {
+            if (m_mrkers.Count >= 1)
+            {
+                TransientManager.CurrentTransientManager.EraseTransient(m_mrkers[0], intColl);
+                m_mrkers[0].Dispose();
+                m_mrkers.Clear();
+            }
 
         }
     }
-
-
 }
