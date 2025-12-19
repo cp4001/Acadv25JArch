@@ -355,7 +355,7 @@ namespace Acadv25JArch
                     ////acTExt.LineWeight = LineWeight.LineWeight040;
                     //acTExt.ColorIndex = 131;
 
-                    Circle circ = new Circle(ctrPt, Vector3d.ZAxis, 160);
+                    Circle circ = new Circle(ctrPt, Vector3d.ZAxis, 300);
                     circ.ColorIndex = 210;
                     circ.LineWeight = LineWeight.LineWeight040;
                     //circ.LineWeight = LineWeight.LineWeight030;
