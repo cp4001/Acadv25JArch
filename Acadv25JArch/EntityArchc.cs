@@ -861,7 +861,7 @@ namespace Acadv25JArch
         private List<BlockReference> Blocks { get; set; } // 창 또는 문 List
         private List<String> Windows = new List<string>(); // Outwall  Window List  외벽 창문 방위:면적 필요
         private List<String> Walls = new List<string>(); // Wall  외벽 내벽  방위:면적 필요
-
+        private List<String> Doors = new List<string>(); // Door 외벽 내벽  방위:면적 
         //private List<BlockReference> Doors { get; set; } // 문 List
 
         //Roomtxts 지정   
@@ -873,6 +873,11 @@ namespace Acadv25JArch
         public List<string> GetWindows()
         {
             return Windows;    
+        }
+
+        public List<string> GetDoors()
+        {
+            return Doors;
         }
 
         public  List<string> GetWalls()
