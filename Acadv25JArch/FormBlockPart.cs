@@ -180,6 +180,7 @@ namespace Acadv25JArch
                         var walls = room.GetWalls();
                         var walls1 = walls.OrderBy(x => x.StartsWith("P")).ToList(); // P로 시작하지 않는 Wall  앞으로 배치
                         var windows = room.GetWindows();
+                        var doors = room.GetDoors();    
                         //var windows1= windows.OrderBy(x => x.StartsWith("P")).ToList(); // P로 시작하지 않는 Wall  앞으로 배치 
 
 
@@ -216,7 +217,7 @@ namespace Acadv25JArch
                             windex++;
                         }
 
-                        // 벽처리  외벽외창 + 외벽+내벽    
+                        // 벽처리  외벽외창 + 도어 + 외벽+내벽    
                         int waldex = 19 + rindex * 50;
                         //외벽에 걸친 외창 처리
                         foreach (var ww in windows) // 외창 + 내창 처리 
@@ -231,6 +232,21 @@ namespace Acadv25JArch
                             worksheet.Cells[$"S{waldex}"].Value = window[0].Contains("P") ? "내   창" : "외   창"; //"외벽";   
                             worksheet.Cells[$"T{waldex}"].Value = window[0];// "NW";
                             worksheet.Cells[$"U{waldex}"].Formula = window[1];// "3*3// 면적 (수식)
+                            waldex++;
+                        }
+                        // 걸친 Door 처리
+                        foreach (var dr in doors) // 외창 + 내창 처리 
+                        {
+                            // 쉼표(',')를 기준으로 자르기
+                            string[] door = dr.Split(':');
+                            //// 방위각
+                            //worksheet.Cells[$"S{waldex}"].Value = "외  창";// "NW";
+                            //if(ww.StartsWith("P")) worksheet.Cells[$"S{waldex}"].Value = "내  창";
+
+                            //항목
+                            worksheet.Cells[$"S{waldex}"].Value = door[0].Contains("P") ? "내벽도어" : "외벽도어"; //"외벽";   
+                            worksheet.Cells[$"T{waldex}"].Value = door[0];// "NW";
+                            worksheet.Cells[$"U{waldex}"].Formula = door[1];// "3*3// 면적 (수식)
                             waldex++;
                         }
                         foreach (var wal in walls1)
@@ -355,7 +371,7 @@ namespace Acadv25JArch
                     ////acTExt.LineWeight = LineWeight.LineWeight040;
                     //acTExt.ColorIndex = 131;
 
-                    Circle circ = new Circle(ctrPt, Vector3d.ZAxis, 300);
+                    Circle circ = new Circle(ctrPt, Vector3d.ZAxis, 1000);
                     circ.ColorIndex = 210;
                     circ.LineWeight = LineWeight.LineWeight040;
                     //circ.LineWeight = LineWeight.LineWeight030;

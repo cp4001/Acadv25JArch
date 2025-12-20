@@ -951,7 +951,7 @@ namespace Acadv25JArch
                         Windows.Add($"{directionStr}:{blocklength.DmText(1)}*{bh}");
                     }
                     //Check Doors
-                    if ((JXdata.GetXdata(br, "Window") != null)) // Door이면   외벽문 내벽문  구분 없이 추가 
+                    if ((JXdata.GetXdata(br, "Door") != null)) // Door이면   외벽문 내벽문  구분 없이 추가 
                     {
                         Doors.Add($"{directionStr}:{blocklength.DmText(1)}*{bh}");
                     }
