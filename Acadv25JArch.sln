@@ -15,6 +15,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LicenseManagerNet8", "Licen
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LicenseManager", "LicenseManagerFrameWork\LicenseManager.vcxproj", "{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleDiaSelect", "ConsoleDiaSelect\ConsoleDiaSelect.csproj", "{0D45EB64-72FE-607D-325F-3FE1F66412CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleDiaSel1", "ConsoleDiaSel1\ConsoleDiaSel1.csproj", "{A81DB321-397A-4604-AD67-8D2411DE5363}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,6 +74,22 @@ Global
 		{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}.Release|Any CPU.Build.0 = Release|Win32
 		{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}.Release|x64.ActiveCfg = Release|Win32
 		{E252D26A-2D9E-4B20-9E3C-5C20C0F82F1D}.Release|x64.Build.0 = Release|Win32
+		{0D45EB64-72FE-607D-325F-3FE1F66412CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D45EB64-72FE-607D-325F-3FE1F66412CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D45EB64-72FE-607D-325F-3FE1F66412CE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0D45EB64-72FE-607D-325F-3FE1F66412CE}.Debug|x64.Build.0 = Debug|Any CPU
+		{0D45EB64-72FE-607D-325F-3FE1F66412CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D45EB64-72FE-607D-325F-3FE1F66412CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D45EB64-72FE-607D-325F-3FE1F66412CE}.Release|x64.ActiveCfg = Release|Any CPU
+		{0D45EB64-72FE-607D-325F-3FE1F66412CE}.Release|x64.Build.0 = Release|Any CPU
+		{A81DB321-397A-4604-AD67-8D2411DE5363}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A81DB321-397A-4604-AD67-8D2411DE5363}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A81DB321-397A-4604-AD67-8D2411DE5363}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A81DB321-397A-4604-AD67-8D2411DE5363}.Debug|x64.Build.0 = Debug|Any CPU
+		{A81DB321-397A-4604-AD67-8D2411DE5363}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A81DB321-397A-4604-AD67-8D2411DE5363}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A81DB321-397A-4604-AD67-8D2411DE5363}.Release|x64.ActiveCfg = Release|Any CPU
+		{A81DB321-397A-4604-AD67-8D2411DE5363}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
