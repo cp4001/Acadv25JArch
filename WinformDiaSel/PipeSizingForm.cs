@@ -214,13 +214,13 @@ namespace WinformDiaSel
                 UpdateGridSimultaneity(inputs, result);
 
                 // 결과 표시
-                lblGenLoad.Text = $"일반기구 부하: {result.GenLoadSum:F1}";
-                lblGenRate.Text = $"일반기구 동시율: {result.GenRate:F2}";
-                lblGenEffective.Text = $"일반기구 유효부하: {result.GenEffective:F2}";
+                lblGenLoad.Text =       $"일반기구   부 하: {result.GenLoadSum:F1}";
+                lblGenRate.Text =        $"일반기구 동시율: {result.GenRate:F2}";
+                lblGenEffective.Text =  $"일반기구 유효부하: {result.GenEffective:F2}";
                 
-                lblFvLoad.Text = $"대변기 부하: {result.FvLoadSum:F1}";
-                lblFvRate.Text = $"대변기 동시율: {result.FvRate:F2} (수량: {result.FvQtySum}개)";
-                lblFvEffective.Text = $"대변기 유효부하: {result.FvEffective:F2}";
+                lblFvLoad.Text =       $"대변기   부 하: {result.FvLoadSum:F1}";
+                lblFvRate.Text =        $"대변기 동시율: {result.FvRate:F2} "; //(수량: {result.FvQtySum}개)
+                lblFvEffective.Text =  $"대변기 유효부하: {result.FvEffective:F2}";
                 
                 lblTotalEffective.Text = $"최종 유효부하: {result.TotalEffective:F2}";
                 lblMainSize.Text = $"{result.MainSize} A";
