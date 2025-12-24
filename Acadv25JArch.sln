@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleDiaSelect", "Console
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleDiaSel1", "ConsoleDiaSel1\ConsoleDiaSel1.csproj", "{A81DB321-397A-4604-AD67-8D2411DE5363}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinformDiaSel", "WinformDiaSel\WinformDiaSel.csproj", "{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,6 +92,14 @@ Global
 		{A81DB321-397A-4604-AD67-8D2411DE5363}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A81DB321-397A-4604-AD67-8D2411DE5363}.Release|x64.ActiveCfg = Release|Any CPU
 		{A81DB321-397A-4604-AD67-8D2411DE5363}.Release|x64.Build.0 = Release|Any CPU
+		{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}.Debug|x64.Build.0 = Debug|Any CPU
+		{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}.Release|x64.ActiveCfg = Release|Any CPU
+		{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
