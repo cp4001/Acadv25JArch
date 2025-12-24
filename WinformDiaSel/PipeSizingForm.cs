@@ -210,6 +210,11 @@ namespace WinformDiaSel
                 // 계산 수행
                 var result = _engine.Calculate(inputs);
 
+                // 개수 함수 이용 결과 
+                // 다른 프로그램에서 사용
+                var engine = new PipeSizingEngine();
+                int dia = engine.CalcSelDia(3, 8, 8, 3, 2, 4, 0);
+
                 // 그리드에 동시사용율 업데이트
                 UpdateGridSimultaneity(inputs, result);
 
