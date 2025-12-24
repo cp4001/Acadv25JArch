@@ -42,6 +42,9 @@ namespace WinformDiaSel
             dataGridView1.SelectionMode = DataGridViewSelectionMode.CellSelect;
             dataGridView1.RowTemplate.Height = 35; // 행 높이 증가
 
+            // 컬럼 헤더 중앙 정렬
+            dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
             // 컬럼 설정
             dataGridView1.Columns.Clear();
             
