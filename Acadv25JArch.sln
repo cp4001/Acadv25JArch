@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleDiaSel1", "ConsoleDi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinformDiaSel", "WinformDiaSel\WinformDiaSel.csproj", "{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PipeLoad2", "PipeLoad2\PipeLoad2.csproj", "{C1F7DB53-C0D8-67A9-90E0-15512A050955}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -100,6 +102,14 @@ Global
 		{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}.Release|x64.ActiveCfg = Release|Any CPU
 		{3AAF681B-F9B1-A087-B0D1-21EA4BBDF080}.Release|x64.Build.0 = Release|Any CPU
+		{C1F7DB53-C0D8-67A9-90E0-15512A050955}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{C1F7DB53-C0D8-67A9-90E0-15512A050955}.Debug|Any CPU.Build.0 = Debug|x64
+		{C1F7DB53-C0D8-67A9-90E0-15512A050955}.Debug|x64.ActiveCfg = Debug|x64
+		{C1F7DB53-C0D8-67A9-90E0-15512A050955}.Debug|x64.Build.0 = Debug|x64
+		{C1F7DB53-C0D8-67A9-90E0-15512A050955}.Release|Any CPU.ActiveCfg = Release|x64
+		{C1F7DB53-C0D8-67A9-90E0-15512A050955}.Release|Any CPU.Build.0 = Release|x64
+		{C1F7DB53-C0D8-67A9-90E0-15512A050955}.Release|x64.ActiveCfg = Release|x64
+		{C1F7DB53-C0D8-67A9-90E0-15512A050955}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
