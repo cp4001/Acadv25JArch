@@ -118,7 +118,7 @@ namespace Acadv25JArch
                 //ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
 
                 // Excel 파일 경로
-                string filePath = @"C:\Jarch25\load_Calc_org.xlsm";
+                string filePath = @"C:\Jarch25\load_eng.xlsm"; ;// @"C:\Jarch25\load_Calc_org.xlsm";
 
                 // 파일 존재 확인
                 if (!File.Exists(filePath))
