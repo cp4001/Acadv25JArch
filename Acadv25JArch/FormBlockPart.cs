@@ -143,7 +143,7 @@ namespace Acadv25JArch
                 using (var package = new ExcelPackage(fileInfo))
                 {
                     // 시트 존재 확인
-                    var worksheet = package.Workbook.Worksheets["부하계산"];
+                    var worksheet = package.Workbook.Worksheets["Load(w)"]; //부하계산
                     if (worksheet == null)
                     {
                         MessageBox.Show("'부하계산' 시트가 없습니다.");
@@ -209,7 +209,7 @@ namespace Acadv25JArch
                             string[] window = ww.Split(':');
 
                             //항목
-                            worksheet.Cells[$"S{windex}"].Value = "외  창";// "NW";
+                            worksheet.Cells[$"S{windex}"].Value = "Window";// "NW";"외  창"
                             // 방위각
                             worksheet.Cells[$"T{windex}"].Value = window[0];// "NW";
                             // 면적 (수식)
@@ -229,7 +229,7 @@ namespace Acadv25JArch
                             //if(ww.StartsWith("P")) worksheet.Cells[$"S{waldex}"].Value = "내  창";
 
                             //항목
-                            worksheet.Cells[$"S{waldex}"].Value = window[0].Contains("P") ? "내   창" : "외   창"; //"외벽";   
+                            worksheet.Cells[$"S{waldex}"].Value = window[0].Contains("P") ? "Window" : "Window"; //"외벽";   
                             worksheet.Cells[$"T{waldex}"].Value = window[0];// "NW";
                             worksheet.Cells[$"U{waldex}"].Formula = window[1];// "3*3// 면적 (수식)
                             waldex++;
@@ -244,7 +244,7 @@ namespace Acadv25JArch
                             //if(ww.StartsWith("P")) worksheet.Cells[$"S{waldex}"].Value = "내  창";
 
                             //항목
-                            worksheet.Cells[$"S{waldex}"].Value = door[0].Contains("P") ? "내벽도어" : "외벽도어"; //"외벽";   
+                            worksheet.Cells[$"S{waldex}"].Value = door[0].Contains("P") ? "Door" : "Door"; //"외벽";   //"내벽도어" : "외벽도어"
                             worksheet.Cells[$"T{waldex}"].Value = door[0];// "NW";
                             worksheet.Cells[$"U{waldex}"].Formula = door[1];// "3*3// 면적 (수식)
                             waldex++;
@@ -255,7 +255,7 @@ namespace Acadv25JArch
                             // 쉼표(':')를 기준으로 자르기
                             string[] wall = wal.Split(':');
                             //항목
-                            worksheet.Cells[$"S{waldex}"].Value = wall[0].Contains("P") ? "내   벽" : "외   벽"; //"외벽";   
+                            worksheet.Cells[$"S{waldex}"].Value = wall[0].Contains("P") ? "Wall" : "Wall"; //"외벽";   "내   벽" : "외   벽"
                             // 방위각
                             worksheet.Cells[$"T{waldex}"].Value = wall[0];// "NW" Or P
                             // 면적 (수식)
