@@ -69,7 +69,7 @@ namespace WinformDiaSel
             // 
             btnCalculate.Anchor = System.Windows.Forms.AnchorStyles.None;
             btnCalculate.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Bold);
-            btnCalculate.Location = new System.Drawing.Point(691, 84);
+            btnCalculate.Location = new System.Drawing.Point(581, 84);
             btnCalculate.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             btnCalculate.Name = "btnCalculate";
             btnCalculate.Size = new System.Drawing.Size(171, 44);
