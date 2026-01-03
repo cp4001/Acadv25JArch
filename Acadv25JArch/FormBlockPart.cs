@@ -180,7 +180,7 @@ namespace Acadv25JArch
                         var walls = room.GetWalls();
                         var walls1 = walls.OrderBy(x => x.StartsWith("P")).ToList(); // P로 시작하지 않는 Wall  앞으로 배치
                         var windows = room.GetWindows();
-                        var doors = room.GetDoors();    
+                        var doors = room.GetDoors();
                         //var windows1= windows.OrderBy(x => x.StartsWith("P")).ToList(); // P로 시작하지 않는 Wall  앞으로 배치 
 
 
@@ -394,6 +394,183 @@ namespace Acadv25JArch
                 m_mrkers.Clear();
             }
 
+        }
+
+        private void btnExcel1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                Editor ed = doc.Editor;
+                string fullPath = doc.Database.Filename;
+
+                if (string.IsNullOrEmpty(fullPath)) return;
+
+                // 확장자를 .dwg에서 .xlsx로 변경
+                string excelPath = Path.ChangeExtension(fullPath, ".xlsx");
+
+                // 템플릿 파일 경로
+                string templatePath = @"C:\Jarch25\Excel\LoadCalcRow.xlsx";
+
+                // 파일 존재 확인
+                if (!File.Exists(templatePath))
+                {
+                    MessageBox.Show($"템플릿 파일이 없습니다: {templatePath}");
+                    return;
+                }
+
+                // 템플릿 파일을 excelPath로 복사
+                File.Copy(templatePath, excelPath, true);
+
+                var roomparts = RoomPart.GetAllRoomParts();
+                if (roomparts == null || roomparts.Count == 0)
+                {
+                    MessageBox.Show("roomparts가 없습니다.");
+                    return;
+                }
+
+                // 워크북 열기
+                FileInfo fileInfo = new FileInfo(excelPath);
+                using (var package = new ExcelPackage(fileInfo))
+                {
+                    var worksheet = package.Workbook.Worksheets[0]; // 첫 번째 시트
+
+                    int currentRow = 4; // 헤더가 1-3행이므로 4행부터 데이터 입력
+
+                    foreach (var room in roomparts)
+                    {
+                        Console.WriteLine($"Room Name: {room.Name}, Floor Area: {room.FloorArea}");
+
+                        var walls = room.GetWalls();
+                        var walls1 = walls.OrderBy(x => x.StartsWith("P")).ToList();
+                        var windows = room.GetWindows();
+                        var doors = room.GetDoors();
+
+                        // === Basic Data (A-F 컬럼) ===
+                        int col = 1;
+
+                        // A: Room Number (실번호)
+                        worksheet.Cells[currentRow, col++].Value = room.RoomIndex;
+
+                        // B: Floor (층 이름)
+                        worksheet.Cells[currentRow, col++].Value = room.Floor;
+
+                        // C: Floor Height (층고)
+                        worksheet.Cells[currentRow, col++].Value = room.FloorHeight;
+
+                        // D: Room Name (실명)
+                        worksheet.Cells[currentRow, col++].Value = room.Name;
+
+                        // E: Ceiling Height (천정고)
+                        worksheet.Cells[currentRow, col++].Value = room.CeilingHeight;
+
+                        // F: Area (면적)
+                        worksheet.Cells[currentRow, col++].Value = room.FloorArea;
+
+                        // G: Roof Load
+                        worksheet.Cells[currentRow, col++].Value = "";
+
+                        // H: Floor Load
+                        worksheet.Cells[currentRow, col++].Value = "";
+
+                        // === Glass 1-5 (I-R 컬럼, 외창만) ===
+                        var outerWindows = windows.Where(w => !w.Contains("P")).ToList();
+                        for (int i = 0; i < 5; i++)
+                        {
+                            if (i < outerWindows.Count)
+                            {
+                                string[] window = outerWindows[i].Split(':');
+
+                                // Direction
+                                worksheet.Cells[currentRow, col++].Value = window[0];
+
+                                // Area (수식)
+                                worksheet.Cells[currentRow, col++].Formula = window[1];
+                            }
+                            else
+                            {
+                                col += 2; // 빈 칸
+                            }
+                        }
+
+                        // === Wall 1-5 (S-AB 컬럼, 외벽만) ===
+                        var outerWalls = walls1.Where(w => !w.StartsWith("P")).Take(5).ToList();
+                        for (int i = 0; i < 5; i++)
+                        {
+                            if (i < outerWalls.Count)
+                            {
+                                string[] wall = outerWalls[i].Split(':');
+
+                                // Direction
+                                worksheet.Cells[currentRow, col++].Value = wall[0];
+
+                                // Area (수식)
+                                worksheet.Cells[currentRow, col++].Formula = wall[1];
+                            }
+                            else
+                            {
+                                col += 2; // 빈 칸
+                            }
+                        }
+
+                        // === Partition 1-5 (AC-AL 컬럼, 내벽 + 내창) ===
+                        var innerWalls = walls1.Where(w => w.StartsWith("P")).ToList();
+                        var innerWindows = windows.Where(w => w.Contains("P")).ToList();
+                        var partitions = new List<string>();
+                        partitions.AddRange(innerWalls);
+                        partitions.AddRange(innerWindows);
+
+                        for (int i = 0; i < 5; i++)
+                        {
+                            if (i < partitions.Count)
+                            {
+                                string[] partition = partitions[i].Split(':');
+
+                                // Type (Partition 또는 Window)
+                                string type = partition[0].Contains("P") ? "Partition" : "Window";
+                                worksheet.Cells[currentRow, col++].Value = type;
+
+                                // Area (수식)
+                                worksheet.Cells[currentRow, col++].Formula = partition[1];
+                            }
+                            else
+                            {
+                                col += 2; // 빈 칸
+                            }
+                        }
+
+                        // === Door 1-2 (AM-AP 컬럼) ===
+                        for (int i = 0; i < 2; i++)
+                        {
+                            if (i < doors.Count)
+                            {
+                                string[] door = doors[i].Split(':');
+
+                                // Direction
+                                worksheet.Cells[currentRow, col++].Value = door[0];
+
+                                // Area (수식)
+                                worksheet.Cells[currentRow, col++].Formula = door[1];
+                            }
+                            else
+                            {
+                                col += 2; // 빈 칸
+                            }
+                        }
+
+                        currentRow++; // 다음 행으로
+                    }
+
+                    // 저장
+                    package.Save();
+                    MessageBox.Show($"{excelPath} 저장 완료!");
+                    ed.WriteMessage($"\n{excelPath} \n저장 완료!");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}\n\n{ex.StackTrace}");
+            }
         }
     }
 }

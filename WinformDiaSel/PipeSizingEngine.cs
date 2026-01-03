@@ -121,13 +121,21 @@ namespace WinformDiaSel
             // 기구 타입 정의 (WinForm과 동일)
             var fixtures = new List<FixtureType>
             {
-                new FixtureType("대변기", 4.9, 25, true),  // 세정밸브
-                new FixtureType("소변기", 1.0, 15),
-                new FixtureType("세면기", 1.0, 15),
-                new FixtureType("청소씽크", 2.6, 20),
-                new FixtureType("샤워", 1.0, 15),
-                new FixtureType("욕조", 2.6, 20),
-                new FixtureType("주방씽크", 1.0, 15)
+                new FixtureType("대변기(후레시밸브)", "Closet(FV)", 4.9, 25, true),  // 세정밸브
+                new FixtureType("대변기(로우탱크)", "Closet(LT)", 1.0, 15),
+                new FixtureType("비데", "Bidet", 1.0, 15),
+                new FixtureType("소변기", "Urinal", 1.0, 15),
+                new FixtureType("세면기", "Lavatory", 1.0, 15),
+                new FixtureType("샤워", "Shower", 1.0, 15),
+                new FixtureType("욕조", "Bath", 2.6, 20),
+                new FixtureType("청소씽크", "Sink_Clean", 2.6, 20),
+                new FixtureType("주방씽크", "Sink_Kitchen", 1.0, 15),
+                new FixtureType("세탁씽크", "Sink_Laundry", 1.0, 15),
+                new FixtureType("수전(15A)", "Faucet(15A)", 1.0, 15),
+                new FixtureType("수전(20A)", "Faucet(20A)", 2.6, 20),
+                new FixtureType("수전(25A)", "Faucet(25A)", 4.9, 25),
+                new FixtureType("접시세척기", "Dishwasher", 1.0, 15),
+                new FixtureType("세족기", "FootBath", 1.0, 15)
             };
 
             // 입력 데이터 생성

@@ -33,13 +33,21 @@ const FixtureType = {
 
 // 기본 기구 데이터
 const FIXTURES = [
-    { name: "대변기", unitFactor: 4.9, minPipeSize: 25, isFlushValve: true },
+    { name: "대변기(후레시밸브)", unitFactor: 4.9, minPipeSize: 25, isFlushValve: true },
+    { name: "대변기(로우탱크)", unitFactor: 1.0, minPipeSize: 15, isFlushValve: false },
+    { name: "비데", unitFactor: 1.0, minPipeSize: 15, isFlushValve: false },
     { name: "소변기", unitFactor: 1.0, minPipeSize: 15, isFlushValve: false },
     { name: "세면기", unitFactor: 1.0, minPipeSize: 15, isFlushValve: false },
-    { name: "청소씽크", unitFactor: 2.6, minPipeSize: 20, isFlushValve: false },
     { name: "샤워", unitFactor: 1.0, minPipeSize: 15, isFlushValve: false },
     { name: "욕조", unitFactor: 2.6, minPipeSize: 20, isFlushValve: false },
-    { name: "주방씽크", unitFactor: 1.0, minPipeSize: 15, isFlushValve: false }
+    { name: "청소씽크", unitFactor: 2.6, minPipeSize: 20, isFlushValve: false },
+    { name: "주방씽크", unitFactor: 1.0, minPipeSize: 15, isFlushValve: false },
+    { name: "세탁씽크", unitFactor: 1.0, minPipeSize: 15, isFlushValve: false },
+    { name: "수전(15A)", unitFactor: 1.0, minPipeSize: 15, isFlushValve: false },
+    { name: "수전(20A)", unitFactor: 2.6, minPipeSize: 20, isFlushValve: false },
+    { name: "수전(25A)", unitFactor: 4.9, minPipeSize: 25, isFlushValve: false },
+    { name: "접시세척기", unitFactor: 1.0, minPipeSize: 15, isFlushValve: false },
+    { name: "세족기", unitFactor: 1.0, minPipeSize: 15, isFlushValve: false }
 ];
 ```
 

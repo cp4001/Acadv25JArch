@@ -62,14 +62,14 @@ namespace WinformDiaSel
             panelTop.Location = new System.Drawing.Point(0, 0);
             panelTop.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             panelTop.Name = "panelTop";
-            panelTop.Size = new System.Drawing.Size(1287, 161);
+            panelTop.Size = new System.Drawing.Size(1304, 161);
             panelTop.TabIndex = 0;
             // 
             // btnCalculate
             // 
             btnCalculate.Anchor = System.Windows.Forms.AnchorStyles.None;
             btnCalculate.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Bold);
-            btnCalculate.Location = new System.Drawing.Point(581, 84);
+            btnCalculate.Location = new System.Drawing.Point(691, 84);
             btnCalculate.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             btnCalculate.Name = "btnCalculate";
             btnCalculate.Size = new System.Drawing.Size(171, 44);
@@ -187,14 +187,14 @@ namespace WinformDiaSel
             dataGridView1.Name = "dataGridView1";
             dataGridView1.RowHeadersWidth = 62;
             dataGridView1.RowTemplate.Height = 25;
-            dataGridView1.Size = new System.Drawing.Size(1287, 460);
+            dataGridView1.Size = new System.Drawing.Size(1304, 722);
             dataGridView1.TabIndex = 1;
             // 
             // PipeSizingForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(1287, 621);
+            ClientSize = new System.Drawing.Size(1304, 883);
             Controls.Add(dataGridView1);
             Controls.Add(panelTop);
             Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);

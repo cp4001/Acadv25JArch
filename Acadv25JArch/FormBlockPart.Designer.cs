@@ -28,18 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle13 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle22 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle14 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle15 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle16 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle17 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle18 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle19 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle20 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle21 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle23 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle24 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle10 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle7 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle8 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle9 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle11 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle12 = new DataGridViewCellStyle();
             btnAllBlocks = new Button();
             dgvBlock = new DataGridView();
             Col1 = new DataGridViewTextBoxColumn();
@@ -52,6 +52,7 @@
             tabControl1 = new TabControl();
             tabPage1 = new TabPage();
             tabPage2 = new TabPage();
+            btnExcel1 = new Button();
             btnExcel = new Button();
             dgvRoom = new DataGridView();
             Col_Index = new DataGridViewTextBoxColumn();
@@ -70,7 +71,6 @@
             tabPage4 = new TabPage();
             dgvDoor = new DataGridView();
             btnDoors = new Button();
-            btnExcel1 = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvBlock).BeginInit();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -98,14 +98,14 @@
             dgvBlock.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             dgvBlock.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvBlock.Columns.AddRange(new DataGridViewColumn[] { Col1, Column1, Column2, Column3, Column4, Column5, Column6 });
-            dataGridViewCellStyle13.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle13.BackColor = SystemColors.Window;
-            dataGridViewCellStyle13.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle13.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle13.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle13.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle13.WrapMode = DataGridViewTriState.False;
-            dgvBlock.DefaultCellStyle = dataGridViewCellStyle13;
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = SystemColors.Window;
+            dataGridViewCellStyle1.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle1.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle1.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.False;
+            dgvBlock.DefaultCellStyle = dataGridViewCellStyle1;
             dgvBlock.Location = new Point(90, 108);
             dgvBlock.Name = "dgvBlock";
             dgvBlock.RowHeadersWidth = 62;
@@ -208,6 +208,16 @@
             tabPage2.Text = "Rooms";
             tabPage2.UseVisualStyleBackColor = true;
             // 
+            // btnExcel1
+            // 
+            btnExcel1.Location = new Point(322, 31);
+            btnExcel1.Name = "btnExcel1";
+            btnExcel1.Size = new Size(148, 34);
+            btnExcel1.TabIndex = 4;
+            btnExcel1.Text = "To Excel Row";
+            btnExcel1.UseVisualStyleBackColor = true;
+            btnExcel1.Click += btnExcel1_Click;
+            // 
             // btnExcel
             // 
             btnExcel.Location = new Point(181, 31);
@@ -224,14 +234,14 @@
             dgvRoom.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             dgvRoom.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvRoom.Columns.AddRange(new DataGridViewColumn[] { Col_Index, Col_Name, Col_Floor, Col_CeilingHeight, Col_FloorHeight, Col_Roofarea, Col_FloorArea, Col_Volumn, ColWallText });
-            dataGridViewCellStyle22.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle22.BackColor = SystemColors.Window;
-            dataGridViewCellStyle22.Font = new Font("맑은 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle22.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle22.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle22.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle22.WrapMode = DataGridViewTriState.False;
-            dgvRoom.DefaultCellStyle = dataGridViewCellStyle22;
+            dataGridViewCellStyle10.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle10.BackColor = SystemColors.Window;
+            dataGridViewCellStyle10.Font = new Font("맑은 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle10.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle10.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle10.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle10.WrapMode = DataGridViewTriState.False;
+            dgvRoom.DefaultCellStyle = dataGridViewCellStyle10;
             dgvRoom.Location = new Point(33, 87);
             dgvRoom.Name = "dgvRoom";
             dgvRoom.RowHeadersWidth = 62;
@@ -243,8 +253,8 @@
             // Col_Index
             // 
             Col_Index.DataPropertyName = "Index";
-            dataGridViewCellStyle14.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            Col_Index.DefaultCellStyle = dataGridViewCellStyle14;
+            dataGridViewCellStyle2.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_Index.DefaultCellStyle = dataGridViewCellStyle2;
             Col_Index.HeaderText = "Index";
             Col_Index.MinimumWidth = 8;
             Col_Index.Name = "Col_Index";
@@ -253,8 +263,8 @@
             // Col_Name
             // 
             Col_Name.DataPropertyName = "Name";
-            dataGridViewCellStyle15.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            Col_Name.DefaultCellStyle = dataGridViewCellStyle15;
+            dataGridViewCellStyle3.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_Name.DefaultCellStyle = dataGridViewCellStyle3;
             Col_Name.HeaderText = "Name";
             Col_Name.MinimumWidth = 8;
             Col_Name.Name = "Col_Name";
@@ -271,8 +281,8 @@
             // Col_CeilingHeight
             // 
             Col_CeilingHeight.DataPropertyName = "CeilingHeight";
-            dataGridViewCellStyle16.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            Col_CeilingHeight.DefaultCellStyle = dataGridViewCellStyle16;
+            dataGridViewCellStyle4.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_CeilingHeight.DefaultCellStyle = dataGridViewCellStyle4;
             Col_CeilingHeight.HeaderText = "천정고";
             Col_CeilingHeight.MinimumWidth = 8;
             Col_CeilingHeight.Name = "Col_CeilingHeight";
@@ -281,8 +291,8 @@
             // Col_FloorHeight
             // 
             Col_FloorHeight.DataPropertyName = "FloorHeight";
-            dataGridViewCellStyle17.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            Col_FloorHeight.DefaultCellStyle = dataGridViewCellStyle17;
+            dataGridViewCellStyle5.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_FloorHeight.DefaultCellStyle = dataGridViewCellStyle5;
             Col_FloorHeight.HeaderText = "층고";
             Col_FloorHeight.MinimumWidth = 8;
             Col_FloorHeight.Name = "Col_FloorHeight";
@@ -291,8 +301,8 @@
             // Col_Roofarea
             // 
             Col_Roofarea.DataPropertyName = "RoofArea";
-            dataGridViewCellStyle18.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            Col_Roofarea.DefaultCellStyle = dataGridViewCellStyle18;
+            dataGridViewCellStyle6.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_Roofarea.DefaultCellStyle = dataGridViewCellStyle6;
             Col_Roofarea.HeaderText = "지붕면적";
             Col_Roofarea.MinimumWidth = 8;
             Col_Roofarea.Name = "Col_Roofarea";
@@ -301,8 +311,8 @@
             // Col_FloorArea
             // 
             Col_FloorArea.DataPropertyName = "FloorArea";
-            dataGridViewCellStyle19.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            Col_FloorArea.DefaultCellStyle = dataGridViewCellStyle19;
+            dataGridViewCellStyle7.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_FloorArea.DefaultCellStyle = dataGridViewCellStyle7;
             Col_FloorArea.HeaderText = "바닥면적";
             Col_FloorArea.MinimumWidth = 8;
             Col_FloorArea.Name = "Col_FloorArea";
@@ -311,8 +321,8 @@
             // Col_Volumn
             // 
             Col_Volumn.DataPropertyName = "Volumn";
-            dataGridViewCellStyle20.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            Col_Volumn.DefaultCellStyle = dataGridViewCellStyle20;
+            dataGridViewCellStyle8.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Col_Volumn.DefaultCellStyle = dataGridViewCellStyle8;
             Col_Volumn.HeaderText = "체적";
             Col_Volumn.MinimumWidth = 8;
             Col_Volumn.Name = "Col_Volumn";
@@ -321,8 +331,8 @@
             // ColWallText
             // 
             ColWallText.DataPropertyName = "WallText";
-            dataGridViewCellStyle21.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            ColWallText.DefaultCellStyle = dataGridViewCellStyle21;
+            dataGridViewCellStyle9.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            ColWallText.DefaultCellStyle = dataGridViewCellStyle9;
             ColWallText.HeaderText = "벽면정보";
             ColWallText.MinimumWidth = 8;
             ColWallText.Name = "ColWallText";
@@ -353,14 +363,14 @@
             // dgvWindow
             // 
             dgvWindow.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle23.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle23.BackColor = SystemColors.Window;
-            dataGridViewCellStyle23.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle23.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle23.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle23.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle23.WrapMode = DataGridViewTriState.False;
-            dgvWindow.DefaultCellStyle = dataGridViewCellStyle23;
+            dataGridViewCellStyle11.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle11.BackColor = SystemColors.Window;
+            dataGridViewCellStyle11.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle11.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle11.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle11.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle11.WrapMode = DataGridViewTriState.False;
+            dgvWindow.DefaultCellStyle = dataGridViewCellStyle11;
             dgvWindow.Location = new Point(87, 112);
             dgvWindow.Name = "dgvWindow";
             dgvWindow.RowHeadersWidth = 62;
@@ -393,14 +403,14 @@
             // dgvDoor
             // 
             dgvDoor.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle24.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle24.BackColor = SystemColors.Window;
-            dataGridViewCellStyle24.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle24.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle24.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle24.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle24.WrapMode = DataGridViewTriState.False;
-            dgvDoor.DefaultCellStyle = dataGridViewCellStyle24;
+            dataGridViewCellStyle12.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle12.BackColor = SystemColors.Window;
+            dataGridViewCellStyle12.Font = new Font("맑은 고딕", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle12.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle12.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle12.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle12.WrapMode = DataGridViewTriState.False;
+            dgvDoor.DefaultCellStyle = dataGridViewCellStyle12;
             dgvDoor.Location = new Point(105, 112);
             dgvDoor.Name = "dgvDoor";
             dgvDoor.RowHeadersWidth = 62;
@@ -417,15 +427,6 @@
             btnDoors.Text = "All Doors";
             btnDoors.UseVisualStyleBackColor = true;
             btnDoors.Click += btnDoors_Click;
-            // 
-            // btnExcel1
-            // 
-            btnExcel1.Location = new Point(322, 31);
-            btnExcel1.Name = "btnExcel1";
-            btnExcel1.Size = new Size(148, 34);
-            btnExcel1.TabIndex = 4;
-            btnExcel1.Text = "To Excel Row";
-            btnExcel1.UseVisualStyleBackColor = true;
             // 
             // FormBlockPart
             // 
