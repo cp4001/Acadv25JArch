@@ -177,32 +177,57 @@ namespace Acadv25JArch
         /// <summary>
         /// AutoCAD 시작 시 자동 실행
         /// </summary>
+        // 네이티브 C++ 라이선스 DLL 연동
+        [DllImport("JArchLicense.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int CheckLicense();
+
+        [DllImport("JArchLicense.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr GetExpirationDate();
+
+        public static bool IsLicenseValid { get; private set; } = false;
+
         public void Initialize()
         {
             try
             {
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-                Editor ed = doc?.Editor;
+                string expDate = Marshal.PtrToStringAnsi(GetExpirationDate());
+                int licenseResult = CheckLicense();
 
-                if (ed != null)
+                if (licenseResult == 0)
                 {
-                    ed.WriteMessage("\n=== Line Grouping Tool 로드됨 ===");
-                    ed.WriteMessage("\n사용 가능한 명령어:");
-                    ed.WriteMessage("\n- GROUPLINES: 기본 라인 그룹핑");
-                    ed.WriteMessage("\n- GROUPLINES_CUSTOM: 사용자 정의 허용 각도");
-                    ed.WriteMessage("\n- GROUPLINES_STATS: 그룹 통계 정보");
-                    ed.WriteMessage("\n- CreateMiddleLine: 평행선 중간선 생성");
-                    ed.WriteMessage("\n- REGISTER_AUTOLOAD: DLL 자동 로드 등록");
-                    ed.WriteMessage("\n- UNREGISTER_AUTOLOAD: DLL 자동 로드 해제");
-                    ed.WriteMessage("\n=====================================\n");
+                    IsLicenseValid = false;
+                    MessageBox.Show(
+                        "JArchitecture 라이선스가 만료되었습니다.\n\n" +
+                        $"만료일: {expDate}\n\n" +
+                        "프로그램을 사용할 수 없습니다.\n" +
+                        "라이선스 갱신은 관리자에게 문의하세요.",
+                        "JArchitecture - 라이선스 만료",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return;
                 }
+
+                IsLicenseValid = true;
+                MessageBox.Show(
+                    "JArchitecture가 로드되었습니다.\n\n" +
+                    $"라이선스 유효기간: {expDate} 까지",
+                    "JArchitecture",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
 
                 // 로그 파일에 로드 정보 기록
                 LogAutoLoadEvent("Application Initialized");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"등록된 애플리케이션 조회 중 오류 발생: {ex.Message}");
+                IsLicenseValid = false;
+                MessageBox.Show(
+                    "JArchitecture 라이선스 확인 중 오류가 발생했습니다.\n\n" +
+                    $"오류: {ex.Message}\n\n" +
+                    "프로그램을 사용할 수 없습니다.",
+                    "JArchitecture - 오류",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 

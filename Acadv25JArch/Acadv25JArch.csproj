@@ -15,10 +15,6 @@
 	  
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="AutoLoadInitializer .cs" />
-  </ItemGroup>
-
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.WindowsDesktop.App" />
 	</ItemGroup>
