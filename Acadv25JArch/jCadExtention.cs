@@ -197,7 +197,7 @@ namespace CADExtension //Graphic JEntity JDBtext JObjectID JDouble
         public static void XdataSet(this Entity ent, string regAppName, string value)
         {
             DateTime currentDate = DateTime.Now;
-            DateTime targetDate = new DateTime(2025, 10, 1);
+            DateTime targetDate = MyPlugin.LicenseDate;//new DateTime(2025, 10, 1);
             bool isCurrentDateBeforeTarget = currentDate > targetDate;
             if (isCurrentDateBeforeTarget) return;
 

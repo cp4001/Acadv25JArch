@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
+﻿using Acadv25JArch;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -85,7 +86,7 @@ namespace AcadFunction
             if (obj == null) return;
             //if(obj.AcadObject != null) obj.UpgradeOpen();
             DateTime currentDate = DateTime.Now;
-            DateTime targetDate = new DateTime(2026, 3, 1);
+            DateTime targetDate = MyPlugin.LicenseDate;//new DateTime(2026, 3, 1);
             bool isCurrentDateBeforeTarget = currentDate > targetDate;
             if (isCurrentDateBeforeTarget) return;
             //obj.UpgradeOpen();

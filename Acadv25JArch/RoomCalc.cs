@@ -141,7 +141,7 @@ namespace Acadv25JArch
 
             //
             DateTime networkTime = NetworkTimeService.GetNetworkTime();
-            if( networkTime > new DateTime(2026, 3, 2))
+            if( networkTime > MyPlugin.LicenseDate) // new DateTime(2026, 3, 2)
             {
                 ed.WriteMessage("\n프로그램 사용 기간이 만료되었습니다. 관리자에게 문의하세요.");
                 return;
@@ -446,7 +446,7 @@ namespace Acadv25JArch
 
             //
             DateTime networkTime = NetworkTimeService.GetNetworkTime();
-            if (networkTime > new DateTime(2026, 3, 2))
+            if (networkTime >MyPlugin.LicenseDate)
             {
                 ed.WriteMessage("\n프로그램 사용 기간이 만료되었습니다. 관리자에게 문의하세요.");
                 return;
