@@ -22,6 +22,7 @@ namespace Acadv25JArch
         private static extern IntPtr GetExpirationDate();
 
         public static bool IsLicenseValid { get; private set; } = false;
+        public static DateTime LicenseDate { get; private set; } = DateTime.MinValue;
         private static string _expDate = "";
         private static string _licenseMessage = "";
 
@@ -32,6 +33,7 @@ namespace Acadv25JArch
             try
             {
                 _expDate = Marshal.PtrToStringAnsi(GetExpirationDate());
+                LicenseDate = DateTime.ParseExact(_expDate, "yyyy-MM-dd", null);
                 int licenseResult = CheckLicense();
 
                 if (licenseResult == 0)
