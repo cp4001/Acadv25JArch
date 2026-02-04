@@ -555,6 +555,7 @@ namespace Acadv25JArch
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
+            if (!MyPlugin.IsLicenseValid) return; // 라이선스 유효성 검사
             try
             {
                 // Prompt user to select a point
