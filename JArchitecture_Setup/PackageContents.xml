@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage
+  SchemaVersion="1.0"
+  AppVersion="1.0.0"
+  AutodeskProduct="AutoCAD"
+  Name="JArchitecture"
+  Description="JArchitecture Plugin for AutoCAD 2025"
+  ProductType="Application"
+  SupportedLocales="Enu,Kor"
+  ProductCode="{E7A3B1C2-4D5F-6789-ABCD-EF0123456789}">
+
+  <CompanyDetails Name="JArchitecture" />
+
+  <RuntimeRequirements
+    OS="Win64"
+    Platform="AutoCAD"
+    SeriesMin="R25.0"
+    SeriesMax="R25.0" />
+
+  <Components Description="Main Module">
+    <RuntimeRequirements
+      OS="Win64"
+      Platform="AutoCAD"
+      SeriesMin="R25.0"
+      SeriesMax="R25.0" />
+    <ComponentEntry
+      AppName="JArchitecture"
+      Version="1.0.0"
+      ModuleName="./Contents/Acadv25JArch.dll"
+      AppDescription="JArchitecture Plugin"
+      LoadOnAutoCADStartup="True" />
+  </Components>
+
+</ApplicationPackage>

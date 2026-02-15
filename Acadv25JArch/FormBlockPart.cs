@@ -109,16 +109,22 @@ namespace Acadv25JArch
                 string fullPath = doc.Database.Filename;
 
                 if (string.IsNullOrEmpty(fullPath)) return;
-
+                 
                 // 핵심: 확장자를 .dwg에서 .xlsm으로 변경
                 string excelPath = Path.ChangeExtension(fullPath, ".xlsm");
 
 
                 //// EPPlus 라이선스 설정 (이 줄 추가!)
                 //ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+                // 현재 실행 중인 DLL의 위치
+                string dllPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string dllFolder = System.IO.Path.GetDirectoryName(dllPath);
 
-                // Excel 파일 경로
-                string filePath = @"C:\Jarch25\load_eng.xlsm"; ;// @"C:\Jarch25\load_Calc_org.xlsm";
+                // 같은 폴더에 있는 Excel 파일
+                string filePath = System.IO.Path.Combine(dllFolder, "Excel", "load_eng.xlsm");
+
+                //// Excel 파일 경로
+                //string filePath = @"C:\Jarch25\load_eng.xlsm"; ;// @"C:\Jarch25\load_Calc_org.xlsm";
 
                 // 파일 존재 확인
                 if (!File.Exists(filePath))
@@ -409,15 +415,34 @@ namespace Acadv25JArch
                 // 확장자를 .dwg에서 .xlsx로 변경
                 string excelPath = Path.ChangeExtension(fullPath, ".xlsx");
 
-                // 템플릿 파일 경로
-                string templatePath = @"C:\Jarch25\Excel\LoadCalcRow.xlsx";
+                //// 템플릿 파일 경로
+                //string templatePath = @"C:\Jarch25\Excel\LoadCalcRow.xlsx";
+
+                //// 파일 존재 확인
+                //if (!File.Exists(templatePath))
+                //{
+                //    MessageBox.Show($"템플릿 파일이 없습니다: {templatePath}");
+                //    return;
+                //}
+
+                // 현재 실행 중인 DLL의 위치
+                string dllPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string dllFolder = System.IO.Path.GetDirectoryName(dllPath);
+
+                // 같은 폴더에 있는 Excel 파일
+                string templatePath = System.IO.Path.Combine(dllFolder, "Excel", "LoadCalcRow.xlsx");
+
+                //// Excel 파일 경로
+                //string filePath = @"C:\Jarch25\load_eng.xlsm"; ;// @"C:\Jarch25\load_Calc_org.xlsm";
 
                 // 파일 존재 확인
                 if (!File.Exists(templatePath))
                 {
-                    MessageBox.Show($"템플릿 파일이 없습니다: {templatePath}");
+                    MessageBox.Show($"파일이 없습니다: {templatePath}");
                     return;
                 }
+
+
 
                 // 템플릿 파일을 excelPath로 복사
                 File.Copy(templatePath, excelPath, true);

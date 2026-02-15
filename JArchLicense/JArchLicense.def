@@ -1,0 +1,4 @@
+LIBRARY JArchLicense
+EXPORTS
+    CheckLicense
+    GetExpirationDate
