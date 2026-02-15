@@ -498,9 +498,9 @@ namespace Acadv25JArch
                         // H: Floor Load
                         worksheet.Cells[currentRow, col++].Value = "";
 
-                        // === Glass 1-5 (I-R 컬럼, 외창만) ===
+                        // === Glass 1-5 (I-R 컬럼, 외창만) ===> Glass 1-10  i-AB
                         var outerWindows = windows.Where(w => !w.Contains("P")).ToList();
-                        for (int i = 0; i < 5; i++)
+                        for (int i = 0; i < 10; i++)
                         {
                             if (i < outerWindows.Count)
                             {
@@ -518,9 +518,9 @@ namespace Acadv25JArch
                             }
                         }
 
-                        // === Wall 1-5 (S-AB 컬럼, 외벽만) ===
+                        // === Wall 1-5 (S-AB 컬럼, 외벽만) ===> Wall 1-5 (AC-AV 컬럼, 외벽만)
                         var outerWalls = walls1.Where(w => !w.StartsWith("P")).Take(5).ToList();
-                        for (int i = 0; i < 5; i++)
+                        for (int i = 0; i < 10; i++)
                         {
                             if (i < outerWalls.Count)
                             {
@@ -538,7 +538,7 @@ namespace Acadv25JArch
                             }
                         }
 
-                        // === Partition 1-5 (AC-AL 컬럼, 내벽 + 내창) ===
+                        // === Partition 1-5 (AC-AL 컬럼, 내벽 + 내창) ===>  Partition 1-5 (AW-BF 컬럼, 내벽 + 내창)
                         var innerWalls = walls1.Where(w => w.StartsWith("P")).ToList();
                         var innerWindows = windows.Where(w => w.Contains("P")).ToList();
                         var partitions = new List<string>();
@@ -564,7 +564,7 @@ namespace Acadv25JArch
                             }
                         }
 
-                        // === Door 1-2 (AM-AP 컬럼) ===
+                        // === Door 1-2 (AM-AP 컬럼) ===  Door 1-2 (BG-BJ 컬럼
                         for (int i = 0; i < 2; i++)
                         {
                             if (i < doors.Count)
