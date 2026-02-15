@@ -238,9 +238,9 @@ namespace Acadv25JArch
                             //if(ww.StartsWith("P")) worksheet.Cells[$"S{waldex}"].Value = "내  창";
 
                             //항목
-                            worksheet.Cells[$"S{waldex}"].Value = window[0].Contains("P") ? "Window" : "Window"; //"외벽";   
-                            worksheet.Cells[$"T{waldex}"].Value = window[0];// "NW";
-                            worksheet.Cells[$"U{waldex}"].Formula = window[1];// "3*3// 면적 (수식)
+                            worksheet.Cells[$"W{waldex}"].Value = window[0].Contains("P") ? "Window" : "Window"; //"외벽";   
+                            worksheet.Cells[$"X{waldex}"].Value = window[0];// "NW";
+                            worksheet.Cells[$"Y{waldex}"].Formula = window[1];// "3*3// 면적 (수식)
                             waldex++;
                         }
                         // 걸친 Door 처리
@@ -253,9 +253,9 @@ namespace Acadv25JArch
                             //if(ww.StartsWith("P")) worksheet.Cells[$"S{waldex}"].Value = "내  창";
 
                             //항목
-                            worksheet.Cells[$"S{waldex}"].Value = door[0].Contains("P") ? "Door" : "Door"; //"외벽";   //"내벽도어" : "외벽도어"
-                            worksheet.Cells[$"T{waldex}"].Value = door[0];// "NW";
-                            worksheet.Cells[$"U{waldex}"].Formula = door[1];// "3*3// 면적 (수식)
+                            worksheet.Cells[$"W{waldex}"].Value = door[0].Contains("P") ? "Door" : "Door"; //"외벽";   //"내벽도어" : "외벽도어"
+                            worksheet.Cells[$"X{waldex}"].Value = door[0];// "NW";
+                            worksheet.Cells[$"Y{waldex}"].Formula = door[1];// "3*3// 면적 (수식)
                             waldex++;
                         }
                         foreach (var wal in walls1)
@@ -264,11 +264,11 @@ namespace Acadv25JArch
                             // 쉼표(':')를 기준으로 자르기
                             string[] wall = wal.Split(':');
                             //항목
-                            worksheet.Cells[$"S{waldex}"].Value = wall[0].Contains("P") ? "Wall" : "Wall"; //"외벽";   "내   벽" : "외   벽"
+                            worksheet.Cells[$"W{waldex}"].Value = wall[0].Contains("P") ? "Wall" : "Wall"; //"외벽";   "내   벽" : "외   벽"
                             // 방위각
-                            worksheet.Cells[$"T{waldex}"].Value = wall[0];// "NW" Or P
+                            worksheet.Cells[$"X{waldex}"].Value = wall[0];// "NW" Or P
                             // 면적 (수식)
-                            worksheet.Cells[$"U{waldex}"].Formula = wall[1];// "3*3";
+                            worksheet.Cells[$"Y{waldex}"].Formula = wall[1];// "3*3";
                             waldex++;
                         }
 
