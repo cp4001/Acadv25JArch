@@ -203,8 +203,11 @@ namespace Acadv25JArch
                         // 실 명:   
                         worksheet.Cells[$"T{rdex + 3}"].Value = room.Name;
 
+                        // 실 면적 :   
+                        worksheet.Cells[$"T{rdex + 4}"].Value = room.FloorArea;
+
                         // 천정고: (double)
-                        worksheet.Cells[$"T{rdex + 4}"].Value = room.CeilingHeight; // double 직접 할당
+                        worksheet.Cells[$"T{rdex + 5}"].Value = room.CeilingHeight; // double 직접 할당
 
                         //if (walls == null || walls.Count == 0) continue;
                         int windex = 11 + rindex * 50;
