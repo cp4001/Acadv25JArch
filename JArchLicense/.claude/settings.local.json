@@ -1,0 +1,12 @@
+{
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "filesystem",
+    "supabase"
+  ],
+  "permissions": {
+    "allow": [
+      "mcp__filesystem__directory_tree"
+    ]
+  }
+}

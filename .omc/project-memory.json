@@ -1,0 +1,453 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1775195313946,
+  "projectRoot": "C:\\Users\\junhoi\\Desktop\\Work\\Acadv25JArch",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": {
+      "defaultBranch": "master",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "AAA": {
+      "path": "AAA",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1775195313913,
+      "keyFiles": [
+        "AAA.csproj",
+        "Program.cs"
+      ]
+    },
+    "Acadv25JArch": {
+      "path": "Acadv25JArch",
+      "purpose": null,
+      "fileCount": 44,
+      "lastAccessed": 1775195313914,
+      "keyFiles": [
+        "acad.err",
+        "AcadUtil.cs",
+        "Acadv25JArch.csproj",
+        "Acadv25JArch.csproj.user",
+        "Acadv25JArch_org.csproj"
+      ]
+    },
+    "ConsoleDiaSel": {
+      "path": "ConsoleDiaSel",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1775195313915,
+      "keyFiles": [
+        "App.config",
+        "ConsoleDiaSel.csproj",
+        "Program.cs"
+      ]
+    },
+    "ConsoleDiaSel1": {
+      "path": "ConsoleDiaSel1",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1775195313916,
+      "keyFiles": [
+        "ConsoleDiaSel1.csproj",
+        "Program.cs"
+      ]
+    },
+    "ConsoleDiaSelect": {
+      "path": "ConsoleDiaSelect",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1775195313917,
+      "keyFiles": [
+        "ConsoleDiaSelect.csproj",
+        "Program.cs"
+      ]
+    },
+    "ConsoleSystemID": {
+      "path": "ConsoleSystemID",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1775195313917,
+      "keyFiles": [
+        "ConsoleSystemID.csproj",
+        "Program.cs"
+      ]
+    },
+    "DataGridViewPersonSample": {
+      "path": "DataGridViewPersonSample",
+      "purpose": null,
+      "fileCount": 6,
+      "lastAccessed": 1775195313918,
+      "keyFiles": [
+        "DataGridViewPersonSample.csproj",
+        "DataGridViewPersonSample.csproj.user",
+        "MainForm.cs",
+        "MainForm.Designer.cs",
+        "MainForm.resx"
+      ]
+    },
+    "DiskSerialChecker": {
+      "path": "DiskSerialChecker",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1775195313919,
+      "keyFiles": [
+        "DiskSerialChecker.csproj",
+        "Program.cs"
+      ]
+    },
+    "JArchitecture_Setup": {
+      "path": "JArchitecture_Setup",
+      "purpose": null,
+      "fileCount": 4,
+      "lastAccessed": 1775195313919,
+      "keyFiles": [
+        "autocadInstall.md",
+        "JArchitecture_Deployment_Blueprint.pdf",
+        "JArchitecture_Setup.iss",
+        "PackageContents.xml"
+      ]
+    },
+    "JArchLicense": {
+      "path": "JArchLicense",
+      "purpose": null,
+      "fileCount": 11,
+      "lastAccessed": 1775195313920,
+      "keyFiles": [
+        "AGENTS.md",
+        "build.bat",
+        "JArchLicense.cpp",
+        "JArchLicense.def",
+        "JArchLicense.dll"
+      ]
+    },
+    "LicenseManagerCore": {
+      "path": "LicenseManagerCore",
+      "purpose": null,
+      "fileCount": 11,
+      "lastAccessed": 1775195313920,
+      "keyFiles": [
+        "BuildWindows11.bat",
+        "BUILD_GUIDE.md",
+        "CleanBuild.bat",
+        "KeyStrings.h",
+        "LicenseManager.cpp"
+      ]
+    },
+    "LicenseManagerFrameWork": {
+      "path": "LicenseManagerFrameWork",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1775195313921,
+      "keyFiles": [
+        "GEMINI.md",
+        "KeyStrings.h",
+        "LicenseManager.cpp",
+        "LicenseManager.h",
+        "LicenseManager.sln"
+      ]
+    },
+    "LicenseTimeManager": {
+      "path": "LicenseTimeManager",
+      "purpose": null,
+      "fileCount": 6,
+      "lastAccessed": 1775195313921,
+      "keyFiles": [
+        "CLAUDE.md",
+        "IntegrationExample.cs",
+        "LicenseHelper.cs",
+        "LicenseTimeManager.csproj",
+        "Program.cs"
+      ]
+    },
+    "OpenStudio": {
+      "path": "OpenStudio",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1775195313922,
+      "keyFiles": []
+    },
+    "OpenStudioCsharp": {
+      "path": "OpenStudioCsharp",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1775195313922,
+      "keyFiles": [
+        "OpenStudioCsharp.csproj",
+        "Program.cs"
+      ]
+    },
+    "PipeLoad": {
+      "path": "PipeLoad",
+      "purpose": null,
+      "fileCount": 11,
+      "lastAccessed": 1775195313923,
+      "keyFiles": [
+        "PipeLoad.csproj",
+        "PipeLoad.md",
+        "PipeLoadAnalysis.cs",
+        "PipeLoadAnalysisV2.cs",
+        "PipeTreeView.xaml"
+      ]
+    },
+    "PipeLoad2": {
+      "path": "PipeLoad2",
+      "purpose": null,
+      "fileCount": 4,
+      "lastAccessed": 1775195313923,
+      "keyFiles": [
+        "LineTreeBuilder.cs",
+        "PipeLoad.md",
+        "PipeLoad2.csproj",
+        "README.md"
+      ]
+    },
+    "VercelLicense": {
+      "path": "VercelLicense",
+      "purpose": null,
+      "fileCount": 15,
+      "lastAccessed": 1775195313924,
+      "keyFiles": [
+        "deploy-vercel.ps1",
+        "deployment-url.txt",
+        "DEPLOYMENT.md",
+        "FINAL-SETUP.md",
+        "neon-db-query.ps1"
+      ]
+    },
+    "WinformDiaSel": {
+      "path": "WinformDiaSel",
+      "purpose": null,
+      "fileCount": 14,
+      "lastAccessed": 1775195313924,
+      "keyFiles": [
+        "CalcResult.cs",
+        "DiaselCalc2.html",
+        "DiaSelCalc3.html",
+        "FixtureInput.cs",
+        "FixtureType.cs"
+      ]
+    },
+    "WinFormsDatagrid": {
+      "path": "WinFormsDatagrid",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1775195313925,
+      "keyFiles": [
+        "DiaselCalc2.html",
+        "MainForm.cs",
+        "MainForm.Designer.cs",
+        "MainForm.resx",
+        "Program.cs"
+      ]
+    },
+    "x64": {
+      "path": "x64",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1775195313925,
+      "keyFiles": []
+    },
+    "AAA\\bin": {
+      "path": "AAA\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313926,
+      "keyFiles": []
+    },
+    "ConsoleDiaSel\\bin": {
+      "path": "ConsoleDiaSel\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313927,
+      "keyFiles": []
+    },
+    "ConsoleDiaSel1\\bin": {
+      "path": "ConsoleDiaSel1\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313928,
+      "keyFiles": []
+    },
+    "ConsoleDiaSelect\\bin": {
+      "path": "ConsoleDiaSelect\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313929,
+      "keyFiles": []
+    },
+    "ConsoleSystemID\\bin": {
+      "path": "ConsoleSystemID\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313930,
+      "keyFiles": []
+    },
+    "DataGridViewPersonSample\\bin": {
+      "path": "DataGridViewPersonSample\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313930,
+      "keyFiles": []
+    },
+    "DiskSerialChecker\\bin": {
+      "path": "DiskSerialChecker\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313931,
+      "keyFiles": []
+    },
+    "JArchLicense\\bin": {
+      "path": "JArchLicense\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313932,
+      "keyFiles": []
+    },
+    "LicenseTimeManager\\bin": {
+      "path": "LicenseTimeManager\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313934,
+      "keyFiles": []
+    },
+    "OpenStudioCsharp\\bin": {
+      "path": "OpenStudioCsharp\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313935,
+      "keyFiles": []
+    },
+    "PipeLoad\\bin": {
+      "path": "PipeLoad\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313936,
+      "keyFiles": []
+    },
+    "PipeLoad2\\bin": {
+      "path": "PipeLoad2\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313936,
+      "keyFiles": []
+    },
+    "VercelLicense\\api": {
+      "path": "VercelLicense\\api",
+      "purpose": "API routes",
+      "fileCount": 6,
+      "lastAccessed": 1775195313937,
+      "keyFiles": [
+        "check-license.js",
+        "delete-id.js",
+        "init-db.js"
+      ]
+    },
+    "WinformDiaSel\\bin": {
+      "path": "WinformDiaSel\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313938,
+      "keyFiles": []
+    },
+    "WinFormsDatagrid\\bin": {
+      "path": "WinFormsDatagrid\\bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1775195313939,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "Acadv25JArch\\DiaTree.cs",
+      "accessCount": 8,
+      "lastAccessed": 1775223965782,
+      "type": "file"
+    },
+    {
+      "path": "D:\\Dropbox\\Obsidian\\Projects\\Architecture\\Architecture.md",
+      "accessCount": 7,
+      "lastAccessed": 1775224618787,
+      "type": "file"
+    },
+    {
+      "path": "Acadv25JArch",
+      "accessCount": 4,
+      "lastAccessed": 1775195409338,
+      "type": "directory"
+    },
+    {
+      "path": "Acadv25JArch\\Commands.cs",
+      "accessCount": 1,
+      "lastAccessed": 1775195365880,
+      "type": "file"
+    },
+    {
+      "path": "Acadv25JArch\\MyPlugIn.cs",
+      "accessCount": 1,
+      "lastAccessed": 1775195366435,
+      "type": "file"
+    },
+    {
+      "path": "Acadv25JArch\\JArchDefaults.cs",
+      "accessCount": 1,
+      "lastAccessed": 1775195372794,
+      "type": "file"
+    },
+    {
+      "path": "Acadv25JArch\\JPolyLine.cs",
+      "accessCount": 1,
+      "lastAccessed": 1775211051292,
+      "type": "file"
+    },
+    {
+      "path": "Acadv25JArch\\LineGrouping.cs",
+      "accessCount": 1,
+      "lastAccessed": 1775211051884,
+      "type": "file"
+    },
+    {
+      "path": "D:\\Dropbox\\Obsidian\\Excalidraw\\Drawing 2026-03-28 10.35.43.excalidraw.md",
+      "accessCount": 1,
+      "lastAccessed": 1775224168706,
+      "type": "file"
+    },
+    {
+      "path": "D:\\Dropbox\\Obsidian\\Projects\\Architecture\\DiaTreeNote.md",
+      "accessCount": 1,
+      "lastAccessed": 1775224196171,
+      "type": "file"
+    },
+    {
+      "path": "D:\\Dropbox\\Obsidian\\Excalidraw\\DiaTree_Geometry.excalidraw.md",
+      "accessCount": 1,
+      "lastAccessed": 1775224240742,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
