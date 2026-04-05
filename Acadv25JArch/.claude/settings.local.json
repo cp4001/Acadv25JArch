@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(/c/home/jjh/.npm-global/qmd collection:*)",
+      "Bash(/c/home/jjh/.npm-global/qmd embed:*)"
     ]
   }
 }
