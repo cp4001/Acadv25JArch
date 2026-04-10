@@ -1,7 +1,7 @@
 #include "JArchLicense.h"
 #include <windows.h>
 
-static const int EXP_YEAR = 2026;
+static const int EXP_YEAR = 2027;
 static const int EXP_MONTH = 4;
 static const int EXP_DAY = 1;
 

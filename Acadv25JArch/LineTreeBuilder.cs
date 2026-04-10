@@ -52,6 +52,7 @@ namespace PipeLoad2
                     var btr = tr.GetModelSpaceBlockTableRecord(db);
 
                     tr.CheckRegName("15A"); //LL(Line)
+                    
                     ////Create layerfor Wall Center Line
                     //tr.CreateLayer(Jdf.Layer.Room, Jdf.Color.Red, LineWeight.LineWeight040);
 
@@ -66,6 +67,7 @@ namespace PipeLoad2
                         }
 
                         //Set Xdata
+                        ll.UpgradeOpen();
                         JXdata.SetXdata(ll, "15A", val15A.ToString());
 
 
