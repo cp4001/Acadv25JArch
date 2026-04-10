@@ -284,7 +284,7 @@ namespace PipeLoad2
         /// <summary>
         /// 연결 관계 그래프 구성 (Handle 기반)
         /// </summary>
-        private Dictionary<string, List<string>> BuildConnectionGraph(List<Line> lines)
+        public Dictionary<string, List<string>> BuildConnectionGraph(List<Line> lines)
         {
             var graph = new Dictionary<string, List<string>>();
 
@@ -316,7 +316,7 @@ namespace PipeLoad2
         /// <summary>
         /// BFS로 Tree 구조 생성
         /// </summary>
-        private LineNode BuildTreeStructureBFS(Line rootLine, List<Line> allLines, 
+        public LineNode BuildTreeStructureBFS(Line rootLine, List<Line> allLines, 
             Dictionary<string, List<string>> connections)
         {
             // Root 노드 생성
@@ -455,7 +455,7 @@ namespace PipeLoad2
         /// <summary>
         /// 전체 노드 수 계산 (재귀)
         /// </summary>
-        private int CountNodes(LineNode node)
+        public int CountNodes(LineNode node)
         {
             if (node == null) return 0;
 
@@ -470,7 +470,7 @@ namespace PipeLoad2
         /// <summary>
         /// Leaf 노드 수 계산 (재귀)
         /// </summary>
-        private int CountLeafNodes(LineNode node)
+        public int CountLeafNodes(LineNode node)
         {
             if (node == null) return 0;
             if (node.Children.Count == 0) return 1;
@@ -562,12 +562,17 @@ namespace PipeLoad2
         private double GetLeafLoad(Line line)
         {
             const double DEFAULT_LEAF_LOAD = 1.0;
+            const double MIN_LEAF_LENGTH   = 300.0;
 
             try
             {
                 string? val = AcadFunction.JXdata.GetXdata(line, "15A");
                 if (val != null && double.TryParse(val, out double result))
-                    return result;
+                    return result; // 15A XData 있으면 길이 무관하게 인정
+
+                // 15A XData 없고 길이 < 300 이면 끝단 미인정
+                if (line.Length < MIN_LEAF_LENGTH)
+                    return 0.0;
             }
             catch { }
 
@@ -577,7 +582,7 @@ namespace PipeLoad2
         /// <summary>
         /// Tree 전체의 부하를 재귀적으로 계산 (Post-order 순회)
         /// </summary>
-        private void CalculateLoads(LineNode node)
+        public void CalculateLoads(LineNode node)
         {
             if (node == null) return;
 
