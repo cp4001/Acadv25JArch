@@ -31,18 +31,18 @@ namespace PipeLoad2
             {
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    int val15A = 1;
+                    double val15A = 1.0;
                     // 1. Leaf Line 선택
                     List<Line> targets = JEntity.GetEntityByTpye<Line>("Leaf Line 를 선택 하세요?", JSelFilter.MakeFilterTypes("LINE"));
                     if (targets.Count() == 0) return;
                     //2 15A Load  값 입력 
-                    PromptIntegerOptions opts = new PromptIntegerOptions("\n 15A 환산값 ? ");
+                    PromptDoubleOptions opts = new PromptDoubleOptions("\n 15A 환산값 ? ");
                     opts.DefaultValue = 1;
                     opts.UseDefaultValue = true;
                     opts.AllowNegative = false;  // 음수 허용 여부
                     opts.AllowZero = false;      // 0 허용 여부
 
-                    PromptIntegerResult result = ed.GetInteger(opts);
+                    PromptDoubleResult result = ed.GetDouble(opts);
 
                     if (result.Status == PromptStatus.OK)
                     {
