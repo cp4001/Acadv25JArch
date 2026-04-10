@@ -75,6 +75,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="LineTreeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="LineTreeForm.Designer.cs">
+      <DependentUpon>LineTreeForm.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="LineTreeForm.resx">
+      <DependentUpon>LineTreeForm.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

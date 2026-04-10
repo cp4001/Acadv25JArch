@@ -105,6 +105,7 @@ namespace PipeLoad2
             public NodeType Type { get; set; }          // Root/Mid/Leaf
             public double Load { get; set; }            // 누적 부하값
             public int LeafCount { get; set; }          // 하위 Leaf 개수
+            public int Diameter { get; set; }           // 결정 관경(mm)
 
             public LineNode()
             {
@@ -611,6 +612,69 @@ namespace PipeLoad2
                     node.LeafCount += child.LeafCount;
                 }
             }
+        }
+
+        /// <summary>
+        /// Tree 전체 노드에 관경 계산 후 XData "Dia" 에 저장 (Post-order)
+        /// 15A 값 >= 3 → 대변기(세정밸브), < 3 → 일반기구
+        /// </summary>
+        public void CalculateDiameters(LineNode node, Database db)
+        {
+            if (node == null) return;
+
+            using var tr = db.TransactionManager.StartTransaction();
+            tr.CheckRegName("Dia");
+            CalcDiaRecursive(node, tr);
+            tr.Commit();
+        }
+
+        private void CalcDiaRecursive(LineNode node, Transaction tr)
+        {
+            if (node == null) return;
+            foreach (var child in node.Children)
+                CalcDiaRecursive(child, tr);
+
+            // 누적 부하를 대변기/일반기구로 분리
+            double toiletEquiv  = 0;
+            double generalEquiv = 0;
+            int    toiletCount  = 0;
+            int    generalCount = 0;
+
+            CollectEquiv(node, ref toiletEquiv, ref toiletCount,
+                                ref generalEquiv, ref generalCount);
+
+            int dia = SupplyDiaCalc.Calculate2(
+                toiletCount,  toiletEquiv,
+                generalCount, generalEquiv);
+
+            // XData "Dia" 저장
+            var handle = new Autodesk.AutoCAD.DatabaseServices.Handle(
+                Convert.ToInt64(node.Handle, 16));
+            var objId = node.Line.Database.GetObjectId(false, handle, 0);
+            if (objId != ObjectId.Null)
+            {
+                var line = tr.GetObject(objId, OpenMode.ForWrite) as Line;
+                if (line != null)
+                    AcadFunction.JXdata.SetXdata(line, "Dia", dia.ToString());
+            }
+
+            node.Diameter = dia;
+        }
+
+        /// <summary>해당 노드 하위 Leaf의 균등값 합산</summary>
+        private void CollectEquiv(LineNode node,
+            ref double toiletEquiv,  ref int toiletCount,
+            ref double generalEquiv, ref int generalCount)
+        {
+            if (node.Type == NodeType.Leaf && node.Load > 0)
+            {
+                double load = node.Load;
+                if (load >= 3.0) { toiletEquiv  += load; toiletCount++;  }
+                else             { generalEquiv += load; generalCount++; }
+            }
+            foreach (var child in node.Children)
+                CollectEquiv(child, ref toiletEquiv,  ref toiletCount,
+                                    ref generalEquiv, ref generalCount);
         }
 
         /// <summary>
