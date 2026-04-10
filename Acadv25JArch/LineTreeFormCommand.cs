@@ -62,9 +62,9 @@ namespace PipeLoad2
 
                 // 5. Form 표시
                 Application.ShowModelessDialog(
-                    new LineTreeForm(rootNode, totalNodes, leafCount, rootLine.Layer));
+                    new LineTreeForm(rootNode, totalNodes, leafCount, rootLine.Layer, db));
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 ed.WriteMessage($"\n오류: {ex.Message}");
             }

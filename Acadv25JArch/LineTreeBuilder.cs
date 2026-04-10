@@ -621,44 +621,51 @@ namespace PipeLoad2
         public void CalculateDiameters(LineNode node, Database db)
         {
             if (node == null) return;
-
-            using var tr = db.TransactionManager.StartTransaction();
-            tr.CheckRegName("Dia");
-            CalcDiaRecursive(node, tr);
-            tr.Commit();
+            CalcDiaRecursive(node);
         }
 
-        private void CalcDiaRecursive(LineNode node, Transaction tr)
+        private void CalcDiaRecursive(LineNode node)
         {
             if (node == null) return;
             foreach (var child in node.Children)
-                CalcDiaRecursive(child, tr);
+                CalcDiaRecursive(child);
 
-            // 누적 부하를 대변기/일반기구로 분리
-            double toiletEquiv  = 0;
-            double generalEquiv = 0;
-            int    toiletCount  = 0;
-            int    generalCount = 0;
-
+            double toiletEquiv  = 0; double generalEquiv = 0;
+            int    toiletCount  = 0; int    generalCount  = 0;
             CollectEquiv(node, ref toiletEquiv, ref toiletCount,
-                                ref generalEquiv, ref generalCount);
+                               ref generalEquiv, ref generalCount);
 
-            int dia = SupplyDiaCalc.Calculate2(
-                toiletCount,  toiletEquiv,
-                generalCount, generalEquiv);
+            node.Diameter = SupplyDiaCalc.Calculate2(
+                toiletCount, toiletEquiv, generalCount, generalEquiv);
+        }
 
-            // XData "Dia" 저장
-            var handle = new Autodesk.AutoCAD.DatabaseServices.Handle(
-                Convert.ToInt64(node.Handle, 16));
-            var objId = node.Line.Database.GetObjectId(false, handle, 0);
-            if (objId != ObjectId.Null)
+        /// <summary>계산된 Diameter를 XData "Dia" 에 저장</summary>
+        public void ApplyDiameters(LineNode node, Database db)
+        {
+            if (node == null) return;
+            using var tr = db.TransactionManager.StartTransaction();
+            tr.CheckRegName("DD");
+            ApplyDiaRecursive(node, tr, db);
+            tr.Commit();
+        }
+
+        private void ApplyDiaRecursive(LineNode node, Transaction tr, Database db)
+        {
+            if (node == null) return;
+            try
             {
-                var line = tr.GetObject(objId, OpenMode.ForWrite) as Line;
-                if (line != null)
-                    AcadFunction.JXdata.SetXdata(line, "Dia", dia.ToString());
+                var handle = new Handle(Convert.ToInt64(node.Handle, 16));
+                var objId  = db.GetObjectId(false, handle, 0);
+                if (objId != ObjectId.Null)
+                {
+                    var line = tr.GetObject(objId, OpenMode.ForWrite) as Line;
+                    if (line != null)
+                        AcadFunction.JXdata.SetXdata(line, "DD", node.Diameter.ToString());
+                }
             }
-
-            node.Diameter = dia;
+            catch { }
+            foreach (var child in node.Children)
+                ApplyDiaRecursive(child, tr, db);
         }
 
         /// <summary>해당 노드 하위 Leaf의 균등값 합산</summary>
