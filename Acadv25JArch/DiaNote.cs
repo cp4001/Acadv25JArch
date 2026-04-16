@@ -12,7 +12,7 @@ using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace Acadv25JArch
 {
-    public class DiaTree
+    public class DiaNote
     {
         private const double OFFSET    = 0.5; // E 확장 거리 / G 오프셋
         private const double S_LENGTH  = 3.5; // foot1 → S 거리
@@ -550,6 +550,169 @@ namespace Acadv25JArch
 
                     ed.WriteMessage("\n========================================");
                     ed.WriteMessage("\n  NoteHor 완료");
+                    ed.WriteMessage($"\n  S:({S.X:F3},{S.Y:F3})  E:({E.X:F3},{E.Y:F3})");
+                    ed.WriteMessage($"\n  F:({F.X:F3},{F.Y:F3})  G:({G.X:F3},{G.Y:F3})  H:({H.X:F3},{H.Y:F3})");
+                    ed.WriteMessage("\n========================================");
+
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
+
+        /// <summary>
+        /// NoteHGor1: cmd_NoteHor 응용 — 첫째/둘째 라인 간 최단거리(base) 기반 동적 치수
+        ///
+        ///  base       = sorted[0].Foot ↔ sorted[1].Foot 최단거리
+        ///  OFFSET_H   = base × 0.1
+        ///  S_LEN      = base × 0.8
+        ///  TEXT_HEIGHT = base
+        ///  TEXT_OFFSET = base × 0.6
+        /// </summary>
+        [CommandMethod("cmd_NoteHor1", CommandFlags.UsePickSet)]
+        public void Cmd_NoteHor1()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db  = doc.Database;
+            Editor   ed  = doc.Editor;
+
+            try
+            {
+                // ── 1. 수평 Line 선택 ─────────────────────────────────────
+                PromptSelectionResult selResult = ed.SelectImplied();
+                if (selResult.Status != PromptStatus.OK)
+                {
+                    var selOpts = new PromptSelectionOptions
+                    {
+                        MessageForAdding = "\n수평 Line들을 선택하세요: "
+                    };
+                    var filter = new SelectionFilter(
+                        new[] { new TypedValue((int)DxfCode.Start, "LINE") });
+                    selResult = ed.GetSelection(selOpts, filter);
+                }
+                if (selResult.Status != PromptStatus.OK) return;
+                ed.SetImpliedSelection(new ObjectId[0]);
+
+                // ── 2. 기준점 X 클릭 ──────────────────────────────────────
+                PromptPointResult ptResult = ed.GetPoint("\n기준점 X를 클릭하세요: ");
+                if (ptResult.Status != PromptStatus.OK) return;
+                Point3d X = ptResult.Value;
+
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // ── 3. 라인 수집 ───────────────────────────────────────
+                    var lines = new List<Line>();
+                    foreach (SelectedObject so in selResult.Value)
+                    {
+                        if (tr.GetObject(so.ObjectId, OpenMode.ForRead) is Line l)
+                            lines.Add(l);
+                    }
+                    if (lines.Count < 2)
+                    {
+                        ed.WriteMessage("\n2개 이상의 수평 라인을 선택해야 합니다.");
+                        tr.Commit(); return;
+                    }
+
+                    // ── 4. X까지 거리 정렬 ────────────────────────────────
+                    var sorted = lines
+                        .Select(l => new { Line = l, Foot = l.GetClosestPointTo(X, true) })
+                        .OrderBy(x => X.DistanceTo(x.Foot))
+                        .ToList();
+
+                    Point3d foot1 = sorted[0].Foot;  // 가장 가까운
+                    Point3d foot2 = sorted.Last().Foot;  // 가장 먼
+
+                    // ── 5. base 계산: 첫째/둘째 라인 foot 간 최단거리 ─────
+                    double baseDist   = foot1.DistanceTo(sorted[1].Foot);
+                    double OFFSET_H   = baseDist * 0.2;
+                    double S_LEN      = baseDist ;
+                    double TEXT_HEIGHT = baseDist*0.8;
+                    double TEXT_OFFSET = baseDist * 0.6;
+
+                    ed.WriteMessage($"\n  base(1-2 간격)={baseDist:F3}  OFFSET_H={OFFSET_H:F3}  S_LEN={S_LEN:F3}  TEXT_HEIGHT={TEXT_HEIGHT:F3}  TEXT_OFFSET={TEXT_OFFSET:F3}");
+
+                    // ── 6. 방향 벡터 ───────────────────────────────────────
+                    Vector3d dirFoot1ToX = (X     - foot1).GetNormal();
+                    Vector3d dirXToFoot2 = (foot2 - X    ).GetNormal();
+                    Line nearLine = sorted.First().Line;
+                    Point3d lineMid = nearLine.StartPoint +
+                                      (nearLine.EndPoint - nearLine.StartPoint) * 0.5;
+                    Vector3d toMid  = lineMid - foot1;
+                    Vector3d perpDir = toMid.Length > 0.001
+                        ? toMid.GetNormal()
+                        : new Vector3d(1, 0, 0);
+
+                    // ── 7. 점 계산 ─────────────────────────────────────────
+                    Point3d S = foot1 + dirFoot1ToX * S_LEN;
+                    Point3d E = foot2 + dirXToFoot2 * OFFSET_H;
+                    Point3d F = E + perpDir * OFFSET_H;
+                    Point3d H = foot1 + dirFoot1ToX * OFFSET_H;
+                    Point3d G = H + perpDir * OFFSET_H;
+
+                    // ── 8. Polyline: S → E → F → G → H ───────────────────
+                    var pline = new Polyline();
+                    pline.AddVertexAt(0, new Point2d(S.X, S.Y), 0, 0, 0);
+                    pline.AddVertexAt(1, new Point2d(E.X, E.Y), 0, 0, 0);
+                    pline.AddVertexAt(2, new Point2d(F.X, F.Y), 0, 0, 0);
+                    pline.AddVertexAt(3, new Point2d(G.X, G.Y), 0, 0, 0);
+                    pline.AddVertexAt(4, new Point2d(H.X, H.Y), 0, 0, 0);
+                    pline.Closed = false;
+
+                    var btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+                    btr.AppendEntity(pline);
+                    tr.AddNewlyCreatedDBObject(pline, true);
+
+                    // ── 9. Y값 오름차순 정렬 후 지시선 + 텍스트 배치 ──────
+                    bool isRight = perpDir.X >= 0;
+                    var textSorted = sorted
+                        .OrderBy(x => (x.Line.StartPoint.Y + x.Line.EndPoint.Y) / 2.0)
+                        .ToList();
+
+                    for (int i = 0; i < textSorted.Count; i++)
+                    {
+                        string dia = JXdata.GetXdata(textSorted[i].Line, "DD");
+                        if (string.IsNullOrEmpty(dia)) continue;
+
+                        Point3d basePt = S + dirFoot1ToX * (S_LEN * i);
+
+                        // 지시선: basePt → basePt + perpDir * TEXT_OFFSET
+                        Point3d lnEnd = basePt + perpDir * TEXT_OFFSET;
+                        var ln = new Line(basePt, lnEnd);
+                        btr.AppendEntity(ln);
+                        tr.AddNewlyCreatedDBObject(ln, true);
+
+                        // 텍스트: 지시선 끝에서 perpDir 방향 OFFSET_H 추가
+                        Point3d txtPt = lnEnd + perpDir * OFFSET_H;
+                        var txt = new DBText();
+                        txt.TextString     = dia;
+                        txt.Height         = TEXT_HEIGHT;
+                        txt.VerticalMode   = TextVerticalMode.TextVerticalMid;
+                        txt.HorizontalMode = isRight
+                            ? TextHorizontalMode.TextLeft
+                            : TextHorizontalMode.TextRight;
+                        txt.AlignmentPoint = txtPt;
+                        txt.Position       = txtPt;
+                        btr.AppendEntity(txt);
+                        tr.AddNewlyCreatedDBObject(txt, true);
+
+                        ed.WriteMessage($"\n  D{i+1} \"{dia}\" base:({basePt.X:F3},{basePt.Y:F3})");
+                    }
+
+                    // ── 10. S에서 dirFoot1ToX 방향 연장 Line ──────────────
+                    if (textSorted.Count > 1)
+                    {
+                        var extLine = new Line(S, S + dirFoot1ToX * S_LEN * (textSorted.Count - 1));
+                        btr.AppendEntity(extLine);
+                        tr.AddNewlyCreatedDBObject(extLine, true);
+                    }
+
+                    ed.WriteMessage("\n========================================");
+                    ed.WriteMessage("\n  NoteHGor1 완료");
+                    ed.WriteMessage($"\n  base={baseDist:F3}");
                     ed.WriteMessage($"\n  S:({S.X:F3},{S.Y:F3})  E:({E.X:F3},{E.Y:F3})");
                     ed.WriteMessage($"\n  F:({F.X:F3},{F.Y:F3})  G:({G.X:F3},{G.Y:F3})  H:({H.X:F3},{H.Y:F3})");
                     ed.WriteMessage("\n========================================");
