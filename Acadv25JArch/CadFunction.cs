@@ -63,7 +63,9 @@ namespace AcadFunction
                     {
                         if (foundStart == true)
                         {
-                            if (tv.TypeCode == (int)DxfCode.ExtendedDataAsciiString)
+                            // String(1000) 또는 Real(1040) 모두 처리
+                            if (tv.TypeCode == (int)DxfCode.ExtendedDataAsciiString ||
+                                tv.TypeCode == (int)DxfCode.ExtendedDataReal)
                             {
                                 res = tv.Value.ToString();
                                 break;
