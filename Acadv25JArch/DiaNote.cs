@@ -349,7 +349,7 @@ namespace Acadv25JArch
                     List<Line> targets = JEntity.GetEntityByTpye<Line>("Pipe Line 를 선택 하세요?", JSelFilter.MakeFilterTypes("LINE"));
                     if (targets.Count() == 0) return;
                     //2 15A Load  값 입력 
-                    PromptDoubleOptions opts = new PromptDoubleOptions("\n 15A 환산값 ? ");
+                    PromptDoubleOptions opts = new PromptDoubleOptions("\n Dia 값을 입력하세요 ? ");
                     opts.DefaultValue = 1;
                     opts.UseDefaultValue = true;
                     opts.AllowNegative = false;  // 음수 허용 여부
