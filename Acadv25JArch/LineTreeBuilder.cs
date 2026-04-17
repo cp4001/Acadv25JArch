@@ -644,7 +644,7 @@ namespace PipeLoad2
         {
             if (node == null) return;
             using var tr = db.TransactionManager.StartTransaction();
-            tr.CheckRegName("DD");
+            tr.CheckRegName("Dia");
             ApplyDiaRecursive(node, tr, db);
             tr.Commit();
         }
@@ -660,7 +660,7 @@ namespace PipeLoad2
                 {
                     var line = tr.GetObject(objId, OpenMode.ForWrite) as Line;
                     if (line != null)
-                        AcadFunction.JXdata.SetXdata(line, "DD", node.Diameter.ToString());
+                        AcadFunction.JXdata.SetXdata(line, "Dia", node.Diameter.ToString());
                 }
             }
             catch { }

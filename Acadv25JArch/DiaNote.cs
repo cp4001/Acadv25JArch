@@ -281,10 +281,10 @@ namespace Acadv25JArch
                     // ── 9. 관경 텍스트 생성 (D1.D2.D3 → S 끝지점 배치) ───
                     const double TEXT_HEIGHT = 2.5;
 
-                    // Line의 중점 X 값 오름차순 정렬 후 DD 읽기
+                    // Line의 중점 X 값 오름차순 정렬 후 Dia 읽기
                     var diaList = sorted
                         .OrderBy(x => (x.Line.StartPoint.X + x.Line.EndPoint.X) / 2.0)
-                        .Select(x => JXdata.GetXdata(x.Line, "DD"))
+                        .Select(x => JXdata.GetXdata(x.Line, "Dia"))
                         .Where(d => !string.IsNullOrEmpty(d))
                         .ToList();
 
@@ -364,7 +364,7 @@ namespace Acadv25JArch
 
                     var btr = tr.GetModelSpaceBlockTableRecord(db);
 
-                    tr.CheckRegName("DD"); //LL(Line)
+                    tr.CheckRegName("Dia"); //LL(Line)
 
                     ////Create layerfor Wall Center Line
                     //tr.CreateLayer(Jdf.Layer.Room, Jdf.Color.Red, LineWeight.LineWeight040);
@@ -381,7 +381,7 @@ namespace Acadv25JArch
 
                         //Set Xdata
                         ll.UpgradeOpen();
-                        JXdata.SetXdata(ll, "DD", valDD.ToString());
+                        JXdata.SetXdata(ll, "Dia", valDD.ToString());
 
 
                     }
@@ -514,7 +514,7 @@ namespace Acadv25JArch
 
                     for (int i = 0; i < textSorted.Count; i++)
                     {
-                        string dia = JXdata.GetXdata(textSorted[i].Line, "DD");
+                        string dia = JXdata.GetXdata(textSorted[i].Line, "Dia");
                         if (string.IsNullOrEmpty(dia)) continue;
 
                         // 기준점: S에서 -dirFoot1ToX 방향으로 S_LEN * i
@@ -674,7 +674,7 @@ namespace Acadv25JArch
 
                     for (int i = 0; i < textSorted.Count; i++)
                     {
-                        string dia = JXdata.GetXdata(textSorted[i].Line, "DD");
+                        string dia = JXdata.GetXdata(textSorted[i].Line, "Dia");
                         if (string.IsNullOrEmpty(dia)) continue;
 
                         Point3d basePt = S + dirFoot1ToX * (S_LEN * i);
