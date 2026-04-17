@@ -331,9 +331,174 @@ namespace Acadv25JArch
 
 
         /// <summary>
-        /// 선택  line  "DD"Xdata를 설정하는 커맨드 
+        /// DiaNoteVer1: cmd_DiaNoteVer 응용 — 첫째/둘째 라인 간 최단거리(base) 기반 동적 치수
+        ///
+        ///  base        = sorted[0].Foot ↔ sorted[1].Foot 최단거리
+        ///  OFFSET_V    = base × 0.2
+        ///  S_LEN       = base
+        ///  TEXT_HEIGHT = base × 0.8
+        ///  TEXT_OFFSET = base × 0.3
         /// </summary>
-        [CommandMethod("DD")] // pipe Load 
+        [CommandMethod("cmd_DiaNoteVer1", CommandFlags.UsePickSet)]
+        public void Cmd_DiaNoteVer1()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db  = doc.Database;
+            Editor   ed  = doc.Editor;
+
+            try
+            {
+                // ── 1. 수직 Line 선택 ─────────────────────────────────────
+                PromptSelectionResult selResult = ed.SelectImplied();
+                if (selResult.Status != PromptStatus.OK)
+                {
+                    var selOpts = new PromptSelectionOptions
+                    {
+                        MessageForAdding = "\n수직 Line들을 선택하세요: "
+                    };
+                    var filter = new SelectionFilter(
+                        new[] { new TypedValue((int)DxfCode.Start, "LINE") });
+                    selResult = ed.GetSelection(selOpts, filter);
+                }
+                if (selResult.Status != PromptStatus.OK) return;
+                ed.SetImpliedSelection(new ObjectId[0]);
+
+                // ── 2. 기준점 X 클릭 ──────────────────────────────────────
+                PromptPointResult ptResult = ed.GetPoint("\n기준점 X를 클릭하세요: ");
+                if (ptResult.Status != PromptStatus.OK) return;
+                Point3d X = ptResult.Value;
+
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // ── 3. 선택 라인 수집 ──────────────────────────────────
+                    var lines = new List<Line>();
+                    foreach (SelectedObject so in selResult.Value)
+                    {
+                        if (tr.GetObject(so.ObjectId, OpenMode.ForRead) is Line l)
+                            lines.Add(l);
+                    }
+                    if (lines.Count < 2)
+                    {
+                        ed.WriteMessage("\n2개 이상의 수직 라인을 선택해야 합니다.");
+                        tr.Commit();
+                        return;
+                    }
+
+                    // ── 4. X에서 각 라인까지 거리 정렬 ────────────────────
+                    var sorted = lines
+                        .Select(l => new
+                        {
+                            Line = l,
+                            Foot = l.GetClosestPointTo(X, true)
+                        })
+                        .OrderBy(x => X.DistanceTo(x.Foot))
+                        .ToList();
+
+                    Point3d foot1 = sorted[0].Foot;       // 가장 가까운 수직라인 수선의 발
+                    Point3d foot2 = sorted.Last().Foot;   // 가장 먼  수직라인 수선의 발
+
+                    // ── 5. base 계산: 첫째/둘째 라인 foot 간 최단거리 ─────
+                    double baseDist    = foot1.DistanceTo(sorted[1].Foot);
+                    double OFFSET_V    = baseDist * 0.2;
+                    double S_LEN       = baseDist;
+                    double TEXT_HEIGHT = baseDist * 0.8;
+                    double TEXT_OFFSET = baseDist * 0.3;
+
+                    ed.WriteMessage($"\n  base(1-2 간격)={baseDist:F3}  OFFSET_V={OFFSET_V:F3}  S_LEN={S_LEN:F3}  TEXT_HEIGHT={TEXT_HEIGHT:F3}  TEXT_OFFSET={TEXT_OFFSET:F3}");
+
+                    // ── 6. 방향 벡터 ───────────────────────────────────────
+                    Vector3d dirFoot1ToX  = (X     - foot1).GetNormal(); // foot1 → X
+                    Vector3d dirXToFoot2  = (foot2 - X    ).GetNormal(); // X → foot2
+
+                    // ── 7. 각 점 계산 ──────────────────────────────────────
+                    Point3d S = foot1 + dirFoot1ToX * S_LEN;          // foot1→X 방향 S_LEN
+                    Point3d E = foot2 + dirXToFoot2 * OFFSET_V;       // foot2→반대 OFFSET_V
+                    Point3d F = new Point3d(E.X, E.Y + OFFSET_V, 0);  // E 위 OFFSET_V
+                    Point3d H = foot1 + dirFoot1ToX * OFFSET_V;       // foot1→X 방향 OFFSET_V
+                    Point3d G = new Point3d(H.X, H.Y + OFFSET_V, 0);  // H 위 OFFSET_V
+
+                    // ── 8. Polyline 생성: S → E → F → G → H ───────────────
+                    var pline = new Polyline();
+                    pline.AddVertexAt(0, new Point2d(S.X, S.Y), 0, 0, 0);
+                    pline.AddVertexAt(1, new Point2d(E.X, E.Y), 0, 0, 0);
+                    pline.AddVertexAt(2, new Point2d(F.X, F.Y), 0, 0, 0);
+                    pline.AddVertexAt(3, new Point2d(G.X, G.Y), 0, 0, 0);
+                    pline.AddVertexAt(4, new Point2d(H.X, H.Y), 0, 0, 0);
+                    pline.Closed = false;
+
+                    var btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+                    btr.AppendEntity(pline);
+                    tr.AddNewlyCreatedDBObject(pline, true);
+
+                    // ── 9. 결과 출력 ───────────────────────────────────────
+                    ed.WriteMessage("\n========================================");
+                    ed.WriteMessage("\n  DiaNoteVer1 폴리라인 생성 완료");
+                    ed.WriteMessage($"\n  라인 수  : {lines.Count}개");
+                    ed.WriteMessage($"\n  X (기준) : ({X.X:F3}, {X.Y:F3})");
+                    ed.WriteMessage($"\n  foot1(1) : ({foot1.X:F3}, {foot1.Y:F3})  dist={X.DistanceTo(foot1):F3}");
+                    ed.WriteMessage($"\n  foot2(2) : ({foot2.X:F3}, {foot2.Y:F3})  dist={X.DistanceTo(foot2):F3}");
+                    ed.WriteMessage($"\n  ----------------------------------------");
+                    ed.WriteMessage($"\n  S : ({S.X:F3}, {S.Y:F3})");
+                    ed.WriteMessage($"\n  E : ({E.X:F3}, {E.Y:F3})");
+                    ed.WriteMessage($"\n  F : ({F.X:F3}, {F.Y:F3})");
+                    ed.WriteMessage($"\n  G : ({G.X:F3}, {G.Y:F3})");
+                    ed.WriteMessage($"\n  H : ({H.X:F3}, {H.Y:F3})");
+                    ed.WriteMessage("\n========================================");
+
+                    // ── 10. 관경 텍스트 생성 (D1.D2.D3 → S 끝지점 배치) ───
+                    // Line의 중점 X 값 오름차순 정렬 후 Dia 읽기
+                    var diaList = sorted
+                        .OrderBy(x => (x.Line.StartPoint.X + x.Line.EndPoint.X) / 2.0)
+                        .Select(x => JXdata.GetXdata(x.Line, "Dia"))
+                        .Where(d => !string.IsNullOrEmpty(d))
+                        .ToList();
+
+                    if (diaList.Count > 0)
+                    {
+                        string diaStr = string.Join(".", diaList); // "D1.D2.D3"
+
+                        // X가 수직라인 오른쪽: TextLeft  → 글자 시작이 S+dir*TEXT_OFFSET
+                        // X가 수직라인 왼쪽  : TextRight → 글자 끝이  S+dir*TEXT_OFFSET
+                        Point3d txtPt = S + dirFoot1ToX * TEXT_OFFSET;
+                        bool isRight = dirFoot1ToX.X >= 0; // X방향 오른쪽 여부
+
+                        var txt = new DBText();
+                        txt.TextString   = diaStr;
+                        txt.Height       = TEXT_HEIGHT;
+                        txt.VerticalMode = TextVerticalMode.TextVerticalMid;
+                        if (isRight)
+                        {
+                            txt.HorizontalMode = TextHorizontalMode.TextLeft;
+                            txt.AlignmentPoint = txtPt;
+                            txt.Position       = txtPt;
+                        }
+                        else
+                        {
+                            txt.HorizontalMode = TextHorizontalMode.TextRight;
+                            txt.AlignmentPoint = txtPt;
+                            txt.Position       = txtPt;
+                        }
+
+                        btr.AppendEntity(txt);
+                        tr.AddNewlyCreatedDBObject(txt, true);
+
+                        ed.WriteMessage($"\n  관경 텍스트 : \"{diaStr}\" → ({S.X:F3}, {S.Y:F3})");
+                    }
+
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
+
+        /// <summary>
+        /// 선택  line  "DD"Xdata를 설정하는 커맨드
+        /// </summary>
+        [CommandMethod("DD")] // pipe Load
         public void Cmd_Line_DD()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -503,13 +668,16 @@ namespace Acadv25JArch
                     btr.AppendEntity(pline);
                     tr.AddNewlyCreatedDBObject(pline, true);
 
-                    // ── 8, 9. Y값 오름차순 정렬 후 1.5 line + 텍스트 배치 ──
-                    // D1(Y최소) → S 기준점
-                    // D2 → S + (-dirFoot1ToX) * 3.5
-                    // D3 → S + (-dirFoot1ToX) * 7.0
-                    bool isRight = perpDir.X >= 0;
-                    var textSorted = sorted
-                        .OrderBy(x => (x.Line.StartPoint.Y + x.Line.EndPoint.Y) / 2.0)
+                    // ── 8, 9. Y 정렬 후 1.5 line + 텍스트 배치 ────────────
+                    //  X 방향과 무관하게 "Y 큰 line → 위쪽 텍스트"가 되도록 정렬 방향 자동 결정.
+                    //  basePt = S + dirFoot1ToX * S_LEN * i 로 진행하므로
+                    //   - dirFoot1ToX.Y >= 0 (basePt 위로 진행) : Y 오름차순  (i=0=최하 → Y최소 line)
+                    //   - dirFoot1ToX.Y <  0 (basePt 아래로 진행): Y 내림차순 (i=0=최상 → Y최대 line)
+                    bool isRight    = perpDir.X >= 0;
+                    bool baseGoesUp = dirFoot1ToX.Y >= 0;
+                    var textSorted = (baseGoesUp
+                        ? sorted.OrderBy         (x => (x.Line.StartPoint.Y + x.Line.EndPoint.Y) / 2.0)
+                        : sorted.OrderByDescending(x => (x.Line.StartPoint.Y + x.Line.EndPoint.Y) / 2.0))
                         .ToList();
 
                     for (int i = 0; i < textSorted.Count; i++)
@@ -666,10 +834,16 @@ namespace Acadv25JArch
                     btr.AppendEntity(pline);
                     tr.AddNewlyCreatedDBObject(pline, true);
 
-                    // ── 9. Y값 오름차순 정렬 후 지시선 + 텍스트 배치 ──────
-                    bool isRight = perpDir.X >= 0;
-                    var textSorted = sorted
-                        .OrderBy(x => (x.Line.StartPoint.Y + x.Line.EndPoint.Y) / 2.0)
+                    // ── 9. Y 정렬 후 지시선 + 텍스트 배치 ──────────────────
+                    //  X 방향과 무관하게 "Y 큰 line → 위쪽 텍스트"가 되도록 정렬 방향 자동 결정.
+                    //  basePt = S + dirFoot1ToX * S_LEN * i 로 진행하므로
+                    //   - dirFoot1ToX.Y >= 0 (basePt 위로 진행) : Y 오름차순  (i=0=최하 → Y최소 line)
+                    //   - dirFoot1ToX.Y <  0 (basePt 아래로 진행): Y 내림차순 (i=0=최상 → Y최대 line)
+                    bool isRight    = perpDir.X >= 0;
+                    bool baseGoesUp = dirFoot1ToX.Y >= 0;
+                    var textSorted = (baseGoesUp
+                        ? sorted.OrderBy         (x => (x.Line.StartPoint.Y + x.Line.EndPoint.Y) / 2.0)
+                        : sorted.OrderByDescending(x => (x.Line.StartPoint.Y + x.Line.EndPoint.Y) / 2.0))
                         .ToList();
 
                     for (int i = 0; i < textSorted.Count; i++)
