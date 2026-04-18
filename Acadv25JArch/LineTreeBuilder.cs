@@ -83,7 +83,106 @@ namespace PipeLoad2
                 ed.WriteMessage($"\n오류 발생: {ex.Message}");
             }
         }
-    }   
+
+        /// <summary>
+        /// 선택  block  "LPM" Xdata를 설정하는 커맨드
+        /// LPM 값은 Block BoundingBox 영역 안에 있는 Text/MText 엔티티에서 읽음
+        /// Text 없는 Block은 Yellow(2)로 표시하고 개수 출력
+        /// </summary>
+        [CommandMethod("LPM", CommandFlags.UsePickSet)] // block LPM
+        public void Cmd_Block_SetLPM()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // 1. Block 선택 (UsePickSet: 사전선택 표시 + 추가/제거 허용)
+                    List<BlockReference> targets = JEntity.GetEntityByTpye<BlockReference>("Block 을 선택 하세요 (Enter 확정)?", JSelFilter.MakeFilterTypes("INSERT"));
+                    if (targets == null || targets.Count == 0) return;
+
+                    tr.CheckRegName("LPM");
+
+                    int setCount = 0;
+                    int missingCount = 0;
+
+                    foreach (var br in targets)
+                    {
+                        if (br == null)
+                        {
+                            ed.WriteMessage("\n블록을 읽을 수 없습니다.");
+                            continue;
+                        }
+
+                        double? lpmValue = TryGetLpmByWindowSelect(br, ed, tr);
+
+                        br.UpgradeOpen();
+
+                        if (lpmValue.HasValue)
+                        {
+                            JXdata.SetXdata(br, "LPM", lpmValue.Value.ToString());
+                            setCount++;
+                        }
+                        else
+                        {
+                            br.Color = Color.FromColorIndex(ColorMethod.ByAci, 2); // Yellow
+                            missingCount++;
+                        }
+                    }
+
+                    ed.WriteMessage($"\nLPM 설정 완료: {setCount}개");
+                    ed.WriteMessage($"\nText 없는 Block: {missingCount}개 (Yellow 표시)");
+
+                    tr.Commit();
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Block의 GeometricExtents 사각형 영역 안에 완전히 포함된 Text/MText에서 숫자값 추출
+        /// ed.SelectWindow(p1, p2, filter) 로 AutoCAD 네이티브 공간 질의 사용
+        /// </summary>
+        private double? TryGetLpmByWindowSelect(BlockReference br, Editor ed, Transaction tr)
+        {
+            Extents3d ext;
+            try { ext = br.GeometricExtents; }
+            catch { return null; }
+
+            var filter = new SelectionFilter(new[]
+            {
+                new TypedValue((int)DxfCode.Operator, "<OR"),
+                new TypedValue((int)DxfCode.Start, "TEXT"),
+                new TypedValue((int)DxfCode.Start, "MTEXT"),
+                new TypedValue((int)DxfCode.Operator, "OR>")
+            });
+
+            var psr = ed.SelectWindow(ext.MinPoint, ext.MaxPoint, filter);
+            if (psr.Status != PromptStatus.OK || psr.Value == null) return null;
+
+            foreach (SelectedObject so in psr.Value)
+            {
+                var ent = tr.GetObject(so.ObjectId, OpenMode.ForRead);
+                string text = ent switch
+                {
+                    DBText dbt => dbt.TextString,
+                    MText mt => mt.Text,
+                    _ => null
+                };
+                if (string.IsNullOrWhiteSpace(text)) continue;
+                if (double.TryParse(text.Trim(), out double v))
+                    return v;
+            }
+            return null;
+        }
+    }
     /// <summary>
     /// Line 네트워크의 Tree 구조를 분석하는 클래스
     /// </summary>
