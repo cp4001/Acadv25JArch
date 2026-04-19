@@ -182,6 +182,167 @@ namespace PipeLoad2
             }
             return null;
         }
+
+        /// <summary>
+        /// 선택한 Line들을 가장 가까운 Block의 BoundingBox 경계까지 연장하는 커맨드
+        /// Line의 방향을 유지한 채로, Block에 더 가까운 끝점을 BBox 경계까지 늘림
+        /// </summary>
+        [CommandMethod("LineExtend2Block", CommandFlags.UsePickSet)]
+        public void Cmd_LineExtend2Block()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // 1. Line + Block 혼합 선택
+                    var filter = JSelFilter.MakeFilterTypes("LINE,INSERT");
+                    var pso = new PromptSelectionOptions
+                    {
+                        MessageForAdding = "\nLine과 Block을 선택하세요 (Enter 확정): "
+                    };
+                    var psr = ed.GetSelection(pso, filter);
+                    if (psr.Status != PromptStatus.OK || psr.Value == null)
+                    {
+                        ed.WriteMessage("\n선택이 취소되었습니다.");
+                        return;
+                    }
+
+                    var lines = new List<Line>();
+                    var blocks = new List<BlockReference>();
+                    foreach (SelectedObject so in psr.Value)
+                    {
+                        var ent = tr.GetObject(so.ObjectId, OpenMode.ForRead);
+                        if (ent is Line ln) lines.Add(ln);
+                        else if (ent is BlockReference br) blocks.Add(br);
+                    }
+
+                    if (lines.Count == 0)
+                    {
+                        ed.WriteMessage("\nLine이 선택되지 않았습니다.");
+                        return;
+                    }
+                    if (blocks.Count == 0)
+                    {
+                        ed.WriteMessage("\nBlock이 선택되지 않았습니다.");
+                        return;
+                    }
+
+                    // 2. Block BoundingBox 캐시
+                    var boxes = new List<(Point3d min, Point3d max)>();
+                    foreach (var br in blocks)
+                    {
+                        try
+                        {
+                            var ext = br.GeometricExtents;
+                            boxes.Add((ext.MinPoint, ext.MaxPoint));
+                        }
+                        catch { /* Extents 없는 Block 은 skip */ }
+                    }
+                    if (boxes.Count == 0)
+                    {
+                        ed.WriteMessage("\n유효한 Block BoundingBox이 없습니다.");
+                        return;
+                    }
+
+                    int extendedCount = 0;
+                    int skippedCount = 0;
+
+                    // 3. 각 Line 에 대해 양쪽 끝점을 후보로 삼아, 가장 가까운 BBox 경계까지 연장
+                    foreach (var ln in lines)
+                    {
+                        var v = ln.EndPoint - ln.StartPoint;
+                        if (v.Length < 1e-9)
+                        {
+                            skippedCount++;
+                            continue;
+                        }
+                        Vector3d dirForward = v.GetNormal();        // Start → End
+                        Vector3d dirBackward = -dirForward;          // End → Start
+
+                        double bestT = double.MaxValue;
+                        bool moveEnd = true;
+                        Point3d bestHit = Point3d.Origin;
+
+                        foreach (var bb in boxes)
+                        {
+                            // End 를 dirForward 로 연장
+                            if (TryRayBoxHitXY(ln.EndPoint, dirForward, bb.min, bb.max, out double tE) && tE < bestT)
+                            {
+                                bestT = tE;
+                                moveEnd = true;
+                                bestHit = ln.EndPoint + dirForward * tE;
+                            }
+                            // Start 를 dirBackward 로 연장
+                            if (TryRayBoxHitXY(ln.StartPoint, dirBackward, bb.min, bb.max, out double tS) && tS < bestT)
+                            {
+                                bestT = tS;
+                                moveEnd = false;
+                                bestHit = ln.StartPoint + dirBackward * tS;
+                            }
+                        }
+
+                        if (bestT == double.MaxValue)
+                        {
+                            skippedCount++;
+                            continue;
+                        }
+
+                        ln.UpgradeOpen();
+                        if (moveEnd) ln.EndPoint = bestHit;
+                        else ln.StartPoint = bestHit;
+                        extendedCount++;
+                    }
+
+                    ed.WriteMessage($"\n연장 완료: {extendedCount}개");
+                    if (skippedCount > 0)
+                        ed.WriteMessage($"\n건너뜀: {skippedCount}개 (BoundingBox과 만나지 않음)");
+
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Ray(origin,dir) 가 AABB(boxMin,boxMax) 경계와 만나는 가장 가까운 양의 t 반환 (XY 평면 기준)
+        /// 원점이 이미 박스 안이면 false (연장 의미 없음)
+        /// </summary>
+        private bool TryRayBoxHitXY(Point3d origin, Vector3d dir, Point3d boxMin, Point3d boxMax, out double tHit)
+        {
+            tHit = 0.0;
+            double tMin = double.NegativeInfinity;
+            double tMax = double.PositiveInfinity;
+
+            if (!SlabIntersect(origin.X, dir.X, boxMin.X, boxMax.X, ref tMin, ref tMax)) return false;
+            if (!SlabIntersect(origin.Y, dir.Y, boxMin.Y, boxMax.Y, ref tMin, ref tMax)) return false;
+
+            if (tMin <= 1e-9) return false;  // 이미 박스 안 또는 반대 방향
+            if (tMax < tMin) return false;
+
+            tHit = tMin;
+            return true;
+        }
+
+        private bool SlabIntersect(double o, double d, double smin, double smax, ref double tMin, ref double tMax)
+        {
+            if (Math.Abs(d) < 1e-12)
+            {
+                return o >= smin - 1e-9 && o <= smax + 1e-9;
+            }
+            double t1 = (smin - o) / d;
+            double t2 = (smax - o) / d;
+            if (t1 > t2) (t1, t2) = (t2, t1);
+            if (t1 > tMin) tMin = t1;
+            if (t2 < tMax) tMax = t2;
+            return tMin <= tMax;
+        }
     }
     /// <summary>
     /// Line 네트워크의 Tree 구조를 분석하는 클래스
