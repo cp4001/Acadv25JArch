@@ -40,6 +40,7 @@ namespace PipeLoad2
             public double MaxFlow { get; set; }     // 선정 관경의 최대유량 (LPM)
             public double Velocity { get; set; }    // 해당 관경 유속 (m/s)
             public string BlockName { get; set; } = ""; // Block 노드 전용
+            public string TreeType { get; set; } = ""; // 분석 시점 Tree 상태 스냅샷 ("Root"/"Mid"/"Leaf"/"Block")
         }
 
         // ---- H-W 공식 / 강관 데이터 (KS D 3507) ----
@@ -307,10 +308,17 @@ namespace PipeLoad2
                 }
             }
 
-            // Leaf Line 식별(자식 없음) → 매칭된 Block들을 Block 노드로 부착
+            // Block 부착 전에 Line 타입 분류 — Block 자식이 생기면 leaf 판정이 깨짐
+            SetNodeTypes(root);
+
+            // Tree 상태를 문자열로 스냅샷 — ApplyDiameters가 이 값을 그대로 "Tree" XData에 기록
+            foreach (var kv in nodeMap)
+                kv.Value.TreeType = kv.Value.Type.ToString();
+
+            // Leaf Line에 Block 부착 (Type == Leaf 기준)
             foreach (var node in nodeMap.Values.ToList())
             {
-                if (node.Children.Count > 0) continue;  // leaf line만 대상
+                if (node.Type != FcuNodeType.Leaf) continue;
                 var blocksForThisLine = blockToLine
                     .Where(kv => kv.Value == node.Handle)
                     .Select(kv => blockMap[kv.Key]);
@@ -323,13 +331,13 @@ namespace PipeLoad2
                         Parent    = node,
                         Level     = node.Level + 1,
                         Type      = FcuNodeType.Block,
-                        BlockName = br.Name
+                        BlockName = br.Name,
+                        TreeType  = "Block"
                     };
                     node.Children.Add(bn);
                 }
             }
 
-            SetNodeTypes(root);
             return root;
         }
 
@@ -405,36 +413,48 @@ namespace PipeLoad2
             }
         }
 
-        /// <summary>계산된 Diameter를 Line XData "Dia"에 저장</summary>
+        /// <summary>계산된 Diameter를 Line XData "Dia"에, 노드 종류를 XData "Tree"(Root/Mid/Leaf)에 저장</summary>
         public void ApplyDiameters(FcuNode node, Database db)
         {
             using var tr = db.TransactionManager.StartTransaction();
             tr.CheckRegName("Dia");
+            tr.CheckRegName("Tree");
             ApplyDiaRecursive(node, tr, db);
             tr.Commit();
         }
 
         private void ApplyDiaRecursive(FcuNode node, Transaction tr, Database db)
         {
-            if (node.Type != FcuNodeType.Block && !string.IsNullOrEmpty(node.Diameter) && node.Diameter != "-")
+            if (node.Type != FcuNodeType.Block)
             {
+                Line? line = null;
                 try
                 {
                     var handle = new Handle(Convert.ToInt64(node.Handle, 16));
                     var id     = db.GetObjectId(false, handle, 0);
                     if (id != ObjectId.Null)
+                        line = tr.GetObject(id, OpenMode.ForWrite) as Line;
+                }
+                catch { }
+
+                if (line != null)
+                {
+                    // "Tree" 먼저 — BuildTree 시점의 스냅샷을 그대로 기록 (Dia 실패와 독립)
+                    if (!string.IsNullOrEmpty(node.TreeType))
                     {
-                        var line = tr.GetObject(id, OpenMode.ForWrite) as Line;
-                        if (line != null)
+                        try { JXdata.SetXdata(line, "Tree", node.TreeType); } catch { }
+                    }
+
+                    // "Dia" — 값이 있고 "-" 가 아닐 때만
+                    if (!string.IsNullOrEmpty(node.Diameter) && node.Diameter != "-")
+                    {
+                        string diaVal = node.Diameter.Replace("A", "").Replace("!", "").Trim();
+                        if (!string.IsNullOrEmpty(diaVal))
                         {
-                            // XData "Dia" 는 숫자 문자열만 기록 ("25A"/"25A!" → "25")
-                            string diaVal = node.Diameter.Replace("A", "").Replace("!", "").Trim();
-                            if (!string.IsNullOrEmpty(diaVal))
-                                JXdata.SetXdata(line, "Dia", diaVal);
+                            try { JXdata.SetXdata(line, "Dia", diaVal); } catch { }
                         }
                     }
                 }
-                catch { }
             }
             foreach (var c in node.Children) ApplyDiaRecursive(c, tr, db);
         }
