@@ -117,7 +117,8 @@ namespace PipeLoad2
                     NodeType.Leaf  => Color.Green,
                     NodeType.Block => Color.Purple,
                     _              => Color.Black
-                }
+                },
+                Tag = node.Handle
             };
 
             if (_mode == CalcMode.Supply &&
@@ -149,6 +150,40 @@ namespace PipeLoad2
         private void btnExpand_Click(object sender, EventArgs e)   => treeView.ExpandAll();
         private void btnCollapse_Click(object sender, EventArgs e) => treeView.CollapseAll();
         private void btnClose_Click(object sender, EventArgs e)    => this.Close();
+
+        private void btnSelect_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var sel = treeView.SelectedNode;
+                if (sel == null || sel.Tag is not string handleStr || string.IsNullOrEmpty(handleStr))
+                {
+                    MessageBox.Show("Tree에서 노드를 먼저 선택하세요.", "Select",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var doc = Autodesk.AutoCAD.ApplicationServices.Application
+                              .DocumentManager.MdiActiveDocument;
+                var ed  = doc.Editor;
+
+                var handle = new Handle(Convert.ToInt64(handleStr, 16));
+                if (!_db.TryGetObjectId(handle, out ObjectId objId) || objId.IsNull)
+                {
+                    MessageBox.Show($"Handle {handleStr} 엔티티를 찾을 수 없습니다.",
+                        "Select", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                ed.SetImpliedSelection(new[] { objId });
+                doc.Window.Focus();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"오류: {ex.Message}", "오류",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
         private void btnApply_Click(object sender, EventArgs e)
         {

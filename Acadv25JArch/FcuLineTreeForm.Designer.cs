@@ -25,6 +25,7 @@ namespace PipeLoad2
             btnExpand = new Button();
             btnCollapse = new Button();
             btnApply = new Button();
+            btnSelect = new Button();
             btnClose = new Button();
             topPanel.SuspendLayout();
             panel.SuspendLayout();
@@ -120,6 +121,7 @@ namespace PipeLoad2
             panel.Controls.Add(btnExpand);
             panel.Controls.Add(btnCollapse);
             panel.Controls.Add(btnApply);
+            panel.Controls.Add(btnSelect);
             panel.Controls.Add(btnClose);
             panel.Dock = DockStyle.Bottom;
             panel.Location = new Point(0, 544);
@@ -157,9 +159,22 @@ namespace PipeLoad2
             btnApply.Text = "관경 적용 (Dia)";
             btnApply.UseVisualStyleBackColor = false;
             btnApply.Click += btnApply_Click;
-            // 
+            //
+            // btnSelect
+            //
+            btnSelect.BackColor = Color.FromArgb(40, 167, 69);
+            btnSelect.FlatStyle = FlatStyle.Flat;
+            btnSelect.ForeColor = Color.White;
+            btnSelect.Location = new Point(343, 6);
+            btnSelect.Name = "btnSelect";
+            btnSelect.Size = new Size(100, 38);
+            btnSelect.TabIndex = 3;
+            btnSelect.Text = "Select";
+            btnSelect.UseVisualStyleBackColor = false;
+            btnSelect.Click += btnSelect_Click;
+            //
             // btnClose
-            // 
+            //
             btnClose.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnClose.Location = new Point(666, 10);
             btnClose.Name = "btnClose";
@@ -198,6 +213,7 @@ namespace PipeLoad2
         private System.Windows.Forms.Button   btnExpand;
         private System.Windows.Forms.Button   btnCollapse;
         private System.Windows.Forms.Button   btnApply;
+        private System.Windows.Forms.Button   btnSelect;
         private System.Windows.Forms.Button   btnClose;
     }
 }

@@ -95,6 +95,10 @@ namespace PipeLoad2
 
                 ed.WriteMessage($"\n[Pre] rootLayer={rootLayer}, lines={lineEndpoints.Count}, LPM blocks={lpmBlockHandles.Count}");
 
+                // 5.5. Zoom fit — 선택된 Entity 전체가 화면에 보이도록
+                // (CrossingWindow는 화면 표시 영역 기준이므로 분석 전 필수)
+                ZoomToEntities(ed, db, per.ObjectId, psr.Value.GetObjectIds());
+
                 // 6. Tree 분석 → Leaf tp(미연결 끝점)에서 CrossingWindow로 LPM Block 매핑
                 var blockToLine = FcuLineTreeBuilder.MapLeafTerminalsToLpmBlocks(
                     ed, rootHandle, lineEndpoints, lpmBlockHandles, margin: 10.0);
@@ -139,6 +143,55 @@ namespace PipeLoad2
             {
                 ed.WriteMessage($"\n오류: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 지정된 Entity 집합의 GeometricExtents를 합산해 현재 뷰를 Zoom fit 한다.
+        /// </summary>
+        private static void ZoomToEntities(Editor ed, Database db, ObjectId rootId, ObjectId[] selIds)
+        {
+            var ext = new Extents3d();
+            bool initialized = false;
+
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                var rootEnt = tr.GetObject(rootId, OpenMode.ForRead) as Entity;
+                if (rootEnt != null)
+                {
+                    try { ext = rootEnt.GeometricExtents; initialized = true; } catch { }
+                }
+
+                foreach (var id in selIds)
+                {
+                    var ent = tr.GetObject(id, OpenMode.ForRead) as Entity;
+                    if (ent == null) continue;
+                    try
+                    {
+                        if (!initialized) { ext = ent.GeometricExtents; initialized = true; }
+                        else ext.AddExtents(ent.GeometricExtents);
+                    }
+                    catch { }
+                }
+                tr.Commit();
+            }
+
+            if (!initialized) return;
+
+            double w = ext.MaxPoint.X - ext.MinPoint.X;
+            double h = ext.MaxPoint.Y - ext.MinPoint.Y;
+            if (w <= 0) w = 1;
+            if (h <= 0) h = 1;
+
+            using (var view = ed.GetCurrentView())
+            {
+                view.Width       = w * 1.1;
+                view.Height      = h * 1.1;
+                view.CenterPoint = new Point2d(
+                    (ext.MinPoint.X + ext.MaxPoint.X) * 0.5,
+                    (ext.MinPoint.Y + ext.MaxPoint.Y) * 0.5);
+                ed.SetCurrentView(view);
+            }
+            ed.UpdateScreen();
         }
     }
 }
