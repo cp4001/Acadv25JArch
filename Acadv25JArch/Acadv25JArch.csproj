@@ -75,19 +75,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="LineTreeForm.cs">
+    <Compile Update="PipeDiaCalc\LineTreeForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Update="LineTreeForm.Designer.cs">
+    <Compile Update="PipeDiaCalc\LineTreeForm.Designer.cs">
       <DependentUpon>LineTreeForm.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Update="LineTreeForm.resx">
+    <EmbeddedResource Update="PipeDiaCalc\LineTreeForm.resx">
       <DependentUpon>LineTreeForm.cs</DependentUpon>
     </EmbeddedResource>
-    <Compile Update="FcuLineTreeForm.cs">
+    <Compile Update="PipeDiaCalc\FcuLineTreeForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Update="FcuLineTreeForm.Designer.cs">
+    <Compile Update="PipeDiaCalc\FcuLineTreeForm.Designer.cs">
       <DependentUpon>FcuLineTreeForm.cs</DependentUpon>
     </Compile>
   </ItemGroup>
