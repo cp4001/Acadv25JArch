@@ -8,6 +8,7 @@ using CADExtension;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Markup;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace Acadv25JArch
@@ -974,6 +975,94 @@ namespace Acadv25JArch
                 ed.WriteMessage($"\n오류 발생: {ex.Message}");
             }
         }
+
+    }
+
+    public class SusPipe            // 배관 도면  SUS Pipe 관경변경
+    {
+
+        //D65->D60 D32->D30  D15->D13
+        [CommandMethod("susDia", CommandFlags.UsePickSet)]
+        public void PipeLine_Changeto_SusDia()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+
+            List<Line> targets = JEntity.GetEntityByTpye<Line>("Pipe 를  선택 하세요?", JEntity.MakeSelFilter("LINE", "Pipe"));
+            if (targets == null) return;
+
+            int cnt = 0;
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                foreach (var ll in targets)
+                {
+                    ll.UpgradeOpen();
+                    if (  JXdata.GetXdata(ll,"Dia")   == "65")
+                    {
+                        JXdata.SetXdata(ll, "Dia", "60");
+                        cnt++;
+                    }
+                    if  (JXdata.GetXdata(ll, "Dia")  == "32")
+                    {
+                        JXdata.SetXdata(ll, "Dia", "30");
+                        cnt++;
+                    }
+                    if (JXdata.GetXdata(ll, "Dia") == "15")
+                    {
+                        JXdata.SetXdata(ll, "Dia", "13");
+                        cnt++;
+                    }
+
+                }
+                tr.Commit();
+            }
+            ed.WriteMessage($" \n {cnt.ToString()} pipes is changed.");
+        }
+
+        // 배관 도면  SUS Pipe 관경변경
+        //D65->D60 D32->D30  D15->D13
+        [CommandMethod("susDia1", CommandFlags.UsePickSet)]
+        public void PipeLine_Changeto_SusDia1()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+
+            List<Line> targets = JEntity.GetEntityByTpye<Line>("Pipe Block을 선택 하세요?", JEntity.MakeSelFilter("LINE", "Pipe"));
+            if (targets == null) return;
+
+            int cnt = 0;
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                foreach (var ll in targets)
+                {
+                    ll.UpgradeOpen();
+                    if (JXdata.GetXdata(ll, "Dia") == "60")
+                    {
+                        JXdata.SetXdata(ll, "Dia", "65");
+                        cnt++;
+                    }
+                    if (JXdata.GetXdata(ll, "Dia") == "30")
+                    {
+                        JXdata.SetXdata(ll, "Dia", "32");
+                        cnt++;
+                    }
+                    if (JXdata.GetXdata(ll, "Dia") == "13")
+                    {
+                        JXdata.SetXdata(ll, "Dia", "15");
+                        cnt++;
+                    }
+
+                }
+                tr.Commit();
+            }
+            ed.WriteMessage($" \n {cnt.ToString()} pipes is changed.");
+        }
+
+
 
     }
 }
