@@ -17,6 +17,8 @@ namespace Acadv25JArch
         private const double OFFSET    = 0.5; // E 확장 거리 / G 오프셋
         private const double S_LENGTH  = 3.5; // foot1 → S 거리
 
+        private static double BaseLen = 30.0; // 관경 텍스트 기준 길이 (실제 상황에 맞게 조정)
+
         /// <summary>
         /// DiaTree: 선택된 흰색 Line들 + 삼각위치 기반 폴리라인 생성
         ///
