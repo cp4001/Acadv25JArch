@@ -379,9 +379,9 @@ namespace Acadv25JArch
                         if (tr.GetObject(so.ObjectId, OpenMode.ForRead) is Line l)
                             lines.Add(l);
                     }
-                    if (lines.Count < 2)
+                    if (lines.Count < 1)
                     {
-                        ed.WriteMessage("\n2개 이상의 수직 라인을 선택해야 합니다.");
+                        ed.WriteMessage("\n1개 이상의 수직 라인을 선택해야 합니다.");
                         tr.Commit();
                         return;
                     }
@@ -399,8 +399,8 @@ namespace Acadv25JArch
                     Point3d foot1 = sorted[0].Foot;       // 가장 가까운 수직라인 수선의 발
                     Point3d foot2 = sorted.Last().Foot;   // 가장 먼  수직라인 수선의 발
 
-                    // ── 5. base 계산: 첫째/둘째 라인 foot 간 최단거리 ─────
-                    double baseDist    = foot1.DistanceTo(sorted[1].Foot);
+                    // ── 5. base = BaseLen (Cmd_SetDiaNoteBase로 설정) ─────
+                    double baseDist    = BaseLen;
                     double OFFSET_V    = baseDist * 0.2;
                     double S_LEN       = baseDist;
                     double TEXT_HEIGHT = baseDist * 0.8;
@@ -565,7 +565,7 @@ namespace Acadv25JArch
         }
 
         /// <summary>
-        /// NoteHor: 수평 Line 선택 + 기준점 X 클릭 → 폴리라인 S-E-F-G-H + 라인별 텍스트 생성
+        /// DiaNoteHor: 수평 Line 선택 + 기준점 X 클릭 → 폴리라인 S-E-F-G-H + 라인별 텍스트 생성
         ///
         ///  foot1 : X에서 가장 가까운 수평 Line의 수선의 발
         ///  foot2 : X에서 가장 먼  수평 Line의 수선의 발
@@ -580,8 +580,8 @@ namespace Acadv25JArch
         ///  Polyline : S → E → F → G → H
         ///  텍스트   : 각 라인 foot에서 perpDir × 1.5 위치에 개별 배치 (Y값 오름차순)
         /// </summary>
-        [CommandMethod("cmd_NoteHor", CommandFlags.UsePickSet)]
-        public void Cmd_NoteHor()
+        [CommandMethod("cmd_DiaNoteHor", CommandFlags.UsePickSet)]
+        public void Cmd_DiaNoteHor()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db  = doc.Database;
@@ -719,7 +719,7 @@ namespace Acadv25JArch
                     tr.AddNewlyCreatedDBObject(extLine, true);
 
                     ed.WriteMessage("\n========================================");
-                    ed.WriteMessage("\n  NoteHor 완료");
+                    ed.WriteMessage("\n  DiaNoteHor 완료");
                     ed.WriteMessage($"\n  S:({S.X:F3},{S.Y:F3})  E:({E.X:F3},{E.Y:F3})");
                     ed.WriteMessage($"\n  F:({F.X:F3},{F.Y:F3})  G:({G.X:F3},{G.Y:F3})  H:({H.X:F3},{H.Y:F3})");
                     ed.WriteMessage("\n========================================");
@@ -735,7 +735,7 @@ namespace Acadv25JArch
 
 
         /// <summary>
-        /// NoteHGor1: cmd_NoteHor 응용 — 첫째/둘째 라인 간 최단거리(base) 기반 동적 치수
+        /// DiaNoteHor1: cmd_DiaNoteHor 응용 — BaseLen 기반 동적 치수
         ///
         ///  base       = sorted[0].Foot ↔ sorted[1].Foot 최단거리
         ///  OFFSET_H   = base × 0.1
@@ -743,8 +743,8 @@ namespace Acadv25JArch
         ///  TEXT_HEIGHT = base
         ///  TEXT_OFFSET = base × 0.6
         /// </summary>
-        [CommandMethod("cmd_NoteHor1", CommandFlags.UsePickSet)]
-        public void Cmd_NoteHor1()
+        [CommandMethod("cmd_DiaNoteHor1", CommandFlags.UsePickSet)]
+        public void Cmd_DiaNoteHor1()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db  = doc.Database;
@@ -781,9 +781,9 @@ namespace Acadv25JArch
                         if (tr.GetObject(so.ObjectId, OpenMode.ForRead) is Line l)
                             lines.Add(l);
                     }
-                    if (lines.Count < 2)
+                    if (lines.Count < 1)
                     {
-                        ed.WriteMessage("\n2개 이상의 수평 라인을 선택해야 합니다.");
+                        ed.WriteMessage("\n1개 이상의 수평 라인을 선택해야 합니다.");
                         tr.Commit(); return;
                     }
 
@@ -796,8 +796,8 @@ namespace Acadv25JArch
                     Point3d foot1 = sorted[0].Foot;  // 가장 가까운
                     Point3d foot2 = sorted.Last().Foot;  // 가장 먼
 
-                    // ── 5. base 계산: 첫째/둘째 라인 foot 간 최단거리 ─────
-                    double baseDist   = foot1.DistanceTo(sorted[1].Foot);
+                    // ── 5. base = BaseLen (Cmd_SetDiaNoteBase로 설정) ─────
+                    double baseDist   = BaseLen;
                     double OFFSET_H   = baseDist * 0.2;
                     double S_LEN      = baseDist ;
                     double TEXT_HEIGHT = baseDist*0.8;
@@ -887,7 +887,7 @@ namespace Acadv25JArch
                     }
 
                     ed.WriteMessage("\n========================================");
-                    ed.WriteMessage("\n  NoteHGor1 완료");
+                    ed.WriteMessage("\n  DiaNoteHor1 완료");
                     ed.WriteMessage($"\n  base={baseDist:F3}");
                     ed.WriteMessage($"\n  S:({S.X:F3},{S.Y:F3})  E:({E.X:F3},{E.Y:F3})");
                     ed.WriteMessage($"\n  F:({F.X:F3},{F.Y:F3})  G:({G.X:F3},{G.Y:F3})  H:({H.X:F3},{H.Y:F3})");
@@ -899,6 +899,79 @@ namespace Acadv25JArch
             catch (System.Exception ex)
             {
                 ed.WriteMessage($"\n오류 발생: {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
+
+        /// <summary>
+        /// SetDiaNoteBase: 평행한 2개의 Line 사이 최단거리를 BaseLen에 설정.
+        /// Cmd_DiaNoteVer1 / Cmd_DiaNoteHor1 의 기준 길이로 사용됨.
+        /// </summary>
+        [CommandMethod("Cmd_SetDiaNoteBase")]
+        public void Cmd_SetDiaNoteBase()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db  = doc.Database;
+            Editor   ed  = doc.Editor;
+
+            try
+            {
+                // ── 1. 평행 Line 2개 선택 ─────────────────────────────────
+                var selOpts = new PromptSelectionOptions
+                {
+                    MessageForAdding = "\n평행한 2개의 Line을 선택하세요: "
+                };
+                var filter = new SelectionFilter(
+                    new[] { new TypedValue((int)DxfCode.Start, "LINE") });
+                PromptSelectionResult selResult = ed.GetSelection(selOpts, filter);
+                if (selResult.Status != PromptStatus.OK) return;
+
+                ObjectId[] ids = selResult.Value.GetObjectIds();
+                if (ids.Length != 2)
+                {
+                    ed.WriteMessage($"\n2개의 Line만 선택해야 합니다. (선택: {ids.Length}개)");
+                    return;
+                }
+
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    Line l1 = tr.GetObject(ids[0], OpenMode.ForRead) as Line;
+                    Line l2 = tr.GetObject(ids[1], OpenMode.ForRead) as Line;
+                    if (l1 == null || l2 == null)
+                    {
+                        ed.WriteMessage("\nLine을 읽을 수 없습니다.");
+                        tr.Commit();
+                        return;
+                    }
+
+                    // ── 2. 평행 검사 ──────────────────────────────────────
+                    Vector3d d1 = (l1.EndPoint - l1.StartPoint).GetNormal();
+                    Vector3d d2 = (l2.EndPoint - l2.StartPoint).GetNormal();
+                    double cosAbs = Math.Abs(d1.DotProduct(d2));
+                    if (cosAbs < 0.9999)
+                    {
+                        ed.WriteMessage($"\n선택된 2 Line이 평행하지 않습니다. (|cos|={cosAbs:F4})");
+                        tr.Commit();
+                        return;
+                    }
+
+                    // ── 3. 최단거리: l1 시작점을 l2 무한선에 수선 투영 ─────
+                    Point3d p    = l1.StartPoint;
+                    Point3d foot = l2.GetClosestPointTo(p, true);
+                    double  dist = p.DistanceTo(foot);
+
+                    BaseLen = dist;
+
+                    ed.WriteMessage("\n========================================");
+                    ed.WriteMessage($"\n  BaseLen = {BaseLen:F3}");
+                    ed.WriteMessage("\n========================================");
+
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
             }
         }
 
