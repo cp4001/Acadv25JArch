@@ -16,8 +16,11 @@ namespace Acadv25JArch.PipeDiaCalc
     {
         public const string DICT_NAME = "AINIT_DEFAULTS";
 
-        // ---- Xrecord 키 이름 (DwgDefault 필드와 1:1 매칭) ----
+        // ---- NOD Xrecord 키 이름 (DiaNote.BaseLen 의 도면별 영구 저장 키) ----
         public const string KEY_DiaNoteHeight = "DiaNoteHeight";
+
+        // ---- 폴백 기본값 (NOD 에 기록이 없을 때 사용) ----
+        public const double DEFAULT_DiaNoteHeight = 50.0;
 
         [CommandMethod("Ainit")]
         public void InitDwgDefaults()
@@ -39,6 +42,8 @@ namespace Acadv25JArch.PipeDiaCalc
                         "\n[Ainit] 경고: 이 도면에는 이미 '" + DICT_NAME +
                         "' 사전이 존재합니다. Ainit는 도면당 한 번만 실행할 수 있습니다.");
                     tr.Commit();
+                    // 사전이 이미 있으니 탭도 보여야 함 (방어적 동기화)
+                    Acadv25JArch.Ribbon.CollabRibbon.SetRibbonTabVisible(true);
                     return;
                 }
 
@@ -57,28 +62,31 @@ namespace Acadv25JArch.PipeDiaCalc
 
                 ed.WriteMessage(
                     "\n[Ainit] '" + DICT_NAME + "' 사전이 생성되었습니다." +
-                    "\n  - " + KEY_DiaNoteHeight + " = " + DwgDefault.DiaNoteHeight);
+                    "\n  - " + KEY_DiaNoteHeight + " = " + DEFAULT_DiaNoteHeight);
             }
+
+            // Ainit 직후 BaseLen 을 NOD 의 DEFAULT 값과 동기화 (이후 RefreshDiaNoteHeight 가 표시)
+            DiaNote.BaseLen = DEFAULT_DiaNoteHeight;
+
+            // JArch 리본 탭 생성/표시 (Ainit 가 실행된 도면 표시) + 높이 표시 갱신
+            Acadv25JArch.Ribbon.CollabRibbon.SetRibbonTabVisible(true);
+            Acadv25JArch.Ribbon.CollabRibbon.RefreshDiaNoteHeight();
         }
 
         /// <summary>
-        /// DwgDefault의 모든 필드를 Xrecord로 기록.
-        /// 새 상수 추가 시 이 메서드와 DwgDefaultLoader.LoadAllDefaults 양쪽에 같은 키로 추가.
+        /// 모든 기본값을 Xrecord 로 기록 (Real DXF code 사용 — string 변환 없음).
         /// </summary>
         private void WriteAllDefaults(Transaction tr, DBDictionary dict)
         {
-            WriteStringXrecord(tr, dict, KEY_DiaNoteHeight, DwgDefault.DiaNoteHeight);
-
-            // 추후 추가:
-            // WriteStringXrecord(tr, dict, KEY_Xxx, DwgDefault.Xxx);
+            WriteDoubleXrecord(tr, dict, KEY_DiaNoteHeight, DEFAULT_DiaNoteHeight);
         }
 
-        private void WriteStringXrecord(Transaction tr, DBDictionary dict,
-                                        string key, string value)
+        private void WriteDoubleXrecord(Transaction tr, DBDictionary dict,
+                                        string key, double value)
         {
             Xrecord xrec = new Xrecord();
             xrec.Data = new ResultBuffer(
-                new TypedValue((int)DxfCode.Text, value ?? string.Empty));
+                new TypedValue((int)DxfCode.Real, value));
             dict.SetAt(key, xrec);
             tr.AddNewlyCreatedDBObject(xrec, true);
         }

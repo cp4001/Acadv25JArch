@@ -18,7 +18,7 @@ namespace Acadv25JArch
         private const double OFFSET    = 0.5; // E 확장 거리 / G 오프셋
         private const double S_LENGTH  = 3.5; // foot1 → S 거리
 
-        private static double BaseLen = 30.0; // 관경 텍스트 기준 길이 (실제 상황에 맞게 조정)
+        internal static double BaseLen = 30.0; // 관경 텍스트 기준 길이 (DWG open/active 시 AinitCommand.KEY_DiaNoteHeight 로 덮어씀)
 
         /// <summary>
         /// DiaTree: 선택된 흰색 Line들 + 삼각위치 기반 폴리라인 생성
@@ -343,7 +343,8 @@ namespace Acadv25JArch
         ///  TEXT_OFFSET = base × 0.3
         /// </summary>
         [CommandMethod("cmd_DiaNoteVer1", CommandFlags.UsePickSet)]
-        public void Cmd_DiaNoteVer1()
+        public void 
+            Cmd_DiaNoteVer1()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db  = doc.Database;
@@ -934,6 +935,8 @@ namespace Acadv25JArch
                     return;
                 }
 
+                // ── 2-3. 평행 검사 + 최단거리 (read-only Transaction) ───
+                double dist;
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     Line l1 = tr.GetObject(ids[0], OpenMode.ForRead) as Line;
@@ -945,7 +948,6 @@ namespace Acadv25JArch
                         return;
                     }
 
-                    // ── 2. 평행 검사 ──────────────────────────────────────
                     Vector3d d1 = (l1.EndPoint - l1.StartPoint).GetNormal();
                     Vector3d d2 = (l2.EndPoint - l2.StartPoint).GetNormal();
                     double cosAbs = Math.Abs(d1.DotProduct(d2));
@@ -956,19 +958,19 @@ namespace Acadv25JArch
                         return;
                     }
 
-                    // ── 3. 최단거리: l1 시작점을 l2 무한선에 수선 투영 ─────
                     Point3d p    = l1.StartPoint;
                     Point3d foot = l2.GetClosestPointTo(p, true);
-                    double  dist = p.DistanceTo(foot);
-
-                    BaseLen = dist;
-
-                    ed.WriteMessage("\n========================================");
-                    ed.WriteMessage($"\n  BaseLen = {BaseLen:F3}");
-                    ed.WriteMessage("\n========================================");
-
+                    dist = p.DistanceTo(foot);
                     tr.Commit();
                 }
+
+                // ── 4. NOD 영구 저장 + DiaNote.BaseLen 동기화 ──────────
+                bool saved = PipeDiaCalc.DwgDefaultLoader.SaveBaseLen(doc, dist);
+
+                ed.WriteMessage("\n========================================");
+                ed.WriteMessage($"\n  BaseLen = {BaseLen:F3}" +
+                                (saved ? " (NOD 저장)" : " (NOD 저장 실패)"));
+                ed.WriteMessage("\n========================================");
             }
             catch (System.Exception ex)
             {

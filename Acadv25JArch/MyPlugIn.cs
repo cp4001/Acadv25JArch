@@ -59,6 +59,17 @@ namespace Acadv25JArch
                 Application.DocumentManager.DocumentCreated += OnDocumentOpened;
                 Application.DocumentManager.DocumentActivated += OnFirstDocActivated;
                 Application.DocumentManager.DocumentBecameCurrent += OnDocumentOpened;
+
+                // DWG open/active 시 NOD 사전(AINIT_DEFAULTS) 에서 BaseLen 등 도면별 기본값 로드
+                var docForLoad = Application.DocumentManager.MdiActiveDocument;
+                if (docForLoad != null)
+                    PipeDiaCalc.DwgDefaultLoader.LoadDwgDefaults(docForLoad);
+                Application.DocumentManager.DocumentCreated      += (s, ev) => PipeDiaCalc.DwgDefaultLoader.LoadDwgDefaults(ev.Document);
+                Application.DocumentManager.DocumentActivated    += (s, ev) => PipeDiaCalc.DwgDefaultLoader.LoadDwgDefaults(ev.Document);
+                Application.DocumentManager.DocumentBecameCurrent += (s, ev) => PipeDiaCalc.DwgDefaultLoader.LoadDwgDefaults(ev.Document);
+
+                // JArch 리본 탭은 Ainit 실행된 도면에서만 표시 — DLL 로드 시 생성하지 않음.
+                // LoadDwgDefaults 가 NOD AINIT_DEFAULTS 존재 여부에 따라 자동 토글.
             }
             catch (Exception ex)
             {
@@ -107,7 +118,16 @@ namespace Acadv25JArch
             if (doc == null) return;
             Editor ed = doc.Editor;
             if (ed == null) return;
-            ed.WriteMessage(_licenseMessage);
+
+            // NETLOAD/이벤트 콜백 컨텍스트에서 WriteMessage 호출 시 eNotApplicable 발생 가능 →
+            // Application.Idle 로 1회 디퍼해 명령 컨텍스트가 빠진 뒤 출력
+            void OnIdle(object s, EventArgs e)
+            {
+                Application.Idle -= OnIdle;
+                try { ed.WriteMessage(_licenseMessage); }
+                catch { /* 라이선스 메시지 출력 실패는 무시 */ }
+            }
+            Application.Idle += OnIdle;
         }
 
         private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)

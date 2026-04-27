@@ -5,52 +5,25 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
-// [assembly: ExtensionApplication(typeof(Acadv25JArch.PipeDiaCalc.DwgDefaultLoader))]
-
 namespace Acadv25JArch.PipeDiaCalc
 {
     /// <summary>
-    /// AutoCAD 어셈블리 로드 시 자동 실행되는 IExtensionApplication.
-    /// DocumentManager.DocumentCreated 이벤트에 핸들러를 등록하여
-    /// DWG가 열릴 때마다 AINIT_DEFAULTS 사전을 읽어 DwgDefault의 static 값에 채워준다.
+    /// AINIT_DEFAULTS NOD 사전 ↔ DiaNote.BaseLen 영속화 어댑터.
+    /// 어셈블리 등록은 MyPlugin.Initialize 가 처리 (Document 이벤트 후크).
     /// </summary>
-    public class DwgDefaultLoader : IExtensionApplication
+    public static class DwgDefaultLoader
     {
-        public void Initialize()
-        {
-            // 도면이 새로 만들어지거나 열릴 때마다 호출됨
-            Application.DocumentManager.DocumentCreated += OnDocumentCreated;
-
-            // 어셈블리가 NETLOAD 등으로 늦게 로드되어
-            // 이미 활성 문서가 존재하는 경우에도 즉시 로드 시도
-            Document activeDoc = Application.DocumentManager.MdiActiveDocument;
-            if (activeDoc != null)
-            {
-                LoadDwgDefaults(activeDoc);
-            }
-        }
-
-        public void Terminate()
-        {
-            Application.DocumentManager.DocumentCreated -= OnDocumentCreated;
-        }
-
-        private void OnDocumentCreated(object sender, DocumentCollectionEventArgs e)
-        {
-            LoadDwgDefaults(e.Document);
-        }
-
         /// <summary>
-        /// 주어진 Document의 NOD에서 AINIT_DEFAULTS 사전을 찾아
-        /// DwgDefault static 필드에 값을 채운다.
-        /// 사전이 없으면 DwgDefault는 컴파일 시 기본값을 그대로 유지한다.
+        /// 도면 NOD 의 AINIT_DEFAULTS / DiaNoteHeight 를 읽어 DiaNote.BaseLen 에 설정.
+        /// 사전이 없거나 키가 없으면 AinitCommand.DEFAULT_DiaNoteHeight 폴백.
         /// </summary>
         public static void LoadDwgDefaults(Document doc)
         {
             if (doc == null) return;
 
+            bool ainitDictExists = false;
+            double baseLen = AinitCommand.DEFAULT_DiaNoteHeight;
             Database db = doc.Database;
-            Editor ed = doc.Editor;
 
             try
             {
@@ -59,49 +32,93 @@ namespace Acadv25JArch.PipeDiaCalc
                     DBDictionary nod = (DBDictionary)tr.GetObject(
                         db.NamedObjectsDictionaryId, OpenMode.ForRead);
 
-                    if (!nod.Contains(AinitCommand.DICT_NAME))
+                    if (nod.Contains(AinitCommand.DICT_NAME))
                     {
-                        // 이 도면에는 아직 Ainit이 실행되지 않음 → 기본값 유지
-                        tr.Commit();
-                        return;
+                        ainitDictExists = true;
+                        DBDictionary ainitDict = (DBDictionary)tr.GetObject(
+                            nod.GetAt(AinitCommand.DICT_NAME), OpenMode.ForRead);
+
+                        double? v = ReadDoubleXrecord(tr, ainitDict, AinitCommand.KEY_DiaNoteHeight);
+                        if (v.HasValue) baseLen = v.Value;
                     }
-
-                    DBDictionary ainitDict = (DBDictionary)tr.GetObject(
-                        nod.GetAt(AinitCommand.DICT_NAME), OpenMode.ForRead);
-
-                    LoadAllDefaults(tr, ainitDict);
-
                     tr.Commit();
-
-                    ed.WriteMessage(
-                        "\n[DwgDefault] 로드 완료: " +
-                        AinitCommand.KEY_DiaNoteHeight + " = " + DwgDefault.DiaNoteHeight);
                 }
             }
             catch (Autodesk.AutoCAD.Runtime.Exception ex)
             {
-                if (ed != null)
-                    ed.WriteMessage("\n[DwgDefault] 로드 오류: " + ex.Message);
+                Editor ed = doc.Editor;
+                if (ed != null) ed.WriteMessage("\n[DwgDefault] 로드 오류: " + ex.Message);
+                // 폴백 그대로 적용. ainitDictExists 는 false 유지 → 탭 숨김
             }
+
+            DiaNote.BaseLen = baseLen;
+            // Ainit 가 실행된 도면이면 탭 보이고, 아니면 숨김 + 높이 표시 갱신
+            Acadv25JArch.Ribbon.CollabRibbon.SetRibbonTabVisible(ainitDictExists);
+            Acadv25JArch.Ribbon.CollabRibbon.RefreshDiaNoteHeight();
         }
 
         /// <summary>
-        /// AINIT_DEFAULTS 사전의 Xrecord를 읽어 DwgDefault static 필드에 대입.
-        /// 새 상수 추가 시 AinitCommand.WriteAllDefaults 와 함께 이 메서드에도 같은 키로 추가.
+        /// DiaNote.BaseLen 을 도면 NOD 에 영구 저장. AINIT_DEFAULTS 사전이 없으면 자동 생성.
+        /// 저장 성공 시 DiaNote.BaseLen 도 갱신.
         /// </summary>
-        private static void LoadAllDefaults(Transaction tr, DBDictionary dict)
+        public static bool SaveBaseLen(Document doc, double value)
         {
-            string v;
+            if (doc == null) return false;
+            Database db = doc.Database;
 
-            v = ReadStringXrecord(tr, dict, AinitCommand.KEY_DiaNoteHeight);
-            if (v != null) DwgDefault.DiaNoteHeight = v;
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    DBDictionary nod = (DBDictionary)tr.GetObject(
+                        db.NamedObjectsDictionaryId, OpenMode.ForWrite);
 
-            // 추후 추가:
-            // v = ReadStringXrecord(tr, dict, AinitCommand.KEY_Xxx);
-            // if (v != null) DwgDefault.Xxx = v;
+                    DBDictionary ainitDict;
+                    if (nod.Contains(AinitCommand.DICT_NAME))
+                    {
+                        ainitDict = (DBDictionary)tr.GetObject(
+                            nod.GetAt(AinitCommand.DICT_NAME), OpenMode.ForWrite);
+                    }
+                    else
+                    {
+                        ainitDict = new DBDictionary();
+                        nod.SetAt(AinitCommand.DICT_NAME, ainitDict);
+                        tr.AddNewlyCreatedDBObject(ainitDict, true);
+                    }
+
+                    Xrecord xrec;
+                    if (ainitDict.Contains(AinitCommand.KEY_DiaNoteHeight))
+                    {
+                        xrec = (Xrecord)tr.GetObject(
+                            ainitDict.GetAt(AinitCommand.KEY_DiaNoteHeight), OpenMode.ForWrite);
+                    }
+                    else
+                    {
+                        xrec = new Xrecord();
+                        ainitDict.SetAt(AinitCommand.KEY_DiaNoteHeight, xrec);
+                        tr.AddNewlyCreatedDBObject(xrec, true);
+                    }
+                    xrec.Data = new ResultBuffer(
+                        new TypedValue((int)DxfCode.Real, value));
+
+                    tr.Commit();
+                }
+
+                DiaNote.BaseLen = value;
+                // SaveBaseLen 이 사전을 자동 생성했을 수 있으므로 탭 표시 보장 + 높이 표시 갱신
+                Acadv25JArch.Ribbon.CollabRibbon.SetRibbonTabVisible(true);
+                Acadv25JArch.Ribbon.CollabRibbon.RefreshDiaNoteHeight();
+                return true;
+            }
+            catch (Autodesk.AutoCAD.Runtime.Exception ex)
+            {
+                Editor ed = doc.Editor;
+                if (ed != null) ed.WriteMessage("\n[DwgDefault] 저장 오류: " + ex.Message);
+                return false;
+            }
         }
 
-        private static string ReadStringXrecord(Transaction tr, DBDictionary dict, string key)
+        private static double? ReadDoubleXrecord(Transaction tr, DBDictionary dict, string key)
         {
             if (!dict.Contains(key)) return null;
 
@@ -111,10 +128,8 @@ namespace Acadv25JArch.PipeDiaCalc
 
             foreach (TypedValue tv in rb)
             {
-                if (tv.TypeCode == (short)DxfCode.Text)
-                {
-                    return tv.Value == null ? null : tv.Value.ToString();
-                }
+                if (tv.TypeCode == (short)DxfCode.Real && tv.Value is double d)
+                    return d;
             }
             return null;
         }
