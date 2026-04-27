@@ -1,11 +1,14 @@
 using AcadFunction;
 using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.Runtime;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Line = Autodesk.AutoCAD.DatabaseServices.Line;
+using AcadColor = Autodesk.AutoCAD.Colors.Color;
 
 namespace PipeLoad2
 {
@@ -25,6 +28,9 @@ namespace PipeLoad2
         private const short COLOR_ROOT = 1;  // Red
         private const short COLOR_MID  = 5;  // Blue
         private const short COLOR_LEAF = 2;  // Yellow
+
+        private const double LABEL_TEXT_HEIGHT = 30.0;
+        private const short  LABEL_COLOR_ACI   = 7;  // White
 
         public static void Register()
         {
@@ -104,9 +110,16 @@ namespace PipeLoad2
                 wd.SubEntityTraits.LineWeight = LineWeight.LineWeight050;
                 wd.Geometry.WorldLine(line.StartPoint, line.EndPoint);
 
-                // trait 원복
+                // trait 원복 — MText 는 자체 Color 사용
                 wd.SubEntityTraits.Color      = origColor;
                 wd.SubEntityTraits.LineWeight = origLW;
+
+                string label = ComposeLabel(
+                    JXdata.GetXdata(line, "Dia"),
+                    JXdata.GetXdata(line, "TotalLPM"));
+                if (!string.IsNullOrEmpty(label))
+                    DrawCenterLabel(line, label, LABEL_COLOR_ACI, wd);
+
                 return true;
             }
             catch
@@ -115,6 +128,51 @@ namespace PipeLoad2
                 wd.SubEntityTraits.LineWeight = origLW;
                 return base.WorldDraw(drawable, wd);
             }
+        }
+
+        private static string ComposeLabel(string? dia, string? totalLpm)
+        {
+            bool hasDia = !string.IsNullOrEmpty(dia);
+            bool hasLpm = !string.IsNullOrEmpty(totalLpm);
+            if (hasDia && hasLpm) return $"{dia}[{totalLpm}]";
+            if (hasDia)           return dia!;
+            if (hasLpm)           return $"[{totalLpm}]";
+            return string.Empty;
+        }
+
+        private static void DrawCenterLabel(Line line, string text, short aciColor, WorldDraw wd)
+        {
+            Point3d sp = line.StartPoint;
+            Point3d ep = line.EndPoint;
+            Vector3d dir = ep - sp;
+            if (dir.Length < 1e-6) return;
+            dir = dir.GetNormal();
+
+            Point3d center = new Point3d(
+                (sp.X + ep.X) * 0.5,
+                (sp.Y + ep.Y) * 0.5,
+                (sp.Z + ep.Z) * 0.5);
+
+            // 거꾸로 읽히지 않도록 ±90° 범위로 정규화
+            double angle = System.Math.Atan2(dir.Y, dir.X);
+            if (angle > System.Math.PI / 2 || angle < -System.Math.PI / 2)
+                angle += System.Math.PI;
+
+            // Line 본체와 겹치지 않게 수직 방향으로 살짝 오프셋
+            Vector3d perp = new Vector3d(-dir.Y, dir.X, 0);
+            Point3d loc = (perp.Length > 1e-6)
+                ? center + perp.GetNormal() * (LABEL_TEXT_HEIGHT * 0.6)
+                : center;
+
+            using var mtext = new MText();
+            mtext.SetDatabaseDefaults();
+            mtext.Location   = loc;
+            mtext.TextHeight = LABEL_TEXT_HEIGHT;
+            mtext.Contents   = text;
+            mtext.Rotation   = angle;
+            mtext.Attachment = AttachmentPoint.MiddleCenter;
+            mtext.Color      = AcadColor.FromColorIndex(ColorMethod.ByAci, aciColor);
+            mtext.WorldDraw(wd);
         }
     }
 
