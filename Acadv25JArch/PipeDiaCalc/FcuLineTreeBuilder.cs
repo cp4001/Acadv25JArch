@@ -419,6 +419,7 @@ namespace PipeLoad2
             using var tr = db.TransactionManager.StartTransaction();
             tr.CheckRegName("Dia");
             tr.CheckRegName("Tree");
+            tr.CheckRegName("TotalLPM");
             ApplyDiaRecursive(node, tr, db);
             tr.Commit();
         }
@@ -444,6 +445,14 @@ namespace PipeLoad2
                     {
                         try { JXdata.SetXdata(line, "Tree", node.TreeType); } catch { }
                     }
+
+                    // "TotalLPM" — Load(LPM 누적합) 저장. Tree와 동일하게 독립 try-catch
+                    try
+                    {
+                        JXdata.SetXdata(line, "TotalLPM",
+                            node.Load.ToString("F2", CultureInfo.InvariantCulture));
+                    }
+                    catch { }
 
                     // "Dia" — 값이 있고 "-" 가 아닐 때만
                     if (!string.IsNullOrEmpty(node.Diameter) && node.Diameter != "-")

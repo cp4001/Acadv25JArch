@@ -13,20 +13,23 @@ namespace PipeLoad2
 
         public LineTreeForm(LineTreeBuilder.LineNode rootNode,
                             int totalNodes, int leafCount,
-                            string layer, Database db)
+                            string layer, Database db,
+                            LineTreeBuilder.CalcMode mode = LineTreeBuilder.CalcMode.Supply)
         {
             InitializeComponent();
 
             _rootNode = rootNode;
             _db       = db;
 
-            this.Text = $"Line Tree 분석 — 레이어: {layer}";
+            string modeStr = mode == LineTreeBuilder.CalcMode.Return ? "환탕" : "급수/급탕";
+            this.Text = $"Line Tree 분석 [{modeStr}] — 레이어: {layer}";
 
             int midCount = totalNodes - leafCount - 1;
+            string loadLabel = mode == LineTreeBuilder.CalcMode.Return ? "총 누적체적" : "총 부하";
             lblStats.Text =
-                $"레이어: {layer}  |  총 노드: {totalNodes}  |  " +
+                $"[{modeStr}]  레이어: {layer}  |  총 노드: {totalNodes}  |  " +
                 $"Root: 1  Mid: {midCount}  Leaf: {leafCount}  |  " +
-                $"총 부하: {rootNode.Load:F2}  |  총 Leaf: {rootNode.LeafCount}";
+                $"{loadLabel}: {rootNode.Load:F2}  |  총 Leaf: {rootNode.LeafCount}";
 
             treeView.BeginUpdate();
             treeView.Nodes.Add(CreateTreeNode(rootNode));

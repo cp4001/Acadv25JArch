@@ -20,6 +20,17 @@ namespace PipeLoad2
 
             try
             {
+                // 0. 계산 모드 선택 (Supply=급수/급탕, Return=환탕)
+                var mode = LineTreeBuilder.CalcMode.Supply;
+                var pko = new PromptKeywordOptions("\n계산 모드 ");
+                pko.Keywords.Add("Supply");
+                pko.Keywords.Add("Return");
+                pko.Keywords.Default = "Supply";
+                pko.AllowNone = true;
+                var pkr = ed.GetKeywords(pko);
+                if (pkr.Status == PromptStatus.OK && pkr.StringResult == "Return")
+                    mode = LineTreeBuilder.CalcMode.Return;
+
                 // 1. Line 선택
                 TypedValue[] filterList = [new TypedValue((int)DxfCode.Start, "LINE")];
                 var filter = new SelectionFilter(filterList);
@@ -49,7 +60,7 @@ namespace PipeLoad2
                 ed.WriteMessage($"\n레이어 [{rootLine.Layer}] 필터: {allLines.Count}개 Line");
 
                 // 4. Tree 구성
-                var builder     = new LineTreeBuilder();
+                var builder     = new LineTreeBuilder { Mode = mode };
                 var connections = builder.BuildConnectionGraph(allLines);
                 var rootNode    = builder.BuildTreeStructureBFS(rootLine, allLines, connections);
                 builder.CalculateLoads(rootNode);
@@ -62,7 +73,7 @@ namespace PipeLoad2
 
                 // 5. Form 표시
                 Application.ShowModelessDialog(
-                    new LineTreeForm(rootNode, totalNodes, leafCount, rootLine.Layer, db));
+                    new LineTreeForm(rootNode, totalNodes, leafCount, rootLine.Layer, db, mode));
             }
             catch (System.Exception ex)
             {

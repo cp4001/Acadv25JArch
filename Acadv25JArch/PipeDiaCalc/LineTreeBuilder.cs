@@ -345,12 +345,41 @@ namespace PipeLoad2
         }
     }
     /// <summary>
+    /// 환탕(순환탕수) 관경 결정 — 누적 체적(L/m) 기준 lookup
+    /// 근거: 20A 체적 0.35 × 급탕대비 30% = 0.105 L/m 단위 부하
+    /// </summary>
+    public static class ReturnDiaCalc
+    {
+        public static int FromVolume(double volume)
+        {
+            if (volume <= 0.30) return 20;
+            if (volume <= 0.40) return 25;
+            if (volume <= 0.70) return 32;
+            if (volume <= 1.50) return 40;
+            if (volume <= 2.20) return 50;
+            if (volume <= 3.60) return 65;
+            return 80;
+        }
+    }
+
+    /// <summary>
     /// Line 네트워크의 Tree 구조를 분석하는 클래스
     /// </summary>
     public class LineTreeBuilder
     {
         private const double TOLERANCE = 1e-6; // 점 일치 판단 허용 오차
         private const string COMMAND_NAME = "LINETREE";
+        private const double RETURN_LEAF_LOAD = 0.105; // 환탕 Leaf 단위 체적(L/m)
+
+        /// <summary>관경 계산 모드</summary>
+        public enum CalcMode
+        {
+            Supply,  // 급수/급탕 — 균등표법 (SupplyDiaCalc.Calculate2)
+            Return   // 환탕 — 누적 체적(0.105 × leaf수) lookup
+        }
+
+        /// <summary>현재 빌더의 관경 계산 모드 (기본값: Supply)</summary>
+        public CalcMode Mode { get; set; } = CalcMode.Supply;
 
         /// <summary>
         /// Tree 노드 클래스
@@ -822,6 +851,10 @@ namespace PipeLoad2
         /// </summary>
         private double GetLeafLoad(Line line)
         {
+            // 환탕: 말단부 모두 20A 전제 → 단위 체적 0.105 L/m 일괄 적용
+            if (Mode == CalcMode.Return)
+                return RETURN_LEAF_LOAD;
+
             const double DEFAULT_LEAF_LOAD = 1.0;
             const double MIN_LEAF_LENGTH   = 300.0;
 
@@ -889,6 +922,13 @@ namespace PipeLoad2
             if (node == null) return;
             foreach (var child in node.Children)
                 CalcDiaRecursive(child);
+
+            // 환탕: 누적 체적(node.Load) 단일 변수로 lookup
+            if (Mode == CalcMode.Return)
+            {
+                node.Diameter = ReturnDiaCalc.FromVolume(node.Load);
+                return;
+            }
 
             double toiletEquiv  = 0; double generalEquiv = 0;
             int    toiletCount  = 0; int    generalCount  = 0;
