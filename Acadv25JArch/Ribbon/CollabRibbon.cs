@@ -12,7 +12,7 @@ namespace Acadv25JArch.Ribbon
 {
     /// <summary>
     /// "공동 작업(JArch)" 커스텀 Ribbon 탭 골격.
-    ///   패널 1) 공유              : 도면 공유 / 공유 뷰
+    ///   패널 1) DiaNote           : DiaNote 높이 변경 / SET (현재 BaseLen 값 표시)
     ///   패널 2) Autodesk Docs     : Push to Autodesk Docs
     ///   패널 3) 트레이스          : 트레이스 팔레트 / 표식 가져오기
     ///   패널 4) 비교              : DWG 비교
@@ -30,7 +30,7 @@ namespace Acadv25JArch.Ribbon
 
         private static bool _attached;
 
-        // 공유 패널의 DiaNote 높이 표시용 라벨 (RefreshDiaNoteHeight 로 갱신)
+        // DiaNote 패널의 BaseLen(크기) 표시용 라벨 (RefreshDiaNoteHeight 로 갱신)
         private static RibbonLabel _diaNoteHeightValue;
 
         // ───────────────────────── 공개 API ─────────────────────────
@@ -99,7 +99,7 @@ namespace Acadv25JArch.Ribbon
         }
 
         /// <summary>
-        /// 공유 패널의 DiaNote 높이 표시값 갱신.
+        /// DiaNote 패널의 BaseLen(크기) 표시값 갱신.
         /// Ainit / LoadDwgDefaults / SaveBaseLen 직후 호출.
         /// 라벨 미생성(리본 미준비) 상태면 무시.
         /// </summary>
@@ -142,36 +142,27 @@ namespace Acadv25JArch.Ribbon
             ribbon.Tabs.Add(tab);
         }
 
-        // 패널 1: 공유 ─ LargeButton 2개 + DiaNote 높이 정보 행
+        // 패널 1: DiaNote ─ LargeButton 2개 (DiaNote 높이 변경 / SET) + 현재 크기 표시 행
         private static RibbonPanel BuildSharePanel()
         {
-            var src = new RibbonPanelSource { Title = "공유" };
+            var src = new RibbonPanelSource { Title = "DiaNote" };
 
-            // Row 1: 기존 공유 버튼 2개
+            // Row 1: DiaNote 높이 변경 + SET (둘 다 Cmd_SetDiaNoteBase 명령 호출)
             var row = new RibbonRowPanel();
-            row.Items.Add(LargeButton("도면\n공유", "_SHAREDRAWING",  "share_drawing_32.png"));
-            row.Items.Add(LargeButton("공유\n뷰",  "_ONLINESHARE",   "share_view_32.png"));
+            row.Items.Add(LargeButton("DiaNote\n높이 변경", "Cmd_SetDiaNoteBase", "share_drawing_32.png"));
+            row.Items.Add(LargeButton("SET",                 "Cmd_SetDiaNoteBase", "share_view_32.png"));
             src.Items.Add(row);
 
-            // Row 2: DiaNote 높이 표시 + SET 버튼 ("Cmd_SetDiaNoteBase" 명령 호출)
+            // Row 2: 현재 BaseLen(크기) 표시
             src.Items.Add(new RibbonRowBreak());
             var infoRow = new RibbonRowPanel();
-            infoRow.Items.Add(new RibbonLabel { Text = "DiaNote 높이: " });
+            infoRow.Items.Add(new RibbonLabel { Text = "크기: " });
             _diaNoteHeightValue = new RibbonLabel
             {
                 Text = DiaNote.BaseLen.ToString("0.##"),
                 Width = 50,
             };
             infoRow.Items.Add(_diaNoteHeightValue);
-            infoRow.Items.Add(new RibbonButton
-            {
-                Text             = "SET",
-                ShowText         = true,
-                ShowImage        = false,
-                Size             = RibbonItemSize.Standard,
-                CommandHandler   = new SendCommandHandler("Cmd_SetDiaNoteBase"),
-                CommandParameter = "Cmd_SetDiaNoteBase",
-            });
             src.Items.Add(infoRow);
 
             return new RibbonPanel { Source = src };
