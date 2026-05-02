@@ -20,7 +20,7 @@ namespace PipeLoad2
         /// <summary>
         /// 선택  line  "15A" Xdata를 설정하는 커맨드 
         /// </summary>
-        [CommandMethod("PPL")] // pipe Load 
+        [CommandMethod("PPL", CommandFlags.UsePickSet)] // pipe Load
         public void Cmd_Line_Set15A()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
