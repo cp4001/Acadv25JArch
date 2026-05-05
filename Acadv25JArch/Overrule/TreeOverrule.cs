@@ -26,7 +26,7 @@ namespace PipeLoad2
 
         // AutoCAD ACI
         private const short COLOR_ROOT = 1;  // Red
-        private const short COLOR_MID  = 5;  // Blue
+        private const short COLOR_MID  = 3;  // Green
         private const short COLOR_LEAF = 2;  // Yellow
 
         private const double LABEL_TEXT_HEIGHT = 30.0;
@@ -50,7 +50,7 @@ namespace PipeLoad2
                 doc.Editor.WriteMessage("\n========================================");
                 doc.Editor.WriteMessage("\n[TreeOverrule] 등록 완료");
                 doc.Editor.WriteMessage($"\n✓ 대상: Line (XData \"{XDATA_REGAPP_NAME}\")");
-                doc.Editor.WriteMessage("\n✓ Root → Red, Mid → Blue, Leaf → Yellow");
+                doc.Editor.WriteMessage("\n✓ Root → Red, Mid → Green, Leaf → Yellow");
                 doc.Editor.WriteMessage("\n========================================");
             }
         }
@@ -114,9 +114,28 @@ namespace PipeLoad2
                 wd.SubEntityTraits.Color      = origColor;
                 wd.SubEntityTraits.LineWeight = origLW;
 
-                string label = ComposeLabel(
-                    JXdata.GetXdata(line, "Dia"),
-                    JXdata.GetXdata(line, "TotalLPM"));
+                string? lpm15A   = JXdata.GetXdata(line, "15A");
+                string? total15A = JXdata.GetXdata(line, "Total15A");
+                string label;
+                if (!string.IsNullOrEmpty(lpm15A))
+                {
+                    label = !string.IsNullOrEmpty(total15A)
+                        ? $"15[{total15A}]-{lpm15A}"
+                        : $"15[{lpm15A}]";
+                }
+                else if (!string.IsNullOrEmpty(total15A))
+                {
+                    string? dia = JXdata.GetXdata(line, "Dia");
+                    label = !string.IsNullOrEmpty(dia)
+                        ? $"{dia}[{total15A}]"
+                        : $"[{total15A}]";
+                }
+                else
+                {
+                    label = ComposeLabel(
+                        JXdata.GetXdata(line, "Dia"),
+                        JXdata.GetXdata(line, "TotalLPM"));
+                }
                 if (!string.IsNullOrEmpty(label))
                     DrawCenterLabel(line, label, LABEL_COLOR_ACI, wd);
 

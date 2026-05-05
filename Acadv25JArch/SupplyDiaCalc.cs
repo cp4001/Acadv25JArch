@@ -47,12 +47,21 @@ namespace PipeLoad2
             double toiletEquivSum,
             int    generalCount,
             double generalEquivSum)
+            => Calculate2(toiletCount, toiletEquivSum, generalCount, generalEquivSum, out _);
+
+        /// <summary>중간값 직접 입력으로 관경 결정 — total(균등값×동시사용율 합) 노출</summary>
+        public static int Calculate2(
+            int    toiletCount,
+            double toiletEquivSum,
+            int    generalCount,
+            double generalEquivSum,
+            out double total)
         {
             double toiletSimul  = toiletCount  > 0
                 ? toiletEquivSum  * GetToiletRate(toiletCount)  / 100.0 : 0;
             double generalSimul = generalCount > 0
                 ? generalEquivSum * GetGeneralRate(generalCount) / 100.0 : 0;
-            double total = toiletSimul + generalSimul;
+            total = toiletSimul + generalSimul;
 
             foreach (var (dia, limit) in DiaTable)
                 if (total <= limit) return dia;

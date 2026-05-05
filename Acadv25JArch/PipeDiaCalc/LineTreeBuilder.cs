@@ -395,6 +395,7 @@ namespace PipeLoad2
             public double Load { get; set; }            // 누적 부하값
             public int LeafCount { get; set; }          // 하위 Leaf 개수
             public int Diameter { get; set; }           // 결정 관경(mm)
+            public double TotalEquiv { get; set; }      // Supply: 균등값×동시사용율 합 (Total15A XData)
 
             public LineNode()
             {
@@ -403,6 +404,7 @@ namespace PipeLoad2
                 Type = NodeType.Leaf;
                 Load = 0.0;
                 LeafCount = 0;
+                TotalEquiv = 0.0;
             }
         }
 
@@ -936,7 +938,8 @@ namespace PipeLoad2
                                ref generalEquiv, ref generalCount);
 
             node.Diameter = SupplyDiaCalc.Calculate2(
-                toiletCount, toiletEquiv, generalCount, generalEquiv);
+                toiletCount, toiletEquiv, generalCount, generalEquiv, out double total);
+            node.TotalEquiv = total;
         }
 
         /// <summary>계산된 Diameter를 XData "Dia" 에, 노드 종류를 XData "Tree"(Root/Mid/Leaf) 에 저장</summary>
@@ -946,6 +949,7 @@ namespace PipeLoad2
             using var tr = db.TransactionManager.StartTransaction();
             tr.CheckRegName("Dia");
             tr.CheckRegName("Tree");
+            tr.CheckRegName("Total15A");
             ApplyDiaRecursive(node, tr, db);
             tr.Commit();
         }
@@ -965,6 +969,8 @@ namespace PipeLoad2
                         // "Tree" 먼저 — Dia 실패와 독립 (FcuLineTreeBuilder.ApplyDiaRecursive 패턴)
                         try { AcadFunction.JXdata.SetXdata(line, "Tree", node.Type.ToString()); } catch { }
                         try { AcadFunction.JXdata.SetXdata(line, "Dia",  node.Diameter.ToString()); } catch { }
+                        if (Mode == CalcMode.Supply && node.TotalEquiv > 0)
+                            try { AcadFunction.JXdata.SetXdata(line, "Total15A", node.TotalEquiv.ToString("0.###")); } catch { }
                     }
                 }
             }
