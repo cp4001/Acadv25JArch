@@ -939,12 +939,13 @@ namespace PipeLoad2
                 toiletCount, toiletEquiv, generalCount, generalEquiv);
         }
 
-        /// <summary>계산된 Diameter를 XData "Dia" 에 저장</summary>
+        /// <summary>계산된 Diameter를 XData "Dia" 에, 노드 종류를 XData "Tree"(Root/Mid/Leaf) 에 저장</summary>
         public void ApplyDiameters(LineNode node, Database db)
         {
             if (node == null) return;
             using var tr = db.TransactionManager.StartTransaction();
             tr.CheckRegName("Dia");
+            tr.CheckRegName("Tree");
             ApplyDiaRecursive(node, tr, db);
             tr.Commit();
         }
@@ -960,7 +961,11 @@ namespace PipeLoad2
                 {
                     var line = tr.GetObject(objId, OpenMode.ForWrite) as Line;
                     if (line != null)
-                        AcadFunction.JXdata.SetXdata(line, "Dia", node.Diameter.ToString());
+                    {
+                        // "Tree" 먼저 — Dia 실패와 독립 (FcuLineTreeBuilder.ApplyDiaRecursive 패턴)
+                        try { AcadFunction.JXdata.SetXdata(line, "Tree", node.Type.ToString()); } catch { }
+                        try { AcadFunction.JXdata.SetXdata(line, "Dia",  node.Diameter.ToString()); } catch { }
+                    }
                 }
             }
             catch { }
