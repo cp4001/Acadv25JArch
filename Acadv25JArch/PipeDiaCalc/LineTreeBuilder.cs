@@ -105,6 +105,7 @@ namespace PipeLoad2
                     if (targets == null || targets.Count == 0) return;
 
                     tr.CheckRegName("LPM");
+                    tr.CheckRegName("Disp");
 
                     int setCount = 0;
                     int missingCount = 0;
@@ -123,7 +124,9 @@ namespace PipeLoad2
 
                         if (lpmValue.HasValue)
                         {
-                            JXdata.SetXdata(br, "LPM", lpmValue.Value.ToString());
+                            string val = lpmValue.Value.ToString();
+                            JXdata.SetXdata(br, "LPM", val);
+                            JXdata.SetXdata(br, "Disp", val);
                             setCount++;
                         }
                         else

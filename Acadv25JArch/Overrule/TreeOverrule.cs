@@ -13,35 +13,45 @@ using AcadColor = Autodesk.AutoCAD.Colors.Color;
 namespace PipeLoad2
 {
     /// <summary>
-    /// Line XData "Tree" 값(Root/Mid/Leaf)에 따라 렌더 색상만 오버레이.
-    /// FcuLineTreeBuilder.ApplyDiameters 가 기록한 XData 기반.
-    /// Root → Red, Mid → Blue, Leaf → Yellow.
+    /// Line: XData "Tree" (Root/Mid/Leaf) → 색상/LineWeight + 라벨 오버레이.
+    /// BlockReference: XData "Disp" → 블록 Geo 센터에 짧은변/2 크기 Red 텍스트.
+    /// 두 인스턴스(Line용, Block용)를 각자 SetXDataFilter 와 함께 등록.
     /// </summary>
     public class TreeDrawOverrule : DrawableOverrule
     {
-        private static TreeDrawOverrule? _instance;
-        private const string XDATA_REGAPP_NAME = "Tree";
+        private static TreeDrawOverrule? _lineInstance;
+        private static TreeDrawOverrule? _blockInstance;
 
-        public static bool IsRegistered => _instance != null;
+        private const string XDATA_TREE_NAME = "Tree";
+        private const string XDATA_DISP_NAME = "Disp";
 
         // AutoCAD ACI
         private const short COLOR_ROOT = 1;  // Red
         private const short COLOR_MID  = 3;  // Green
         private const short COLOR_LEAF = 2;  // Yellow
+        private const short COLOR_DISP = 1;  // Red
 
         private const double LABEL_TEXT_HEIGHT = 30.0;
         private const short  LABEL_COLOR_ACI   = 7;  // White
 
+        public static bool IsRegistered => _lineInstance != null || _blockInstance != null;
+
+        private readonly bool _isBlockMode;
+
+        private TreeDrawOverrule(bool isBlockMode) { _isBlockMode = isBlockMode; }
+
         public static void Register()
         {
-            if (_instance != null) return;
-            _instance = new TreeDrawOverrule();
+            if (IsRegistered) return;
 
-            RXClass lineClass = RXObject.GetClass(typeof(Line));
-            Overrule.AddOverrule(lineClass, _instance, false);
+            _lineInstance = new TreeDrawOverrule(false);
+            Overrule.AddOverrule(RXObject.GetClass(typeof(Line)), _lineInstance, false);
+            _lineInstance.SetXDataFilter(XDATA_TREE_NAME);
 
-            // XData "Tree" 있는 Line만 WorldDraw 진입
-            _instance.SetXDataFilter(XDATA_REGAPP_NAME);
+            _blockInstance = new TreeDrawOverrule(true);
+            Overrule.AddOverrule(RXObject.GetClass(typeof(BlockReference)), _blockInstance, false);
+            _blockInstance.SetXDataFilter(XDATA_DISP_NAME);
+
             Overrule.Overruling = true;
 
             var doc = Application.DocumentManager.MdiActiveDocument;
@@ -49,20 +59,26 @@ namespace PipeLoad2
             {
                 doc.Editor.WriteMessage("\n========================================");
                 doc.Editor.WriteMessage("\n[TreeOverrule] 등록 완료");
-                doc.Editor.WriteMessage($"\n✓ 대상: Line (XData \"{XDATA_REGAPP_NAME}\")");
-                doc.Editor.WriteMessage("\n✓ Root → Red, Mid → Green, Leaf → Yellow");
+                doc.Editor.WriteMessage($"\n✓ Line   (XData \"{XDATA_TREE_NAME}\") → Root/Mid/Leaf 색상 + 라벨");
+                doc.Editor.WriteMessage($"\n✓ Block  (XData \"{XDATA_DISP_NAME}\") → Geo 센터 Red 텍스트(짧은변/2)");
                 doc.Editor.WriteMessage("\n========================================");
             }
         }
 
         public static void Unregister()
         {
-            if (_instance == null) return;
-
-            RXClass lineClass = RXObject.GetClass(typeof(Line));
-            Overrule.RemoveOverrule(lineClass, _instance);
-            _instance.SetXDataFilter(null);
-            _instance = null;
+            if (_lineInstance != null)
+            {
+                Overrule.RemoveOverrule(RXObject.GetClass(typeof(Line)), _lineInstance);
+                _lineInstance.SetXDataFilter(null);
+                _lineInstance = null;
+            }
+            if (_blockInstance != null)
+            {
+                Overrule.RemoveOverrule(RXObject.GetClass(typeof(BlockReference)), _blockInstance);
+                _blockInstance.SetXDataFilter(null);
+                _blockInstance = null;
+            }
 
             var doc = Application.DocumentManager.MdiActiveDocument;
             doc?.Editor.WriteMessage("\n[TreeOverrule] 제거됨");
@@ -74,16 +90,24 @@ namespace PipeLoad2
             if (entity == null) return false;
             if (entity.ObjectId.IsNull || entity.ObjectId.IsErased) return false;
 
-            // XData "Tree" 존재 여부를 엄격히 확인 — SetXDataFilter 보조 (없으면 Overrule 적용 안함)
+            string appName = _isBlockMode ? XDATA_DISP_NAME : XDATA_TREE_NAME;
             try
             {
-                using ResultBuffer? rb = entity.GetXDataForApplication(XDATA_REGAPP_NAME);
+                using ResultBuffer? rb = entity.GetXDataForApplication(appName);
                 return rb != null;
             }
             catch { return false; }
         }
 
         public override bool WorldDraw(Drawable drawable, WorldDraw wd)
+        {
+            if (_isBlockMode)
+                return DrawBlockDisp(drawable, wd);
+
+            return DrawLineTree(drawable, wd);
+        }
+
+        private bool DrawLineTree(Drawable drawable, WorldDraw wd)
         {
             if (drawable is not Line line)
                 return base.WorldDraw(drawable, wd);
@@ -94,7 +118,7 @@ namespace PipeLoad2
 
             try
             {
-                string? tree = JXdata.GetXdata(line, XDATA_REGAPP_NAME);
+                string? tree = JXdata.GetXdata(line, XDATA_TREE_NAME);
                 short color = tree switch
                 {
                     "Root" => COLOR_ROOT,
@@ -149,6 +173,47 @@ namespace PipeLoad2
             }
         }
 
+        private bool DrawBlockDisp(Drawable drawable, WorldDraw wd)
+        {
+            // Block 본체는 정상 렌더 → 그 위에 텍스트 추가
+            bool result = base.WorldDraw(drawable, wd);
+
+            if (drawable is not BlockReference br) return result;
+
+            try
+            {
+                string? disp = JXdata.GetXdata(br, XDATA_DISP_NAME);
+                if (string.IsNullOrEmpty(disp)) return result;
+
+                Extents3d ext;
+                try { ext = br.GeometricExtents; }
+                catch { return result; }
+
+                double width  = ext.MaxPoint.X - ext.MinPoint.X;
+                double height = ext.MaxPoint.Y - ext.MinPoint.Y;
+                double shortSide = System.Math.Min(width, height);
+                if (shortSide < 1e-6) return result;
+
+                Point3d center = new Point3d(
+                    (ext.MinPoint.X + ext.MaxPoint.X) * 0.5,
+                    (ext.MinPoint.Y + ext.MaxPoint.Y) * 0.5,
+                    (ext.MinPoint.Z + ext.MaxPoint.Z) * 0.5);
+
+                using var mtext = new MText();
+                mtext.SetDatabaseDefaults();
+                mtext.Location   = center;
+                mtext.TextHeight = shortSide * 0.5;
+                mtext.Contents   = disp;
+                mtext.Rotation   = 0;
+                mtext.Attachment = AttachmentPoint.MiddleCenter;
+                mtext.Color      = AcadColor.FromColorIndex(ColorMethod.ByAci, COLOR_DISP);
+                mtext.WorldDraw(wd);
+            }
+            catch { }
+
+            return result;
+        }
+
         private static string ComposeLabel(string? dia, string? totalLpm)
         {
             bool hasDia = !string.IsNullOrEmpty(dia);
@@ -198,8 +263,6 @@ namespace PipeLoad2
     /// <summary>TreeOverrule 토글 커맨드.</summary>
     public class TreeOverruleCommand
     {
-        private const string XDATA_REGAPP_NAME = "Tree";
-
         [CommandMethod("TTG")]
         public void Cmd_ToggleTreeOverrule()
         {
@@ -215,7 +278,8 @@ namespace PipeLoad2
                 }
                 else
                 {
-                    RegisterRegApp(doc.Database, XDATA_REGAPP_NAME);
+                    RegisterRegApp(doc.Database, "Tree");
+                    RegisterRegApp(doc.Database, "Disp");
                     TreeDrawOverrule.Register();
                 }
                 ed.Regen();
