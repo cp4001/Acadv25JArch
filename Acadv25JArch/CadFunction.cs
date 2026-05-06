@@ -2867,6 +2867,55 @@ namespace AcadFunction
             }
         }
 
+        /// <summary>
+        /// 지정된 Entity 집합의 GeometricExtents를 합산해 현재 뷰를 Zoom fit 한다.
+        /// 개별 Entity의 GeometricExtents 예외(eNullExtents 등) 및 빈 시퀀스에 안전.
+        /// CrossingWindow 직전 호출 시 padding(기본 1.1, 5%씩 여유)으로 경계 누락 방지.
+        /// </summary>
+        public static void ZoomToEntities(this Editor ed, IEnumerable<ObjectId> ids, double padding = 1.1)
+        {
+            if (ed == null)
+                throw new ArgumentNullException("ed");
+            if (ids == null) return;
+
+            var ext = new Extents3d();
+            bool initialized = false;
+
+            using (Transaction tr = ed.Document.TransactionManager.StartTransaction())
+            {
+                foreach (var id in ids)
+                {
+                    var ent = tr.GetObject(id, OpenMode.ForRead) as Entity;
+                    if (ent == null) continue;
+                    try
+                    {
+                        if (!initialized) { ext = ent.GeometricExtents; initialized = true; }
+                        else ext.AddExtents(ent.GeometricExtents);
+                    }
+                    catch { }
+                }
+                tr.Commit();
+            }
+
+            if (!initialized) return;
+
+            double w = ext.MaxPoint.X - ext.MinPoint.X;
+            double h = ext.MaxPoint.Y - ext.MinPoint.Y;
+            if (w <= 0) w = 1;
+            if (h <= 0) h = 1;
+
+            using (ViewTableRecord view = ed.GetCurrentView())
+            {
+                view.Width       = w * padding;
+                view.Height      = h * padding;
+                view.CenterPoint = new Point2d(
+                    (ext.MinPoint.X + ext.MaxPoint.X) * 0.5,
+                    (ext.MinPoint.Y + ext.MaxPoint.Y) * 0.5);
+                ed.SetCurrentView(view);
+            }
+            ed.UpdateScreen();
+        }
+
         public static void ZoomScale(this Editor ed, double scale)
         {
             if (ed == null)
