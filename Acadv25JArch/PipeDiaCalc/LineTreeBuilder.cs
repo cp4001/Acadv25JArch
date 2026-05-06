@@ -107,6 +107,10 @@ namespace PipeLoad2
                     tr.CheckRegName("LPM");
                     tr.CheckRegName("Disp");
 
+                    // 선택 Block 전체가 화면에 보이도록 Zoom fit
+                    // (각 Block 내부 Text 추출에 ed.SelectWindow 사용 → 뷰포트 밖이면 매핑 실패)
+                    ed.ZoomToEntities(targets.Select(b => b.ObjectId));
+
                     int setCount = 0;
                     int missingCount = 0;
 
