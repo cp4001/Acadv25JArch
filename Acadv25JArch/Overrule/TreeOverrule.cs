@@ -138,28 +138,32 @@ namespace PipeLoad2
                 wd.SubEntityTraits.Color      = origColor;
                 wd.SubEntityTraits.LineWeight = origLW;
 
+                string? dia = JXdata.GetXdata(line, "Dia")??"00";
+                string? total15A = JXdata.GetXdata(line, "Total15A")??"00";
                 string? lpm15A   = JXdata.GetXdata(line, "15A");
-                string? total15A = JXdata.GetXdata(line, "Total15A");
-                string label;
+                
+                string label="";
                 if (!string.IsNullOrEmpty(lpm15A))
                 {
-                    label = !string.IsNullOrEmpty(total15A)
-                        ? $"15[{total15A}]-{lpm15A}"
-                        : $"15[{lpm15A}]";
+                    label = $"{dia}[{total15A}]-{lpm15A}";
                 }
                 else if (!string.IsNullOrEmpty(total15A))
                 {
-                    string? dia = JXdata.GetXdata(line, "Dia");
-                    label = !string.IsNullOrEmpty(dia)
-                        ? $"{dia}[{total15A}]"
-                        : $"[{total15A}]";
+                    label = $"{dia}[{total15A}]";
                 }
-                else
-                {
-                    label = ComposeLabel(
-                        JXdata.GetXdata(line, "Dia"),
-                        JXdata.GetXdata(line, "TotalLPM"));
-                }
+                //else if (!string.IsNullOrEmpty(total15A))
+                //{
+                //    //string? dia = JXdata.GetXdata(line, "Dia");
+                //    label = !string.IsNullOrEmpty(dia)
+                //        ? $"{dia}[{total15A}]"
+                //        : $"[{total15A}]";
+                //}
+                //else
+                //{
+                //    label = ComposeLabel(
+                //        JXdata.GetXdata(line, "Dia"),
+                //        JXdata.GetXdata(line, "TotalLPM"));
+                //}
                 if (!string.IsNullOrEmpty(label))
                     DrawCenterLabel(line, label, LABEL_COLOR_ACI, wd);
 
