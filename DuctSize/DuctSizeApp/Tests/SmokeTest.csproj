@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DuctSizeApp</RootNamespace>
+    <AssemblyName>SmokeTest</AssemblyName>
+    <StartupObject>SmokeTest</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DuctDesign.cs" Link="DuctDesign.cs" />
+  </ItemGroup>
+
+</Project>
