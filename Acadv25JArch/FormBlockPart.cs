@@ -600,5 +600,346 @@ namespace Acadv25JArch
                 MessageBox.Show($"Error: {ex.Message}\n\n{ex.StackTrace}");
             }
         }
+
+        // RTS Input JSON 출력 (RTS_Input_Jason.md 사양)
+        // - Polyline 정점 → CCW from SW, m 단위, 빌딩 SW 원점 정규화
+        // - 각 변(edge)별 OutWall 검사 + Window/Door 블록 면적 누적
+        // - CAD 비파생 항목(location/climate/U/glazing/schedule)은 spec 예시 기본값
+        private void btnRtsJson_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                Database db = doc.Database;
+                Editor ed = doc.Editor;
+                string fullPath = doc.Database.Filename;
+                if (string.IsNullOrEmpty(fullPath)) return;
+
+                string jsonPath = Path.Combine(
+                    Path.GetDirectoryName(fullPath),
+                    Path.GetFileNameWithoutExtension(fullPath) + "_RTS.json");
+
+                var roomparts = RoomPart.GetAllRoomParts();
+                if (roomparts == null || roomparts.Count == 0)
+                {
+                    MessageBox.Show("roomparts 가 없습니다.");
+                    return;
+                }
+
+                const double scale = 0.001; // AutoCAD mm → m
+
+                // 빌딩 BBox 최소(mm) — 모든 룸의 정점 SW
+                double minX_mm = double.MaxValue, minY_mm = double.MaxValue;
+                foreach (var rp in roomparts)
+                {
+                    var poly = rp.GetPoly();
+                    if (poly == null) continue;
+                    for (int i = 0; i < poly.NumberOfVertices; i++)
+                    {
+                        var p = poly.GetPoint2dAt(i);
+                        if (p.X < minX_mm) minX_mm = p.X;
+                        if (p.Y < minY_mm) minY_mm = p.Y;
+                    }
+                }
+                double minX_m = minX_mm * scale;
+                double minY_m = minY_mm * scale;
+
+                var rooms = new List<object>();
+
+                using (DocumentLock docLock = doc.LockDocument())
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    foreach (var rp in roomparts)
+                    {
+                        var poly = rp.GetPoly();
+                        if (poly == null) continue;
+                        int n = poly.NumberOfVertices;
+                        if (n < 3) continue;
+
+                        // 1. 정점 (m, 원점 정규화)
+                        var verts = new List<(double x, double y)>();
+                        for (int i = 0; i < n; i++)
+                        {
+                            var p = poly.GetPoint2dAt(i);
+                            verts.Add((p.X * scale - minX_m, p.Y * scale - minY_m));
+                        }
+
+                        // 2. 변별 메타 (edge i: vert[i] → vert[(i+1)%n] in 원본 순서)
+                        var lines = poly.GetLines();
+                        var edgeMeta = new List<RtsEdgeMeta>();
+                        for (int i = 0; i < n; i++)
+                            edgeMeta.Add(BuildRtsEdgeMeta(lines[i], rp.FloorHeight));
+
+                        // 3. CCW 정규화
+                        if (RtsSignedArea(verts) < 0)
+                        {
+                            verts.Reverse();
+                            // 정점 reverse 시 새 edge[i]는 원래 edge[(2n-2-i) mod n] 의 역방향
+                            var rotated = new List<RtsEdgeMeta>(n);
+                            for (int i = 0; i < n; i++)
+                                rotated.Add(edgeMeta[(2 * n - 2 - i) % n]);
+                            edgeMeta = rotated;
+                        }
+
+                        // 4. SW 부터 시작 (Y 최소, 동률시 X 최소)
+                        int swIdx = 0;
+                        for (int i = 1; i < n; i++)
+                        {
+                            if (verts[i].y < verts[swIdx].y - 1e-9 ||
+                                (Math.Abs(verts[i].y - verts[swIdx].y) < 1e-9 && verts[i].x < verts[swIdx].x))
+                                swIdx = i;
+                        }
+                        if (swIdx > 0)
+                        {
+                            verts = verts.Skip(swIdx).Concat(verts.Take(swIdx)).ToList();
+                            edgeMeta = edgeMeta.Skip(swIdx).Concat(edgeMeta.Take(swIdx)).ToList();
+                        }
+
+                        // 5. surfaces
+                        var surfaces = new List<object>();
+                        for (int i = 0; i < n; i++)
+                        {
+                            var (vx0, vy0) = verts[i];
+                            var (vx1, vy1) = verts[(i + 1) % n];
+                            double dx = vx1 - vx0;
+                            double dy = vy1 - vy0;
+                            double length_m = Math.Sqrt(dx * dx + dy * dy);
+                            if (length_m < 1e-6) continue;
+
+                            // CCW 외향 법선 = (dy, -dx). 남=0, 동=-90, 서=+90, 북=±180
+                            double nx = dy, ny = -dx;
+                            double az = Math.Atan2(-nx, -ny) * 180.0 / Math.PI;
+
+                            var meta = edgeMeta[i];
+                            double edgeArea = length_m * rp.FloorHeight;
+                            double winArea = meta.WindowAreas.Sum();
+                            double doorArea = meta.DoorAreas.Sum();
+                            double opaqueArea = Math.Max(edgeArea - winArea - doorArea, 0.0);
+
+                            if (meta.IsOuterWall)
+                            {
+                                if (opaqueArea > 0.01)
+                                {
+                                    surfaces.Add(new
+                                    {
+                                        type = "ExteriorWall",
+                                        name = $"외벽 #{i}",
+                                        wall_cts_id = 33,
+                                        area_m2 = Math.Round(opaqueArea, 2),
+                                        azimuth_deg = Math.Round(az, 1),
+                                        tilt_deg = 90,
+                                        color = "Dark",
+                                        surroundings = "Vertical",
+                                        edge_index = i
+                                    });
+                                }
+                                foreach (var wa in meta.WindowAreas)
+                                {
+                                    surfaces.Add(new
+                                    {
+                                        type = "Window",
+                                        name = $"창 #{i}",
+                                        glazing_id = "5d",
+                                        u_si = 3.18,
+                                        area_m2 = Math.Round(wa, 2),
+                                        azimuth_deg = Math.Round(az, 1),
+                                        tilt_deg = 90,
+                                        edge_index = i,
+                                        interior_shading = new
+                                        {
+                                            type = "VenetianBlinds",
+                                            iac_0 = 0.74,
+                                            iac_60 = 0.65,
+                                            iac_diff = 0.79
+                                        }
+                                    });
+                                }
+                                foreach (var da in meta.DoorAreas)
+                                {
+                                    surfaces.Add(new
+                                    {
+                                        type = "ExteriorWall",
+                                        name = $"외부도어 #{i}",
+                                        wall_cts_id = 33,
+                                        area_m2 = Math.Round(da, 2),
+                                        azimuth_deg = Math.Round(az, 1),
+                                        tilt_deg = 90,
+                                        color = "Dark",
+                                        surroundings = "Vertical",
+                                        edge_index = i
+                                    });
+                                }
+                            }
+                            else
+                            {
+                                surfaces.Add(new
+                                {
+                                    type = "InteriorPartition",
+                                    name = $"내벽 #{i}",
+                                    u_si = 1.7,
+                                    area_m2 = Math.Round(edgeArea, 2),
+                                    adjacent_temp_C = 26.0,
+                                    edge_index = i
+                                });
+                            }
+                        }
+
+                        double floorAreaM2 = 0;
+                        double.TryParse(rp.FloorArea, out floorAreaM2);
+
+                        rooms.Add(new
+                        {
+                            id = string.IsNullOrEmpty(rp.RoomIndex) ? $"R{rp.Index:D3}" : rp.RoomIndex,
+                            name = string.IsNullOrEmpty(rp.Name) ? $"Room {rp.Index}" : rp.Name,
+                            floor_area_m2 = Math.Round(floorAreaM2, 2),
+                            ceiling_height_m = rp.CeilingHeight,
+                            construction_class = "Medium",
+                            has_carpet = false,
+                            glass_pct = 50,
+                            is_interior_zone = false,
+                            position = new
+                            {
+                                vertices = verts.Select(v => new
+                                {
+                                    x_m = Math.Round(v.x, 3),
+                                    y_m = Math.Round(v.y, 3)
+                                }).ToArray()
+                            },
+                            surfaces = surfaces,
+                            occupancy = new
+                            {
+                                max_persons = 2,
+                                sensible_W_per_person = 75,
+                                latent_W_per_person = 55,
+                                schedule_24h = new double[] { 0,0,0,0,0,0,0, 1,1,1,1, 0.5,1,1,1,1,1, 0,0,0,0,0,0,0 }
+                            },
+                            lighting = new
+                            {
+                                type = "Pendant_Fluorescent",
+                                total_W = 200,
+                                use_factor = 1.0,
+                                special_allowance = 0.85,
+                                schedule_24h = new double[] { 0,0,0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1, 0,0,0,0,0,0 }
+                            },
+                            equipment = new
+                            {
+                                type = "OfficeEquipment",
+                                total_W = 250,
+                                radiant_fraction = 0.20,
+                                schedule_24h = new double[] { 0,0,0,0,0,0,0, 1,1,1,1, 0.5,1,1,1,1,1, 0,0,0,0,0,0,0 }
+                            },
+                            infiltration = new { ach_cooling = 0.2, ach_heating = 1.0 },
+                            return_plenum_fraction = 0
+                        });
+                    }
+                    tr.Commit();
+                }
+
+                // 6. 전체 JSON
+                var root = new
+                {
+                    project = new
+                    {
+                        name = Path.GetFileNameWithoutExtension(fullPath),
+                        designer = "AutoCAD plugin",
+                        date = DateTime.Now.ToString("yyyy-MM-dd")
+                    },
+                    location = new
+                    {
+                        city = "Seoul",
+                        latitude_deg = 37.5,
+                        longitude_deg = 127.0,
+                        elevation_m = 38,
+                        lsm_deg = 135.0,
+                        ground_reflectivity = 0.20
+                    },
+                    climate = new
+                    {
+                        design_db_C = 31.4,
+                        design_wb_C = 25.7,
+                        daily_range_C = 8.0,
+                        tau_b_monthly = new Dictionary<string, double> { ["7"] = 0.510 },
+                        tau_d_monthly = new Dictionary<string, double> { ["7"] = 2.080 }
+                    },
+                    indoor_design = new
+                    {
+                        cooling_db_C = 26.0,
+                        cooling_rh_pct = 50,
+                        heating_db_C = 20.0
+                    },
+                    rooms = rooms
+                };
+
+                var opts = new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+                string json = System.Text.Json.JsonSerializer.Serialize(root, opts);
+                File.WriteAllText(jsonPath, json, new System.Text.UTF8Encoding(false));
+
+                MessageBox.Show($"{jsonPath} 저장 완료!");
+                ed.WriteMessage($"\n{jsonPath} \n저장 완료!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}\n\n{ex.StackTrace}");
+            }
+        }
+
+        private class RtsEdgeMeta
+        {
+            public bool IsOuterWall;
+            public List<double> WindowAreas = new List<double>();
+            public List<double> DoorAreas = new List<double>();
+        }
+
+        private static double RtsSignedArea(List<(double x, double y)> verts)
+        {
+            double s = 0; int n = verts.Count;
+            for (int i = 0; i < n; i++)
+            {
+                var a = verts[i];
+                var b = verts[(i + 1) % n];
+                s += a.x * b.y - b.x * a.y;
+            }
+            return s * 0.5;
+        }
+
+        private RtsEdgeMeta BuildRtsEdgeMeta(Line line, double floorHeight)
+        {
+            var meta = new RtsEdgeMeta();
+            // OutWall 레이어 검사 (RoomPart.GetWallText 와 동일 패턴)
+            var midPt = line.GetPointAtDist(line.Length / 2.0);
+            var outs = SelSet.GetEntitys(midPt,
+                JSelFilter.MakeFilterTypesLayer("LINE,LWPOLYLINE", Jdf.Layer.OutWall), 400);
+            meta.IsOuterWall = outs != null && outs.Count > 0;
+
+            // Window/Door 블록
+            var brs = SelSet.GetEntitys(line, JSelFilter.MakeFilterTypesRegs("INSERT", "Door,Window"))?
+                .OfType<Entity>().Select(x => x as BlockReference).ToList();
+            if (brs == null) return meta;
+
+            foreach (var br in brs)
+            {
+                if (br == null) continue;
+                var brpoly = br.GetPoly1();
+                double blockLen_mm = line.GetDistFromPolyIntersect(brpoly);
+                if (blockLen_mm <= 0) continue;
+                double blockLen_m = blockLen_mm / 1000.0;
+
+                var bhStr = JXdata.GetXdata(br, "Height");
+                double bh = 0;
+                double.TryParse(bhStr, out bh);
+                if (bh <= 0) bh = floorHeight;
+                double area = blockLen_m * bh;
+
+                if (JXdata.GetXdata(br, "Window") != null)
+                    meta.WindowAreas.Add(area);
+                else if (JXdata.GetXdata(br, "Door") != null)
+                    meta.DoorAreas.Add(area);
+            }
+            return meta;
+        }
     }
 }

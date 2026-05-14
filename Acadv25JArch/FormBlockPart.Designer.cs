@@ -54,6 +54,7 @@
             tabPage2 = new TabPage();
             btnExcel1 = new Button();
             btnExcel = new Button();
+            btnRtsJson = new Button();
             dgvRoom = new DataGridView();
             Col_Index = new DataGridViewTextBoxColumn();
             Col_Name = new DataGridViewTextBoxColumn();
@@ -196,6 +197,7 @@
             // 
             // tabPage2
             // 
+            tabPage2.Controls.Add(btnRtsJson);
             tabPage2.Controls.Add(btnExcel1);
             tabPage2.Controls.Add(btnExcel);
             tabPage2.Controls.Add(dgvRoom);
@@ -209,7 +211,7 @@
             tabPage2.UseVisualStyleBackColor = true;
             // 
             // btnExcel1
-            // 
+            //
             btnExcel1.Location = new Point(322, 31);
             btnExcel1.Name = "btnExcel1";
             btnExcel1.Size = new Size(148, 34);
@@ -217,6 +219,16 @@
             btnExcel1.Text = "To Excel Row";
             btnExcel1.UseVisualStyleBackColor = true;
             btnExcel1.Click += btnExcel1_Click;
+            //
+            // btnRtsJson
+            //
+            btnRtsJson.Location = new Point(485, 31);
+            btnRtsJson.Name = "btnRtsJson";
+            btnRtsJson.Size = new Size(148, 34);
+            btnRtsJson.TabIndex = 5;
+            btnRtsJson.Text = "To RTS Json";
+            btnRtsJson.UseVisualStyleBackColor = true;
+            btnRtsJson.Click += btnRtsJson_Click;
             // 
             // btnExcel
             // 
@@ -482,5 +494,6 @@
         private DataGridViewTextBoxColumn Col_Volumn;
         private DataGridViewTextBoxColumn ColWallText;
         private Button btnExcel1;
+        private Button btnRtsJson;
     }
 }

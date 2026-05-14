@@ -154,6 +154,76 @@ namespace PipeLoad2
         }
 
         /// <summary>
+        /// 선택  block  "CMH" Xdata를 설정하는 커맨드 (디퓨져 유량, ㎥/h)
+        /// CMH 값은 Block BoundingBox 영역 안에 있는 Text/MText 엔티티에서 읽음
+        /// Text 없는 Block은 Yellow(2)로 표시하고 개수 출력
+        /// "CMH" 와 "Disp" 양쪽에 동일 문자열 기록 (TTG 시각화용)
+        /// </summary>
+        [CommandMethod("CMH", CommandFlags.UsePickSet)] // diffuser CMH
+        public void Cmd_Block_SetCMH()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // 1. Block 선택 (UsePickSet: 사전선택 표시 + 추가/제거 허용)
+                    List<BlockReference> targets = JEntity.GetEntityByTpye<BlockReference>("Block 을 선택 하세요 (Enter 확정)?", JSelFilter.MakeFilterTypes("INSERT"));
+                    if (targets == null || targets.Count == 0) return;
+
+                    tr.CheckRegName("CMH");
+                    tr.CheckRegName("Disp");
+
+                    // 선택 Block 전체가 화면에 보이도록 Zoom fit
+                    // (각 Block 내부 Text 추출에 ed.SelectWindow 사용 → 뷰포트 밖이면 매핑 실패)
+                    ed.ZoomToEntities(targets.Select(b => b.ObjectId));
+
+                    int setCount = 0;
+                    int missingCount = 0;
+
+                    foreach (var br in targets)
+                    {
+                        if (br == null)
+                        {
+                            ed.WriteMessage("\n블록을 읽을 수 없습니다.");
+                            continue;
+                        }
+
+                        double? cmhValue = TryGetLpmByWindowSelect(br, ed, tr);
+
+                        br.UpgradeOpen();
+
+                        if (cmhValue.HasValue)
+                        {
+                            string val = cmhValue.Value.ToString();
+                            JXdata.SetXdata(br, "CMH", val);
+                            JXdata.SetXdata(br, "Disp", val);
+                            setCount++;
+                        }
+                        else
+                        {
+                            br.Color = Color.FromColorIndex(ColorMethod.ByAci, 2); // Yellow
+                            missingCount++;
+                        }
+                    }
+
+                    ed.WriteMessage($"\nCMH 설정 완료: {setCount}개");
+                    ed.WriteMessage($"\nText 없는 Block: {missingCount}개 (Yellow 표시)");
+
+                    tr.Commit();
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Block의 GeometricExtents 사각형 영역 안에 완전히 포함된 Text/MText에서 숫자값 추출
         /// ed.SelectWindow(p1, p2, filter) 로 AutoCAD 네이티브 공간 질의 사용
         /// </summary>

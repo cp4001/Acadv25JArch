@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DuctSizing</RootNamespace>
+    <AssemblyName>DuctSizing</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <ApplicationDefaultFont>Segoe UI, 9pt</ApplicationDefaultFont>
+  </PropertyGroup>
+
+</Project>

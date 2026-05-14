@@ -90,6 +90,15 @@
     <Compile Update="PipeDiaCalc\FcuLineTreeForm.Designer.cs">
       <DependentUpon>FcuLineTreeForm.cs</DependentUpon>
     </Compile>
+    <Compile Update="PipeDiaCalc\DuctTreeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="PipeDiaCalc\DuctTreeForm.Designer.cs">
+      <DependentUpon>DuctTreeForm.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="PipeDiaCalc\DuctTreeForm.resx">
+      <DependentUpon>DuctTreeForm.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
