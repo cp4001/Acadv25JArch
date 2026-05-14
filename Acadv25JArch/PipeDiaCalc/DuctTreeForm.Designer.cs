@@ -66,7 +66,7 @@ namespace PipeLoad2
             btnExpand.Name = "btnExpand";
             btnExpand.Size = new Size(100, 38);
             btnExpand.TabIndex = 0;
-            btnExpand.Text = "전체 펼치기";
+            btnExpand.Text = "전체";
             btnExpand.Click += btnExpand_Click;
             //
             // btnCollapse
@@ -75,7 +75,7 @@ namespace PipeLoad2
             btnCollapse.Name = "btnCollapse";
             btnCollapse.Size = new Size(100, 38);
             btnCollapse.TabIndex = 1;
-            btnCollapse.Text = "전체 접기";
+            btnCollapse.Text = "접기";
             btnCollapse.Click += btnCollapse_Click;
             //
             // btnApply
