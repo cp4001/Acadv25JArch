@@ -1,5 +1,5 @@
 #nullable enable
-namespace DuctSizing;
+namespace DuctSizing1;
 
 partial class MainForm
 {
@@ -46,6 +46,13 @@ partial class MainForm
         this.colAspect = new DataGridViewTextBoxColumn();
         this.colArea = new DataGridViewTextBoxColumn();
 
+        this.tabMain = new TabControl();
+        this.tabSingle = new TabPage();
+        this.tabSimul = new TabPage();
+        this.lblSimulInfo = new Label();
+        this.btnSimul = new Button();
+        this.treeSimul = new TreeView();
+
         ((System.ComponentModel.ISupportInitialize)this.numQ).BeginInit();
         ((System.ComponentModel.ISupportInitialize)this.numAlpha).BeginInit();
         ((System.ComponentModel.ISupportInitialize)this.numAspect).BeginInit();
@@ -53,6 +60,9 @@ partial class MainForm
         this.grpInput.SuspendLayout();
         this.grpMode.SuspendLayout();
         this.grpResult.SuspendLayout();
+        this.tabMain.SuspendLayout();
+        this.tabSingle.SuspendLayout();
+        this.tabSimul.SuspendLayout();
         this.SuspendLayout();
 
         // grpInput
@@ -248,16 +258,51 @@ partial class MainForm
         this.colArea.FillWeight = 90;
         this.colArea.DefaultCellStyle = new DataGridViewCellStyle { Format = "0.000", Alignment = DataGridViewContentAlignment.MiddleRight };
 
+        // tabSingle (단건 탭)
+        this.tabSingle.Text = "단건";
+        this.tabSingle.Padding = new Padding(3);
+        this.tabSingle.UseVisualStyleBackColor = true;
+        this.tabSingle.Controls.Add(this.grpInput);
+        this.tabSingle.Controls.Add(this.grpMode);
+        this.tabSingle.Controls.Add(this.btnCalc);
+        this.tabSingle.Controls.Add(this.grpResult);
+        this.tabSingle.Controls.Add(this.dgvCombos);
+
+        // Simul 탭 컨트롤
+        this.lblSimulInfo.Text = "단건 탭의 여유율 α·아스펙트비 한계 사용. Q 100~24,000 CMH (100 간격), 흡입·토출 양쪽 산출.";
+        this.lblSimulInfo.Location = new Point(12, 12);
+        this.lblSimulInfo.AutoSize = true;
+
+        this.btnSimul.Text = "Simulation 실행";
+        this.btnSimul.Location = new Point(12, 38);
+        this.btnSimul.Size = new Size(728, 36);
+        this.btnSimul.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        this.btnSimul.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+
+        this.treeSimul.Location = new Point(12, 86);
+        this.treeSimul.Size = new Size(728, 530);
+        this.treeSimul.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+        this.treeSimul.HideSelection = false;
+
+        // tabSimul
+        this.tabSimul.Text = "Simul";
+        this.tabSimul.Padding = new Padding(3);
+        this.tabSimul.UseVisualStyleBackColor = true;
+        this.tabSimul.Controls.Add(this.lblSimulInfo);
+        this.tabSimul.Controls.Add(this.btnSimul);
+        this.tabSimul.Controls.Add(this.treeSimul);
+
+        // tabMain
+        this.tabMain.Dock = DockStyle.Fill;
+        this.tabMain.Controls.Add(this.tabSingle);
+        this.tabMain.Controls.Add(this.tabSimul);
+
         // MainForm
         this.AutoScaleDimensions = new SizeF(7F, 15F);
         this.AutoScaleMode = AutoScaleMode.Font;
-        this.ClientSize = new Size(756, 624);
-        this.MinimumSize = new Size(620, 520);
-        this.Controls.Add(this.grpInput);
-        this.Controls.Add(this.grpMode);
-        this.Controls.Add(this.btnCalc);
-        this.Controls.Add(this.grpResult);
-        this.Controls.Add(this.dgvCombos);
+        this.ClientSize = new Size(756, 660);
+        this.MinimumSize = new Size(620, 560);
+        this.Controls.Add(this.tabMain);
         this.Text = "덕트 사이즈 계산";
         this.StartPosition = FormStartPosition.CenterScreen;
 
@@ -271,6 +316,10 @@ partial class MainForm
         this.grpMode.PerformLayout();
         this.grpResult.ResumeLayout(false);
         this.grpResult.PerformLayout();
+        this.tabSingle.ResumeLayout(false);
+        this.tabSimul.ResumeLayout(false);
+        this.tabSimul.PerformLayout();
+        this.tabMain.ResumeLayout(false);
         this.ResumeLayout(false);
     }
 
@@ -306,4 +355,11 @@ partial class MainForm
     private DataGridViewTextBoxColumn colDeEq = null!;
     private DataGridViewTextBoxColumn colAspect = null!;
     private DataGridViewTextBoxColumn colArea = null!;
+
+    private TabControl tabMain = null!;
+    private TabPage tabSingle = null!;
+    private TabPage tabSimul = null!;
+    private Label lblSimulInfo = null!;
+    private Button btnSimul = null!;
+    private TreeView treeSimul = null!;
 }

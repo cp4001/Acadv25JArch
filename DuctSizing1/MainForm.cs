@@ -1,9 +1,11 @@
 using DuctSizing.Core;
 
-namespace DuctSizing;
+namespace DuctSizing1;
 
 public partial class MainForm : Form
 {
+    private const int SimulMaxCombos = 10;
+
     private List<RectCombination> _combos = new();
     private string? _sortColumn;
     private bool _sortAscending = true;
@@ -21,6 +23,8 @@ public partial class MainForm : Form
         rbModeA.CheckedChanged += OnModeChanged;
         rbModeB.CheckedChanged += OnModeChanged;
         dgvCombos.ColumnHeaderMouseClick += OnColumnHeaderClick;
+        btnSimul.Click += OnSimulClick;
+        OnModeChanged(this, EventArgs.Empty); // 초기 컬럼 가시성 동기화
     }
 
     private void LoadStandardSizes()
@@ -33,6 +37,7 @@ public partial class MainForm : Form
     private void OnModeChanged(object? sender, EventArgs e)
     {
         cmbShortSide.Enabled = rbModeA.Checked;
+        colDeEq.Visible = rbModeA.Checked; // Mode B 선택 시 De′ 컬럼 숨김
     }
 
     private void OnCalcClick(object? sender, EventArgs e)
@@ -75,6 +80,53 @@ public partial class MainForm : Form
         else { _sortColumn = prop; _sortAscending = true; }
 
         BindCombos();
+    }
+
+    private void OnSimulClick(object? sender, EventArgs e)
+    {
+        var alpha = (double)numAlpha.Value;
+        var aspectMax = (double)numAspect.Value;
+
+        Cursor = Cursors.WaitCursor;
+        treeSimul.BeginUpdate();
+        try
+        {
+            treeSimul.Nodes.Clear();
+            for (int q = 100; q <= 24_000; q += 100)
+            {
+                var qNode = treeSimul.Nodes.Add($"Q = {q:N0} CMH");
+                AddTypeNode(qNode, q, DuctType.Suction, "흡입", alpha, aspectMax);
+                AddTypeNode(qNode, q, DuctType.Discharge, "토출", alpha, aspectMax);
+            }
+        }
+        finally
+        {
+            treeSimul.EndUpdate();
+            Cursor = Cursors.Default;
+        }
+    }
+
+    private static void AddTypeNode(TreeNode parent, int q, DuctType type, string label, double alpha, double aspectMax)
+    {
+        var r = DuctResistance.Of(type);
+        var result = DuctSizingCalculator.ModeB(q, type, alpha, aspectMax);
+        var header = $"{label} (R={r:0.00}) — De={result.De:0} mm, 원형 D={result.D} mm";
+        var typeNode = parent.Nodes.Add(header);
+
+        if (result.Combinations.Count == 0)
+        {
+            typeNode.Nodes.Add("(조건 만족 조합 없음)");
+            return;
+        }
+
+        foreach (var c in result.Combinations.Take(SimulMaxCombos))
+        {
+            typeNode.Nodes.Add($"{c.B} × {c.A} mm | De′={c.DeEq:0} | a/b={c.Aspect:0.00} | 면적={c.Area:0.000} m²");
+        }
+        if (result.Combinations.Count > SimulMaxCombos)
+        {
+            typeNode.Nodes.Add($"… 외 {result.Combinations.Count - SimulMaxCombos}개 (상위 {SimulMaxCombos}만 표시)");
+        }
     }
 
     private void BindCombos()

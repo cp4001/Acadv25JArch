@@ -4,7 +4,10 @@
       "Bash(dotnet build *)",
       "Read(//c/Users/junhoi/Desktop/Work/Acadv25JArch/**)",
       "Bash(dotnet sln *)",
-      "Bash(dotnet new *)"
+      "Bash(dotnet new *)",
+      "Bash(mkdir -p \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing1\")",
+      "Bash(cp \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/Program.cs\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/MainForm.cs\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/MainForm.Designer.cs\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/MainForm.resx\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/DuctSize_Design_1.md\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/CLAUDE.md\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing1/\")",
+      "Bash(cp \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/DuctSizing.csproj\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing1/DuctSizing1.csproj\")"
     ]
   }
 }

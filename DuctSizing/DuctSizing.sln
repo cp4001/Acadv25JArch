@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DuctSizing", "DuctSizing.cs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DuctSizing.Core", "..\DuctSizing.Core\DuctSizing.Core.csproj", "{98BFF2B4-CBF5-8533-96FE-9F3E67B34A77}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DuctSizing1", "..\DuctSizing1\DuctSizing1.csproj", "{DBD3FE9B-CF31-543D-5646-92C889FB8F9E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{98BFF2B4-CBF5-8533-96FE-9F3E67B34A77}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98BFF2B4-CBF5-8533-96FE-9F3E67B34A77}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98BFF2B4-CBF5-8533-96FE-9F3E67B34A77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBD3FE9B-CF31-543D-5646-92C889FB8F9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBD3FE9B-CF31-543D-5646-92C889FB8F9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBD3FE9B-CF31-543D-5646-92C889FB8F9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBD3FE9B-CF31-543D-5646-92C889FB8F9E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
