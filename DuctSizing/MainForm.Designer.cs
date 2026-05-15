@@ -16,8 +16,8 @@ partial class MainForm
         this.grpInput = new GroupBox();
         this.lblQ = new Label();
         this.numQ = new NumericUpDown();
-        this.lblR = new Label();
-        this.numR = new NumericUpDown();
+        this.lblDuctType = new Label();
+        this.cmbDuctType = new ComboBox();
         this.lblAlpha = new Label();
         this.numAlpha = new NumericUpDown();
         this.lblAspect = new Label();
@@ -47,7 +47,6 @@ partial class MainForm
         this.colArea = new DataGridViewTextBoxColumn();
 
         ((System.ComponentModel.ISupportInitialize)this.numQ).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)this.numR).BeginInit();
         ((System.ComponentModel.ISupportInitialize)this.numAlpha).BeginInit();
         ((System.ComponentModel.ISupportInitialize)this.numAspect).BeginInit();
         ((System.ComponentModel.ISupportInitialize)this.dgvCombos).BeginInit();
@@ -63,8 +62,8 @@ partial class MainForm
         this.grpInput.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         this.grpInput.Controls.Add(this.lblQ);
         this.grpInput.Controls.Add(this.numQ);
-        this.grpInput.Controls.Add(this.lblR);
-        this.grpInput.Controls.Add(this.numR);
+        this.grpInput.Controls.Add(this.lblDuctType);
+        this.grpInput.Controls.Add(this.cmbDuctType);
         this.grpInput.Controls.Add(this.lblAlpha);
         this.grpInput.Controls.Add(this.numAlpha);
         this.grpInput.Controls.Add(this.lblAspect);
@@ -84,18 +83,16 @@ partial class MainForm
         this.numQ.Value = 13_000;
         this.numQ.TextAlign = HorizontalAlignment.Right;
 
-        // lblR / numR
-        this.lblR.Text = "마찰손실 R [mmAq/m]";
-        this.lblR.Location = new Point(16, 64);
-        this.lblR.AutoSize = true;
-        this.numR.Location = new Point(170, 60);
-        this.numR.Size = new Size(150, 23);
-        this.numR.Minimum = 0.01M;
-        this.numR.Maximum = 10M;
-        this.numR.Increment = 0.01M;
-        this.numR.DecimalPlaces = 2;
-        this.numR.Value = 0.08M;
-        this.numR.TextAlign = HorizontalAlignment.Right;
+        // lblDuctType / cmbDuctType
+        this.lblDuctType.Text = "덕트 구분";
+        this.lblDuctType.Location = new Point(16, 64);
+        this.lblDuctType.AutoSize = true;
+        this.cmbDuctType.Location = new Point(170, 60);
+        this.cmbDuctType.Size = new Size(150, 23);
+        this.cmbDuctType.DropDownStyle = ComboBoxStyle.DropDownList;
+        this.cmbDuctType.Items.Add("흡입 (R=0.08)");
+        this.cmbDuctType.Items.Add("토출 (R=0.10)");
+        this.cmbDuctType.SelectedIndex = 0;
 
         // lblAlpha / numAlpha
         this.lblAlpha.Text = "여유율 α";
@@ -265,7 +262,6 @@ partial class MainForm
         this.StartPosition = FormStartPosition.CenterScreen;
 
         ((System.ComponentModel.ISupportInitialize)this.numQ).EndInit();
-        ((System.ComponentModel.ISupportInitialize)this.numR).EndInit();
         ((System.ComponentModel.ISupportInitialize)this.numAlpha).EndInit();
         ((System.ComponentModel.ISupportInitialize)this.numAspect).EndInit();
         ((System.ComponentModel.ISupportInitialize)this.dgvCombos).EndInit();
@@ -281,8 +277,8 @@ partial class MainForm
     private GroupBox grpInput = null!;
     private Label lblQ = null!;
     private NumericUpDown numQ = null!;
-    private Label lblR = null!;
-    private NumericUpDown numR = null!;
+    private Label lblDuctType = null!;
+    private ComboBox cmbDuctType = null!;
     private Label lblAlpha = null!;
     private NumericUpDown numAlpha = null!;
     private Label lblAspect = null!;

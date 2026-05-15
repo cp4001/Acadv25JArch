@@ -30,9 +30,10 @@ Acadv25JArch/
 - `DuctSize_Design_1.md` — 셀 매핑, 공식, 알고리즘 (구현 기준)
 
 ## 라이브러리 공개 API (`DuctSizing.Core`)
-- `DuctSizingCalculator.ModeA(q, r, alpha, b)` — 단변 지정, 범위 내 모든 장변 후보
-- `DuctSizingCalculator.ModeB(q, r, alpha, aspectMax)` — 모든 (b,a) 조합
-- `DuctSizingCalculator.ModeC(q, r, alpha, aspectMax)` — Mode B 중 De_eq 최소 1개 (단일 출력)
+- `DuctSizingCalculator.ModeA(q, type, alpha, b)` — 단변 지정, 범위 내 모든 장변 후보
+- `DuctSizingCalculator.ModeB(q, type, alpha, aspectMax)` — 모든 (b,a) 조합
+- `DuctSizingCalculator.ModeC(q, type, alpha, aspectMax)` — Mode B 중 De_eq 최소 1개 (단일 출력)
+- `type`: `DuctType.Suction` (흡입, R=0.08) 또는 `DuctType.Discharge` (토출, R=0.10) — 두 값만 허용
 - 모두 `DuctSizingResult` 반환 — `{De, D, Aux, Combinations}`
 - 보조 클래스 `StandardSizes`, `EquivalentDiameter`, `HuebscherFormula`, `AuxiliaryCalculator` 등은 public이지만 일반적으로 facade만 호출
 

@@ -38,7 +38,7 @@ public partial class MainForm : Form
     private void OnCalcClick(object? sender, EventArgs e)
     {
         var q = (double)numQ.Value;
-        var r = (double)numR.Value;
+        var ductType = (DuctType)cmbDuctType.SelectedIndex;
         var alpha = (double)numAlpha.Value;
         var aspectMax = (double)numAspect.Value;
 
@@ -46,11 +46,11 @@ public partial class MainForm : Form
         if (rbModeA.Checked)
         {
             var b = (int)cmbShortSide.SelectedItem!;
-            result = DuctSizingCalculator.ModeA(q, r, alpha, b);
+            result = DuctSizingCalculator.ModeA(q, ductType, alpha, b);
         }
         else
         {
-            result = DuctSizingCalculator.ModeB(q, r, alpha, aspectMax);
+            result = DuctSizingCalculator.ModeB(q, ductType, alpha, aspectMax);
         }
 
         lblDe.Text = $"등가직경 De = {result.De:0} mm";
