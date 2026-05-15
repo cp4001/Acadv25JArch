@@ -1,6 +1,6 @@
-namespace DuctSizing;
+namespace DuctSizing.Core;
 
-internal static class EquivalentDiameter
+public static class EquivalentDiameter
 {
     // De = ROUND( ( (3.295e-10 · Q^1.9 / R)^0.199 · 1000 ) / α , 0 )   [mm]
     // 출처: DUCT MEASURE!D18

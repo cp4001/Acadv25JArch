@@ -1,12 +1,12 @@
-namespace DuctSizing;
+namespace DuctSizing.Core;
 
-internal sealed record AuxiliaryValues(
+public sealed record AuxiliaryValues(
     double Area,             // A  [m²]
     double Velocity,         // V  [m/s]
     double DynamicPressure,  // Δp [mmAq]
     double ActualResistance); // R′ [mmAq/m]
 
-internal static class AuxiliaryCalculator
+public static class AuxiliaryCalculator
 {
     public static AuxiliaryValues Calculate(double q, double deMm)
     {

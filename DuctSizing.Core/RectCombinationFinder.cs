@@ -1,6 +1,6 @@
-namespace DuctSizing;
+namespace DuctSizing.Core;
 
-internal static class RectCombinationFinder
+public static class RectCombinationFinder
 {
     // Mode B: De_eq ∈ [deMin, deMax] & a/b ≤ aspectMax 인 모든 (b, a) 조합
     public static List<RectCombination> FindAll(double deMin, double deMax, double aspectMax, IReadOnlyList<int> sizes)

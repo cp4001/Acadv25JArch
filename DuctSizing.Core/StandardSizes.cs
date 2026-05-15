@@ -1,6 +1,6 @@
-namespace DuctSizing;
+namespace DuctSizing.Core;
 
-internal static class StandardSizes
+public static class StandardSizes
 {
     public static readonly IReadOnlyList<int> Default = Build(100, 2000, 50);
 

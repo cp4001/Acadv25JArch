@@ -1,6 +1,6 @@
-namespace DuctSizing;
+namespace DuctSizing.Core;
 
-internal sealed class RectCombination
+public sealed class RectCombination
 {
     public int B { get; init; }
     public int A { get; init; }

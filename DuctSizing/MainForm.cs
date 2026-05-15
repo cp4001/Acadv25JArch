@@ -1,9 +1,9 @@
+using DuctSizing.Core;
+
 namespace DuctSizing;
 
 public partial class MainForm : Form
 {
-    private const double DeUpperRatio = 1.05; // De_eq 허용 상한 = De × 1.05 (+5%)
-
     private List<RectCombination> _combos = new();
     private string? _sortColumn;
     private bool _sortAscending = true;
@@ -42,38 +42,25 @@ public partial class MainForm : Form
         var alpha = (double)numAlpha.Value;
         var aspectMax = (double)numAspect.Value;
 
-        var de = EquivalentDiameter.Calculate(q, r, alpha);
-        var d = StandardSizes.NextAtLeast(de);
-        var aux = AuxiliaryCalculator.Calculate(q, de);
-
-        lblDe.Text = $"등가직경 De = {de:0} mm";
-        lblD.Text = $"원형 D = {d} mm";
-        lblA.Text = $"단면적 A = {aux.Area:0.000} m²";
-        lblV.Text = $"풍속 V = {aux.Velocity:0.000} m/s";
-        lblDp.Text = $"동압 Δp = {aux.DynamicPressure:0.000} mmAq";
-        lblRp.Text = $"실저항 R′ = {aux.ActualResistance:0.000} mmAq/m";
-
-        var deMax = de * DeUpperRatio;
-
+        DuctSizingResult result;
         if (rbModeA.Checked)
         {
             var b = (int)cmbShortSide.SelectedItem!;
-            _combos = RectDuctSelector.FindLongSidesInRange(de, deMax, b, StandardSizes.Default)
-                .Select(a => new RectCombination
-                {
-                    B = b,
-                    A = a,
-                    DeEq = HuebscherFormula.CalculateRounded(b, a),
-                    Aspect = (double)a / b,
-                    Area = (double)b * a / 1_000_000.0,
-                })
-                .ToList();
+            result = DuctSizingCalculator.ModeA(q, r, alpha, b);
         }
         else
         {
-            _combos = RectCombinationFinder.FindAll(de, deMax, aspectMax, StandardSizes.Default);
+            result = DuctSizingCalculator.ModeB(q, r, alpha, aspectMax);
         }
 
+        lblDe.Text = $"등가직경 De = {result.De:0} mm";
+        lblD.Text = $"원형 D = {result.D} mm";
+        lblA.Text = $"단면적 A = {result.Aux.Area:0.000} m²";
+        lblV.Text = $"풍속 V = {result.Aux.Velocity:0.000} m/s";
+        lblDp.Text = $"동압 Δp = {result.Aux.DynamicPressure:0.000} mmAq";
+        lblRp.Text = $"실저항 R′ = {result.Aux.ActualResistance:0.000} mmAq/m";
+
+        _combos = result.Combinations.ToList();
         _sortColumn = null;
         BindCombos();
     }

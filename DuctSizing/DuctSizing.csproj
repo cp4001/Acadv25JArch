@@ -12,4 +12,8 @@
     <ApplicationDefaultFont>Segoe UI, 9pt</ApplicationDefaultFont>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\DuctSizing.Core\DuctSizing.Core.csproj" />
+  </ItemGroup>
+
 </Project>
