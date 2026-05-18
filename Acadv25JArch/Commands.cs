@@ -109,6 +109,15 @@ namespace Acadv25JArch
         }
 
 
+        [CommandMethod("PWD")]
+        public void Cmd_ShowActiveDwgPath()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            if (doc == null) return;
+            doc.Editor.WriteMessage($"\n{doc.Name}");
+        }
+
+
         [CommandMethod("QQ", CommandFlags.UsePickSet)]
         public void SelectSimilarShortcut()
         {
