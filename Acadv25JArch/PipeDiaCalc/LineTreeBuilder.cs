@@ -224,6 +224,61 @@ namespace PipeLoad2
         }
 
         /// <summary>
+        /// 선택 Block 에 사용자가 입력한 숫자를 "CMH" Xdata 로 기록 (Typed 입력 버전)
+        /// "CMH" 와 "Disp" 양쪽에 동일 문자열 기록 (TTG 시각화용)
+        /// CMH 명령은 Block 안의 Text 를 추출하지만, CMHT 는 키보드 입력값 사용
+        /// </summary>
+        [CommandMethod("CMHT", CommandFlags.UsePickSet)] // diffuser CMH Typed
+        public void Cmd_Block_SetCMH_Typed()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // 1. Block 선택
+                    List<BlockReference> targets = JEntity.GetEntityByTpye<BlockReference>("Block 을 선택 하세요 (Enter 확정)?", JSelFilter.MakeFilterTypes("INSERT"));
+                    if (targets == null || targets.Count == 0) return;
+
+                    // 2. CMH 값 입력
+                    var opts = new PromptDoubleOptions("\nCMH 값 입력 (㎥/h) ? ")
+                    {
+                        AllowNegative = false,
+                        AllowZero = false,
+                    };
+                    PromptDoubleResult result = ed.GetDouble(opts);
+                    if (result.Status != PromptStatus.OK) return;
+
+                    string val = result.Value.ToString();
+
+                    tr.CheckRegName("CMH");
+                    tr.CheckRegName("Disp");
+
+                    int setCount = 0;
+                    foreach (var br in targets)
+                    {
+                        if (br == null) continue;
+                        br.UpgradeOpen();
+                        JXdata.SetXdata(br, "CMH", val);
+                        JXdata.SetXdata(br, "Disp", val);
+                        setCount++;
+                    }
+
+                    ed.WriteMessage($"\nCMH={val} 설정 완료: {setCount}개");
+
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Block의 GeometricExtents 사각형 영역 안에 완전히 포함된 Text/MText에서 숫자값 추출
         /// ed.SelectWindow(p1, p2, filter) 로 AutoCAD 네이티브 공간 질의 사용
         /// </summary>
