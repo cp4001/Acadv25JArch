@@ -12,7 +12,7 @@ namespace Acadv25JArch.Ribbon
 {
     /// <summary>
     /// "공동 작업(JArch)" 커스텀 Ribbon 탭 골격.
-    ///   패널 1) DiaNote           : DiaNote 높이 변경 / SET (현재 BaseLen 값 표시)
+    ///   패널 1) DiaNote           : DiaNote 높이 변경 / DiaNote 높이 변경 입력 (현재 BaseLen 값 표시)
     ///   패널 2) Autodesk Docs     : Push to Autodesk Docs
     ///   패널 3) 트레이스          : 트레이스 팔레트 / 표식 가져오기
     ///   패널 4) 비교              : DWG 비교
