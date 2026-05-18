@@ -348,7 +348,7 @@ namespace PipeLoad2
                     try
                     {
                         JXdata.SetXdata(line, "Total_CMH",
-                            node.Load.ToString("F2", CultureInfo.InvariantCulture));
+                            node.Load.ToString("0.##", CultureInfo.InvariantCulture));
                     }
                     catch { }
                 }
