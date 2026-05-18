@@ -978,6 +978,45 @@ namespace Acadv25JArch
             }
         }
 
+        /// <summary>
+        /// SetDiaNoteBaseText: 사용자가 직접 입력한 값을 BaseLen에 설정.
+        /// Cmd_SetDiaNoteBase 와 동일한 영속화 경로 (NOD AINIT_DEFAULTS + DiaNote.BaseLen).
+        /// </summary>
+        [CommandMethod("Cmd_SetDiaNoteBaseText")]
+        public void Cmd_SetDiaNoteBaseText()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor   ed  = doc.Editor;
+
+            try
+            {
+                // ── 1. 사용자 입력 (기본값: 현재 BaseLen) ─────────────────
+                var opts = new PromptDoubleOptions($"\nBaseLen 값을 입력하세요 <{BaseLen:F3}>: ")
+                {
+                    DefaultValue    = BaseLen,
+                    UseDefaultValue = true,
+                    AllowNegative   = false,
+                    AllowZero       = false,
+                };
+                PromptDoubleResult result = ed.GetDouble(opts);
+                if (result.Status != PromptStatus.OK) return;
+
+                double value = result.Value;
+
+                // ── 2. NOD 영구 저장 + DiaNote.BaseLen 동기화 ─────────────
+                bool saved = PipeDiaCalc.DwgDefaultLoader.SaveBaseLen(doc, value);
+
+                ed.WriteMessage("\n========================================");
+                ed.WriteMessage($"\n  BaseLen = {BaseLen:F3}" +
+                                (saved ? " (NOD 저장)" : " (NOD 저장 실패)"));
+                ed.WriteMessage("\n========================================");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
     }
 
     public class SusPipe            // 배관 도면  SUS Pipe 관경변경

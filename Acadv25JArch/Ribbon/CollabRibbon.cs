@@ -142,15 +142,15 @@ namespace Acadv25JArch.Ribbon
             ribbon.Tabs.Add(tab);
         }
 
-        // 패널 1: DiaNote ─ LargeButton 2개 (DiaNote 높이 변경 / SET) + 현재 크기 표시 행
+        // 패널 1: DiaNote ─ LargeButton 2개 (DiaNote 높이 변경 / DiaNote 높이 변경 입력) + 현재 크기 표시 행
         private static RibbonPanel BuildSharePanel()
         {
             var src = new RibbonPanelSource { Title = "DiaNote" };
 
-            // Row 1: DiaNote 높이 변경 + SET (둘 다 Cmd_SetDiaNoteBase 명령 호출)
+            // Row 1: DiaNote 높이 변경(평행 2선) + DiaNote 높이 변경 입력(키보드 입력)
             var row = new RibbonRowPanel();
-            row.Items.Add(LargeButton("DiaNote\n높이 변경", "Cmd_SetDiaNoteBase", "share_drawing_32.png"));
-            row.Items.Add(LargeButton("SET",                 "Cmd_SetDiaNoteBase", "share_view_32.png"));
+            row.Items.Add(LargeButton("DiaNote\n높이 변경",      "Cmd_SetDiaNoteBase",     "share_drawing_32.png"));
+            row.Items.Add(LargeButton("DiaNote\n높이 변경 입력", "Cmd_SetDiaNoteBaseText", "share_drawing_32.png"));
             src.Items.Add(row);
 
             // Row 2: 현재 BaseLen(크기) 표시
