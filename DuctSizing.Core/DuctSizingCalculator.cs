@@ -37,6 +37,48 @@ public static class DuctSizingCalculator
         return new DuctSizingResult(b.De, b.D, b.Aux, combos);
     }
 
+    // Mode D: 단변 범위 [bMin, bMax] 강제. Mode B 결과에서 a/b ≤ aspectMax 중 aspectMax에 가장 근접 1개 채택.
+    //  - 선택 b < bMin → b = bMin, a = max(a_orig, bMin)         (예: 150x150 → 200x200, 150x200 → 200x200)
+    //  - 선택 b > bMax → Mode B 결과 중 b == bMax 인 항목에서 aspect 최대 1개 채택
+    public static DuctSizingResult ModeD(double q, DuctType type, double alpha, int bMin, int bMax, double aspectMax = 1.5)
+    {
+        var b = ModeB(q, type, alpha, aspectMax);
+
+        var best = b.Combinations
+            .OrderByDescending(c => c.Aspect)
+            .ThenBy(c => c.Area)
+            .FirstOrDefault();
+
+        if (best == null)
+        {
+            // Mode B 결과가 비어 있으면 단변 최소값으로 정사각 폴백 (b=bMin, a=bMin)
+            var fallback = BuildCombo(bMin, bMin);
+            return new DuctSizingResult(b.De, b.D, b.Aux, new List<RectCombination> { fallback });
+        }
+
+        RectCombination final;
+        if (best.B < bMin)
+        {
+            var adjA = Math.Max(best.A, bMin);
+            final = BuildCombo(bMin, adjA);
+        }
+        else if (best.B > bMax)
+        {
+            var capped = b.Combinations
+                .Where(c => c.B == bMax)
+                .OrderByDescending(c => c.Aspect)
+                .ThenBy(c => c.Area)
+                .FirstOrDefault();
+            final = capped ?? best;
+        }
+        else
+        {
+            final = best;
+        }
+
+        return new DuctSizingResult(b.De, b.D, b.Aux, new List<RectCombination> { final });
+    }
+
     private static (double de, int d, double deMax, AuxiliaryValues aux) ComputeContext(double q, DuctType type, double alpha)
     {
         var r = DuctResistance.Of(type);

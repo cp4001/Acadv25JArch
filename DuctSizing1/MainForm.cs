@@ -13,8 +13,51 @@ public partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
+        InitializeGridColumns(); // VS Designer가 재생성해도 살아남도록 런타임에서 컬럼 구성
         WireUp();
         LoadStandardSizes();
+        EnsureComboDefaults(); // Designer 재생성 시 누락 가능한 ComboBox 초기 선택 보강
+    }
+
+    private void EnsureComboDefaults()
+    {
+        if (cmbDuctType.Items.Count > 0 && cmbDuctType.SelectedIndex < 0)
+            cmbDuctType.SelectedIndex = 0;
+    }
+
+    private void InitializeGridColumns()
+    {
+        // dgvCombos
+        dgvCombos.AutoGenerateColumns = false;
+        colB = MakeCol("단변 b [mm]", "B", 100, "0");
+        colA = MakeCol("장변 a [mm]", "A", 100, "0");
+        colDeEq = MakeCol("De′ [mm]", "DeEq", 90, "0");
+        colAspect = MakeCol("a/b", "Aspect", 70, "0.00");
+        colArea = MakeCol("면적 [m²]", "Area", 90, "0.000");
+        dgvCombos.Columns.AddRange(colB, colA, colDeEq, colAspect, colArea);
+
+        // dgvModeD
+        dgvModeD.AutoGenerateColumns = false;
+        colMdQ = MakeCol("Q [CMH]", "Q", 100, "N0");
+        colMdSucB = MakeCol("Return b [mm]", "ReturnB", 100, null);
+        colMdSucA = MakeCol("Return a [mm]", "ReturnA", 100, null);
+        colMdDisB = MakeCol("Supply b [mm]", "SupplyB", 100, null);
+        colMdDisA = MakeCol("Supply a [mm]", "SupplyA", 100, null);
+        dgvModeD.Columns.AddRange(colMdQ, colMdSucB, colMdSucA, colMdDisB, colMdDisA);
+    }
+
+    private static DataGridViewTextBoxColumn MakeCol(string header, string prop, int fillWeight, string? format)
+    {
+        var style = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleRight };
+        if (format != null) style.Format = format;
+        return new DataGridViewTextBoxColumn
+        {
+            HeaderText = header,
+            DataPropertyName = prop,
+            AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+            FillWeight = fillWeight,
+            DefaultCellStyle = style,
+        };
     }
 
     private void WireUp()
@@ -24,8 +67,60 @@ public partial class MainForm : Form
         rbModeB.CheckedChanged += OnModeChanged;
         dgvCombos.ColumnHeaderMouseClick += OnColumnHeaderClick;
         btnSimul.Click += OnSimulClick;
+        btnModeD.Click += OnModeDClick;
         OnModeChanged(this, EventArgs.Empty); // 초기 컬럼 가시성 동기화
     }
+
+    private sealed class ModeDRow
+    {
+        public int Q { get; init; }
+        public string ReturnB { get; init; } = "";
+        public string ReturnA { get; init; } = "";
+        public string SupplyB { get; init; } = "";
+        public string SupplyA { get; init; } = "";
+    }
+
+    private void OnModeDClick(object? sender, EventArgs e)
+    {
+        var alpha = (double)numAlpha.Value;
+        var bMin = (int)numBMin.Value;
+        var bMax = (int)numBMax.Value;
+        const double aspectMax = 1.5; // Mode D 정의
+
+        if (bMin > bMax)
+        {
+            MessageBox.Show("단변 최소값이 최대값보다 큽니다.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        Cursor = Cursors.WaitCursor;
+        try
+        {
+            var rows = new List<ModeDRow>(200);
+            for (int q = 100; q <= 20_000; q += 100)
+            {
+                var ret = DuctSizingCalculator.ModeD(q, DuctType.Return, alpha, bMin, bMax, aspectMax);
+                var sup = DuctSizingCalculator.ModeD(q, DuctType.Supply, alpha, bMin, bMax, aspectMax);
+                rows.Add(new ModeDRow
+                {
+                    Q = q,
+                    ReturnB = FormatDim(ret, c => c.B),
+                    ReturnA = FormatDim(ret, c => c.A),
+                    SupplyB = FormatDim(sup, c => c.B),
+                    SupplyA = FormatDim(sup, c => c.A),
+                });
+            }
+            dgvModeD.DataSource = null;
+            dgvModeD.DataSource = rows;
+        }
+        finally
+        {
+            Cursor = Cursors.Default;
+        }
+    }
+
+    private static string FormatDim(DuctSizingResult r, Func<RectCombination, int> pick)
+        => r.Combinations.Count == 0 ? "—" : pick(r.Combinations[0]).ToString();
 
     private void LoadStandardSizes()
     {
@@ -95,8 +190,8 @@ public partial class MainForm : Form
             for (int q = 100; q <= 24_000; q += 100)
             {
                 var qNode = treeSimul.Nodes.Add($"Q = {q:N0} CMH");
-                AddTypeNode(qNode, q, DuctType.Suction, "흡입", alpha, aspectMax);
-                AddTypeNode(qNode, q, DuctType.Discharge, "토출", alpha, aspectMax);
+                AddTypeNode(qNode, q, DuctType.Return, "Return", alpha, aspectMax);
+                AddTypeNode(qNode, q, DuctType.Supply, "Supply", alpha, aspectMax);
             }
         }
         finally

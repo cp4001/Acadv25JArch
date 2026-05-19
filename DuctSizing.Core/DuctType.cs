@@ -2,19 +2,19 @@ namespace DuctSizing.Core;
 
 public enum DuctType
 {
-    Suction = 0,   // 흡입 — R = 0.08 mmAq/m
-    Discharge = 1, // 토출 — R = 0.10 mmAq/m
+    Return = 0,  // 환기(리턴) — R = 0.08 mmAq/m
+    Supply = 1,  // 급기(서플라이) — R = 0.10 mmAq/m
 }
 
 public static class DuctResistance
 {
-    public const double Suction = 0.08;
-    public const double Discharge = 0.10;
+    public const double Return = 0.08;
+    public const double Supply = 0.10;
 
     public static double Of(DuctType type) => type switch
     {
-        DuctType.Suction => Suction,
-        DuctType.Discharge => Discharge,
+        DuctType.Return => Return,
+        DuctType.Supply => Supply,
         _ => throw new ArgumentOutOfRangeException(nameof(type)),
     };
 }

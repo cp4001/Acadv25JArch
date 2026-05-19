@@ -13,10 +13,12 @@
 ## 프로젝트 구성
 ```
 Acadv25JArch/
-├── DuctSizing.sln              ← 솔루션 (두 프로젝트 묶음)
+├── DuctSizing.sln              ← 솔루션 (세 프로젝트 묶음)
 ├── DuctSizing/                  ← WinForms 앱 (Mode A/B UI만)
 │   └── DuctSizing.csproj         (net8.0-windows, ProjectReference로 .Core 참조)
-└── DuctSizing.Core/             ← 로직 라이브러리 (Mode A/B/C 모두)
+├── DuctSizing1/                 ← DuctSizing 사본 + Mode D 탭 추가 (별도 CLAUDE.md)
+│   └── DuctSizing1.csproj
+└── DuctSizing.Core/             ← 로직 라이브러리 (Mode A/B/C/D 모두)
     └── DuctSizing.Core.csproj    (net8.0, 다른 프로그램 재사용 가능)
 ```
 
@@ -33,7 +35,8 @@ Acadv25JArch/
 - `DuctSizingCalculator.ModeA(q, type, alpha, b)` — 단변 지정, 범위 내 모든 장변 후보
 - `DuctSizingCalculator.ModeB(q, type, alpha, aspectMax)` — 모든 (b,a) 조합
 - `DuctSizingCalculator.ModeC(q, type, alpha, aspectMax)` — Mode B 중 De_eq 최소 1개 (단일 출력)
-- `type`: `DuctType.Suction` (흡입, R=0.08) 또는 `DuctType.Discharge` (토출, R=0.10) — 두 값만 허용
+- `DuctSizingCalculator.ModeD(q, type, alpha, bMin, bMax, aspectMax = 1.5)` — 단변 범위 강제 + a/b가 `aspectMax`에 가장 근접한 1개 (단일 출력)
+- `type`: `DuctType.Return` (환기/리턴, R=0.08) 또는 `DuctType.Supply` (급기/서플라이, R=0.10) — 두 값만 허용
 - 모두 `DuctSizingResult` 반환 — `{De, D, Aux, Combinations}`
 - 보조 클래스 `StandardSizes`, `EquivalentDiameter`, `HuebscherFormula`, `AuxiliaryCalculator` 등은 public이지만 일반적으로 facade만 호출
 
@@ -43,7 +46,11 @@ Acadv25JArch/
 - **Mode A**: 단변 지정 → 범위 내 모든 장변 a 후보
 - **Mode B**: 모든 (b,a) 조합 — b 오름차순, De_eq 범위 내 모든 a, `a/b ≤ aspectMax`
 - **Mode C**: Mode B 결과 중 `De_eq` 가장 작은 1개 (동률이면 `Area` 더 작은 쪽)
-- **WinForms UI**: Mode A·B만 노출. Mode C는 라이브러리 전용 (다른 프로그램에서 사용)
+- **Mode D**: 단변 범위 `[bMin, bMax]` 강제 + Mode B 결과 중 `a/b`가 `aspectMax`(=1.5)에 가장 근접 1개
+  - `best.B < bMin` → `b = bMin`, `a = max(best.A, bMin)` 치환 (예: 150×200 → 200×200)
+  - `best.B > bMax` → Mode B 결과 중 `B == bMax` 항목에서 aspect 최대 1개 채택
+  - Mode B 결과가 비면 `(bMin, bMin)` 정사각 폴백 1건 반환
+- **WinForms UI (DuctSizing/)**: Mode A·B만 노출. Mode C·D는 라이브러리 전용 (Mode D 탭은 `DuctSizing1/`에 있음)
 - **공식 출처**: 모든 계산은 `DuctSize_Design_1.md` §5
 - **환산표 미사용**: 데이터 임베드하지 않고 Huebscher 공식만 사용 (§4.0)
 - **원형 D**: De 이상의 가장 작은 표준치수 (`DuctSizingResult.D`)

@@ -7,7 +7,15 @@
       "Bash(dotnet new *)",
       "Bash(mkdir -p \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing1\")",
       "Bash(cp \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/Program.cs\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/MainForm.cs\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/MainForm.Designer.cs\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/MainForm.resx\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/DuctSize_Design_1.md\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/CLAUDE.md\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing1/\")",
-      "Bash(cp \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/DuctSizing.csproj\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing1/DuctSizing1.csproj\")"
+      "Bash(cp \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing/DuctSizing.csproj\" \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSizing1/DuctSizing1.csproj\")",
+      "Bash(command -v pdftotext pdftoppm pdf2txt python python3)",
+      "Bash(pip list *)",
+      "Bash(pdftotext -layout \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSize/DUCT_DESIGN.pdf\" -)",
+      "Bash(pdftotext -layout -f 14 -l 22 \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSize/DUCT_DESIGN.pdf\" -)",
+      "Bash(pdftotext -layout -f 18 -l 23 \"C:/Users/junhoi/Desktop/Work/Acadv25JArch/DuctSize/DUCT_DESIGN.pdf\" -)",
+      "Bash(dir /B C:\\\\Users\\\\junhoi\\\\Desktop\\\\Work\\\\Acadv25JArch\\\\DuctSizing.Core)",
+      "Bash(dir /B C:\\\\Users\\\\junhoi\\\\Desktop\\\\Work\\\\Acadv25JArch\\\\DuctSizing)",
+      "Bash(cmd *)"
     ]
   }
 }

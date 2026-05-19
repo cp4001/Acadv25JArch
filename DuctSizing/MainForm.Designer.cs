@@ -90,8 +90,8 @@ partial class MainForm
         this.cmbDuctType.Location = new Point(170, 60);
         this.cmbDuctType.Size = new Size(150, 23);
         this.cmbDuctType.DropDownStyle = ComboBoxStyle.DropDownList;
-        this.cmbDuctType.Items.Add("흡입 (R=0.08)");
-        this.cmbDuctType.Items.Add("토출 (R=0.10)");
+        this.cmbDuctType.Items.Add("Return (R=0.08)");
+        this.cmbDuctType.Items.Add("Supply (R=0.10)");
         this.cmbDuctType.SelectedIndex = 0;
 
         // lblAlpha / numAlpha

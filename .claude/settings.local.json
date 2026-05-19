@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(qmd query *)",
+      "Bash(dotnet build *)",
+      "Bash(tasklist /FI \"IMAGENAME eq acad.exe\")",
+      "PowerShell(Get-Process *)",
+      "PowerShell(dotnet build *)",
+      "Bash(git push *)"
+    ]
+  }
+}
