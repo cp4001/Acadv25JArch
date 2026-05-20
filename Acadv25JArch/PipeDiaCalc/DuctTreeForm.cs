@@ -1,4 +1,5 @@
 using Autodesk.AutoCAD.DatabaseServices;
+using DuctSizing.Core;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -22,9 +23,17 @@ namespace PipeLoad2
             _db       = db;
             _layer    = layer;
 
+            // Designer 재생성 시 Checked / NumericUpDown 값이 누락될 수 있어 코드에서 재보장
+            if (!rbSupply.Checked && !rbReturn.Checked) rbSupply.Checked = true;
+            if (numBMin.Value < numBMin.Minimum) numBMin.Value = 200;
+            if (numBMax.Value < numBMax.Minimum) numBMax.Value = 500;
+
             this.Text = $"Duct Tree 분석 — 레이어: {layer}";
             RefreshView();
         }
+
+        private DuctType SelectedDuctType =>
+            rbReturn.Checked ? DuctType.Return : DuctType.Supply;
 
         private void RefreshView()
         {
@@ -135,13 +144,24 @@ namespace PipeLoad2
         {
             try
             {
+                var ductType = SelectedDuctType;
+                int bMin = (int)numBMin.Value;
+                int bMax = (int)numBMax.Value;
+                if (bMin > bMax)
+                {
+                    MessageBox.Show("b 최소 값이 최대 값보다 큽니다.", "입력 오류",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 var doc = Autodesk.AutoCAD.ApplicationServices.Application
                               .DocumentManager.MdiActiveDocument;
                 using (doc.LockDocument())
                 {
-                    _builder.ApplyTotalCmh(_rootNode, _db);
+                    _builder.ApplyTotalCmh(_rootNode, _db, ductType, bMin, bMax);
                 }
-                MessageBox.Show("누적 CMH 가 XData \"Total_CMH\" 및 \"Tree\" 에 저장되었습니다.",
+                MessageBox.Show(
+                    $"[{ductType}] b={bMin}..{bMax} — Total_CMH / Tree / a / b / Disp XData 저장됨.",
                     "적용 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)

@@ -138,18 +138,28 @@ namespace PipeLoad2
                 wd.SubEntityTraits.Color      = origColor;
                 wd.SubEntityTraits.LineWeight = origLW;
 
-                string? dia = JXdata.GetXdata(line, "Dia")??"00";
-                string? total15A = JXdata.GetXdata(line, "Total15A")??"00";
-                string? lpm15A   = JXdata.GetXdata(line, "15A");
-                
-                string label="";
-                if (!string.IsNullOrEmpty(lpm15A))
+                // Line "Disp" — 표시 캐노니컬 값 (Duct: "{a}x{b}"). 있으면 최우선.
+                string? disp = JXdata.GetXdata(line, XDATA_DISP_NAME);
+
+                string label = "";
+                if (!string.IsNullOrEmpty(disp))
                 {
-                    label = $"{dia}[{total15A}]-{lpm15A}";
+                    label = disp;
                 }
-                else if (!string.IsNullOrEmpty(total15A))
+                else
                 {
-                    label = $"{dia}[{total15A}]";
+                    string? dia      = JXdata.GetXdata(line, "Dia")      ?? "00";
+                    string? total15A = JXdata.GetXdata(line, "Total15A") ?? "00";
+                    string? lpm15A   = JXdata.GetXdata(line, "15A");
+
+                    if (!string.IsNullOrEmpty(lpm15A))
+                    {
+                        label = $"{dia}[{total15A}]-{lpm15A}";
+                    }
+                    else if (!string.IsNullOrEmpty(total15A))
+                    {
+                        label = $"{dia}[{total15A}]";
+                    }
                 }
                 //else if (!string.IsNullOrEmpty(total15A))
                 //{

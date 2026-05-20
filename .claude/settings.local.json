@@ -6,7 +6,8 @@
       "Bash(tasklist /FI \"IMAGENAME eq acad.exe\")",
       "PowerShell(Get-Process *)",
       "PowerShell(dotnet build *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(qmd search *)"
     ]
   }
 }

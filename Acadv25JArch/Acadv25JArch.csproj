@@ -118,7 +118,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="AutoCAD.NET" Version="25.0.1" />
-	
+
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\DuctSizing.Core\DuctSizing.Core.csproj" />
 	</ItemGroup>
 
   <PropertyGroup>

@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using CADExtension;
+using DuctSizing.Core;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -312,17 +313,26 @@ namespace PipeLoad2
             return 0.0;
         }
 
-        /// <summary>각 Line 노드에 "Total_CMH"(누적 부하), "Tree"(Root/Mid/Leaf) XData 를 저장.</summary>
-        public void ApplyTotalCmh(DuctNode node, Database db)
+        // Mode D 입력 상수 — α / aspectMax 는 운영 중 변경 안 함 (bMin/bMax 는 Form 입력)
+        private const double ModeD_Alpha     = 1.0;
+        private const double ModeD_AspectMax = 1.5;
+
+        /// <summary>각 Line 노드에 "Total_CMH"/"Tree"/"a"/"b"/"Disp" XData 를 저장.
+        /// "a"(장변)/"b"(단변)/"Disp"=$"{a}x{b}[{Total_CMH}]" 는 Mode D 결과 (Load > 0 일 때만).
+        /// bMin/bMax 는 Form 의 NumericUpDown 에서 전달.</summary>
+        public void ApplyTotalCmh(DuctNode node, Database db, DuctType ductType, int bMin, int bMax)
         {
             using var tr = db.TransactionManager.StartTransaction();
             tr.CheckRegName("Tree");
             tr.CheckRegName("Total_CMH");
-            ApplyRecursive(node, tr, db);
+            tr.CheckRegName("a");
+            tr.CheckRegName("b");
+            tr.CheckRegName("Disp");
+            ApplyRecursive(node, tr, db, ductType, bMin, bMax);
             tr.Commit();
         }
 
-        private void ApplyRecursive(DuctNode node, Transaction tr, Database db)
+        private void ApplyRecursive(DuctNode node, Transaction tr, Database db, DuctType ductType, int bMin, int bMax)
         {
             if (node.Type != DuctNodeType.Block)
             {
@@ -344,16 +354,39 @@ namespace PipeLoad2
                         try { JXdata.SetXdata(line, "Tree", node.TreeType); } catch { }
                     }
 
-                    // "Total_CMH" — 누적 CMH 부하값
+                    // "Total_CMH" — 누적 CMH 부하값 (Disp 합성에도 재사용)
+                    string totalCmhStr = node.Load.ToString("0.##", CultureInfo.InvariantCulture);
                     try
                     {
-                        JXdata.SetXdata(line, "Total_CMH",
-                            node.Load.ToString("0.##", CultureInfo.InvariantCulture));
+                        JXdata.SetXdata(line, "Total_CMH", totalCmhStr);
                     }
                     catch { }
+
+                    // Mode D 사이즈 산정 → "a"(장변) / "b"(단변) / "Disp"=$"{a}x{b}[{Total_CMH}]"
+                    // Load == 0 (부하 없는 Line) 은 생략
+                    if (node.Load > 0)
+                    {
+                        try
+                        {
+                            var result = DuctSizingCalculator.ModeD(
+                                node.Load, ductType, ModeD_Alpha,
+                                bMin, bMax, ModeD_AspectMax);
+                            var combo = result.Combinations.FirstOrDefault();
+                            if (combo != null)
+                            {
+                                JXdata.SetXdata(line, "a",
+                                    combo.A.ToString(CultureInfo.InvariantCulture));
+                                JXdata.SetXdata(line, "b",
+                                    combo.B.ToString(CultureInfo.InvariantCulture));
+                                JXdata.SetXdata(line, "Disp",
+                                    $"{combo.A}x{combo.B}[{totalCmhStr}]");
+                            }
+                        }
+                        catch { }
+                    }
                 }
             }
-            foreach (var c in node.Children) ApplyRecursive(c, tr, db);
+            foreach (var c in node.Children) ApplyRecursive(c, tr, db, ductType, bMin, bMax);
         }
 
         // ---- 통계 ----
