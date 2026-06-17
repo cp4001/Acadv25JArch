@@ -1,0 +1,5561 @@
+//
+//      AutoCAD Menu - Release 14.0
+//      28 April 1997
+//
+//      Copyright (C) 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1994, 1996, 1997
+//      by Autodesk, Inc.
+//
+//      Permission to use, copy, modify, and distribute this software
+//      for any purpose and without fee is hereby granted, provided that
+//      the above copyright notice appears in all copies and that both
+//      the copyright notice and the limited warranty and restricted rights
+//      notice below appear in all supporting documentation.
+//
+//      AUTODESK, INC. PROVIDES THIS PROGRAM "AS IS" AND WITH ALL FAULTS.
+//      AUTODESK, INC. SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTY OF
+//      MERCHANTABILITY OR FITNESS FOR A PARTICULAR USE.  AUTODESK, INC.
+//      DOES NOT WARRANT THAT THE OPERATION OF THE PROGRAM WILL BE
+//      UNINTERRUPTED OR ERROR FREE.
+//
+//      Use, duplication, or disclosure by the U.S. Government is subject to
+//      restrictions set forth in FAR 52.227-19 (Commercial Computer
+//      Software - Restricted Rights) and DFAR 252.227-7013(c)(1)(ii)
+//      (Rights in Technical Data and Computer Software), as applicable.
+//
+//
+//      NOTE:  AutoCAD looks for an ".mnl" (Menu Lisp) file whose name is
+//             the same as that of the menu file, and loads it if
+//             found.  If you modify this menu and change its name, you
+//             should copy acad.mnl to <yourname>.mnl, since the menu
+//             relies on AutoLISP routines found there.
+//
+
+//
+//      Default AutoCAD NAMESPACE declaration:
+//
+***MENUGROUP=ACAD
+
+//
+//   Begin AutoCAD Digitizer Button Menus
+//
+***BUTTONS1
+// Simple + button
+// if a grip is hot bring up the Grips Cursor Menu (POP 17), else send a carriage return
+$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,5),GRIP_),$P0=ACAD.GRIPS $P0=*);
+$P0=SNAP $p0=*
+^C^C
+^B
+^O
+^G
+^D
+^E
+^T
+
+***BUTTONS2
+// Shift + button
+'ZOOM W
+'ZOOM P
+'PAN
+
+***BUTTONS3
+// Control + button
+
+***BUTTONS4
+// Control + shift + button
+
+//
+//   Begin System Pointing Device Menus
+//
+***AUX1
+// Simple button
+// if a grip is hot bring up the Grips Cursor Menu (POP 17), else send a carriage return
+$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,5),GRIP_),$P0=ACAD.GRIPS $P0=*);
+$P0=SNAP $p0=*
+^C^C
+^B
+^O
+^G
+^D
+^E
+^T
+
+
+***AUX2
+// Shift + button
+$P0=SNAP $p0=*
+$P0=SNAP $p0=*
+
+***AUX3
+// Control + button
+$P0=SNAP $p0=*
+
+***AUX4
+// Control + shift + button
+$P0=SNAP $p0=*
+
+//
+//   Begin AutoCAD Pull-down Menus
+//
+***POP0
+**SNAP
+// Shift-right-click
+             [&Object Snap Cursor Menu]
+ID_Tracking  [Trac&king]_tracking
+ID_From      [&From]_from
+ID_MnPointFi [->Point Fi&lters]
+ID_PointFilx   [.X].X
+ID_PointFily   [.Y].Y
+ID_PointFilz   [.Z].Z
+			   [--]
+ID_PointFixy   [.XY].XY
+ID_PointFixz   [.XZ].XZ
+ID_PointFiyz   [<-.YZ].YZ
+             [--]
+ID_OsnapEndp [&Endpoint]_endp
+ID_OsnapMidp [&Midpoint]_mid
+ID_OsnapInte [&Intersection]_int
+ID_OsnapAppa [&Apparent Intersect]_appint
+             [--]
+ID_OsnapCent [&Center]_cen
+ID_OsnapQuad [&Quadrant]_qua
+ID_OsnapTang [&Tangent]_tan
+             [--]
+ID_OsnapPerp [&Perpendicular]_per
+ID_OsnapNode [No&de]_nod
+ID_OsnapInse [In&sert]_ins
+ID_OsnapNear [Nea&rest]_nea
+ID_OsnapNone [&None]_non
+             [--]
+ID_Osnap     [&Osnap Settings...]'_osnap
+
+
+***POP1
+**FILE
+ID_MnFile    [&File]
+ID_New       [&New...\tCtrl+N]^C^C_new
+ID_Open      [&Open...\tCtrl+O]^C^C_open
+             [--]
+ID_Save      [&Save\tCtrl+S]^C^C_qsave
+ID_Saveas    [Save &As...]^C^C_saveas
+ID_Export    [&Export...]^C^C_export
+             [--]
+ID_Config    [P&rinter Setup...]^C^C_config
+ID_Preview   [Print Pre&view]^C^C_preview
+ID_Print     [&Print...\tCtrl+P]^C^C_plot
+             [--]
+ID_MnDrawing [->Drawing &Utilities]
+ID_Audit       [&Audit]^C^C_audit
+ID_Recover     [&Recover...]^C^C_recover
+               [--]
+ID_MnPurge     [->&Purge]
+ID_PurgeAll      [&All]^C^C_purge _a
+                 [--]
+ID_PurgeLay      [&Layers]^C^C_purge _la
+ID_PurgeLin      [Li&netypes]^C^C_purge _lt
+ID_PurgeTxt      [&Text Styles]^C^C_purge _st
+ID_PurgeDim      [&Dimension Styles]^C^C_purge _d
+ID_PurgeMln      [&Multiline Styles]^C^C_purge _m
+ID_PurgeBlk      [&Blocks]^C^C_purge _b
+ID_PurgeShp      [<-<-&Shapes]^C^C_purge _sh
+ID_SendMail  [Sen&d...]
+             [--]
+ID_MRU       [Drawing Histo&ry]
+             [--]
+ID_Quit      [E&xit]^C^C_quit
+
+***POP2
+**EDIT
+ID_MnEdit    [&Edit]
+ID_U         [&Undo\tCtrl+Z]_u
+ID_Redo      [&Redo\tCtrl+Y]^C^C_redo
+             [--]
+ID_Cutclip   [Cu&t\tCtrl+X]'_cutclip
+ID_Copyclip  [&Copy\tCtrl+C]'_copyclip
+ID_Copylink  [Copy &Link]^C^C_copylink
+ID_Pasteclip [&Paste\tCtrl+V]'_pasteclip
+ID_Pastesp   [Paste &Special...]^C^C_pastespec
+ID_Erase     [Cle&ar\tDel]^C^C_erase
+             [--]
+ID_Links     [&OLE Links...]^C^C_olelinks
+
+***POP3
+**VIEW
+ID_MnView    [&View]
+ID_Redrawall [&Redraw]'_redrawall
+ID_Regen     [Re&gen]^C^C_regen
+ID_Regenall  [Regen &All]^C^C_regenall
+             [--]
+ID_MnZoom    [->&Zoom]
+ID_ZoomRealt   [&Realtime]'_zoom ;
+               [--]
+ID_ZoomPrevi   [&Previous]'_zoom _p
+ID_ZoomWindo   [&Window]'_zoom _w
+ID_ZoomDynam   [&Dynamic]'_zoom _d
+ID_ZoomScale   [&Scale]'_zoom _s
+ID_ZoomCente   [&Center]'_zoom _c
+               [--]
+ID_ZoomIn      [&In]'_zoom 2x
+ID_ZoomOut     [&Out]'_zoom .5x
+               [--]
+ID_ZoomAll     [&All]'_zoom _all
+ID_ZoomExten   [<-&Extents]'_zoom _e
+ID_MnPan     [->&Pan]
+ID_Pan         [Real &Time]'_pan
+ID_PanPick     [&Point]'_-pan
+               [--]
+ID_PanLeft     [&Left]^P'_-pan (trans (list (* -0.2 (getvar "viewsize")) 0) 0 1) ;^P
+ID_PanRight    [&Right]^P'_-pan (trans (list (* 0.2 (getvar "viewsize")) 0) 0 1) ;^P
+ID_PanUp       [&Up]^P'_-pan (trans (list 0 (* 0.2 (getvar "viewsize"))) 0 1) ;^P
+ID_PanDown     [<-&Down]^P'_-pan (trans (list 0 (* -0.2 (getvar "viewsize"))) 0 1) ;^P
+ID_Dsviewer  [Aerial Vie&w]^C^C_dsviewer
+             [--]
+ID_Tilemode1 [$(if,$(getvar,tilemode),!.)Model Space (&Tiled)]^C^C^P_ai_tilemode1 ^P
+ID_Ai_fms    [$(if,$(and,$(eq,$(getvar,tilemode),0),$(!=,$(getvar,cvport),1)),!.)Model Space (&Floating)]^C^C^Pai_fms ^P
+ID_Ai_pspace [$(if,$(and,$(eq,$(getvar,tilemode),0),$(=,$(getvar,cvport),1)),!.)Paper Spa&ce]^C^C^P_ai_pspace ^P
+             [--]
+ID_MnTiledVi [->$(if,$(getvar,tilemode),,~)Tile&d Viewports]
+ID_Ai_tiledv   [&Layout...]^P(ai_tiledvp_chk T) ^P
+               [--]
+ID_VportsSin   [&1 Viewport]^C^C_vports _si
+ID_Vports2     [&2 Viewports]^C^C_vports 2
+ID_Vports3     [&3 Viewports]^C^C_vports 3
+ID_Vports4     [&4 Viewports]^C^C_vports 4
+               [--]
+ID_VportsRes   [&Restore]^C^C_vports _r
+ID_VportsDel   [&Delete]^C^C_vports _d
+ID_VportsJoi   [&Join]^C^C_vports _j
+               [--]
+ID_VportsSav   [<-&Save]^C^C_vports _s
+ID_MnFloatin [->$(if,$(getvar,tilemode),~)Floating &Viewports]
+ID_Mview1      [&1 Viewport]^C^C_mview _1
+ID_Mview2      [&2 Viewports]^C^C_mview _2
+ID_Mview3      [&3 Viewports]^C^C_mview _3
+ID_Mview4      [&4 Viewports]^C^C_mview _4
+               [--]
+ID_MviewRest   [&Restore]^C^C_mview _r
+               [--]
+ID_MviewOn     [Viewports O&n]^C^C_mview _on
+ID_MviewOff    [Viewports O&ff]^C^C_mview _off
+ID_MviewHide   [<-&Hideplot]^C^C_mview _h
+             [--]
+ID_Ddview    [&Named Views...]^C^C_ddview
+ID_MnViewpoi [->$(if,$(and,$(eq,$(getvar,tilemode),0),$(eq,$(getvar,cvport),1)),~,)&3D Viewpoint]
+ID_Ddvpoint    [Sele&ct...]^C^C_ddvpoint
+ID_VpointRot   [R&otate]^C^C_vpoint _r
+ID_VpointTri   [Tripo&d]^C^C_vpoint ;
+ID_Vpoint      [&Vector]^C^C_vpoint
+ID_MnPlanView  [->&Plan View]
+ID_PlanCurre     [&Current UCS]^C^C_plan ;
+ID_PlanWorld     [&World UCS]^C^C_plan _w
+ID_PlanUCS       [<-&Named UCS]^C^C_plan _u
+               [--]
+ID_VpointTop   [&Top]^C^C_vpoint _non *0,0,1
+ID_VpointBot   [&Bottom]^C^C_vpoint _non *0,0,-1
+ID_VpointLef   [&Left]^C^C_vpoint _non *-1,0,0
+ID_VpointRig   [&Right]^C^C_vpoint _non *1,0,0
+ID_VpointFro   [&Front]^C^C_vpoint _non *0,-1,0
+ID_VpointBac   [Bac&k ]^C^C_vpoint _non *0,1,0
+               [--]
+ID_VpointSW    [&SW Isometric]^C^C_vpoint _non *-1,-1,1
+ID_VpointSE    [S&E Isometric]^C^C_vpoint _non *1,-1,1
+ID_VpointNE    [&NE Isometric]^C^C_vpoint _non *1,1,1
+ID_VpointNW    [<-N&W Isometric]^C^C_vpoint _non *-1,1,1
+ID_Dview     [$(if,$(and,$(eq,$(getvar,tilemode),0),$(eq,$(getvar,cvport),1)),~,)3D D&ynamic View]^C^C_dview
+             [--]
+ID_Hide      [&Hide]^C^C_hide
+ID_MnShade   [->&Shade]
+ID_Shade0      [&256 Color]^C^C_shadedge 0 _shade
+ID_Shade1      [256 Color &Edge Highlight]^C^C_shadedge 1 _shade
+ID_Shade2      [&16 Color Hidden Line]^C^C_shadedge 2 _shade
+ID_Shade3      [<-16 Color &Filled]^C^C_shadedge 3 _shade
+ID_MnRender  [->R&ender]
+ID_Render      [&Render...]^C^C_render
+               [--]
+ID_Scene       [&Scene...]^C^C_scene
+ID_Light       [&Light...]^C^C_light
+ID_Rmat        [&Materials...]^C^C_rmat
+ID_Matlib      [Ma&terials Library...]^C^C_matlib
+ID_Setuv       [M&apping...]^C^C_setuv
+               [--]
+ID_Backgroun   [&Background...]^C^C_background
+ID_Fog         [&Fog...]^C^C_fog
+ID_Lsnew       [Landscape &New...]^C^C_lsnew
+ID_Lsedit      [Landscape &Edit...]^C^C_lsedit
+ID_Lslib       [Lands&cape Library...]^C^C_lslib
+               [--]
+ID_Rpref       [&Preferences...]^C^C_rpref
+ID_Stats       [<-S&tatistics...]^C^C_stats
+             [--]
+ID_MnDisplay [->Disp&lay]
+ID_MnUCSicon   [->&UCS Icon]
+ID_UcsiconOn     [$(if,$(and,$(getvar,ucsicon),1),!.)&On]$M=$(if,$(and,$(getvar,ucsicon),1),^C^C_ucsicon _off,^C^C_ucsicon _on)
+ID_UcsiconOr     [<-$(if,$(and,$(getvar,ucsicon),2),!.)O&rigin]$M=$(if,$(and,$(getvar,ucsicon),2),^C^C_ucsicon _no,^C^C_ucsicon _or)
+ID_MnAttribu   [->&Attribute Display]
+ID_AttdispNo     [$(if,$(eq,$(getvar,attmode),1),!.)&Normal]^C^C_attdisp _n
+                 [--]
+ID_AttdispOn     [$(if,$(eq,$(getvar,attmode),2),!.)&On]^C^C_attdisp _on
+ID_AttdispOf     [<-$(if,$(eq,$(getvar,attmode),0),!.)O&ff]^C^C_attdisp _off
+               [--]
+ID_Textscr     [<-&Text Window\tF2]'_textscr
+ID_Toolbar   [T&oolbars...]^C^C_toolbar
+
+***POP4
+**INSERT
+ID_MnInsert  [&Insert]
+ID_Ddinsert  [&Block...]^C^C_ddinsert
+             [--]
+ID_Xref      [E&xternal Reference...]^C^C_xref
+ID_Image     [Raster &Image...]^C^C_image
+             [--]
+ID_3dsin     [&3D Studio...]^C^C_3dsin
+ID_Acisin    [&ACIS Solid...]^C^C_acisin
+ID_Dxbin     [Drawing &Exchange Binary...]^C^C_dxbin
+ID_Wmfin     [&Windows Metafile...]^C^C_wmfin
+ID_Psin      [Encapsulated &PostScript...]^C^C_psin
+             [--]
+ID_Insertobj [&OLE Object...]^C^C_insertobj
+
+***POP5
+**FORMAT
+ID_MnFormat  [F&ormat]
+ID_Layer     [&Layer...]'_layer
+ID_Ddcolor   [&Color...]'_ddcolor
+ID_Linetype  [Li&netype...]'_linetype
+             [--]
+ID_Style     [Text &Style...]'_style
+ID_Ddim      [&Dimension Style...]^C^C_ddim
+ID_Ddptype   [&Point Style...]'_ddptype
+ID_Mlstyle   [&Multiline Style...]^C^C_mlstyle
+             [--]
+ID_Ddunits   [&Units...]'_ddunits
+ID_Thickness [&Thickness]'_thickness
+ID_Limits    [Dr&awing Limits]'_limits
+             [--]
+ID_Ddrename  [&Rename...]^C^C_ddrename
+
+***POP6
+**TOOLS
+ID_MnTools   [&Tools]
+ID_Spell     [&Spelling]^C^C_spell
+ID_MnOrder   [->Display &Order]
+ID_DrawordeF   [Bring to &Front]^C^C^P(ai_draworder "_f") ^P
+ID_DrawordeB   [Send to &Back]^C^C^P(ai_draworder "_b") ^P
+               [--]
+ID_DrawordeA   [Bring &Above Object]^C^C^P(ai_draworder "_a") ^P
+ID_DrawordeU   [<-Send &Under Object]^C^C^P(ai_draworder "_u") ^P
+ID_Inquiry   [->In&quiry]
+ID_Dist        [&Distance]^C^C_dist
+ID_Area        [&Area]^C^C_area
+ID_Massprop    [&Mass Properties]^C^C_massprop
+               [--]
+ID_List        [&List]^C^C_list
+ID_Id          [&ID Point]'_id
+               [--]
+ID_Time        [&Time]'_time
+ID_Status      [&Status]'_status
+ID_Setvar      [<-Set &Variable]'_setvar
+             [--]
+ID_Appload   [&Load Application...]^C^C_appload
+ID_Script    [&Run Script...]^C^C_script
+             [--]
+ID_MnImage   [->&Display Image]
+ID_Replay      [&View...]^C^C_replay
+ID_Saveimg     [<-&Save...]^C^C_saveimg
+ID_MnDatabas [->&External Database]
+ID_Aseadmin    [&Administration...]^C^C_aseadmin
+               [--]
+ID_Aserows     [&Rows...]^C^C_aserows
+ID_Aselinks    [&Links...]^C^C_aselinks
+               [--]
+ID_Aseselect   [&Select Objects]^C^C_aseselect
+ID_Aseexport   [&Export Links...]^C^C_aseexport
+ID_Asesqled    [<-S&QL Editor...]^C^C_asesqled
+             [--]
+ID_Osnap     [Object S&nap Settings...]'_osnap
+ID_Ddrmodes  [Drawing &Aids...]'_ddrmodes
+ID_MnUCS     [->&UCS]
+ID_Dducsp      [Preset &UCS...]^C^C_dducsp
+ID_Dducs       [Named U&CS...]^C^C_dducs
+               [--]
+ID_UcsPrevio   [&Previous]^C^C_ucs _p
+               [--]
+ID_UcsRestor   [&Restore]^C^C_ucs _r
+ID_UcsSave     [&Save]^C^C_ucs _s
+ID_UcsDelete   [&Delete]^C^C_ucs _d
+ID_UcsList     [&List]^C^C_ucs _?
+               [--]
+ID_UcsWorld    [&World]^C^C_ucs _w
+ID_UcsObject   [&Object]^C^C_ucs _ob
+ID_UcsView     [&View]^C^C_ucs _v
+               [--]
+ID_UcsOrigin   [Ori&gin]^C^C_ucs _o
+ID_UcsZAxVec   [Z &Axis Vector]^C^C_ucs _zaxis
+ID_Ucs3point   [&3 Point]^C^C_ucs _3
+               [--]
+ID_UcsXAxRot   [&X Axis Rotate]^C^C_ucs _x
+ID_UcsYAxRot   [&Y Axis Rotate]^C^C_ucs _y
+ID_UcsZAxRot   [<-&Z Axis Rotate]^C^C_ucs _z
+             [--]
+ID_Ddgrips   [&Grips...]'_ddgrips
+ID_Ddselect  [Sele&ction...]'_ddselect
+ID_Group     [O&bject Group...]^C^C_group
+             [--]
+ID_MnTablet  [->&Tablet]
+ID_TabletOn    [$(if,$(getvar,tabmode),!.)&On]^C^C_tablet _on
+ID_TabletOff   [$(if,$(eq,$(getvar,tabmode),0),!.)O&ff]^C^C_tablet _off
+               [--]
+ID_TabletCal   [&Ca&librate]^C^C_tablet _cal
+ID_TabletCfg   [<-Co&nfigure]^C^C_tablet _cfg
+ID_Menuload  [Customize &Menus...]^C^C_menuload
+ID_Preferenc [&Preferences...]^C^C_preferences
+
+***POP7
+**DRAW
+ID_MnDraw    [&Draw]
+ID_Line      [&Line]^C^C_line
+ID_Ray       [&Ray]^C^C_ray
+ID_Xline     [Cons&truction Line]^C^C_xline
+ID_Mline     [&Multiline]^C^C_mline
+             [--]
+ID_Pline     [&Polyline]^C^C_pline
+ID_3dpoly    [&3D Polyline]^C^C_3dpoly
+ID_Polygon   [Pol&ygon]^C^C_polygon
+ID_Rectang   [Rectan&gle]^C^C_rectang
+             [--]
+ID_MnArc     [->&Arc]
+ID_Arc3point   [3 &Points]^C^C_arc
+               [--]
+ID_ArcStCeEn   [&Start, Center, End]^C^C_arc \_c
+ID_ArcStCeAn   [S&tart, Center, Angle]^C^C_arc \_c \_a
+ID_ArcStCeLe   [St&art, Center, Length]^C^C_arc \_c \_l
+               [--]
+ID_ArcStEnAg   [Start, E&nd, Angle]^C^C_arc \_e \_a
+ID_ArcStEnDi   [Start, End, &Direction]^C^C_arc \_e \_d
+ID_ArcStEnRa   [Start, End, &Radius]^C^C_arc \_e \_r
+               [--]
+ID_ArcCeStEn   [&Center, Start, End]^C^C_arc _c
+ID_ArcCeStAn   [C&enter, Start, Angle]^C^C_arc _c \\_a
+ID_ArcCeStLe   [Center, Start, &Length]^C^C_arc _c \\_l
+               [--]
+ID_ArcContin   [<-C&ontinue]^C^C_arc ;
+ID_MnCircle  [->&Circle]
+ID_CircleRad   [Center, &Radius]^C^C_circle
+ID_CircleDia   [Center, &Diameter]^C^C_circle \_d
+               [--]
+ID_Circle2pt   [&2 Points]^C^C_circle _2p
+ID_Circle3pt   [&3 Points]^C^C_circle _3p
+               [--]
+ID_CircleTTR   [&Tan, Tan, Radius]^C^C_circle _ttr
+ID_CircleTTT   [<-T&an, Tan, Tan]^C^C_circle _3p _tan \_tan \_tan \
+ID_Donut     [&Donut]^C^C_donut
+ID_Spline    [&Spline]^C^C_spline
+ID_MnEllipse [->&Ellipse]
+ID_EllipseCe   [&Center]^C^C_ellipse _c
+ID_EllipseAx   [Axis, &End]^C^C_ellipse
+               [--]
+ID_EllipseAr   [<-&Arc]^C^C_ellipse _a
+             [--]
+ID_MnBlock   [->Bloc&k]
+ID_Bmake       [&Make...]^C^C_bmake
+               [--]
+ID_Base        [&Base]^C^C_base
+ID_Ddattdef    [<-&Define Attributes...]^C^C_ddattdef
+ID_MnPoint   [->P&oint]
+ID_PointSing   [&Single Point]^C^C_point
+ID_PointMult   [Multiple &Point]*^C^C_point
+               [--]
+ID_Divide      [&Divide]^C^C_divide
+ID_Measure     [<-&Measure]^C^C_measure
+             [--]
+ID_Bhatch    [&Hatch...]^C^C_bhatch
+ID_Boundary  [&Boundary...]^C^C_boundary
+ID_Region    [Regio&n]^C^C_region
+             [--]
+ID_MnText    [->Te&xt]
+ID_Mtext       [&Multiline Text...]^C^C_mtext
+ID_Dtext       [<-&Single Line Text]^C^C_dtext
+             [--]
+ID_MnSurface [->Sur&faces]
+ID_Solid       [&2D Solid]^C^C_solid
+ID_3dface      [3D &Face]^C^C_3dface
+ID_3dsurface   [&3D Surfaces...]$I=ACAD.image_3dobjects $I=ACAD.*
+               [--]
+ID_Edge        [&Edge]^C^C_edge
+ID_3dmesh      [3D &Mesh]^C^C_3dmesh
+               [--]
+ID_Revsurf     [Revolved &Surface]^C^C_revsurf
+ID_Tabsurf     [&Tabulated Surface]^C^C_tabsurf
+ID_Rulesurf    [&Ruled Surface]^C^C_rulesurf
+ID_Edgesurf    [<-E&dge Surface]^C^C_edgesurf
+ID_MnSolids  [->Sol&ids]
+ID_Box         [&Box]^C^C_box
+ID_Sphere      [&Sphere]^C^C_sphere
+ID_Cylinder    [&Cylinder]^C^C_cylinder
+ID_Cone        [C&one]^C^C_cone
+ID_Wedge       [&Wedge]^C^C_wedge
+ID_Torus       [&Torus]^C^C_torus
+               [--]
+ID_Extrude     [E&xtrude]^C^C_extrude
+ID_Revolve     [&Revolve]^C^C_revolve
+               [--]
+ID_Slice       [S&lice]^C^C_slice
+ID_Section     [S&ection]^C^C_section
+ID_Interfere   [&Interference]^C^C_interfere
+               [--]
+ID_MnSetup     [->Set&up]
+ID_Soldraw       [&Drawing]^C^C_soldraw
+ID_Solview       [&View]^C^C_solview
+ID_Solprof       [<-<-&Profile]^C^C_solprof
+
+***POP8
+**DIMENSION
+ID_MnDimensi [Dime&nsion]
+ID_Dimlinear [&Linear]^C^C_dimlinear
+ID_Dimaligne [Ali&gned]^C^C_dimaligned
+ID_Dimordina [&Ordinate]^C^C_dimordinate
+             [--]
+ID_Dimradius [&Radius]^C^C_dimradius
+ID_Dimdiamet [&Diameter]^C^C_dimdiameter
+ID_Dimangula [&Angular]^C^C_dimangular
+             [--]
+ID_Dimbaseli [&Baseline]^C^C_dimbaseline
+ID_Dimcontin [&Continue]^C^C_dimcontinue
+             [--]
+ID_Leader    [L&eader]^C^C_leader
+ID_Tolerance [&Tolerance...]^C^C_tolerance
+ID_Dimcenter [Center &Mark]^C^C_dimcenter
+             [--]
+ID_Dimedit   [Obli&que]^C^C_dimedit _o
+ID_MnAlign   [->Align Te&xt]
+ID_DimteditH   [&Home]^C^C_dimtedit \_h
+ID_DimteditA   [&Angle]^C^C_dimtedit \_a
+               [--]
+ID_DimteditL   [&Left]^C^C_dimtedit \_l
+ID_DimteditC   [&Center]^C^C^P_select \(ai_dim_cen) ^P
+ID_DimteditR   [<-&Right]^C^C_dimtedit \_r
+             [--]
+ID_Ddim      [&Style...]^C^C_ddim
+ID_Dimoverri [O&verride]^C^C_dimoverride
+ID_DimstyleA [&Update]^C^C_dimstyle _apply
+
+***POP9
+**MODIFY
+ID_MnModify  [&Modify]
+ID_Ai_propch [&Properties...]^C^C_ai_propchk
+ID_Matchprop [&Match Properties]^C^C_matchprop
+ID_MnObject  [->&Object]
+ID_MnExterna   [->&External Reference]
+ID_Xbind         [&Bind...]^C^C_xbind
+                 [--]
+ID_Xclipfram     [<-$(if,$(eq,$(getvar,xclipframe),1),!.)&Frame]$M=$(if,$(eq,$(getvar,xclipframe),1),^C^C_xclipframe 0,^C^C_xclipframe 1)
+ID_MnImage     [->&Image]
+ID_Imageadju     [&Adjust...]^C^C_imageadjust
+ID_Imagequal     [&Quality]^C^C_imagequality
+ID_Transpare     [&Transparency]^C^C_transparency
+                 [--]
+ID_Imagefram     [<-&Frame]^C^C_imageframe
+               [--]
+ID_Xclip       [&Clip]^C^C_xclip
+ID_Imageclip   [Ima&ge Clip]^C^C_imageclip
+               [--]
+ID_Hatchedit   [&Hatch...]^C^C_hatchedit
+ID_Pedit       [&Polyline]^C^C_pedit
+ID_Splinedit   [&Spline]^C^C_splinedit
+ID_Mledit      [&Multiline...]^C^C_mledit
+ID_MnAttribu   [->&Attribute]
+ID_Ddatte        [&Single...]^C^C_ddatte
+ID_Attedit       [<-&Global]^C^C_attedit
+ID_Ddedit      [<-&Text...]^C^C_ddedit
+             [--]
+ID_Erase     [&Erase]^C^C_erase
+ID_Copy      [Cop&y]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),GRIP),_copy,^C^C_copy)
+ID_Mirror    [M&irror]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),GRIP),_mirror,^C^C_mirror)
+ID_Offset    [Off&set]^C^C_offset
+ID_Array     [&Array]^C^C_array
+             [--]
+ID_Move      [Mo&ve]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),GRIP),_move,^C^C_move)
+ID_Rotate    [&Rotate]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),GRIP),_rotate,^C^C_rotate)
+ID_Scale     [Sca&le]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),GRIP),_scale,^C^C_scale)
+ID_Stretch   [Stretc&h]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),GRIP),_stretch,^C^C_stretch)
+ID_Lengthen  [Len&gthen]^C^C_lengthen
+             [--]
+ID_Trim      [&Trim]^C^C_trim
+ID_Extend    [Exten&d]^C^C_extend
+ID_Break     [Brea&k]^C^C_break
+ID_Chamfer   [&Chamfer]^C^C_chamfer
+ID_Fillet    [&Fillet]^C^C_fillet
+             [--]
+ID_Mn3dopera [->&3D Operation]
+ID_3darray     [&3D Array]^C^C_3darray
+ID_Mirror3d    [&Mirror 3D]^C^C_mirror3d
+ID_Rotate3d    [&Rotate 3D]^C^C_rotate3d
+               [--]
+ID_Align       [<-A&lign]^C^C_align
+ID_MnBoolean [->&Boolean]
+ID_Union       [&Union]^C^C_union
+ID_Subtract    [&Subtract]^C^C_subtract
+ID_Intersect   [<-&Intersect]^C^C_intersect
+             [--]
+ID_Explode   [E&xplode]^C^C_explode
+
+***POP10
+**HELP
+ID_MnHelp    [&Help]
+ID_Help      [AutoCAD &Help Topics]'_help
+             [--]
+ID_Qtour     [&Quick Tour]^P(if (startapp (findfile "qtour.exe")) (princ) (alert "Could not find or could not start Quick Tour.")) ^P
+ID_Wnew      [&What's New]^P(if (startapp (findfile "wnew.exe")) (princ) (alert "Could not find or could not start What's New.")) ^P
+ID_L_acla    [&Learning Assistance]^P(if (startapp (findfile "l_acla.exe")) (princ) (alert "Could not find or could not start Learning Assistance.")) ^P
+ID_Browser   [&Connect to Internet]^C^C_browser ;
+             [--]
+ID_About     [&About AutoCAD]^C^C_about
+
+***POP17
+**GRIPS
+//  When a grip is hot, then display the following shortcut menu for grips.  See also AUX1 menu.
+//  Note:  This menu appears in the Menu Customization  dialog,
+//  but it is intended for use as a right-click cursor menu.
+             [&Grips Cursor Menu]
+ID_Enter     [&Enter];
+             [--]
+ID_GripMove  [&Move]_move
+ID_GripMirro [M&irror]_mirror
+ID_GripRotat [&Rotate]_rotate
+ID_GripScale [Sca&le]_scale
+ID_GripStret [&Stretch]_stretch
+             [--]
+ID_GripBase  [&Base Point]_base
+ID_GripCopy  [&Copy]_copy
+ID_GripRefer [$(if,$(or,$(eq,$(getvar,cmdnames),GRIP_SCALE),$(eq,$(getvar,cmdnames),GRIP_ROTATE)),,~)Re&ference]_reference
+ID_GripUndo  [&Undo]_u
+             [--]
+ID_Ddmodify  [&Properties...]^C^C_ai_propchk
+ID_GotoURL   [&Go to URL...]^C^C_gotourl
+             [--]
+ID_GripExit  [E&xit]_exit
+
+//
+//   Begin AutoCAD ToolBars
+//
+
+***TOOLBARS
+
+**TB_DIMENSION
+ID_TbDimensi [_Toolbar("Dimension", _Floating, _Hide, 100, 130, 1)]
+ID_Dimlinear [_Button("Linear Dimension", ICON_16_DIMLIN, ICON_24_DIMLIN)]^C^C_dimlinear
+ID_Dimaligne [_Button("Aligned Dimension", ICON_16_DIMALI, ICON_24_DIMALI)]^C^C_dimaligned
+ID_Dimordina [_Button("Ordinate Dimension", ICON_16_DIMORD, ICON_24_DIMORD)]^C^C_dimordinate
+             [--]
+ID_Dimradius [_Button("Radius Dimension", ICON_16_DIMRAD, ICON_24_DIMRAD)]^C^C_dimradius
+ID_Dimdiamet [_Button("Diameter Dimension", ICON_16_DIMDIA, ICON_24_DIMDIA)]^C^C_dimdiameter
+ID_Dimangula [_Button("Angular Dimension", ICON_16_DIMANG, ICON_24_DIMANG)]^C^C_dimangular
+             [--]
+ID_Dimbaseli [_Button("Baseline Dimension", ICON_16_DIMBAS, ICON_24_DIMBAS)]^C^C_dimbaseline
+ID_Dimcontin [_Button("Continue Dimension", ICON_16_DIMCON, ICON_24_DIMCON)]^C^C_dimcontinue
+             [--]
+ID_Leader    [_Button("Leader", ICON_16_DIMLEA, ICON_24_DIMLEA)]^C^C_leader
+ID_Tolerance [_Button("Tolerance", ICON_16_TOLERA, ICON_24_TOLERA)]^C^C_tolerance
+ID_Dimcenter [_Button("Center Mark", ICON_16_DIMCEN, ICON_24_DIMCEN)]^C^C_dimcenter
+             [--]
+ID_Dimedit   [_Button("Dimension Edit", ICON_16_DIMNEW, ICON_24_DIMNEW)]^C^C_dimedit
+ID_Dimtedit  [_Button("Dimension Text Edit", ICON_16_DIMHOM, ICON_24_DIMHOM)]^C^C_dimtedit
+             [--]
+ID_Ddim      [_Button("Dimension Style", ICON_16_DIMSTY, ICON_24_DIMSTY)]^C^C_ddim
+             [--]
+ID_DimUpdate [_Button("Dimension Update", ICON_16_DIMUPD, ICON_24_DIMUPD)]^C^C_dim _update
+
+**TB_DRAW
+ID_TbDraw    [_Toolbar("Draw", _Left, _Show, 0, 0, 1)]
+ID_Line      [_Button("Line", ICON_16_LINE, ICON_24_LINE)]^C^C_line
+ID_Xline     [_Button("Construction Line", ICON_16_XLINE, ICON_24_XLINE)]^C^C_xline
+ID_Mline     [_Button("Multiline", ICON_16_MLINE, ICON_24_MLINE)]^C^C_mline
+ID_Pline     [_Button("Polyline", ICON_16_PLINE, ICON_24_PLINE)]^C^C_pline
+ID_Polygon   [_Button("Polygon", ICON_16_POLYGO, ICON_24_POLYGO)]^C^C_polygon
+ID_Rectang   [_Button("Rectangle", ICON_16_RECTAN, ICON_24_RECTAN)]^C^C_rectang
+ID_Arc       [_Button("Arc", ICON_16_ARC3PT, ICON_24_ARC3PT)]^C^C_arc
+ID_Circle    [_Button("Circle", ICON_16_CIRRAD, ICON_24_CIRRAD)]^C^C_circle
+ID_Spline    [_Button("Spline", ICON_16_SPLINE, ICON_24_SPLINE)]^C^C_spline
+ID_Ellipse   [_Button("Ellipse", ICON_16_ELLCEN, ICON_24_ELLCEN)]^C^C_ellipse
+ID_TbInsert  [_Flyout("Block", ICON_16_BLOCK, ICON_24_BLOCK, _OtherIcon, ACAD.TB_INSERT)]
+ID_Bmake     [_Button("Make Block", ICON_16_BLOCK, ICON_24_BLOCK)]^C^C_bmake
+ID_Point     [_Button("Point", ICON_16_POINT, ICON_24_POINT)]*^C^C_point
+ID_Bhatch    [_Button("Hatch", ICON_16_BHATCH, ICON_24_BHATCH)]^C^C_bhatch
+ID_Region    [_Button("Region", ICON_16_REGION, ICON_24_REGION)]^C^C_region
+ID_Mtext     [_Button("Multiline Text", ICON_16_MTEXT, ICON_24_MTEXT)]^C^C_mtext
+
+**TB_EXTERNAL_DATABASE
+ID_TbExtdb   [_Toolbar("External Database", _Floating, _Hide, 100, 150, 1)]
+ID_Aseadmin  [_Button("Administration", ICON_16_ASEADM, ICON_24_ASEADM)]^C^C_aseadmin
+ID_Aserows   [_Button("Rows", ICON_16_ASEROW, ICON_24_ASEROW)]^C^C_aserows
+ID_Aselinks  [_Button("Links", ICON_16_ASELIN, ICON_24_ASELIN)]^C^C_aselinks
+ID_Aseselect [_Button("Select Objects", ICON_16_ASESEL, ICON_24_ASESEL)]^C^C_aseselect
+ID_Aseexport [_Button("Export Links", ICON_16_ASEEXP, ICON_24_ASEEXP)]^C^C_aseexport
+ID_Asesqled  [_Button("SQL Editor", ICON_16_ASESQL, ICON_24_ASESQL)]^C^C_asesqled
+
+**TB_INQUIRY
+ID_TbInquiry [_Toolbar("Inquiry", _Floating, _Hide, 100, 170, 1)]
+ID_Dist      [_Button("Distance", ICON_16_DIST, ICON_24_DIST)]'_dist
+ID_Area      [_Button("Area", ICON_16_AREA, ICON_24_AREA)]^C^C_area
+ID_Massprop  [_Button("Mass Properties", ICON_16_MASSPR, ICON_24_MASSPR)]^C^C_massprop
+             [--]
+ID_List      [_Button("List", ICON_16_LIST, ICON_24_LIST)]^C^C_list
+ID_Id        [_Button("Locate Point", ICON_16_ID, ICON_24_ID)]'_id
+
+**TB_INSERT
+ID_TbInsert  [_Toolbar("Insert", _Floating, _Hide, 100, 190, 1)]
+ID_Ddinsert  [_Button("Insert Block", ICON_16_DINSER, ICON_24_DINSER)]^C^C_ddinsert
+             [--]
+ID_Xref      [_Button("External Reference", ICON_16_XREATT, ICON_24_XREATT)]^C^C_xref
+ID_Image     [_Button("Image", ICON_16_IMAGE, ICON_24_IMAGE)]^C^C_image
+             [--]
+ID_Import    [_Button("Import", ICON_16_IMPORT, ICON_24_IMPORT)]^C^C_import
+             [--]
+ID_Insertobj [_Button("OLE Object", ICON_16_INSOLE, ICON_24_INSOLE)]^C^C_insertobj
+
+**TB_MODIFY
+ID_TbModify  [_Toolbar("Modify", _Left, _Show, 1, 0, 1)]
+ID_Erase     [_Button("Erase", ICON_16_ERASE, ICON_24_ERASE)]^C^C_erase
+ID_Copy      [_Button("Copy Object", ICON_16_COPYOB, ICON_24_COPYOB)]$M=$(if,$(eq,+
+$(substr,$(getvar,cmdnames),1,4),grip),_copy,^C^C_copy)
+ID_Mirror    [_Button("Mirror", ICON_16_MIRROR, ICON_24_MIRROR)]$M=$(if,$(eq,+
+$(substr,$(getvar,cmdnames),1,4),grip),_mirror,^C^C_mirror)
+ID_Offset    [_Button("Offset", ICON_16_OFFSET, ICON_24_OFFSET)]^C^C_offset
+ID_Array     [_Button("Array", ICON_16_ARRREC, ICON_24_ARRREC)]^C^C_array
+ID_Move      [_Button("Move", ICON_16_MOVE, ICON_24_MOVE)]$M=$(if,$(eq,+
+$(substr,$(getvar,cmdnames),1,4),grip),_move,^C^C_move)
+ID_Rotate    [_Button("Rotate", ICON_16_ROTATE, ICON_24_ROTATE)]$M=$(if,$(eq,+
+$(substr,$(getvar,cmdnames),1,4),grip),_rotate,^C^C_rotate)
+ID_Scale     [_Button("Scale", ICON_16_SCALE, ICON_24_SCALE)]$M=$(if,$(eq,+
+$(substr,$(getvar,cmdnames),1,4),grip),_scale,^C^C_scale)
+ID_Stretch   [_Button("Stretch", ICON_16_STRETC, ICON_24_STRETC)]^C^C_stretch
+ID_Lengthen  [_Button("Lengthen", ICON_16_LENGTH, ICON_24_LENGTH)]^C^C_lengthen
+ID_Trim      [_Button("Trim", ICON_16_TRIM, ICON_24_TRIM)]^C^C_trim
+ID_Extend    [_Button("Extend", ICON_16_EXTEND, ICON_24_EXTEND)]^C^C_extend
+ID_Break     [_Button("Break", ICON_16_BRE2PT, ICON_24_BRE2PT)]^C^C_break
+ID_Chamfer   [_Button("Chamfer", ICON_16_CHAMFE, ICON_24_CHAMFE)]^C^C_chamfer
+ID_Fillet    [_Button("Fillet", ICON_16_FILLET, ICON_24_FILLET)]^C^C_fillet
+ID_Explode   [_Button("Explode", ICON_16_EXPLOD, ICON_24_EXPLOD)]^C^C_explode
+
+**TB_MODIFY_II
+ID_TbModifII [_Toolbar("Modify II", _Floating, _Hide, 100, 270, 1)]
+ID_Draworder [_Button("Draworder",ICON_16_DRWORD,ICON_24_DRWORD)]^C^C_draworder
+             [--]
+ID_Hatchedit [_Button("Edit Hatch", ICON_16_HATEDI, ICON_24_HATEDI)]^C^C_hatchedit
+ID_Pedit     [_Button("Edit Polyline", ICON_16_PEDIT, ICON_24_PEDIT)]^C^C_pedit
+ID_Splinedit [_Button("Edit Spline", ICON_16_SPLEDI, ICON_24_SPLEDI)]^C^C_splinedit
+ID_Mledit    [_Button("Edit Multiline", ICON_16_MLEDIT, ICON_24_MLEDIT)]^C^C_mledit
+ID_Ddatte    [_Button("Edit Attribute", ICON_16_ATTEDI, ICON_24_ATTEDI)]^C^C_ddatte
+ID_Ddedit    [_Button("Edit Text", ICON_16_TEXEDI, ICON_24_TEXEDI)]^C^C_ddedit
+             [--]
+ID_Union     [_Button("Union", ICON_16_UNION, ICON_24_UNION)]^C^C_union
+ID_Subtract  [_Button("Subtract", ICON_16_SUBTRA, ICON_24_SUBTRA)]^C^C_subtract
+ID_Intersect [_Button("Intersect", ICON_16_INTERS, ICON_24_INTERS)]^C^C_intersect
+
+**TB_OBJECT_PROPERTIES
+ID_TbObjectP [_Toolbar("_Object Properties", _Top, _Show, 0, 1, 1)]
+ID_Ai_molc   [_Button("Make Object's Layer Current", ICON_16_MOLC, ICON_24_MOLC)]^C^Cai_molc
+ID_Layer     [_Button("Layers", ICON_16_LAYERS, ICON_24_LAYERS)]'_layer
+             [--]
+ID_CtrlLayer [_Control(_Layer)]
+             [--]
+ID_CtrlColor [_Control(_Color)]
+             [--]
+ID_Linetype  [_Button("Linetype", ICON_16_LINETY, ICON_24_LINETY)]'_linetype
+             [--]
+ID_CtrlLinet [_Control(_Linetype)]
+             [--]
+ID_Ai_propch [_Button("Properties", ICON_16_MODIFY, ICON_24_MODIFY)]^C^Cai_propchk
+
+**TB_OBJECT_SNAP
+ID_TbOsnap   [_Toolbar("Object Snap", _Floating, _Hide, 100, 210, 1)]
+ID_Tracking  [_Button("Tracking", ICON_16_TRACK, ICON_24_TRACK)]_tracking
+ID_From      [_Button("Snap From", ICON_16_OSNFRO, ICON_24_OSNFRO)]_from
+             [--]
+ID_OsnapEndp [_Button("Snap to Endpoint", ICON_16_OSNEND, ICON_24_OSNEND)]_endp
+ID_OsnapMidp [_Button("Snap to Midpoint", ICON_16_OSNMID, ICON_24_OSNMID)]_mid
+ID_OsnapInte [_Button("Snap to Intersection", ICON_16_OSNINT, ICON_24_OSNINT)]_int
+ID_OsnapAppa [_Button("Snap to Apparent Intersect", ICON_16_OSNAPP, ICON_24_OSNAPP)]_appint
+             [--]
+ID_OsnapCent [_Button("Snap to Center", ICON_16_OSNCEN, ICON_24_OSNCEN)]_cen
+ID_OsnapQuad [_Button("Snap to Quadrant", ICON_16_OSNQUA, ICON_24_OSNQUA)]_qua
+ID_OsnapTang [_Button("Snap to Tangent", ICON_16_OSNTAN, ICON_24_OSNTAN)]_tan
+             [--]
+ID_OsnapPerp [_Button("Snap to Perpendicular", ICON_16_OSNPER, ICON_24_OSNPER)]_per
+ID_OsnapInse [_Button("Snap to Insert", ICON_16_OSNINS, ICON_24_OSNINS)]_ins
+ID_OsnapNode [_Button("Snap to Node", ICON_16_OSNNOD, ICON_24_OSNNOD)]_nod
+             [--]
+ID_OsnapNear [_Button("Snap to Nearest", ICON_16_OSNNEA, ICON_24_OSNNEA)]_nea
+ID_OsnapQuic [_Button("Snap to Quick", ICON_16_OSNQUI, ICON_24_OSNQUI)]_quick,^Z
+ID_OsnapNone [_Button("Snap to None", ICON_16_OSNNON, ICON_24_OSNNON)]_non
+             [--]
+ID_Osnap     [_Button("Object Snap Settings", ICON_16_OSNAP, ICON_24_OSNAP)]'_osnap
+
+**TB_REFERENCE
+ID_TbReferen [_Toolbar("Reference", _Floating, _Hide, 100, 370, 1)]
+ID_Xref      [_Button("External Reference", ICON_16_XREATT, ICON_24_XREATT)]^C^C_xref
+ID_Xattach   [_Button("External Reference Attach", ICON_16_XATTAC, ICON_24_XATTAC)]^C^C_xattach
+ID_Xclip     [_Button("External Reference Clip",ICON_16_XRECLI,ICON_24_XRECLI)]^C^C_xclip
+ID_Xbind     [_Button("External Reference Bind",ICON_16_XBIND,ICON_24_XBIND)]^C^C_xbind
+ID_Xclipfram [_Button("External Reference Clip Frame",ICON_16_XCLIPFRAME,ICON_24_XCLIPFRAME)]^C^C_xclipframe
+             [--]
+ID_Image     [_Button("Image", ICON_16_IMAGE, ICON_24_IMAGE)]^C^C_image
+ID_ImageAtta [_Button("Image Attach", ICON_16_IMGATT, ICON_24_IMGATT)]^C^C_imageattach
+ID_Imageclip [_Button("Image Clip",ICON_16_IMGCLP, ICON_24_IMGCLP)]^C^C_imageclip
+ID_Imageadju [_Button("Image Adjust",ICON_16_IMGADJ, ICON_24_IMGADJ)]^C^C_imageadjust
+ID_Imagequal [_Button("Image Quality",ICON_16_IMGQUA, ICON_24_IMGQUA)]^C^C_imagequality
+ID_Transpare [_Button("Image Transparency",ICON_16_TRANSP, ICON_24_TRANSP)]^C^C_transparency
+ID_Imagefram [_Button("Image Frame",ICON_16_IMGFRAME, ICON_24_IMGFRAME)]^C^C_imageframe
+
+**TB_RENDER
+ID_TbRender  [_Toolbar("Render", _Floating, _Hide, 100, 230, 1)]
+ID_Hide      [_Button("Hide", ICON_16_HIDE, ICON_24_HIDE)]^C^C_hide
+ID_Shade     [_Button("Shade", ICON_16_SHADE, ICON_24_SHADE)]^C^C_shade
+             [--]
+ID_Render    [_Button("Render", ICON_16_RENDER, ICON_24_RENDER)]^C^C_render
+             [--]
+ID_Scene     [_Button("Scenes", ICON_16_SCENE, ICON_24_SCENE)]^C^C_scene
+ID_Light     [_Button("Lights", ICON_16_LIGHT, ICON_24_LIGHT)]^C^C_light
+ID_Rmat      [_Button("Materials", ICON_16_RMAT, ICON_24_RMAT)]^C^C_rmat
+ID_Matlib    [_Button("Materials Library", ICON_16_MATLIB, ICON_24_MATLIB)]^C^C_matlib
+ID_Setuv     [_Button("Mapping", ICON_16_SETUV, ICON_24_SETUV)]^C^C_setuv
+             [--]
+ID_Backgroun [_Button("Background", ICON_16_BACKGR, ICON_24_BACKGR)]^C^C_background
+ID_Fog       [_Button("Fog", ICON_16_FOG, ICON_24_FOG)]^C^C_fog
+ID_Lsnew     [_Button("Landscape New", ICON_16_LSNEW, ICON_24_LSNEW)]^C^C_lsnew
+ID_Lsedit    [_Button("Landscape Edit", ICON_16_LSEDIT, ICON_24_LSEDIT)]^C^C_lsedit
+ID_Lslib     [_Button("Landscape Library", ICON_16_LSLIB, ICON_24_LSLIB)]^C^C_lslib
+             [--]
+ID_Rpref     [_Button("Render Preferences", ICON_16_RPREF, ICON_24_RPREF)]^C^C_rpref
+ID_Stats     [_Button("Statistics", ICON_16_STATS, ICON_24_STATS)]^C^C_stats
+
+**TB_SOLIDS
+ID_TbSolids  [_Toolbar("Solids", _Floating, _Hide, 100, 250, 1)]
+ID_Box       [_Button("Box", ICON_16_BOX, ICON_24_BOX)]^C^C_box
+ID_Sphere    [_Button("Sphere", ICON_16_SPHERE, ICON_24_SPHERE)]^C^C_sphere
+ID_Cylinder  [_Button("Cylinder", ICON_16_CYLIND, ICON_24_CYLIND)]^C^C_cylinder
+ID_Cone      [_Button("Cone", ICON_16_CONE, ICON_24_CONE)]^C^C_cone
+ID_Wedge     [_Button("Wedge", ICON_16_WEDGE, ICON_24_WEDGE)]^C^C_wedge
+ID_Torus     [_Button("Torus", ICON_16_TORUS, ICON_24_TORUS)]^C^C_torus
+             [--]
+ID_Extrude   [_Button("Extrude", ICON_16_EXTRUD, ICON_24_EXTRUD)]^C^C_extrude
+ID_Revolve   [_Button("Revolve", ICON_16_REVOLV, ICON_24_REVOLV)]^C^C_revolve
+             [--]
+ID_Slice     [_Button("Slice", ICON_16_SLICE, ICON_24_SLICE)]^C^C_slice
+ID_Section   [_Button("Section", ICON_16_SECTIO, ICON_24_SECTIO)]^C^C_section
+ID_Interfere [_Button("Interfere", ICON_16_INTERF, ICON_24_INTERF)]^C^C_interfere
+             [--]
+ID_Soldraw   [_Button("Setup Drawing",ICON_16_SOLDR, ICON_24_SOLDR)]^C^C_soldraw
+ID_Solview   [_Button("Setup View",ICON_16_SOLVW, ICON_24_SOLVW)]^C^C_solview
+ID_Solprof   [_Button("Setup Profile",ICON_16_SOLPR, ICON_24_SOLPR)]^C^C_solprof
+
+**TB_STANDARD
+ID_TbStandar [_Toolbar("_Standard Toolbar", _Top, _Show, 0, 0, 1)]
+ID_New       [_Button("New", ICON_16_NEW, ICON_24_NEW)]^C^C_new
+ID_Open      [_Button("Open", ICON_16_OPEN, ICON_24_OPEN)]^C^C_open
+ID_Save      [_Button("Save", ICON_16_SAVE, ICON_24_SAVE)]^C^C_qsave
+             [--]
+ID_Print     [_Button("Print", ICON_16_PRINT, ICON_24_PRINT)]^C^C_plot
+ID_Preview   [_Button("Print Preview", ICON_16_PREVIEW, ICON_24_PREVIEW)]^C^C_preview
+ID_Spell     [_Button("Spelling", ICON_16_SPELL, ICON_24_SPELL)]^C^C_spell
+             [--]
+ID_Cutclip   [_Button("Cut to Clipboard", ICON_16_CUT, ICON_24_CUT)]'_cutclip
+ID_Copyclip  [_Button("Copy to Clipboard", ICON_16_COPY, ICON_24_COPY)]'_copyclip
+ID_Pasteclip [_Button("Paste from Clipboard", ICON_16_PASTE, ICON_24_PASTE)]'_pasteclip
+ID_Matchprop [_Button("Match Properties", ICON_16_MATCH, ICON_24_MATCH)]_matchprop
+             [--]
+ID_U         [_Button("Undo", ICON_16_UNDO, ICON_24_UNDO)]_u
+ID_Redo      [_Button("Redo", ICON_16_REDO, ICON_24_REDO)]^C^C_redo
+             [--]
+ID_Browser   [_Button("Launch Browser", ICON_16_URL, ICON_24_URL)]^C^C_browser;;
+             [--]
+ID_TbOsnap   [_Flyout("Object Snap", ICON_16_OSNAP, ICON_24_OSNAP, _OtherIcon, ACAD.TB_OBJECT_SNAP)]
+ID_TbUcs     [_Flyout("UCS", ICON_16_UCS, ICON_24_UCS, _OtherIcon, ACAD.TB_UCS)]
+ID_TbInquiry [_Flyout("Inquiry", ICON_16_LIST, ICON_24_LIST, _OtherIcon, ACAD.TB_INQUIRY)]
+             [--]
+ID_Redrawall [_Button("Redraw All", ICON_16_REDRAW, ICON_24_REDRAW)]^C^C_redrawall
+             [--]
+ID_Dsviewer  [_Button("Aerial View", ICON_16_AERIAL, ICON_24_AERIAL)]'_dsviewer
+ID_TbViewpoi [_Flyout("Viewpoint", ICON_16_DDVIEW, ICON_24_DDVIEW, _OtherIcon, ACAD.TB_VIEWPOINT)]
+             [--]
+ID_Pan       [_Button("Pan Realtime", ICON_16_RTPAN, ICON_24_RTPAN)]'_pan
+ID_ZoomRealt [_Button("Zoom Realtime", ICON_16_RTZOOM, ICON_24_RTZOOM)]'_zoom ;
+ID_TbZoom    [_Flyout("Zoom", ICON_16_ZOOM, ICON_24_ZOOM, _OtherIcon, ACAD.TB_ZOOM)]
+ID_ZoomPrevi [_Button("Zoom Previous", ICON_16_ZOOPRE, ICON_24_ZOOPRE)]'_zoom;_p
+             [--]
+ID_Help      [_Button("Help", ICON_16_HELP, ICON_24_HELP)]'_help
+
+**TB_SURFACES
+ID_TbSurface [_Toolbar("Surfaces", _Floating, _Hide, 100, 290, 1)]
+ID_Solid     [_Button("2D Solid", ICON_16_SOLID, ICON_24_SOLID)]^C^C_solid
+ID_3dface    [_Button("3D Face", ICON_16_3DFACE, ICON_24_3DFACE)]^C^C_3dface
+             [--]
+ID_Ai_box    [_Button("Box", ICON_16_SURBOX, ICON_24_SURBOX)]^C^Cai_box
+ID_Ai_wedge  [_Button("Wedge", ICON_16_SURWED, ICON_24_SURWED)]^C^Cai_wedge
+ID_Ai_pyrami [_Button("Pyramid", ICON_16_SURPYR, ICON_24_SURPYR)]^C^Cai_pyramid
+ID_Ai_cone   [_Button("Cone", ICON_16_SURCON, ICON_24_SURCON)]^C^Cai_cone
+ID_Ai_sphere [_Button("Sphere", ICON_16_SURSPH, ICON_24_SURSPH)]^C^Cai_sphere
+ID_Ai_dome   [_Button("Dome", ICON_16_SURDOM, ICON_24_SURDOM)]^C^Cai_dome
+ID_Ai_dish   [_Button("Dish", ICON_16_SURDIS, ICON_24_SURDIS)]^C^Cai_dish
+ID_Ai_torus  [_Button("Torus", ICON_16_SURTOR, ICON_24_SURTOR)]^C^Cai_torus
+             [--]
+ID_Edge      [_Button("Edge", ICON_16_EDGE, ICON_24_EDGE)]^C^C_edge
+ID_3dmesh    [_Button("3D Mesh", ICON_16_3DMESH, ICON_24_3DMESH)]^C^C_3dmesh
+             [--]
+ID_Revsurf   [_Button("Revolved Surface", ICON_16_REVSUR, ICON_24_REVSUR)]^C^C_revsurf
+ID_Tabsurf   [_Button("Tabulated Surface", ICON_16_TABSUR, ICON_24_TABSUR)]^C^C_tabsurf
+ID_Rulesurf  [_Button("Ruled Surface", ICON_16_RULESU, ICON_24_RULESU)]^C^C_rulesurf
+ID_Edgesurf  [_Button("Edge Surface", ICON_16_EDGESU, ICON_24_EDGESU)]^C^C_edgesurf
+
+**TB_UCS
+ID_TbUcs     [_Toolbar("UCS", _Floating, _Hide, 100, 310, 1)]
+ID_Ucs       [_Button("UCS", ICON_16_UCS, ICON_24_UCS)]^C^C_ucs
+ID_Dducs     [_Button("Named UCS", ICON_16_DDUCS, ICON_24_DDUCS)]^C^C_dducs
+ID_Dducsp    [_Button("Preset UCS", ICON_16_UCSP, ICON_24_UCSP)]^C^C_dducsp
+             [--]
+ID_UcsPrevio [_Button("UCS Previous", ICON_16_UCSPRE, ICON_24_UCSPRE)]^C^C_ucs _p
+             [--]
+ID_UcsWorld  [_Button("World UCS", ICON_16_UCSW, ICON_24_UCSW)]^C^C_ucs _w
+ID_UcsObject [_Button("Object UCS", ICON_16_UCSOBJ, ICON_24_UCSOBJ)]^C^C_ucs _ob
+ID_UcsView   [_Button("View UCS", ICON_16_UCSVIE, ICON_24_UCSVIE)]^C^C_ucs _v
+             [--]
+ID_UcsOrigin [_Button("Origin UCS", ICON_16_UCSORI, ICON_24_UCSORI)]^C^C_ucs _o
+ID_UcsZAxVec [_Button("Z Axis Vector UCS", ICON_16_UCSZAV, ICON_24_UCSZAV)]^C^C_ucs _zaxis
+ID_Ucs3point [_Button("3 Point UCS", ICON_16_UCS3PT, ICON_24_UCS3PT)]^C^C_ucs _3
+             [--]
+ID_UcsXAxRot [_Button("X Axis Rotate UCS", ICON_16_UCSXAR, ICON_24_UCSXAR)]^C^C_ucs _x
+ID_UcsYAxRot [_Button("Y Axis Rotate UCS", ICON_16_UCSYAR, ICON_24_UCSYAR)]^C^C_ucs _y
+ID_UcsZAxRot [_Button("Z Axis Rotate UCS", ICON_16_UCSZAR, ICON_24_UCSZAR)]^C^C_ucs _z
+
+**TB_VIEWPOINT
+ID_TbViewpoi [_Toolbar("Viewpoint", _Floating, _Hide, 100, 330, 1)]
+ID_Ddview    [_Button("Named Views", ICON_16_DDVIEW, ICON_24_DDVIEW)]^C^C_ddview
+             [--]
+ID_VpointTop [_Button("Top View", ICON_16_VIETOP, ICON_24_VIETOP)]^C^C_vpoint _non *0,0,1
+ID_VpointBot [_Button("Bottom View", ICON_16_VIEBOT, ICON_24_VIEBOT)]^C^C_vpoint _non *0,0,-1
+ID_VpointLef [_Button("Left View", ICON_16_VIELEF, ICON_24_VIELEF)]^C^C_vpoint _non *-1,0,0
+ID_VpointRig [_Button("Right View", ICON_16_VIERIG, ICON_24_VIERIG)]^C^C_vpoint _non *1,0,0
+ID_VpointFro [_Button("Front View", ICON_16_VIEFRO, ICON_24_VIEFRO)]^C^C_vpoint _non *0,-1,0
+ID_VpointBac [_Button("Back View", ICON_16_VIEBAC, ICON_24_VIEBAC)]^C^C_vpoint _non *0,1,0
+             [--]
+ID_VpointSW  [_Button("SW Isometric View", ICON_16_VIESWI, ICON_24_VIESWI)]^C^C_vpoint _non *-1,-1,1
+ID_VpointSE  [_Button("SE Isometric View", ICON_16_VIESEI, ICON_24_VIESEI)]^C^C_vpoint _non *1,-1,1
+ID_VpointNE  [_Button("NE Isometric View", ICON_16_VIENEI, ICON_24_VIENEI)]^C^C_vpoint _non *1,1,1
+ID_VpointNW  [_Button("NW Isometric View", ICON_16_VIENWI, ICON_24_VIENWI)]^C^C_vpoint _non *-1,1,1
+
+**TB_ZOOM
+ID_TbZoom    [_Toolbar("Zoom", _Floating, _Hide, 100, 350, 1)]
+ID_ZoomWindo [_Button("Zoom Window", ICON_16_ZOOWIN, ICON_24_ZOOWIN)]'_zoom _w
+ID_ZoomDynam [_Button("Zoom Dynamic", ICON_16_ZOODYN, ICON_24_ZOODYN)]'_zoom _d
+ID_ZoomScale [_Button("Zoom Scale", ICON_16_ZOOSCA, ICON_24_ZOOSCA)]'_zoom _s
+ID_ZoomCente [_Button("Zoom Center", ICON_16_ZOOCEN, ICON_24_ZOOCEN)]'_zoom _c
+             [--]
+ID_ZoomIn    [_Button("Zoom In", ICON_16_ZOOIN, ICON_24_ZOOIN)]'_zoom 2x
+ID_ZoomOut   [_Button("Zoom Out", ICON_16_ZOOOUT, ICON_24_ZOOOUT)]'_zoom .5x
+             [--]
+ID_ZoomAll   [_Button("Zoom All", ICON_16_ZOOALL, ICON_24_ZOOALL)]'_zoom _all
+ID_ZoomExten [_Button("Zoom Extents", ICON_16_ZOOEXT, ICON_24_ZOOEXT)]'_zoom _e
+
+//
+//     Begin AutoCAD Image Menus
+//
+
+***image
+**image_3DObjects
+[3D Objects]
+[acad(Box3d,Box3d)]^C^Cai_box
+[acad(Pyramid,Pyramid)]^C^Cai_pyramid
+[acad(Wedge,Wedge)]^C^Cai_wedge
+[acad(Dome,Dome)]^C^Cai_dome
+[acad(Sphere,Sphere)]^C^Cai_sphere
+[acad(Cone,Cone)]^C^Cai_cone
+[acad(Torus,Torus)]^C^Cai_torus
+[acad(Dish,Dish)]^C^Cai_dish
+[acad(Mesh,Mesh)]^C^Cai_mesh
+
+**image_poly
+[Set Spline Fit Variables]
+[acad(pm-quad,Quadric Fit Mesh)]'_surftype 5
+[acad(pm-cubic,Cubic Fit Mesh)]'_surftype 6
+[acad(pm-bezr,Bezier Fit Mesh)]'_surftype 8
+[acad(pl-quad,Quadric Fit Pline)]'_splinetype 5
+[acad(pl-cubic,Cubic Fit Pline)]'_splinetype 6
+
+**image_vporti
+[Tiled Viewport Layout]
+[acad(vport-1,Single)]^C^C(ai_tiledvp 1 nil)
+[acad(vport-3v,Three: Vertical)]^C^C(ai_tiledvp 3 "_V")
+[acad(vport-3h,Three: Horizontal)]^C^C(ai_tiledvp 3 "_H")
+[acad(vport-4,Four:  Equal)]^C^C(ai_tiledvp 4 nil)
+[acad(vport-2v,Two:   Vertical)]^C^C(ai_tiledvp 2 "_V")
+[acad(vport-3r,Three: Right)]^C^C(ai_tiledvp 3 "_R")
+[acad(vport-3l,Three: Left)]^C^C(ai_tiledvp 3 "_L")
+[acad(vport-4l,Four:  Left)]^C^C(ai_tiledvp 4 "_L")
+[acad(vport-2h,Two:   Horizontal)]^C^C(ai_tiledvp 2 "_H")
+[acad(vport-3a,Three: Above)]^C^C(ai_tiledvp 3 "_A")
+[acad(vport-3b,Three: Below)]^C^C(ai_tiledvp 3 "_B")
+[acad(vport-4r,Four:  Right)]^C^C(ai_tiledvp 4 "_R")
+
+**leader
+[Leader lines]
+[iso1(leader1)]^c^c^portho off insert leader1 \!s;;\ ^c^cexplode l
+[iso1(leader2)]^c^c^portho off insert leader2 \!s;;\ ^c^cexplode l
+[iso1(leader3)]^c^c^portho off insert leader3 \!s;;\ ^c^cexplode l
+[iso1(leader1b)]^c^c^portho off insert leader1b \!s;;\ ^c^cexplode l
+[iso1(leader2b)]^c^c^portho off insert leader2b \!s;;\ ^c^cexplode l
+[iso1(leader3b)]^c^c^portho off insert leader3b \!s;;\ ^c^cexplode l
+[iso1(leaderl)]^C^C^cortho off LAYER S 20  DIM1 LEA \\^c^c^p^clayer S 40;;
+[iso1(leadert)]^C^C^Cortho off LAYER S 20  DIM1 LEA \\^o\ \CHANGE L  P LA 40;;LAYER S 40; ortho off move l;;ins
+[ EXIT                  ]^c^c
+
+//
+//  AutoCAD Screen Menus
+//
+//  There are two types of screen menus: command menus and options menus
+//  Command menus provide access to the lists of AutoCAD commands.
+//  Options menus provides access to the options available for individual commands.
+//
+//  There are 22 lines between menu titles.  This is one method for assuring that each time
+//  that a menu is called that it overwrites the previous menu.
+//
+//  The organization of the command menus generally follows the organization of the pull-down menus.
+//  A command has a screen menu item only if it has a pull-down menu item.
+//  Command menus have, as much as possible, the same name as the equivalent pull-down menu.
+//  Command menus have, as much as possible, the same items in the same order as the pull-down menus.
+//
+//  Command menus generally use the command name while pull-down menus offer a more descriptive title.
+//  Items in command menus that call other command menus are in upper case.
+//
+//  Command menu names start with a number and are located after the special menus.
+//
+***SCREEN
+**S
+[AutoCAD ]^C^C^P(ai_rootmenus) ^P
+[* * * * ]$S=ACAD.OSNAP
+[FILE    ]$S=ACAD.01_FILE
+[EDIT    ]$S=ACAD.02_EDIT
+[VIEW 1  ]$S=ACAD.03_VIEW1
+[VIEW 2  ]$S=ACAD.04_VIEW2
+[INSERT  ]$S=ACAD.05_INSERT
+[FORMAT  ]$S=ACAD.06_FORMAT
+[TOOLS 1 ]$S=ACAD.07_TOOLS1
+[TOOLS 2 ]$S=ACAD.08_TOOLS2
+[DRAW 1  ]$S=ACAD.09_DRAW1
+[DRAW 2  ]$S=ACAD.10_DRAW2
+[DIMNSION]$S=ACAD.11_DIMENSION
+[MODIFY1 ]$S=ACAD.12_MODIFY1
+[MODIFY2 ]$S=ACAD.13_MODIFY2
+[TABLET ]$S=ACAD.14_TABLET
+
+[HELP    ]$S=ACAD.15_HELP
+
+[ASSIST ]$S=ACAD.ASSIST
+[LAST   ]$S=ACAD.
+
+[********]
+[1.ACAD  ]^c^cmenu ACAD (load "planbase")
+[2.ISO14 ]^c^cmenu ISO14
+[3.PID14 ]^c^cmenu PID14
+[********]
+[{MIHYUN}]^C^CMENU ACAD (LOAD "PLANBASE")
+[********]
+
+// The SNAP_TO menu can be called on high resolution displays to paint the snap
+// options on the bottom of the screen menu.  
+// To add lines to the bottom of the Root menu delete the next line.
+**SNAP_TO 28
+[Endpoint]_endp
+[Midpoint]_mid
+[Intersec]_int
+[App Int ]_appint
+
+[Center  ]_cen
+[Quadrant]_qua
+[Tangent ]_tan
+
+[Perpend ]_per
+[Node    ]_nod
+[Insert  ]_ins
+
+[Nearest ]_nea
+[Quick   ]_qui,^z
+[None    ]_non
+
+[Tracking]_tr
+[From    ]_from
+
+
+
+**ASSIST 3
+[Last    ]_l
+[Previous]_p
+[All     ]_all
+[Cpolygon]_cp
+[Wpolygon]_wp
+[Fence   ]_f
+[Group   ]_g
+[Add     ]_a
+[Remove  ]_r
+[Undo    ]_u
+[Filters ]_'filter
+.x
+.y
+.z
+.xy
+.xz
+.yz
+[Ddosnap ]'_osnap
+[Ddrmodes]'_ddrmodes
+[Layer   ]'_layer
+[GroupDlg]^C^C_group
+[OSNAP   ]$S=ACAD.OSNAP
+**GRIP_EDIT 3
+[Grip    ]
+[ Edit   ]
+
+[Move    ]_mo
+[Mirror  ]_mi
+[Rotate  ]_ro
+[Scale   ]_sc
+[Stretch ]_st
+
+[Base Pt ]_b
+[Copy    ]_c
+[Referenc]_r
+[Undo    ]_u
+
+[Propchek]^C^C_ai_propchk
+[GoTo URL]^C^C_gotourl
+
+[Exit    ]_x
+[Cancel  ]^C
+
+
+
+
+
+
+
+**01_FILE 3
+[New     ]^C^C_new
+[Open    ]^C^C_open
+
+[Qsave   ]^C^C_qsave
+[Saveas  ]^C^C_saveas
+[Export  ]^C^C_export
+
+[Config  ]^C^C_config
+[Plot    ]^C^C_plot
+
+[Audit   ]^C^C_audit
+[Recover ]^C^C_recover
+[Purge   ]^C^C_purge
+
+[Quit    ]^C^C_quit
+
+
+
+
+
+
+
+**02_EDIT 3
+[Undo    ]_u
+[Redo    ]^C^C_redo
+
+[Cutclip ]'_cutclip
+[Copyclip]'_copyclip
+[Copylink]^C^C_copylink
+
+[Pasteclp]'_pasteclip
+[Pastespe]^C^C_pastespec
+
+[OLElinks]^C^C_olelinks
+
+
+
+
+
+
+
+
+
+
+
+**03_VIEW1 3
+[Redraw  ]'_redraw
+[Redrawal]'_redrawall
+[Regen   ]^C^C_regen
+[Regenall]^C^C_regenall
+
+[Zoom    ]'_zoom
+[Pan     ]'_pan
+[Dsviewer]^C^C_dsviewer
+
+[Tilemode]^C^C_tilemode
+[Mspace  ]^C^C_mspace
+[Pspace  ]^C^C_pspace
+
+[Vports  ]^C^C_vports
+[Mview   ]^C^C_mview
+
+[Ddview  ]^C^C_ddview
+[Ddvpoint]^C^C_ddvpoint
+[Plan    ]^C^C_plan
+[Vpoint  ]^C^C_vpoint
+[Dview   ]^C^C_dview
+
+**04_VIEW2 3
+[Hide    ]^C^C_hide
+[Shade   ]^C^C_shade
+
+[Render  ]^C^C_render
+[Scene   ]^C^C_scene
+[Light   ]^C^C_light
+[Mapping ]^C^C_setuv
+[Backgrnd]^C^C_background
+[Fog     ]^C^C_fog
+[Lsnew   ]^C^C_lsnew
+[Lsedit  ]^C^C_lsedit
+[Lslib   ]^C^C_lslib
+[Rmat    ]^C^C_rmat
+[Matlib  ]^C^C_matlib
+[Rpref   ]^C^C_rpref
+[Stats   ]^C^C_stats
+
+[UCSicon ]^C^C_ucsicon
+[Attdisp ]^C^C_attdisp
+
+[Textscr ]'_textscr
+[Toolbar ]^C^C_toolbar
+**05_INSERT 3
+[Ddinsert]^C^C_ddinsert
+
+[Xref    ]^C^C_xref
+[Image   ]^C^C_image
+
+[3DSin   ]^C^C_3dsin
+[ACISin  ]^C^C_acisin
+[DXBin   ]^C^C_dxbin
+[WMFin   ]^C^C_wmfin
+[PSin    ]^C^C_psin
+
+[Insertob]^C^C_insertobj
+
+
+
+
+
+
+
+
+
+
+**06_FORMAT 3
+[Layer   ]'_layer
+[Ddcolor ]'_ddcolor
+[Linetype]'_linetype
+
+[Style   ]'_style
+[Ddim    ]^C^C_ddim
+[Ddptype ]'_ddptype
+[Mlstyle ]^C^C_mlstyle
+
+[Ddunits ]'_ddunits
+[Thicknes]'_thickness
+[Limits  ]'_limits
+
+[Ddrename]^C^C_ddrename
+
+
+
+
+
+
+
+
+**07_TOOLS1 3
+[Spell   ]^C^C_spell
+[Drawordr]^C^C_draworder
+
+[Dist    ]'_dist
+[Area    ]^C^C_area
+[Massprop]^C^C_massprop
+
+[List    ]^C^C_list
+[ID      ]'_id
+
+[Time    ]'_time
+[Status  ]'_status
+[Setvar  ]'_setvar
+
+[Appload ]^C^C_appload
+[Script  ]^C^C_script
+
+[Saveimg ]^C^C_saveimg
+[Replay  ]^C^C_replay
+
+
+
+**08_TOOLS2 3
+[ASEadmin]^C^C_aseadmin
+[ASErows ]^C^C_aserows
+[ASElinks]^C^C_aselinks
+
+[ASEselec]^C^C_aseselect
+[ASEexpor]^C^C_aseexport
+[ASEsqled]^C^C_asesqled
+
+[Ddosnap ]'_osnap
+[Ddrmodes]'_ddrmodes
+
+[Dducsp  ]^C^C_dducsp
+[Dducs   ]^C^C_dducs
+[UCS     ]^C^C_ucs
+
+[Ddgrips ]'_ddgrips
+[Ddselect]'_ddselect
+[Group   ]^C^C_group
+
+[Tablet  ]^C^C_tablet
+[Menuload]^C^C_menuload
+[Prefernc]^C^C_preferences
+**09_DRAW1 3
+[Line    ]^C^C_line
+[Ray     ]^C^C_ray
+[Xline   ]^C^C_xline
+[Mline   ]^C^C_mline
+
+[Pline   ]^C^C_pline
+[3Dpoly  ]^C^C_3dpoly
+[Polygon ]^C^C_polygon
+[Rectang ]^C^C_rectang
+
+[Arc     ]^C^C_arc
+[Circle  ]^C^C_circle
+[Donut   ]^C^C_donut
+
+[Spline  ]^C^C_spline
+[Ellipse ]^C^C_ellipse
+
+
+
+
+
+
+**10_DRAW2 3
+[Bmake   ]^C^C_bmake
+[Base    ]^C^C_base
+[Ddattdef]^C^C_ddattdef
+
+[Point   ]*^C^C_point
+[Divide  ]^C^C_divide
+[Measure ]^C^C_measure
+
+[Bhatch  ]^C^C_bhatch
+[Boundary]^C^C_boundary
+
+[Region  ]^C^C_region
+
+[Mtext   ]^C^C_mtext
+[Dtext   ]^C^C_dtext
+
+[SURFACES]$S=ACAD.3D
+[SOLIDS  ]$S=ACAD.101_SOLIDS
+
+
+
+
+**101_SOLIDS 3
+[Box     ]^C^C_box
+[Sphere  ]^C^C_sphere
+[Cylinder]^C^C_cylinder
+[Cone    ]^C^C_cone
+[Wedge   ]^C^C_wedge
+[Torus   ]^C^C_torus
+
+[Extrude ]^C^C_extrude
+[Revolve ]^C^C_revolve
+
+[Slice   ]^C^C_slice
+[Section ]^C^C_section
+[Interfer]^C^C_interfere
+
+[Soldraw ]^C^C_soldraw
+[Solview ]^C^C_solview
+[Solprof ]^C^C_solprof
+
+
+
+
+
+**11_DIMENSION 3
+[Linear  ]^C^C_dimlinear
+[Aligned ]^C^C_dimaligned
+[Ordinate]^C^C_dimordinate
+
+[Diameter]^C^C_dimdiameter
+[Radius  ]^C^C_dimradius
+[Angular ]^C^C_dimangular
+
+[Baseline]^C^C_dimbaseline
+[Continue]^C^C_dimcontinue
+
+[Leader  ]^C^C_leader
+[Toleranc]^C^C_tolerance
+[Center  ]^C^C_dimcenter
+
+[Dimedit ]^C^C_dimedit
+[Dimtedit]^C^C_dimtedit
+
+[Ddim    ]^C^C_ddim
+[Dimstyle]^C^C_dimstyle
+[Update  ]^C^C_dim _update
+
+**12_MODIFY1 3
+[Modify  ]^C^C_ai_propchk
+[MatchPrp]^C^C_matchprop
+[Xbind   ]^C^C_xbind
+[Imageadj]^C^C_imageadjust
+[Imagequa]^C^C_imagequality
+[Transpar]^C^C_transparency
+[Imagefrm]^C^C_imageframe
+[Xclip   ]^C^C_xclip
+[Imageclp]^C^C_imageclip
+[Hatchedt]^C^C_hatchedit
+[Pedit   ]^C^C_pedit
+[Splinedt]^C^C_splinedit
+[Mledit  ]^C^C_mledit
+[Ddatte  ]^C^C_ddatte
+[Attedit ]^C^C_attedit
+[Ddedit  ]^C^C_ddedit
+
+[Erase   ]^C^C_erase
+[Copy    ]$m=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_copy,^C^C_copy)
+[Mirror  ]$m=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_mirror,^C^C_mirror)
+[Offset  ]^C^C_offset
+[Array   ]^C^C_array
+**13_MODIFY2 3
+[Move    ]$m=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_move,^C^C_move)
+[Rotate  ]$m=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_rotate,^C^C_rotate)
+[Scale   ]$m=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_scale,^C^C_scale)
+[Stretch ]$m=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_stretch,^C^C_stretch)
+[Lengthen]^C^C_lengthen
+
+[Trim    ]^C^C_trim
+[Extend  ]^C^C_extend
+[Break   ]^C^C_break
+[Chamfer ]^C^C_chamfer
+[Fillet  ]^C^C_fillet
+
+[3Darray ]^C^C_3darray
+[Mirror3D]^C^C_mirror3d
+[Rotate3D]^C^C_rotate3d
+[Align   ]^C^C_align
+
+[Union   ]^C^C_union
+[Subtract]^C^C_subtract
+[Intrsect]^C^C_intersect
+
+[Explode ]^C^C_explode
+**14_TABLET
+[TABLET:&ISO]^C^C_TABLET
+
+[ISO]^C^C_TABLET;_CAL
+[Re-Cfg&ISO]^C^CVSLIDE TABLET_2 TABLET;CFG;3;Y;\\\27;11;\\\11;12;\\\27;4;Y \\'REDRAW
+[Config&ISO]^C^CVSLIDE TABLET_2 TABLET;CFG;3;\\\27;11;\\\11;12;\\\27;4;Y \\'REDRAW
+
+[On      ]_on
+[Off     ]_off
+[Yes     ]_y
+[No      ]_n
+
+[Orthognl]_o
+[Affine  ]_a
+[Projectv]_p
+
+**15_HELP 3
+[Help    ]'_help
+
+[QuikTour]^P(if (startapp (findfile "qtour.exe")) (princ) (alert "Could not find or could not start Quick Tour.")) ^P
+[WhatsNew]^P(if (startapp (findfile "wnew.exe")) (princ) (alert "Could not find or could not start What's New.")) ^P
+[Learning]^P(if (startapp (findfile "l_acla.exe")) (princ) (alert "Could not find or could not start Learning Assistant.")) ^P
+[Browser ]^C^C_browser ;
+
+[About   ]'_about
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
+//  Here begins the command options menus
+//  Only commands that have command line options are included here.
+//  - Commands that immediately call dialog boxes do not havre screen menus.
+//  - Commands with no options (example: Ray) do not have screen menus.
+//  Commands are listed in alphabetical order.
+//  Commands and system variables are followed by a colon.
+//  Command options and sub-options do not have colons.
+//
+**3D 3
+[Solid:  ]^C^C_solid
+[3Dface  ]^C^C_3dface
+[3Dobjec:]$I=ACAD.image_3dobjects $I=ACAD.*
+
+[Edge:   ]^C^C_edge
+[3Dmesh: ]^C^C_3dmesh
+
+
+[Revsurf:]^C^C_revsurf
+[Tabsurf:]^C^C_tabsurf
+[Rulsurf:]^C^C_rulesurf
+[Edgsurf:]^C^C_edgesurf
+
+[Surftb1:]'_surftab1
+[Surftb2:]'_surftab2
+[PolyVars]$I=ACAD.image_poly $I=*
+
+
+
+
+
+
+**3DARRAY 3
+[3Darray:]^C^C_3darray
+
+[Rectang ]_r
+[Polar   ]_p
+
+[Yes     ]_y
+[No      ]_n
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**3DFACE 3
+[3Dface: ]^C^C_3dface
+
+[Invisibl]_i
+
+[ShowEdge]^P(setvar "splframe" 1)(ai_showedge_alert) ^P
+[HideEdge]^P(setvar "splframe" 0)(ai_hideedge_alert) ^P
+
+[Edge:   ]^C^C_edge
+[Ddmodif:]^C^C_ddmodify
+
+
+
+
+
+
+
+
+
+
+
+
+
+**3DPOLY 3
+[3Dpoly: ]^C^C_3dpoly
+
+[Close   ]_c
+[Undo    ]_u
+
+@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**ARC 3
+[Arc:    ]^C^C_arc
+
+[3 Point ]\\
+[St,C,End]\_c \
+[St,C,Ang]\_c \_a
+[St,C,Len]\_c \_l
+[St,E,Ang]\_e \_a
+[St,E,Dir]\_e \_d
+[St,E,Rad]\_e \_r
+[Ce,S,End]_c \\
+[Ce,S,Ang]_c \\_a
+[Ce,S,Len]_c \\_l
+
+[ArcCont:]^C^C_arc ;
+[LinCont:]^C^C_line ;
+
+
+
+
+
+
+
+**AREA 3
+[Area:   ]^C^C_area
+
+[Object  ]_o
+[Add     ]_a
+[Subtract]_s
+
+[Boundar:]^C^C_boundary
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**ARRAY 3
+[Array:  ]^C^C_array
+
+
+
+[Rectang ]_r
+[Polar   ]_p
+
+[Yes     ]_y
+[No      ]_n
+
+
+
+
+
+
+
+
+
+
+
+
+
+**ATTDISP 3
+[Attdisp:]'_attdisp
+
+[Normal  ]_n
+[On      ]_on
+[Off     ]_off
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**ATTEDIT 3
+[Attedit:]^C^C_attedit
+
+[DDatte: ]^C^C_ddatte
+
+[Yes     ]_y
+[No      ]_n
+
+[Value   ]_v
+[Position]_p
+[Height  ]_h
+[Angle   ]_a
+[Style   ]_s
+[Layer   ]_l
+[Color   ]_c
+[Next    ]_n
+
+[ColorDlg](acad_colordlg 256)
+
+
+
+
+
+**AUDIT 3
+[Audit:  ]^C^C_audit
+
+[Yes     ]_y
+[No      ]_n
+
+[Auditct:]'_auditctl
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**BREAK 3
+[Break:  ]^C^C_break
+
+[First   ]_f
+@
+
+[Sel, 2nd]\\
+[Sel Pt  ]\@
+[Sel,2Pts]\_first \
+[Sel, 1st]\_first \@
+
+
+
+
+
+
+
+
+
+
+
+
+
+**CHAMFER 3
+[Chamfer:]^C^C_chamfer
+
+[Polyline]_p
+[Distance]_d \\_chamfer
+[Dist = 0]_d 0 0 _chamfer
+[Angle   ]_a \\ _chamfer
+
+[Trim    ]_t
+[No Trim ]_n
+
+[Method  ]_m
+[Distance]_d
+[Angle   ]_a
+
+
+
+
+
+
+
+
+
+**CIRCLE 3
+[Circle: ]^C^C_circle
+
+[Cen,Rad ]\\
+
+[Cen,Dia ]\_d
+
+[2 Point ]_2p \
+[3 Point ]_3p \\
+
+[TTR     ]_ttr
+[TanTanTa]_3p _tan \_tan \_tan \
+
+[CopyRad:]^C^C_circlerad '_cal rad;
+
+
+
+
+
+
+
+
+
+**COPY 3
+[Copy:   ]^C^C_copy
+
+
+
+[Multiple]_m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMALIGNED 3
+[DimAlin:]^C^C_dimaligned
+
+[Text    ]_t
+[Angle   ]_a
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMANGULAR 3
+[DimAngl:]^C^C_dimangular
+
+[Text    ]_t
+[Angle   ]_a
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMEDIT 3
+[DimEdit:]^C^C_dimedit
+
+[Home    ]_h
+[New     ]_n
+[Rotate  ]_r
+[Oblique ]_o
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMLINEAR 3
+[DimLinr:]^C^C_dimlinear
+
+[Horizont]_h
+[Vertical]_v
+
+[Text    ]_t
+[Angle   ]_a
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMORDINATE 3
+[DimOrdin]^C^C_dimordinate
+
+[Xdatum  ]_x
+[Ydatum  ]_y
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMOVERRIDE 3
+[DimOver:]^C^C_dimoverride
+
+[Clear   ]_c
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMTEDIT 3
+[DimTedt:]^C^C_dimtedit
+
+[Left    ]_l
+[Right   ]_r
+[Home    ]_h
+[Angle   ]_a
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIVIDE 3
+[Divide: ]^C^C_divide
+
+[Block   ]_b
+
+[Yes     ]_y
+[No      ]_n
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DRAWORDER 3
+[Draword:]^C^C_draworder
+
+[Above   ]_a
+[Under   ]_u
+
+[Top     ]_t
+[Bottom  ]_b
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DTEXT 3
+[Dtext:  ]^C^C_dtext
+[Mtext:  ]^C^C_mtext
+
+[Style   ]_s
+
+[Justify ]_j
+[Align   ]_a
+[Center  ]_c
+[Fit     ]_f
+[Middle  ]_m
+[Right   ]_r
+[Top Left]_tl
+[Top Cent]_tc
+[Top Rght]_tr
+[Mid Left]_ml
+[Mid Cent]_mc
+[Mid Rght]_mr
+[Bot Left]_bl
+[Bot Cent]_bc
+[Bot Rght]_br
+
+[Style:  ]^C^C_style
+**DVIEW 3
+[Dview:  ]^C^C_dview
+
+[Dvwblok:]^C^C_dview ;
+
+[Camera  ]_ca
+[Target  ]_ta
+[Distance]_d
+[Points  ]_po
+[Pan     ]_pa
+[Zoom    ]_z
+[Twist   ]_tw
+[Clip    ]_cl
+[Hide    ]_h
+[Off     ]_off
+[Undo    ]_u
+[Exit    ]_x
+
+[Back    ]_b
+[Front   ]_f
+
+[Off     ]_off
+
+**ELLIPSE 3
+[Ellipse:]^C^C_ellipse
+
+[Arc     ]_a
+[Center  ]_c
+[Rotation]_r
+
+
+
+
+[Pellips:]'_pellipse
+
+
+
+
+
+
+
+
+
+
+
+
+**ERASE 3
+[Erase:  ]^C^C_erase
+
+[Oops:   ]^C^C_oops
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**EXTEND 3
+[Extend: ]^C^C_extend
+
+[Edge    ]_e
+[ Extend ]_e
+[ NoExten]_n
+
+[Project ]_p
+[ None   ]_n
+[ UCS    ]_u
+[ View   ]_v
+
+[Undo    ]_u
+
+
+
+
+
+
+
+
+
+
+**EXTRUDE 3
+[Extrude:]^C^C_extrude
+
+[Path    ]_p
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**FILLET 3
+[Fillet: ]^C^C_fillet
+
+[Polyline]_p
+
+[Radius  ]_r
+[Radius 0]_r 0
+
+[Trim    ]_t
+[No Trim ]_n
+
+
+
+
+
+
+
+
+
+
+
+
+
+**IMAGECLIP 3
+[Imagclp:]^C^C_imageclip
+
+[New    ];
+[On     ]_on
+[Off    ]_off
+[Delete ]_d
+
+
+[Polygon]_p
+[Rectang];
+
+
+
+
+
+
+
+
+
+
+
+
+**IMAGEQUALITY 3
+[Imagqua:]^C^C_imagequality
+
+[High    ]_h
+[Draft   ]_d
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**LEADER 3
+[Leader: ]^C^C_leader
+
+[Format  ]_f
+[Undo    ]_u
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**LENGTHEN 3
+[Lengthn:]^C^C_lengthen
+
+[Delta   ]_de
+[Percent ]_p
+[Total   ]_t
+[Dynamic ]_dy
+
+[Angle   ]_a
+[Length  ]_l
+[Undo    ]_u
+
+
+
+
+
+
+
+
+
+
+
+
+**LINE 3
+[Line:   ]^C^C_line
+
+[1 Line: ]^C^C_line \\;
+
+[Continue];
+[Undo    ]_u
+[Close   ]_c
+@
+
+[ArcCont:]^C^C_arc ;
+
+
+
+
+
+
+
+
+
+
+
+
+**MATCHPROP 3
+[Matchpr:]^C^C_matchprop
+
+[Settings]_s
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**MEASURE 3
+[Measure:]^C^C_measure
+
+[Block   ]_b
+
+[Yes     ]_y
+[No      ]_n
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**MIRROR 3
+[Mirror: ]^C^C_mirror
+
+[Mirror3:]^C^C_mirror3d
+
+[Yes     ]_y
+[No      ]_n
+
+[Mirrtex:]'_mirrtext
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**MIRROR3D 3
+[Mirror3:]^C^C_mirror3d
+
+[Entity  ]_e
+[Z Axis  ]_z
+[View    ]_v
+[XY      ]_xy
+[YZ      ]_yz
+[ZX      ]_zx
+[3 Point ]_3
+
+
+
+
+
+
+
+
+
+
+
+
+
+**MLINE 3
+[Mline:  ]^C^C_mline
+
+[Justify ]_j
+[Scale   ]_s
+[Style   ]_st
+
+[Undo    ]_u
+[Close   ]_c
+@
+
+[Mlstyle:]^C^C_mlstyle
+[Mledit  ]^C^C_mledit
+
+
+
+
+
+
+
+
+
+
+**MVIEW 3
+[Mview:  ]^C^C_mview
+
+[On      ]_on
+[Off     ]_off
+[Hideplot]_h
+[Fit     ]_f
+2
+3
+4
+[Restore ]_r
+
+
+
+
+
+
+
+
+
+
+
+
+**OFFSET 3
+[Offset: ]^C^C_offset
+
+[Through ]_t
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**OSNAP 3
+[Osnap:  ]'_osnap
+
+[Tracking]_tracking
+[From    ]_from
+
+[Endpoint]_endp
+[Midpoint]_mid
+[Intersec]_int
+[App Int ]_appint
+
+[Center  ]_cen
+[Quadrant]_qua
+[Tangent ]_tan
+
+[Perpend ]_per
+[Node    ]_nod
+[Insert  ]_ins
+[Nearest ]_nea
+[None    ]_non
+[Quick,  ]_qui,^z
+
+[Ddosnap ]'_Osnap
+**PEDIT 3
+[Pedit:  ]^C^C_pedit
+[Break   ]_b
+[Close   ]_c
+[Down/Dec]_d
+[Ed Vertx]_e
+[Fit     ]_f
+[Go      ]_g
+[Insert  ]_i
+[Join    ]_j
+[LtypeGen]_l
+[Move/Opn]_m
+[Next/Opn]_n
+[Open    ]_o
+[Prev    ]_p
+[Regen/Rt]_r
+[REdispla]_re
+[Spln/Str]_s
+[Tan     ]_t
+[Undo/Up ]_u
+[Width   ]_w
+[eXit    ]_x
+[Polyvars]$I=ACAD.image_poly $I=*
+**PLAN 3
+[Plan:   ]^C^C_plan
+
+[Current ]_c
+[UCS     ]_u
+[World   ]_w
+
+[Follow:]'_ucsfollow
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**PLINE 3
+[Pline:  ]^C^C_pline
+
+[Arc     ]_a
+[Close   ]_c
+[Halfwid ]_h
+[Length  ]_l
+[Undo    ]_u
+[Width   ]_w
+
+[Angle   ]_a
+[Center  ]_ce
+[Close   ]_cl
+[Direct'n]_d \
+[Line    ]_l
+[Radius  ]_r
+[2nd Pt  ]_s \
+
+[Pedit   ]^C^C_pedit
+
+
+
+
+**POINT 3
+[Point:  ]*^C^C_point
+
+[Ddptype:]'_ddptype
+
+[Pdmode: ]'_pdmode
+[Pdsize: ]'_pdsize
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**POLYGON 3
+[Polygon:]^C^C_polygon
+
+[Edge    ]_e
+
+[I-scribe]_i
+[C-scribe]_c
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**PURGE 3
+[Purge:  ]^C^C_purge
+
+[Blocks  ]_b
+[Dimstyle]_d
+[Layers  ]_la
+[Ltypes  ]_lt
+[Shapes  ]_sh
+[Styles  ]_st
+[All     ]_a
+
+[Yes     ]_y
+[No      ]_n
+
+
+
+
+
+
+
+
+
+
+**REVOLVE 3
+[Revolve:]^C^C_revolve
+
+[Object  ]_o
+[X Axis  ]_x
+[Y Axis  ]_y
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**ROTATE 3
+[Rotate: ]^C^C_rotate
+
+[Referenc]_r
+
+[Rotate3:]^C^C_rotate3d
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**ROTATE3D 3
+[Rotat3d:]^C^C_rotate3d
+
+[Entity  ]_e
+[Last    ]_l
+[View    ]_v
+[X Axis  ]_x
+[Y Axis  ]_y
+[Z Sxis  ]_z
+[2 Points]_2p
+
+
+
+
+
+
+
+
+
+
+
+
+
+**SCALE 3
+[Scale:  ]^C^C_scale
+
+[Referenc]_r
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**SECTION 3
+[Section:]^C^C_section
+
+[Object  ]_o
+[Z Axis   ]_z
+[View    ]_v
+[XY      ]_xy
+[YZ      ]_yz
+[ZX      ]_zx
+[3 Point ]_3p
+
+
+
+
+
+
+
+
+
+
+
+
+
+**SETVAR 3
+[Setvar: ]'_setvar
+
+[List    ]?
+*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**SHADE 3
+[Shade:  ]^C^C_shade
+
+[Shadedge]
+[ 256-col]'_shadedge 0
+[ 256-edg]'_shadedge 1
+[ Hidden ]'_shadedge 2
+[ Filled ]'_shadedge 3
+
+[Shadedif]'_shadedif
+
+[Regen:  ]^C^C_regen
+
+
+
+
+
+
+
+
+
+
+
+**SLICE 3
+[Slice:  ]^C^C_slice
+
+[Object  ]_o
+[Z Axis  ]_z
+[View    ]_v
+[XY      ]_xy
+[YZ      ]_yz
+[ZX      ]_zx
+[3 Point ]_3p
+
+
+
+
+
+
+
+
+
+
+
+
+
+**SPLINE 3
+[Spline: ]^C^C_spline
+
+[Object  ]_o
+
+[Close   ]_c
+[Fit Tol ]_f
+
+[Splframe]'_splframe
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**SPLINEDIT 3
+[Splnedt:]^C^C_splinedit
+
+[Fit     ]_fit
+[Add     ]_add
+[Delete  ]_delete
+[Move    ]_move
+[Purge   ]_purge
+[Tangents]_tangents
+[Toleranc]_tolerance
+[Close   ]_c
+[Open    ]_o
+[MoveVert]_v
+[Next    ]_n
+[Previous]_p
+[Select  ]_s
+[Refine  ]_r
+[AddPoint]_a
+[ElevOrdr]_e
+[Weight  ]_w
+[Reverse ]_e
+[Undo    ]_u
+[Exit    ]_x
+**TABLET 3
+[Tablet: ]^C^C_tablet
+
+[Calibrat]_cal
+[Config  ]_cfg 4 \\\25 9 \\\11 9 \\\9 13 \\\25 7 _y \\_y
+[Reconfig]_cfg 4 _y \\\;;\\\;;\\\;;\\\;;_y \\
+[Re-DfCfg]_cfg 4 _y \\\25 9 \\\11 9 \\\9 13 \\\25 7 _y \\
+
+[On      ]_on
+[Off     ]_off
+[Yes     ]_y
+[No      ]_n
+
+[Orthognl]_o
+[Affine  ]_a
+[Projectv]_p
+
+
+
+
+
+
+
+**TRIM 3
+[Trim:   ]^C^C_trim
+
+[Mledit  ]_e
+[ Extend ]_e
+[ NoExten]_n
+
+[Project ]_p
+[ None   ]_n
+[ UCS    ]_u
+[ View   ]_v
+
+[Undo    ]_u
+
+
+
+
+
+
+
+
+
+
+**UCS 3
+[UCS:    ]^C^C_ucs
+
+[Origin  ]_o
+[Z Axis  ]_z
+[3 Point ]_3p
+[X       ]_x
+[Y       ]_y
+[Z       ]_z
+[Entity  ]_e
+[View    ]_v
+[Previous]_p
+[Restore ]_r
+[Save    ]_s
+[Delete  ]_d
+[List    ]?
+[World   ]_w
+
+[Dducs:  ]^C^C_dducs
+[Dducsp: ]^C^C_dducsp
+[Follow: ]'_ucsfollow
+[UCSicon:]^C^C_ucsicon
+
+**UCSICON 3
+[UCSicon:]^C^C_ucsicon
+
+[On      ]_on
+[Off     ]_off
+
+[All     ]_all
+[Origin  ]_or
+[NoOrigin]_n
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**VIEW 3
+[View:   ]'_view
+
+[List    ]_?
+[Delete  ]_d
+[Restore ]_r
+[Save    ]_s
+[Window  ]_w
+
+
+[Pan:    ]'_pan
+[Zoom:   ]'_zoom
+
+[Ddview: ]^C^C_ddview
+[Plan:   ]^C^C_plan
+[Dview:  ]^C^C_dview
+
+
+
+
+
+
+
+**VIEWPORTS 3
+[Vports: ]^C^C_vports
+[Layout  ]^C^C^P(ai_tiledvp_chk T) ^P
+
+[Save    ]_s
+[Restore ]_r
+[Delete  ]_d
+[Join    ]_j
+[Single  ]_s
+?
+2
+3
+4
+
+[Horizont]_h
+[Vertical]_v
+[Above   ]_a
+[Below   ]_b
+[Left    ]_l
+[Right   ]_r
+
+
+
+**VPOINT 3
+[Vpoint: ]^C^C_vpoint
+
+[Rotate  ]_r
+[Axes    ] ;
+
+
+[Top     ]_non *0,0,1
+[Bottom  ]_non *0,0,-1
+[Left    ]_non *-1,0,0
+[Right   ]_non *1,0,0
+[Front   ]_non *0,-1,0
+[Back    ]_non *0,1,0
+
+[Iso SW  ]_non *-1,-1,1
+[Iso SE  ]_non *1,-1,1
+[Iso NE  ]_non *1,1,1
+[Iso NW  ]_non *-1,1,1
+
+[Ddvpoint]^C^C_ddvpoint
+[Ddview: ]^C^C_ddview
+[Plan:   ]^C^C_plan
+[Dview:  ]^C^C_dview
+**VPORTS 3
+[Vports: ]^C^C_vports
+[Layout: ]^C^C^P(ai_tiledvp_chk T) ^P
+
+[Save    ]_s
+[Restore ]_r
+[Delete  ]_d
+[Join    ]_j
+[Single  ]_si
+?
+2
+3
+4
+
+[Horizont]_h
+[Vertical]_v
+[Above   ]_a
+[Below   ]_b
+[Left    ]_l
+[Right   ]_r
+
+
+
+**XCLIP 3
+[Xclip:  ]^C^C_xclip
+
+[On      ]_on
+[Off     ]_off
+
+[Clipdpth]_c
+[Delete  ]_d
+[Polyline]_p
+
+
+[Select  ]_s
+[Polygon ]_p
+[Rectang ];
+
+
+
+
+
+
+
+
+
+**XLINE 3
+[Xline:  ]^C^C_xline
+
+[Horizont]_h
+[Vertical]_v
+[Angle   ]_a
+[Bisect  ]_b
+[Offset  ]_o
+
+
+[Ray:    ]^C^C_ray
+
+
+
+
+
+
+
+
+
+
+
+
+**ZOOM 3
+[Zoom:   ]'_zoom
+
+[Realtime];
+
+[Previous]_p
+[Window  ]_w
+[Dynamic ]_d
+[Scale   ]_s
+[Center  ]_c
+
+[In      ]2x
+[Out     ].5x
+
+[All     ]_a
+[Extents ]_e
+
+**LAYERS 3
+[ Layer ]
+[* Set *]
+[ Change]$S=X $S=LAYERR
+[   0   ]^c^cLAYER S 0 ;
+[  REV  ]^c^cLAYER S REV ;
+[**1C** ]^c^cLAYER S 1C ;
+[  1E   ]^c^cLAYER S 1E ;
+[  1H   ]^c^cLAYER S 1H ;
+[  1P   ]^c^cLAYER S 1P ;
+[**2C** ]^c^cLAYER S 2C ;
+[  2E   ]^c^cLAYER S 2E ;
+[  2H   ]^c^cLAYER S 2H ;
+[  2P   ]^c^cLAYER S 2P ;
+[**3C** ]^c^cLAYER S 3C ;
+[  3E   ]^c^cLAYER S 3E ;
+[  3H   ]^c^cLAYER S 3H ;
+[  3P   ]^c^cLAYER S 3P ;
+[**5C** ]^c^cLAYER S 5C ;
+[  5E   ]^c^cLAYER S 5E ;
+[  5H   ]^c^cLAYER S 5H ;
+[  5P   ]^c^cLAYER S 5P ;
+[**8C** ]^c^cLAYER S 8C ;
+[  8E   ]^c^cLAYER S 8E ;
+[  8H   ]^c^cLAYER S 8H ;
+[  8P   ]^c^cLAYER S 8P ;
+[**9C** ]^c^cLAYER S 9C ;
+[  9E   ]^c^cLAYER S 9E ;
+[  9H   ]^c^cLAYER S 9H ;
+[  9P   ]^c^cLAYER S 9P ;
+
+**LAYERR 3
+[ Layer ]
+[*Change]
+[  Set  ]$S=X $S=LAYERS
+[   0   ]^c^cCHPROP AUTO \\ LA 0 C BYLAYER LT BYLAYER ;
+[  REV  ]^c^cCHPROP AUTO \\ LA REV C BYLAYER LT BYLAYER ;
+[**1C** ]^c^c1
+[  1E   ]^c^c1C
+[  1H   ]^c^c1H
+[  1P   ]^c^c1P
+[**2C** ]^c^c2
+[  2E   ]^c^c2C
+[  2H   ]^c^c2H
+[  2P   ]^c^c2P
+[**3C** ]^c^c3
+[  3E   ]^c^c3C
+[  3H   ]^c^c3H
+[  3P   ]^c^c3P
+[**5C** ]^c^c5
+[  5E   ]^c^c5C
+[  5H   ]^c^c5H
+[  5P   ]^c^c5P
+[**8C** ]^c^c8
+[  8E   ]^c^c8C
+[  8H   ]^c^c8H
+[  8P   ]^c^c8P
+[**9C** ]^c^c9
+[  9E   ]^c^c9C
+[  9H   ]^c^c9H
+[  9P   ]^c^c9P
+[  REV  ]^c^cCHPROP AUTO \\ LA REV C BYLAYER LT BYLAYER ;
+
+**A0scale 3
+[A0 Scale]
+
+[ 1/1   ]^c^c^p(setq s 1)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/5   ]^c^c^p(setq s 5)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/10  ]^c^c^p(setq s 10)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/15  ]^c^c^p(setq s 15)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/20  ]^c^c^p(setq s 20)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/30  ]^c^c^p(setq s 30)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/40  ]^c^c^p(setq s 40)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/50  ]^c^c^p(setq s 50)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/60  ]^c^c^p(setq s 60)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/100 ]^c^c^p(setq s 100)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/150 ]^c^c^p(setq s 150)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/200 ]^c^c^p(setq s 200)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/300 ]^c^c^p(setq s 300)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/500 ]^c^c^p(setq s 500)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ 1/1000]^c^c^p(setq s 1000)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+[ Spec. ]^c^c^p(setq s(getreal "Do you want Scale :"))(setq maxy 1189)(setq maxx 841)(dwg-scale) ^p
+
+**A1scale 3
+[A1 Scale]
+
+[ 1/1   ]^c^c^p(setq s 1)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/5   ]^c^c^p(setq s 5)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/10  ]^c^c^p(setq s 10)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/15  ]^c^c^p(setq s 15)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/20  ]^c^c^p(setq s 20)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/30  ]^c^c^p(setq s 30)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/40  ]^c^c^p(setq s 40)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/50  ]^c^c^p(setq s 50)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/60  ]^c^c^p(setq s 60)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/100 ]^c^c^p(setq s 100)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/150 ]^c^c^p(setq s 150)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/200 ]^c^c^p(setq s 200)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/300 ]^c^c^p(setq s 300)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/500 ]^c^c^p(setq s 500)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ 1/1000]^c^c^p(setq s 1000)(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+[ Spec. ]^c^c^p(setq s(getreal "Do you want Scale :"))(setq maxy 841)(setq maxx 594)(dwg-scale) ^p
+
+**A2scale 3
+[A2 Scale]
+
+[ 1/1   ]^c^c^p(setq s 1)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/5   ]^c^c^p(setq s 5)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/10  ]^c^c^p(setq s 10)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/15  ]^c^c^p(setq s 15)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/20  ]^c^c^p(setq s 20)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/30  ]^c^c^p(setq s 30)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/40  ]^c^c^p(setq s 40)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/50  ]^c^c^p(setq s 50)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/60  ]^c^c^p(setq s 60)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/100 ]^c^c^p(setq s 100)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/150 ]^c^c^p(setq s 150)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/200 ]^c^c^p(setq s 200)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/300 ]^c^c^p(setq s 300)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/500 ]^c^c^p(setq s 500)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ 1/1000]^c^c^p(setq s 1000)(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+[ Spec. ]^c^c^p(setq s(getreal "Do you want Scale :"))(setq maxy 594)(setq maxx 420)(dwg-scale) ^p
+
+**A3scale 3
+[A3 Scale]
+
+[ 1/1 ]^c^csetvar limmin 0,0;;ltscale 8;;limmax 420,297;;dimscale 1;;dimtxt 2.5;;dimasz 2.5;^c^czoom a view s z
+[ 1/5 ]^c^csetvar limmin 0,0;;ltscale 40;;limmax 2100,1485;;dimscale 5;;dimtxt 2.5;;dimasz 2.5;^c^czoom a view s z
+[ 1/10]^c^csetvar limmin 0,0;;ltscale 80;;limmax 4200,2970;;dimscale 10;;dimtxt 2.5;;dimasz 2.5;^c^czoom a view s z
+[ 1/20]^c^csetvar limmin 0,0;;ltscale 160;;limmax 8400,5940;;dimscale 20;;dimtxt 2.5;;dimasz 2.5;^c^czoom a view s z
+[ Spec. ]^c^c^p(setq s(getreal "Do you want Scale :"))(setq maxy 420)(setq maxx 297)(dwg-scale) ^p
+
+[A4 scale]$s=X $s=a4scale
+**A4scale 3
+[A4 Scale]
+                                                        
+[  1/1]^c^csetvar limmin 0,0;;ltscale 80;;limmax 210,297;;dimscale 1;;dimtxt 2.5;;dimasz 2.5;^c^czoom a view s z
+[ Spec. ]^c^c^p(setq s(getreal "Do you want Scale :"))(setq maxy 297)(setq maxx 210)(dwg-scale) ^p
+
+    
+**pipemain 3
+[**Main**]
+[JUMP LINE]^c^c^p(IF (not linejump)(load"pipe"))(linejump) $s=x $s=linejump ^p
+[ 90EL UP]^c^c^p(IF (not pipes)(load"pipe"))$s=x $s=pipes (if (= radu- "S")(menucmd "s=pipess")(menucmd "s=pipesl"))(pipes) ^p
+[ 90EL DN]^c^c^p(IF (not peldn)(load"elbow"))$s=x $s=peldn (if (= radu- "S")(menucmd "s=peldns")(menucmd "s=peldnl"))(peldn) ^p
+[ 90EL TN]^c^c^p(IF (not turn)(load"elbow"))$s=x $s=turn (if (= radu- "S")(menucmd "s=turns")(menucmd "s=turnl"))(turn) ^p
+[45EL TU1]^c^c^p(IF (not pel45)(load"elbow"))(setq pel45-t 1)(pel45) $s=x $s=pel45 ^p
+[45EL TU2]^c^c^p(IF (not pel45)(load"elbow"))(setq pel45-t 2)(pel45) $s=x $s=pel45 ^p
+[45EL DN1]^c^c^p(IF (not p45el)(load"elbow"))(setq p45el-t 1)(p45el) $s=x $s=p45el ^p
+[45EL DN2]^c^c^p(IF (not p45el)(load"elbow"))(setq p45el-t 2)(p45el) $s=x $s=p45el ^p
+[ FLG UP ]^c^c^p(IF (not flgt)(load"flg"))$s=x $s=flgt (if (= radu- "S")(menucmd "s=flgts")(menucmd "s=flgtl"))(flgt) ^p
+[ FLG DN ]^c^c^p(IF (not feldn)(load"flg"))$s=x $s=feldn (if (= radu- "S")(menucmd "s=feldns")(menucmd "s=feldnl"))(feldn) ^p
+[STRAIGHT]
+[ TEE FR ]^c^c^p(IF (not fst)(load"tee"))(fst) $s=x $s=fst ^p
+[ TEE DN ]^c^c^p(IF (not sstdn)(load"tee"))(sstdn) $s=x $s=sstdn ^p
+[ TEE UP ]^c^c^p(IF (not sstup)(load"tee"))(sstup) $s=x $s=sstup ^p
+[REDUCING]
+[ TEE FR ]^c^c^p(IF (not frt)(load"tee"))(frt) $s=x $s=frt ^p
+[ TEE DN ]^c^c^p(IF (not srtdn)(load"tee"))(srtdn) $s=x $s=srtdn ^p
+[ TEE UP ]^c^c^p(IF (not srtup)(load"tee"))(srtup) $s=x $s=srtup ^p
+[ CON RED]^c^c^p(IF (not cre)(load"ere"))(cre) $s=x $s=cre ^p
+[ ERE RED]^c^c^p(IF (not ere)(load"ere"))(ere) $s=x $s=ere ^p
+[~~~~~~~~]
+[  GATE  ]^c^c^p(IF (NOT GATVF)(LOAD"GATVF"))(if (= flg_end nil)(setq flg_end "F"))(setq valve-t 1)(gatvf) $s=x $s=gatvf ^p
+[ GLOVE  ]^c^c^p(IF (NOT GATVF)(LOAD"GATVF"))(if (= flg_end nil)(setq flg_end "F"))(setq valve-t 2)(gatvf) $s=x $s=glbvf ^p
+[ CHECK  ]^c^c^p(IF (NOT CHKVF)(LOAD"CHKVF"))(if (= flg_end nil)(setq flg_end "F"))(setq valve-t 3)(chkvf) $s=x $s=chkvf ^p
+
+
+**caplsp 3
+[**Cap**]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(caplsp) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(caplsp) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(caplsp) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(caplsp) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(caplsp) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(caplsp) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(caplsp) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(caplsp) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(caplsp) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(caplsp) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(caplsp) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(caplsp) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(caplsp) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(caplsp) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(caplsp) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(caplsp) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(caplsp) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(caplsp) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(caplsp) ^p
+
+**linejump 3                  
+[**Pipe**]
+[**jump**]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(linejump) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(linejump) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(linejump) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(linejump) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(linejump) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(linejump) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(linejump) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(linejump) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(linejump) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(linejump) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(linejump) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(linejump) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(linejump) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(linejump) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(linejump) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(linejump) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(linejump) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(linejump) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(linejump) ^p
+
+**pipe 3
+[**Pipe**]
+[**Front*]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(pipe) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(pipe) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(pipe) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(pipe) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(pipe) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(pipe) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(pipe) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(pipe) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(pipe) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(pipe) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(pipe) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(pipe) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(pipe) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(pipe) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(pipe) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(pipe) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(pipe) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(pipe) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(pipe) ^p
+
+**pipesl 3
+[**Pipe**]
+[*Section*]
+[**long**]^c^c^p(setq radu- "R") ^p
+[--sort--]^c^c^p(setq radu- "S") $s=pipess ^p
+**pipess 3
+[**Pipe**]
+[*Section*]
+[--long--]^c^c^p(setq radu- "R") $s=pipesl ^p
+[**sort**]^c^c^p(setq radu- "S") ^p
+**pipes 3
+[**Pipe**]
+[*Section*]
+[]
+[]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(pipes) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(pipes) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(pipes) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(pipes) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(pipes) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(pipes) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(pipes) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(pipes) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(pipes) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(pipes) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(pipes) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(pipes) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(pipes) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(pipes) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(pipes) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(pipes) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(pipes) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(pipes) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(pipes) ^p
+
+**pipepl 3
+[Pipe sec]
+[*Hatch*]
+[**long**]^c^c^p(setq radu- "R") ^p
+[--sort--]^c^c^p(setq radu- "S") $s=pipeps ^p
+**pipeps 3
+[Pipe sec]
+[*Hatch*]
+[--long--]^c^c^p(setq radu- "R") $s=pipepl ^p
+[**sort**]^c^c^p(setq radu- "S") ^p
+**pipep 3
+[Pipe sec]
+[*Hatch*]
+[]
+[]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(pipep) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(pipep) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(pipep) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(pipep) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(pipep) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(pipep) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(pipep) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(pipep) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(pipep) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(pipep) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(pipep) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(pipep) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(pipep) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(pipep) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(pipep) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(pipep) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(pipep) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(pipep) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(pipep) ^p
+
+**pipeil 3
+[Pipe sec]
+[*Insul.*]
+[**long**]^c^c^p(setq radu- "R") ^p
+[--sort--]^c^c^p(setq radu- "S") $s=pipeis ^p
+**pipeis 3
+[Pipe sec]
+[*Insul.*]
+[--long--]^c^c^p(setq radu- "R") $s=pipeil ^p
+[**sort**]^c^c^p(setq radu- "S") ^p
+**pipei 3
+[Pipe sec]
+[*Insul.*]
+[]
+[]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(pipei) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(pipei) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(pipei) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(pipei) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(pipei) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(pipei) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(pipei) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(pipei) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(pipei) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(pipei) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(pipei) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(pipei) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(pipei) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(pipei) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(pipei) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(pipei) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(pipei) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(pipei) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(pipei) ^p
+
+**peldnl 3
+[Elbow dn]
+[**long**]^c^c^p(setq radu- "R") ^p
+[--sort--]^c^c^p(setq radu- "S") $s=peldns ^p
+**peldns 3
+[Elbow dn]
+[--long--]^c^c^p(setq radu- "R") $s=peldnl ^p
+[**sort**]^c^c^p(setq radu- "S") ^p
+**peldn 3
+[Elbow dn]
+[]
+[]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(peldn) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(peldn) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(peldn) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(peldn) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(peldn) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(peldn) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(peldn) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(peldn) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(peldn) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(peldn) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(peldn) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(peldn) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(peldn) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(peldn) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(peldn) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(peldn) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(peldn) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(peldn) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(peldn) ^p
+
+**peldn45l 3
+[Elbow 45]
+[**long**]^c^c^p(setq radu- "R") ^p
+[--sort--]^c^c^p(setq radu- "S") $s=peldn45s ^p
+**peldn45s 3
+[Elbow 45]
+[--long--]^c^c^p(setq radu- "R") $s=peldn45l ^p
+[**sort**]^c^c^p(setq radu- "S") ^p
+**peldn45 3
+[Elbow 45]
+[]
+[]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(peldn45) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(peldn45) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(peldn45) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(peldn45) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(peldn45) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(peldn45) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(peldn45) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(peldn45) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(peldn45) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(peldn45) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(peldn45) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(peldn45) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(peldn45) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(peldn45) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(peldn45) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(peldn45) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(peldn45) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(peldn45) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(peldn45) ^p
+
+
+**feldnl 3
+[Flange dn]
+[**long**]^c^c^p(setq radu- "R") ^p
+[--sort--]^c^c^p(setq radu- "S") $s=feldns ^p
+**feldns 3
+[Flange dn]
+[--long--]^c^c^p(setq radu- "R") $s=feldnl ^p
+[**sort**]^c^c^p(setq radu- "S") ^p
+**feldn 3
+[Flange dn]
+[]
+[]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(feldn) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(feldn) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(feldn) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(feldn) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(feldn) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(feldn) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(feldn) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(feldn) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(feldn) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(feldn) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(feldn) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(feldn) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(feldn) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(feldn) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(feldn) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(feldn) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(feldn) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(feldn) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(feldn) ^p
+
+**turnl 3
+[90e-turn]
+[*Single*]$s=x $s=turn
+[-Double-]$s=x $s=dturn
+[**long**]^c^c^p(setq radu- "R") ^p
+[--sort--]^c^c^p(setq radu- "S") $s=turns ^p
+**turns 3
+[90e-turn]
+[*Single*]$s=x $s=turn
+[-Double-]$s=x $s=dturn
+[--long--]^c^c^p(setq radu- "R") $s=turnl ^p
+[**sort**]^c^c^p(setq radu- "S") ^p
+**turn 3
+[90e-turn]
+[*Single*]$s=x $s=turn
+[-Double-]$s=x $s=dturn
+[]
+[]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(turn) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(turn) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(turn) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(turn) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(turn) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(turn) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(turn) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(turn) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(turn) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(turn) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(turn) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(turn) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(turn) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(turn) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(turn) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(turn) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(turn) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(turn) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(turn) ^p
+
+**dturnl 3
+[90e-turn]
+[*Double*]$s=x $s=dturn
+[-Single-]$s=x $s=turn
+[**long**]^c^c^p(setq radu- "R") ^p
+[--sort--]^c^c^p(setq radu- "S") $s=dturns ^p
+**dturns 3
+[90e-turn]
+[*Double*]$s=x $s=dturn
+[-Single-]$s=x $s=turn
+[--long--]^c^c^p(setq radu- "R") $s=dturnl ^p
+[**sort**]^c^c^p(setq radu- "S") ^p
+**dturn 3
+[90e-turn]
+[*Double*]$s=x $s=dturn
+[-Single-]$s=x $s=turn
+[]
+[]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(dturn) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(dturn) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(dturn) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(dturn) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(dturn) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(dturn) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(dturn) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(dturn) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(dturn) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(dturn) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(dturn) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(dturn) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(dturn) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(dturn) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(dturn) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(dturn) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(dturn) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(dturn) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(dturn) ^p
+
+
+**pel45 3
+[45el-tur]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(pel45) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(pel45) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(pel45) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(pel45) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(pel45) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(pel45) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(pel45) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(pel45) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(pel45) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(pel45) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(pel45) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(pel45) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(pel45) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(pel45) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(pel45) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(pel45) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(pel45) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(pel45) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(pel45) ^p
+
+
+**p45el 3
+[45el-dn]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(p45el) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(p45el) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(p45el) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(p45el) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(p45el) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(p45el) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(p45el) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(p45el) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(p45el) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(p45el) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(p45el) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(p45el) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(p45el) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(p45el) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(p45el) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(p45el) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(p45el) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(p45el) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(p45el) ^p
+
+
+**cre 3
+[ Reducer]
+[ Concen ]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(cre) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(cre) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(cre) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(cre) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(cre) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(cre) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(cre) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(cre) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(cre) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(cre) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(cre) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(cre) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(cre) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(cre) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(cre) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(cre) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(cre) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(cre) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(cre) ^p
+
+
+
+
+
+
+**ere 3
+[ Reducer]
+[ Ecentr.]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(ere) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(ere) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(ere) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(ere) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(ere) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(ere) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(ere) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(ere) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(ere) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(ere) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(ere) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(ere) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(ere) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(ere) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(ere) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(ere) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(ere) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(ere) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(ere) ^p
+
+**fst 3
+[**TEE***]
+[Tee side]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(fst) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(fst) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(fst) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(fst) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(fst) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(fst) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(fst) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(fst) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(fst) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(fst) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(fst) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(fst) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(fst) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(fst) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(fst) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(fst) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(fst) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(fst) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(fst) ^p
+
+**sstdn 3
+[**TEE***]
+[Tee dwon]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(sstdn) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(sstdn) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(sstdn) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(sstdn) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(sstdn) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(sstdn) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(sstdn) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(sstdn) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(sstdn) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(sstdn) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(sstdn) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(sstdn) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(sstdn) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(sstdn) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(sstdn) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(sstdn) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(sstdn) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(sstdn) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(sstdn) ^p
+
+**sstup 3
+[**TEE***]
+[ Tee up ]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(sstup) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(sstup) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(sstup) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(sstup) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(sstup) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(sstup) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(sstup) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(sstup) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(sstup) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(sstup) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(sstup) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(sstup) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(sstup) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(sstup) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(sstup) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(sstup) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(sstup) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(sstup) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(sstup) ^p
+
+**srtdn 3
+[**TEE***]
+[ Rte dn ]
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(srtdn) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(srtdn) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(srtdn) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(srtdn) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(srtdn) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(srtdn) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(srtdn) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(srtdn) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(srtdn) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(srtdn) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(srtdn) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(srtdn) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(srtdn) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(srtdn) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(srtdn) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(srtdn) ^p
+
+**srtup 3
+[**TEE***]
+[ Rte up ]
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(srtup) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(srtup) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(srtup) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(srtup) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(srtup) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(srtup) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(srtup) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(srtup) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(srtup) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(srtup) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(srtup) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(srtup) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(srtup) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(srtup) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(srtup) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(srtup) ^p
+
+**frt 3
+[*Red Tee*]
+[Tee side]
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(frt) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(frt) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(frt) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(frt) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(frt) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(frt) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(frt) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(frt) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(frt) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(frt) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(frt) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(frt) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(frt) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(frt) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(frt) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(frt) ^p
+
+**gatvf 3
+[*Gate f*]
+[--Glov--]$s=x $s=x $s=glbvf
+[-Flange-]^c^c^p(setq flg_end "F")(setq valve-t 1)(gatvf) ^p
+[--Sock--]^c^c^p(setq flg_end "S")(setq valve-t 1)(gatvf) ^p
+[--Thred-]^c^c^p(setq flg_end "T")(setq valve-t 1)(gatvf) ^p
+[GAT_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_22" ]^c^c^p(setq ghk 550)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+[GAT_24" ]^c^c^p(setq ghk 600)(ch-size ghk)(setq valve-t 1)(gatvf) ^p
+
+**glbvf 3
+[*Glov f*]
+[--Gate--]$s=x $s=gatvf
+[-Flange-]^c^c^p(setq flg_end "F")(setq valve-t 2)(gatvf) ^p
+[--Sock--]^c^c^p(setq flg_end "S")(setq valve-t 2)(gatvf) ^p
+[--Thred-]^c^c^p(setq flg_end "T")(setq valve-t 2)(gatvf) ^p
+[GLO_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+[GLO_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 2)(gatvf) ^p
+
+**gatvt 3
+[*Gate t*]
+[--Glov--]$s=x $s=x $s=glbvt
+[-Flange-]^c^c^p(setq flg_end "F")(setq valve-t 1)(gatvt) ^p
+[--Sock--]^c^c^p(setq flg_end "S")(setq valve-t 1)(gatvt) ^p
+[--Thred-]^c^c^p(setq flg_end "T")(setq valve-t 1)(gatvt) ^p
+[GAT_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+[GAT_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(setq valve-t 1)(gatvt) ^p
+
+**glbvt 3
+[*Glov t*]
+[--Gate--]$s=x $s=gatvt
+[-Flange-]^c^c^p(setq flg_end "F")(setq valve-t 2)(gatvt) ^p
+[--Sock--]^c^c^p(setq flg_end "S")(setq valve-t 2)(gatvt) ^p
+[--Thred-]^c^c^p(setq flg_end "T")(setq valve-t 2)(gatvt) ^p
+[GLO_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+[GLO_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 2)(gatvt) ^p
+
+**gatvb 3
+[*Gate b*]
+[--Glov--]$s=x $s=x $s=glbvb
+[-Flange-]^c^c^p(setq flg_end "F")(setq valve-t 1)(gatvb) ^p
+[--Sock--]^c^c^p(setq flg_end "S")(setq valve-t 1)(gatvb) ^p
+[--Thred-]^c^c^p(setq flg_end "T")(setq valve-t 1)(gatvb) ^p
+[GAT_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+[GAT_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(setq valve-t 1)(gatvb) ^p
+
+**glbvb 3
+[*Glov b*]
+[--Gate--]$s=x $s=gatvb
+[-Flange-]^c^c^p(setq flg_end "F")(setq valve-t 2)(gatvb) ^p
+[--Sock--]^c^c^p(setq flg_end "S")(setq valve-t 2)(gatvb) ^p
+[--Thred-]^c^c^p(setq flg_end "T")(setq valve-t 2)(gatvb) ^p
+[GLO_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+[GLO_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 2)(gatvb) ^p
+
+**gatvs 3
+[*Gate s*]
+[--Glov--]$s=x $s=glbvs
+[--While-]$s=x $s=gatvh
+[GAT_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+[GAT_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(setq valve-t 1)(gatvs) ^p
+
+**glbvs 3
+[*Glov s*]
+[--Gate--]$s=x $s=gatvs
+[--While-]$s=x $s=gatvh
+[GLO_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+[GLO_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 2)(gatvs) ^p
+
+**gatvh 3
+[*Gate s*]
+[--Glov--]$s=x $s=glbvh
+[GAT_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+[GAT_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(setq valve-t 1)(gatvh) ^p
+
+**glbvh 3
+[*Glov s*]
+[--Gate--]$s=x $s=gatvh
+[--While-]$s=x $s=gatvh
+[GLO_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+[GLO_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 2)(gatvh) ^p
+
+**chkvf 3
+[*Check*]
+[--Wafer-]^c^c^p(setq flg_end "W")(setq valve-t 3)(chkvf) ^p
+[-Flange-]^c^c^p(setq flg_end "F")(setq valve-t 3)(chkvf) ^p
+[--Thred-]^c^c^p(setq flg_end "T")(setq valve-t 3)(chkvf) ^p
+[CHK_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+[CHK_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(setq valve-t 3)(chkvf) ^p
+
+**balvf 3
+[*Ball f*]
+[-Flange-]^c^c^p(setq flg_end "F")(setq valve-t 4)(balvf) ^p
+[--Sock--]^c^c^p(setq flg_end "S")(setq valve-t 4)(balvf) ^p
+[--Thred-]^c^c^p(setq flg_end "T")(setq valve-t 4)(balvf) ^p
+[BAL_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+[BAL_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 4)(balvf) ^p
+
+**diavf 3
+[**Dia**]
+[-Flange-]^c^c^p(setq flg_end "F")(setq valve-t 4)(diavf) ^p
+[DIA_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+[DIA_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(setq valve-t 6)(diavf) ^p
+
+[~~~~~~~~]
+[  DIA   ]^c^c^p(valset) ^p
+[  TYPE  ]^c^c^p(valset) ^p
+[~~~~~~~~]
+
+**butvf 3
+[**But**]
+[-Flange-]^c^c^p(setq flg_end "F")(setq valve-t 5)(butvf) ^p
+[BUT   2"]^c^c^p(setq ghk  50)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+[BUT21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+[BUT_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+[BUT_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+[BUT_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+[BUT_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+[BUT_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+[BUT_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+[BUT_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+[BUT_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+[BUT_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+[BUT_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+[BUT_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(setq valve-t 5)(butvf) ^p
+
+[~~~~~~~~]
+[  BUT   ]^c^c^p(valset) ^p
+[  TYPE  ]^c^c^p(valset) ^p
+[~~~~~~~~]
+
+**safety 3
+[*Safety*]
+[--side--]
+[25x50  ]^c^c^p(setq ghk  25)(setq ghk1  50)(ch-size ghk)(safety)(prin1) ^p
+[40x50  ]^c^c^p(setq ghk  40)(setq ghk1  50)(ch-size ghk)(safety)(prin1) ^p
+[40x65  ]^c^c^p(setq ghk  40)(setq ghk1  65)(ch-size ghk)(safety)(prin1) ^p
+[40x80  ]^c^c^p(setq ghk  40)(setq ghk1  80)(ch-size ghk)(safety)(prin1) ^p
+[50x80  ]^c^c^p(setq ghk  50)(setq ghk1  80)(ch-size ghk)(safety)(prin1) ^p
+[65x100 ]^c^c^p(setq ghk  65)(setq ghk1 100)(ch-size ghk)(safety)(prin1) ^p
+[80x100 ]^c^c^p(setq ghk  80)(setq ghk1 100)(ch-size ghk)(safety)(prin1) ^p
+[100x150]^c^c^p(setq ghk 100)(setq ghk1 150)(ch-size ghk)(safety)(prin1) ^p
+[150x200]^c^c^p(setq ghk 150)(setq ghk1 200)(ch-size ghk)(safety)(prin1) ^p
+[150x250]^c^c^p(setq ghk 150)(setq ghk1 250)(ch-size ghk)(safety)(prin1) ^p
+[200x250]^c^c^p(setq ghk 200)(setq ghk1 250)(ch-size ghk)(safety)(prin1) ^p
+
+**safetyt 3
+[*Safety*]
+[--top--]
+[25x50  ]^c^c^p(setq ghk  25)(setq ghk1  50)(ch-size ghk)(safetyt)(prin1) ^p
+[40x50  ]^c^c^p(setq ghk  40)(setq ghk1  50)(ch-size ghk)(safetyt)(prin1) ^p
+[40x65  ]^c^c^p(setq ghk  40)(setq ghk1  65)(ch-size ghk)(safetyt)(prin1) ^p
+[40x80  ]^c^c^p(setq ghk  40)(setq ghk1  80)(ch-size ghk)(safetyt)(prin1) ^p
+[50x80  ]^c^c^p(setq ghk  50)(setq ghk1  80)(ch-size ghk)(safetyt)(prin1) ^p
+[65x100 ]^c^c^p(setq ghk  65)(setq ghk1 100)(ch-size ghk)(safetyt)(prin1) ^p
+[80x100 ]^c^c^p(setq ghk  80)(setq ghk1 100)(ch-size ghk)(safetyt)(prin1) ^p
+[100x150]^c^c^p(setq ghk 100)(setq ghk1 150)(ch-size ghk)(safetyt)(prin1) ^p
+[150x200]^c^c^p(setq ghk 150)(setq ghk1 200)(ch-size ghk)(safetyt)(prin1) ^p
+[150x250]^c^c^p(setq ghk 150)(setq ghk1 250)(ch-size ghk)(safetyt)(prin1) ^p
+[200x250]^c^c^p(setq ghk 200)(setq ghk1 250)(ch-size ghk)(safetyt)(prin1) ^p
+**convf 3
+[Control]
+
+[ Front]^c^cINSERT C:/std/pipe/v/CONTROLF \\\
+[ Top]^c^cINSERT C:/std/pipe/v/CONTROLT \\\
+[ Below]^c^cINSERT C:/std/pipe/v/CONTROLB \\\
+[ Side]^c^cINSERT C:/std/pipe/v/CONTROLS \\\
+
+**redvf 3
+[Redv]
+
+[ Front]^c^cINSERT C:/std/pipe/v/REDUF \\\
+[ Top]^c^cINSERT C:/std/pipe/v/REDUT \\\
+[ Below]^c^cINSERT C:/std/pipe/v/REDUB \\\
+[ Side]^c^cINSERT C:/std/pipe/v/REDUS \\\
+
+**gatchkvf 3
+[*Gat+Chk*]
+[--Side--]
+[G+C_1/2"]^c^c^p(setq ghk  15)(gatchkvf)(prin1)
+[G+C_3/4"]^c^c^p(setq ghk  20)(gatchkvf)(prin1)
+[G+C_1"  ]^c^c^p(setq ghk  25)(gatchkvf)(prin1)
+[G+C11/2"]^c^c^p(setq ghk  40)(gatchkvf)(prin1)
+[G+C_2"  ]^c^c^p(setq ghk  50)(gatchkvf)(prin1)
+[G+C21/2"]^c^c^p(setq ghk  65)(gatchkvf)(prin1)
+[G+C_3"  ]^c^c^p(setq ghk  80)(gatchkvf)(prin1)
+[G+C_4"  ]^c^c^p(setq ghk 100)(gatchkvf)(prin1)
+[G+C_5"  ]^c^c^p(setq ghk 125)(gatchkvf)(prin1)
+[G+C_6"  ]^c^c^p(setq ghk 150)(gatchkvf)(prin1)
+[G+C_8"  ]^c^c^p(setq ghk 200)(gatchkvf)(prin1)
+[G+C_10" ]^c^c^p(setq ghk 250)(gatchkvf)(prin1)
+[G+C_12" ]^c^c^p(setq ghk 300)(gatchkvf)(prin1)
+[G+C_14" ]^c^c^p(setq ghk 350)(gatchkvf)(prin1)
+[G+C_16" ]^c^c^p(setq ghk 400)(gatchkvf)(prin1)
+[G+C_18" ]^c^c^p(setq ghk 450)(gatchkvf)(prin1)
+[G+C_20" ]^c^c^p(setq ghk 500)(gatchkvf)(prin1)
+
+**gatstrvf 3
+[*Gat+Str*]
+[--Side--]
+[G+S_1/2"]^c^c^p(setq ghk  15)(gatstrvf)(prin1)
+[G+S_3/4"]^c^c^p(setq ghk  20)(gatstrvf)(prin1)
+[G+S_1"  ]^c^c^p(setq ghk  25)(gatstrvf)(prin1)
+[G+S11/2"]^c^c^p(setq ghk  40)(gatstrvf)(prin1)
+[G+S_2"  ]^c^c^p(setq ghk  50)(gatstrvf)(prin1)
+[G+S21/2"]^c^c^p(setq ghk  65)(gatstrvf)(prin1)
+[G+S_3"  ]^c^c^p(setq ghk  80)(gatstrvf)(prin1)
+[G+S_4"  ]^c^c^p(setq ghk 100)(gatstrvf)(prin1)
+[G+S_5"  ]^c^c^p(setq ghk 125)(gatstrvf)(prin1)
+[G+S_6"  ]^c^c^p(setq ghk 150)(gatstrvf)(prin1)
+[G+S_8"  ]^c^c^p(setq ghk 200)(gatstrvf)(prin1)
+[G+S_10" ]^c^c^p(setq ghk 250)(gatstrvf)(prin1)
+[G+S_12" ]^c^c^p(setq ghk 300)(gatstrvf)(prin1)
+[G+S_14" ]^c^c^p(setq ghk 350)(gatstrvf)(prin1)
+[G+S_16" ]^c^c^p(setq ghk 400)(gatstrvf)(prin1)
+[G+S_18" ]^c^c^p(setq ghk 450)(gatstrvf)(prin1)
+[G+S_20" ]^c^c^p(setq ghk 500)(gatstrvf)(prin1)
+
+**y-strf 3
+[*Y-STR*]
+[--Side--]
+[-Flange-]^c^c^p(setq flg_end "F")(y-strf) ^p
+[--Sock--]^c^c^p(setq flg_end "S")(y-strf) ^p
+[--Thred-]^c^c^p(setq flg_end "T")(y-strf) ^p
+[STR_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(y-strf) ^p
+[STR_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(y-strf) ^p
+[STR_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(y-strf) ^p
+[STR11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(y-strf) ^p
+[STR_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(y-strf) ^p
+[STR21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(y-strf) ^p
+[STR_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(y-strf) ^p
+[STR_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(y-strf) ^p
+[STR_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(y-strf) ^p
+[STR_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(y-strf) ^p
+[STR_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(y-strf) ^p
+[STR_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(y-strf) ^p
+[STR_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(y-strf) ^p
+[STR_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(y-strf) ^p
+[STR_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(y-strf) ^p
+[STR_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(y-strf) ^p
+[STR_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(y-strf) ^p
+
+**b-strf 3
+[*B-str f*]
+[-Flange-]^c^c^p(setq flg_end "F")(b-strf) ^p
+[--Sock--]^c^c^p(setq flg_end "S")(b-strf) ^p
+[--Thred-]^c^c^p(setq flg_end "T")(b-strf) ^p
+[STR_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(b-strf) ^p
+[STR21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(b-strf) ^p
+[STR_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(b-strf) ^p
+[STR_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(b-strf) ^p
+[STR_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(b-strf) ^p
+[STR_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(b-strf) ^p
+[STR_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(b-strf) ^p
+[STR_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(b-strf) ^p
+[STR_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(b-strf) ^p
+[STR_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(b-strf) ^p
+[STR_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(b-strf) ^p
+[STR_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(b-strf) ^p
+[STR_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(b-strf) ^p
+**b-strt 3
+[*B-str t*]
+[-Flange-]^c^c^p(setq flg_end "F")(b-strt) ^p
+[--Sock--]^c^c^p(setq flg_end "S")(b-strt) ^p
+[--Thred-]^c^c^p(setq flg_end "T")(b-strt) ^p
+[STR_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(b-strt) ^p
+[STR21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(b-strt) ^p
+[STR_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(b-strt) ^p
+[STR_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(b-strt) ^p
+[STR_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(b-strt) ^p
+[STR_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(b-strt) ^p
+[STR_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(b-strt) ^p
+[STR_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(b-strt) ^p
+[STR_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(b-strt) ^p
+[STR_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(b-strt) ^p
+[STR_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(b-strt) ^p
+[STR_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(b-strt) ^p
+[STR_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(b-strt) ^p
+**b-strs 3
+[*B-str s*]
+[-Flange-]^c^c^p(setq flg_end "F")(b-strs) ^p
+[--Sock--]^c^c^p(setq flg_end "S")(b-strs) ^p
+[--Thred-]^c^c^p(setq flg_end "T")(b-strs) ^p
+[STR_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(b-strs) ^p
+[STR21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(b-strs) ^p
+[STR_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(b-strs) ^p
+[STR_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(b-strs) ^p
+[STR_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(b-strs) ^p
+[STR_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(b-strs) ^p
+[STR_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(b-strs) ^p
+[STR_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(b-strs) ^p
+[STR_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(b-strs) ^p
+[STR_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(b-strs) ^p
+[STR_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(b-strs) ^p
+[STR_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(b-strs) ^p
+[STR_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(b-strs) ^p
+**t-strf 3
+[*T-str f*]
+[-Flange-]^c^c^p(setq flg_end "F") ^p
+[--Butt--]^c^c^p(setq flg_end "B") ^p
+[STR_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(t-strf) ^p
+[STR11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(t-strf) ^p
+[STR_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(t-strf) ^p
+[STR21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(t-strf) ^p
+[STR_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(t-strf) ^p
+[STR_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(t-strf) ^p
+[STR_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(t-strf) ^p
+[STR_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(t-strf) ^p
+[STR_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(t-strf) ^p
+[STR_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(t-strf) ^p
+[STR_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(t-strf) ^p
+[STR_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(t-strf) ^p
+[STR_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(t-strf) ^p
+[STR_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(t-strf) ^p
+[STR_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(t-strf) ^p
+
+**flx 3
+[**FLEX**]
+[FLX_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(flx)(prin1) ^p
+[FLX_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(flx)(prin1) ^p
+[FLX_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(flx)(prin1) ^p
+[FLX11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(flx)(prin1) ^p
+[FLX_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(flx)(prin1) ^p
+[FLX21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(flx)(prin1) ^p
+[FLX_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(flx)(prin1) ^p
+[FLX_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(flx)(prin1) ^p
+[FLX_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(flx)(prin1) ^p
+[FLX_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(flx)(prin1) ^p
+[FLX_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(flx)(prin1) ^p
+[FLX_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(flx)(prin1) ^p
+[FLX_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(flx)(prin1) ^p
+[FLX_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(flx)(prin1) ^p
+[FLX_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(flx)(prin1) ^p
+[FLX_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(flx)(prin1) ^p
+[FLX_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(flx)(prin1) ^p
+[FLX_22" ]^c^c^p(setq ghk 550)(ch-size ghk)(flx)(prin1) ^p
+[FLX_24" ]^c^c^p(setq ghk 600)(ch-size ghk)(flx)(prin1) ^p
+
+**flowmater 3
+[**F . I**]
+[FI_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(flowmate)(prin1) ^p
+[FI11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(flowmate)(prin1) ^p
+[FI21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_22" ]^c^c^p(setq ghk 550)(ch-size ghk)(flowmate)(prin1) ^p
+[FI_24" ]^c^c^p(setq ghk 600)(ch-size ghk)(flowmate)(prin1) ^p
+
+**flg 3
+[*Nozzle*]
+[--Tank--]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(flg)(prin1) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(flg)(prin1) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(flg)(prin1) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(flg)(prin1) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(flg)(prin1) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(flg)(prin1) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(flg)(prin1) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(flg)(prin1) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(flg)(prin1) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(flg)(prin1) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(flg)(prin1) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(flg)(prin1) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(flg)(prin1) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(flg)(prin1) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(flg)(prin1) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(flg)(prin1) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(flg)(prin1) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(flg)(prin1) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(flg)(prin1) ^p
+**manhole 3
+[*Manhole*]
+[--Tank--]
+[FLG_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(manhole)(prin1) ^p
+[FLG_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(manhole)(prin1) ^p
+[FLG_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(manhole)(prin1) ^p
+[FLG_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(manhole)(prin1) ^p
+[FLG_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(manhole)(prin1) ^p
+[FLG_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(manhole)(prin1) ^p
+[FLG_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(manhole)(prin1) ^p
+[FLG_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(manhole)(prin1) ^p
+[FLG_22" ]^c^c^p(setq ghk 550)(ch-size ghk)(manhole)(prin1) ^p
+[FLG_24" ]^c^c^p(setq ghk 600)(ch-size ghk)(manhole)(prin1) ^p
+
+**wnfflgs 3
+[**W.N***]
+[*Single*]^c^c^p(setq flg-type 1) ^p
+[-Double-]^c^c^p(setq flg-type 0) $s=wnfflgd ^p
+**wnfflgd 3
+[**W.N***]
+[-Single-]^c^c^p(setq flg-type 1) $s=wnfflgs ^p
+[*Double*]^c^c^p(setq flg-type 0) ^p
+**wnfflg 3
+[**W.N***]
+[]
+[]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(wnfflg)(prin1) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(wnfflg)(prin1) ^p
+**flgtl 3
+[**Flg.**]
+[--Sect--]
+[**long**]^c^c^p(setq radu- "R") ^p
+[--sort--]^c^c^p(setq radu- "S") $s=flgts ^p
+**flgts 3
+[**Flg.**]
+[--Sect--]
+[--long--]^c^c^p(setq radu- "R") $s=flgtl ^p
+[**sort**]^c^c^p(setq radu- "S") ^p
+**flgt 3
+[**Flg.**]
+[--Sect--]
+[]
+[]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(flgt)(prin1) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(flgt)(prin1) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(flgt)(prin1) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(flgt)(prin1) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(flgt)(prin1) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(flgt)(prin1) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(flgt)(prin1) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(flgt)(prin1) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(flgt)(prin1) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(flgt)(prin1) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(flgt)(prin1) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(flgt)(prin1) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(flgt)(prin1) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(flgt)(prin1) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(flgt)(prin1) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(flgt)(prin1) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(flgt)(prin1) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(flgt)(prin1) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(flgt)(prin1) ^p
+**sofflgs 3
+[**S.ON**]
+[*Single*]^c^c^p(setq flg-type 1) ^p
+[-Double-]^c^c^p(setq flg-type 0) $s=sofflgd ^p
+**sofflgd 3
+[**S.ON**]
+[-Single-]^c^c^p(setq flg-type 1) $s=sofflgs ^p
+[*Double*]^c^c^p(setq flg-type 0) ^p
+**sofflg 3
+[**S.ON**]
+[]
+[]
+[ 1/2"   ]^c^c^p(setq ghk  15)(ch-size ghk)(sofflg)(prin1) ^p
+[ 3/4"   ]^c^c^p(setq ghk  20)(ch-size ghk)(sofflg)(prin1) ^p
+[ 1"     ]^c^c^p(setq ghk  25)(ch-size ghk)(sofflg)(prin1) ^p
+[ 1-1/2" ]^c^c^p(setq ghk  40)(ch-size ghk)(sofflg)(prin1) ^p
+[ 2"     ]^c^c^p(setq ghk  50)(ch-size ghk)(sofflg)(prin1) ^p
+[ 2-1/2" ]^c^c^p(setq ghk  65)(ch-size ghk)(sofflg)(prin1) ^p
+[ 3"     ]^c^c^p(setq ghk  80)(ch-size ghk)(sofflg)(prin1) ^p
+[ 4"     ]^c^c^p(setq ghk 100)(ch-size ghk)(sofflg)(prin1) ^p
+[ 5"     ]^c^c^p(setq ghk 125)(ch-size ghk)(sofflg)(prin1) ^p
+[ 6"     ]^c^c^p(setq ghk 150)(ch-size ghk)(sofflg)(prin1) ^p
+[ 8"     ]^c^c^p(setq ghk 200)(ch-size ghk)(sofflg)(prin1) ^p
+[ 10"    ]^c^c^p(setq ghk 250)(ch-size ghk)(sofflg)(prin1) ^p
+[ 12"    ]^c^c^p(setq ghk 300)(ch-size ghk)(sofflg)(prin1) ^p
+[ 14"    ]^c^c^p(setq ghk 350)(ch-size ghk)(sofflg)(prin1) ^p
+[ 16"    ]^c^c^p(setq ghk 400)(ch-size ghk)(sofflg)(prin1) ^p
+[ 18"    ]^c^c^p(setq ghk 450)(ch-size ghk)(sofflg)(prin1) ^p
+[ 20"    ]^c^c^p(setq ghk 500)(ch-size ghk)(sofflg)(prin1) ^p
+[ 22"    ]^c^c^p(setq ghk 550)(ch-size ghk)(sofflg)(prin1) ^p
+[ 24"    ]^c^c^p(setq ghk 600)(ch-size ghk)(sofflg)(prin1) ^p
+
+**flg-ang 3
+[*Flg.ang*]
+[*********]
+[ FLG_10  ]$s=x $s=flg-ang1 (setq f-ang 10)
+[ FLG_15  ]$s=x $s=flg-ang1 (setq f-ang 15)
+[ FLG_20  ]$s=x $s=flg-ang1 (setq f-ang 20)
+[ FLG_30  ]$s=x $s=flg-ang1 (setq f-ang 30)
+[ FLG_40  ]$s=x $s=flg-ang1 (setq f-ang 40)
+[ FLG_45  ]$s=x $s=flg-ang1 (setq f-ang 45)
+[ FLG_50  ]$s=x $s=flg-ang1 (setq f-ang 50)
+[ FLG_60  ]$s=x $s=flg-ang1 (setq f-ang 60)
+[ FLG_70  ]$s=x $s=flg-ang1 (setq f-ang 70)
+[ FLG_80  ]$s=x $s=flg-ang1 (setq f-ang 80)
+
+**flg-ang1 3
+[*Flg.ang*]
+[-Return- ]$s=x $s=flg-ang
+[FLG_1/2"]^c^c^p(setq ghk  15)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_3/4"]^c^c^p(setq ghk  20)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_1"  ]^c^c^p(setq ghk  25)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG11/2"]^c^c^p(setq ghk  40)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_2"  ]^c^c^p(setq ghk  50)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG21/2"]^c^c^p(setq ghk  65)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_3"  ]^c^c^p(setq ghk  80)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_4"  ]^c^c^p(setq ghk 100)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_5"  ]^c^c^p(setq ghk 125)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_6"  ]^c^c^p(setq ghk 150)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_8"  ]^c^c^p(setq ghk 200)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_10" ]^c^c^p(setq ghk 250)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_12" ]^c^c^p(setq ghk 300)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_14" ]^c^c^p(setq ghk 350)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_16" ]^c^c^p(setq ghk 400)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_18" ]^c^c^p(setq ghk 450)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_20" ]^c^c^p(setq ghk 500)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_22" ]^c^c^p(setq ghk 550)(ch-size ghk)(flg-ang)(prin1) ^p
+[FLG_24" ]^c^c^p(setq ghk 600)(ch-size ghk)(flg-ang)(prin1) ^p
+
+**equip 3
+[**EQUI**]
+[-10%Equi-]^c^c^p(setq equi-type 1)(equip) ^p
+[-1/2Equi-]^c^c^p(setq equi-type 2)(equip) ^p
+[--Torip--]^c^c^p(setq equi-type 3)(equip) ^p
+[--Tray-- ]^c^c^p(setq equi-type 4)(equip) ^p
+
+
+
+
+**ENDSCREEN
+
+//
+//      Begin AutoCAD Tablet Menus
+//
+//      This is the TABLET1 menu.  You may put your own
+//      macros and menu items here in these spaces.
+//      All of the "blank" line items actually contain a
+//      backslash so that no command is issued when you pick any
+//      of them from the tablet.  Remove them if you want an Enter
+//      to happen when they are selected, or place your own
+//      macros in their place.
+***TABLET1
+[T1-001]^CINSERT U;\;;\
+[T1-002]^CINSERT V;\;;\
+[T1-003]^CINSERT C:/GHK/MPID/TK3
+[T1-004]^CINSERT C:/GHK/MPID/TK3A
+[T1-005]^CINSERT C:/GHK/MPID/TK7
+[T1-006]^CINSERT C:/GHK/MPID/ROT1;\;;\
+[T1-007]^CINSERT C:/GHK/MPID/4P;\;;\
+[T1-008]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@53<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL1" "NON" PT "" ""ANG)
+[T1-009]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@53<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL1" "NON" PT "" ""ANG)
+[T1-010]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@53<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL1" "NON" PT "" ""ANG)
+[T1-011]^CINSERT C:/GHK/MPID/BOX3;\;;\
+[T1-012]^CINSERT C:/GHK/MPID/BOX4;\;;\
+[T1-013]^CINSERT C:/GHK/MPID/CIR;\;;\
+[T1-014]^CINSERT C:/GHK/MPID/SWER3;\;;\
+[T1-015]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/GAT" "NON" PT "" ""ANG)
+[T1-016]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/GLV" "NON" PT "" ""ANG)
+[T1-017]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/BAL" "NON" PT "" ""ANG)
+[T1-018]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/BAL1" "NON" PT "" ""ANG)
+[T1-019]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5.6<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/FT" "NON" PT "" ""ANG)
+[T1-020]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5.6<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/FLW" "NON" PT "" ""ANG)
+[T1-021]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@11.6<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/DIV" "NON" PT "" ""ANG)
+[T1-022]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@10<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/DIVS" "NON" PT "" ""ANG)
+[T1-023]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@10.8<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/EXP" "NON" PT "" ""ANG)
+[T1-024]^CINSERT C:/GHK/MPID/EXP1;\;;\
+[T1-025]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@16<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/EXP2" "NON" PT "" ""ANG)
+[T1-026]^CINSERT C:/GHK/MPID/EXP3;\;;\
+[T1-027]^CINSERT C:/GHK/MPID/HOSCN;\;;\
+[T1-028]^CINSERT C:/GHK/MPID/S;\;;\
+[T1-029]^CINSERT C:/GHK/MPID/T;\;;\
+[T1-030]^CINSERT C:/GHK/MPID/TK3
+[T1-031]^CINSERT C:/GHK/MPID/TK3A
+[T1-032]^CINSERT C:/GHK/MPID/TK7
+[T1-033]^CINSERT C:/GHK/MPID/ROT2
+[T1-034]^CINSERT C:/GHK/MPID/ROT3
+[T1-035]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@42<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL2" "NON" PT "" ""ANG)
+[T1-036]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@42<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL2" "NON" PT "" ""ANG)
+[T1-037]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@42<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL2" "NON" PT "" ""ANG)
+[T1-038]^CINSERT C:/GHK/MPID/JAKT;\;;\
+[T1-039]^CINSERT C:/GHK/MPID/JAKT;\;;\
+[T1-040]^CINSERT C:/GHK/MPID/JAKT;\;;\
+[T1-041]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@11<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/LG" "NON" PT "" ""ANG)
+[T1-042]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CHK" "NON" PT "" ""ANG)
+[T1-043]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ALGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CHK2" "NON" PT "" ""ANG)
+[T1-044]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/PLG" "NON" PT "" ""ANG)
+[T1-045]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/PST" "NON" PT "" ""ANG)
+[T1-046]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@7<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/PRR1" "NON" PT "" ""ANG)
+[T1-047]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@7<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/PRR2" "NON" PT "" ""ANG)
+[T1-048]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@4.667<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/RUD" "NON" PT "" ""ANG)
+[T1-049]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@7<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/RUD1" "NON" PT "" ""ANG)
+[T1-050]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@12<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/FLEX" "NON" PT "" ""ANG)
+[T1-051]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@20<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/FIRTR1" "NON" PT "" ""ANG)
+[T1-052]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@8<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/SG1" "NON" PT "" ""ANG)
+[T1-053]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@9<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/SG2" "NON" PT "" ""ANG)
+[T1-054]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@2<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/ROS1" "NON" PT "" ""ANG)
+[T1-055]^CINSERT Q;\;;\
+[T1-056]^CINSERT R;\;;\
+[T1-057]^CINSERT C:/GHK/MPID/TK6
+[T1-058]^CINSERT C:/GHK/MPID/TK10
+[T1-058]^CINSERT C:/GHK/MPID/TK2
+[T1-060]^CINSERT C:/GHK/MPID/TEB1
+[T1-061]^CINSERT C:/GHK/MPID/TEB2
+[T1-062]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@35<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL3" "NON" PT "" ""ANG)
+[T1-063]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@35<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL3" "NON" PT "" ""ANG)
+[T1-064]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@35<" ANG)) \+
+(COMMAND "INSERT" "C:/GHK/MPID/COL3" "NON" PT "" ""ANG)
+[T1-065]^CINSERT C:/GHK/MPID/SYM1;\;;\
+[T1-066]^CINSERT C:/GHK/MPID/SYM2;\;;\
+[T1-067]^CINSERT C:/GHK/MPID/TAPER1;\;;\
+[T1-068]^CINSERT C:/GHK/MPID/TAPER;\;;\
+[T1-069]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/BUT" "NON" PT "" ""ANG)
+[T1-070]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/DAV" "NON" PT "" ""ANG)
+[T1-071]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/NED" "NON" PT "" ""ANG)
+[T1-072]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/NED1" "NON" PT "" ""ANG)
+[T1-073]^CINSERT C:/GHK/MPID/EJTR
+[T1-074]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5.1<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/TEMST1" "NON" PT "" ""ANG)
+[T1-075]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/TEMST" "NON" PT "" ""ANG)
+[T1-076]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@15<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/ROTMTR" "NON" PT "" ""ANG)
+[T1-077]^CINSERT C:/GHK/MPID/VENT;\;;\
+[T1-078]^CINSERT C:/GHK/MPID/VENT1;\;;\
+[T1-079]^CINSERT C:/GHK/MPID/DRVT;\;;\
+[T1-080]^CINSERT C:/GHK/MPID/DRVT2;\;;\
+[T1-081]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@2<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/ROS2" "NON" PT "" ""ANG)
+[T1-082]^CINSERT O;\;;\
+[T1-083]^CINSERT P;\;;\
+[T1-084]^CINSERT C:/GHK/MPID/TK4;\;;\
+[T1-085]^CINSERT C:/GHK/MPID/TK5;\;;\
+[T1-086]^CINSERT C:/GHK/MPID/TK1;\;;\
+[T1-087]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@10<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/GP1" "NON" PT "" ""ANG)
+[T1-088]^C(SETQ PT (GETPOINT "ISNERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@12<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/GP" "NON" PT "" ""ANG)
+[T1-089]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@35<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL4" "NON" PT "" ""ANG)
+[T1-090]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@35<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL4" "NON" PT "" ""ANG)
+[T1-091]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@35<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL4" "NON" PT "" ""ANG)
+[T1-092]^CINSERT C:/GHK/MPID/ELEC;\;;\
+[T1-093]^CINSERT C:/GHK/MPID/DUFTR;\;;\
+[T1-094]^CINSERT C:/GHK/MPID/FILT;\;;\
+[T1-095]^CINSERT C:/GHK/MPID/FILT1;\;;\
+[T1-096]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CL1" "NON" PT "" ""ANG)
+[T1-097]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CL6" "NON" PT "" ""ANG)
+[T1-098]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CL2" "NON" PT "" ""ANG)
+[T1-099]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CL5" "NON" PT "" ""ANG)
+[T1-100]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@6<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/VRO3" "NON" PT "" ""ANG)
+[T1-101]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@6<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/VRO4" "NON" PT "" ""ANG)
+[T1-102]^CINSERT C:/GHK/MPID/SO;\;;\
+[T1-103]^CINSERT C:/GHK/MPID/SPP;\;;\
+[T1-104]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@7.5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/VEN1" "NON" PT "" ""ANG)
+[T1-105]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/VEN" "NON" PT "" ""ANG)
+[T1-106]^CINSERT C:/GHK/MPID/INS;\;;\
+[T1-107]^CINSERT C:/GHK/MPID/INS1;\;;\
+[T1-108]^CINSERT C:/GHK/MPID/INS2;\;;\
+[T1-109]^CINSERT M;\;;\
+[T1-110]^CINSERT N;\;;\
+[T1-111]^CINSERT C:/GHK/MPID/EXCH;\;;\
+[T1-112]^CINSERT C:/GHK/MPID/EXCH;\;;\
+[T1-113]^CINSERT C:/GHK/MPID/TK1;\;;\
+[T1-114]^C(SET PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@10<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/GP1" "NON" PT "" ""ANG)
+[T1-115]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@12<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/GP" "NON" PT "" ""ANG)
+[T1-116]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@30<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL5" "NON" PT "" ""ANG)
+[T1-117]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@30<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL5" "NON" PT "" ""ANG)
+[T1-118]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (AGNTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@30<" ANG)) +
+(COMMAND "ISNERT" "C:/GHK/MPID/COL5" "NON" PT "" ""ANG)
+[T1-119]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/FILTER" "NON" PT "" ""ANG)
+[T1-120]^CINSERT C:/GHK/MPID/FLAME;\;;\
+[T1-121]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@20<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/FIRTR1" "NON" PT "" ""ANG)
+[T1-122]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@20<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/FIRTR1" "NON" PT "" ""ANG)
+[T1-123]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CL3" "NON" PT "" ""ANG)
+[T1-124]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CL4" "NON" PT "" ""ANG)
+[T1-125]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CL4A" "NON" PT "" ""ANG)
+[T1-126]^CINSERT C:/GHK/MPID/CL;\;;\
+[T1-127]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@6<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/VRO1" "NON" PT "" ""ANG)
+[T1-128]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@6<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/VRO2" "NON" PT "" ""ANG)
+[T1-129]^CINSERT C:/GHK/MPID/SPO
+[T1-130]^CINSERT C:/GHK/MPID/SPC
+[T1-131]
+[T1-132]
+[T1-133]
+[T1-134]
+[T1-135]
+[T1-136]^CINSERT K;\;;\
+[T1-137]^CINSERT L;\;;\
+[T1-138]^CINSERT C:/GHK/MPID/TK9
+[T1-139]^CINSERT C:/GHK/MPID/TK9
+[T1-140]^CINSERT C:/GHK/MPID/TK12
+[T1-141]^CINSERT C:/GHK/MPID/MET;\;;\
+[T1-142]^CINSERT C:/GHK/MPID/MET1;\;;\
+[T1-143]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@38<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL9" "NON" PT "" ""ANG)
+[T1-144]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@38<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL9" "NON" PT "" ""ANG)
+[T1-145]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@38<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL9" "NON" PT "" ""ANG)
+[T1-146]^CINSERT C:/GHK/MPID/BOX;\;;\
+[T1-147]^CINSERT C:/GHK/MPID/BOX1;\;;\
+[T1-148]^CINSERT C:/GHK/MPID/CIRX;\;;\
+[T1-149]^CINSERT C:/GHK/MPID/CIRS;\;;\
+[T1-150]^CINSERT C:/GHK/MPID/3WY;\;;\
+[T1-151]^CINSERT C:/GHK/MPID/ANG;\;;\
+[T1-152]^CINSERT C:/GHK/MPID/ANV;\;;\
+[T1-153]^CINSERT C:/GHK/MPID/SAV;\;;\
+[T1-154]^CINSERT C:/GHK/MPID/MH;\;;\
+[T1-155]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5.6<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/TOTAL" "NON" PT "" ""ANG)
+[T1-156]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@1.6<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/BLO" "NON" PT "" ""ANG)
+[T1-157]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@1.6<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/BLC" "NON" PT "" ""ANG)
+[T1-158]^CINSERT C:/GHK/MPID/SP;\;;\
+[T1-159]^CINSERT C:/GHK/MPID/S1;\;;\
+[T1-160]^CINSERT C:/GHK/MPID/S2;\;;\
+[T1-161]^CINSERT C:/GHK/MPID/S3;\;;\
+[T1-162]^CINSERT C:/GHK/MPID/S4;\;;\
+[T1-163]^CINSERT I;\;;\
+[T1-164]^CINSERT J;\;;\
+[T1-165]^CINSERT C:/GHK/MPID/TK11
+[T1-166]^CINSERT C:/GHK/MPID/TK11
+[T1-167]^CINSERT C:/GHK/MPID/TK12
+[T1-168]^CINSERT C:/GHK/MPID/VFTR
+[T1-169]^CINSERT C:/GHK/MPID/VEP
+[T1-170]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@38<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL8" "NON" PT "" ""ANG)
+[T1-171]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@38<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL8" "NON" PT "" ""ANG)
+[T1-172]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@38<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL8" "NON" PT "" ""ANG)
+[T1-173]^CINSERT C:/GHK/MPID/SWER1;\;;\
+[T1-174]^CINSERT C:/GHK/MPID/SWER;\;;\
+[T1-175]^CINSERT C:/GHK/MPID/SHAWER;\;;\
+[T1-176]^CINSERT C:/GHK/MPID/SWER2;\;;\
+[T1-177]^CINSERT C:/GHK/MPID/3WY3;\;;\
+[T1-178]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CM" "NON" PT "" ""ANG)
+[T1-179]^CINSERT C:/GHK/MPID/CS;\;;\
+[T1-180]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CS1" "NON" PT "" ""ANG)
+[T1-181]^CINSERT C:/GHK/MPID/MHH;\;;\
+[T1-182]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@1.6<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/ORIF" "NON" PT "" ""ANG)
+[T1-183]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@1<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/BLF" "NON" PT "" ""ANG)
+[T1-184]^CINSERT C:/GHK/MPID/FLG;\;;\
+[T1-185]^CINSERT C:/GHK/MPID/B5;\;;\
+[T1-186]^CINSERT C:/GHK/MPID/B1;\;;\
+[T1-187]^CINSERT C:/GHK/MPID/B2;\;;\
+[T1-188]^CINSERT C:/GHK/MPID/B3;\;;\
+[T1-189]^CINSERT C:/GHK/MPID/B4;\;;\
+[T1-190]^CINSERT C:/GHK/MPID/G
+[T1-191]^CINSERT C:/GHK/MPID/H
+[T1-192]^CINSERT C:/GHK/MPID/TK13
+[T1-193]^CINSERT C:/GHK/MPID/TK8
+[T1-194]^CINSERT C:/GHK/MPID/TK12
+[T1-195]^CINSERT C:/GHK/MPID/IMPEL
+[T1-196]^CINSERT C:/GHK/MPID/IMPEL
+[T1-197]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@23<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL6" "NON" PT "" ""ANG)
+[T1-198]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@23<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL6" "NON" PT "" ""ANG)
+[T1-199]^CINSERT C:/GHK/MPID/BY1;\;;\
+[T1-200]^CINSERT C:/GHK/MPID/BY1;\;;\
+[T1-201]^CINSERT C:/GHK/MPID/BY1;\;;\
+[T1-202]^CINSERT C:/GHK/MPID/BY5;\;;\
+[T1-203]^CINSERT C:/GHK/MPID/BY5;\;;\
+[T1-204]^CINSERT C:/GHK/MPID/4WY;\;;\
+[T1-205]^CINSERT C:/GHK/MPID/3WY2;\;;\
+[T1-206]^CINSERT C:/GHK/MPID/SWF;\;;\
+[T1-207]^CINSERT C:/GHK/MPID/3WS;\;;\
+[T1-208]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@4<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/RED" "NON" PT "" ""ANG)
+[T1-209]^CINSERT C:/GHK/MPID/CAP1;\;;\
+[T1-210]^CINSERT C:/GHK/MPID/CAP2;\;;\
+[T1-211]^CINSERT C:/GHK/MPID/PLU;\;;\
+[T1-212]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ T (GETSTRING 5 "Tag name...?")) \+
+(SETQ N (GETSTRING 5 "Tag number...?")) \+
+(COMMAND "INSERT" "C:/GHK/MPID/TAG8" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ 1 (CADR P1)))) +
+(SETQ T2 (LIST (CAR P1) (- (CADR P1) 3))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.5" "0" T) +
+(COMMAND "TEXT" "C" T2 "2.5" "0" N)
+[T1-213]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ T (GETSTRING 1 "Tag name...?")) \+
+(SETQ N1 (GETSTRING 1 "Tag number1...?")) \+
+(SETQ N2 (GETSTRING 1 "Tag number2...?")) \+
+(COMMAND "INSERT" "C:/GHK/MPID/TAG4" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ 1.8 (CADR P1)))) +
+(SETQ T2 (LIST (CAR P1) (+ 1 (CADR P1) -2.3))) +
+(SETQ T3 (LIST (CAR P1) (+ 1 (CADR P1) -5.1))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.3" "0" T) +
+(COMMAND "TEXT" "C" T2 "2.3" "0" N1) +
+(COMMAND "TEXT" "C" T3 "2.3" "0" N2)
+[T1-214]^CINSERT C:/GHK/MPID/FFF;\;;\
+[T1-215]^CINSERT C:/GHK/MPID/ARR;\;;\
+[T1-216]^CINSERT C:/GHK/MPID/BUKT;\;;\
+[T1-217]^CINSERT E;\;;\
+[T1-218]^CINSERT F;\;;\
+[T1-219]^CINSERT C:/GHK/MPID/TK13
+[T1-220]^CINSERT C:/GHK/MPID/COM
+[T1-221]^CINSERT C:/GHK/MPID/PUM2;\;;\
+[T1-222]^CINSERT C:/GHK/MPID/PUM1;\;;\
+[T1-223]^CINSERT C:/GHK/MPID/PUM3;\;;\
+[T1-224]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@23<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL7" "NON" PT "" ""ANG)
+[T1-225]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (AGNTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@23<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL7" "NON" PT "" ""ANG)
+[T1-226]^CINSERT C:/GHK/MPID/BY2;\;;\
+[T1-227]^CINSERT C:/GHK/MPID/BY2;\;;\
+[T1-228]^CINSERT C:/GHK/MPID/BY2;\;;\
+[T1-229]^CINSERT C:/GHK/MPID/BY6;\;;\
+[T1-230]^CINSERT C:/GHK/MPID/BY6;\;;\
+[T1-231]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CH1" "NON" PT "" ""ANG)
+[T1-232]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CH2" "NON" PT "" ""ANG)
+[T1-233]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CH1A" "NON" PT "" ""ANG)
+[T1-234]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/CH2A" "NON" PT "" ""ANG)
+[T1-235]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/TRP" "NON" PT "" ""ANG)
+[T1-236]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG))+
+(COMMAND "INSERT" "C:/GHK/MPID/TRP1" "NON" PT "" ""ANG)
+[T1-237]^CINSERT C:/GHK/MPID/PSTV;\;;\
+[T1-238]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@2<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/PSTW" "NON" PT "" ""ANG)
+[T1-239]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ T (GETSTRING 5 "Tag neme...?")) \+
+(SETQ N (GETSTRING 5 "Tag number...?")) \+
+(COMMAND "INSERT" "C:/GHK/MPID/TAG3" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ 1 (CADR P1)))) +
+(SETQ T2 (LIST (CAR P1) (- (CADR P1) 3.5))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.5" "0" T) +
+(COMMAND "TEXT" "C" T2 "2.5" "0" N)
+[T1-240]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ T (GETSTRING 5 "Tag name...?")) \+
+(SETQ N (GETSTRING 5 "Tag number...?")) \+
+(COMMAND "INSERT" "C:/GHK/MPID/TAG7" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ 1 (CADR P1)))) +
+(SETQ T2 (LIST (CAR P1) (- (CADR P1) 3.5))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.5" "0" T) +
+(COMMAND "TEXT" "C" T2 "2.5" "0" N)
+[T1-241]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ T (GETSTRING 5 "Tag name...?")) \+
+(SETQ N (GETSTRING 5 "Tag number...?")) \+
+(COMMAND "INSERT" "C:/GHK/MPID/TAG11" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ 1.2 (CADR P1)))) +
+(SETQ T2 (LIST (CAR P1) (- (CADR P1) 3.7))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.5" "0" T) +
+(COMMAND "TEXT" "C" T2 "2.5" "0" N)
+[T1-242]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ T (GETSTRING 5 "Tag name...?")) \+
+(SETQ N (GETSTRING 5 "Tag number...?")) \+
+(COMMAND "INSERT" "C:/GHK/MPID/TAG12" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ 1.2 (CADR P1)))) +
+(SETQ T2 (LIST (CAR P1) (- (CADR P1) 3.7))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.5" "0" T) +
+(COMMAND "TEXT" "C" T2 "2.5" "0" N)
+[T1-243]^CINSERT C:/GHK/MPID/TAG10;\;;\
+[T1-244]^CINSERT C;\;;\
+[T1-245]^CINSERT D;\;;\
+[T1-246]^CINSERT C:/GHK/MPID/TK13
+[T1-247]^CINSERT C:/GHK/MPID/RECI
+[T1-248]^CINSERT C:/GHK/MPID/BLO1;\;;\
+[T1-249]^CINSERT C:/GHK/MPID/BLO2;\;;\
+[T1-250]^CINSERT C:/GHK/MPID/BLO3;\;;\
+[T1-251]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@31<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL10" "NON" PT "" ""ANG)
+[T1-252]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@31<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL10" "NON" PT "" ""ANG)
+[T1-253]^CINSERT C:/GHK/MPID/BY3;\;;\
+[T1-254]^CINSERT C:/GHK/MPID/BY3;\;;\
+[T1-255]^CINSERT C:/GHK/MPID/BY3;\;;\
+[T1-256]^CINSERT C:/GHK/MPID/BY7;\;;\
+[T1-257]^CINSERT C:/GHK/MPID/BY7;\;;\
+[T1-258]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/GAH" "NON" PT "" ""ANG)
+[T1-259]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@6.6<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/GAF" "NON" PT "" ""ANG)
+[T1-260]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/NED2" "NON" PT "" ""ANG)
+[T1-261]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/YVA" "NON" PT "" ""ANG)
+[T1-262]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@7<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/BSTR" "NON" PT "" ""ANG)
+[T1-263]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/TSTR" "NON" PT "" ""ANG)
+[T1-264]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/YSTR1" "NON" PT "" ""ANG)
+[T1-265]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/YSTR2" "NON" PT "" ""ANG)
+[T1-266]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ T (GETSTRING 5 "Tag name...?")) \+
+(SETQ N (GETSTRING 5 "Tag number...?")) \+
+(COMMAND "INSERT" "C:/GHK/MPID/TAG1" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ 0.9 (CADR P1 )))) +
+(SETQ T2 (LIST (CAR P1) (- (CADR P1) 3.2))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.5" "0" T) +
+(COMMAND "TEXT" "C" T2 "2.5" "0" N) 
+[T1-267]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ T (GETSTRING 1 "Tag name...?")) \+
+(SETQ N1 (GETSTRING 1 "Tag number1...?")) \+
+(SETQ N2 (GETSTRING 1 "Tag number2...?")) \+
+(COMMAND "INSERT" "D:/ISO/SYMBOL/TAG2" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ 1.6 (CADR P1))))+
+(SETQ T2 (LIST (CAR P1) (+ 1 (CADR P1) -2.3))) +
+(SETQ T3 (LIST (CAR P1) (+ 1 (CADR P1) -5.2))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.3" "0" T) +
+(COMMAND "TEXT" "C" T2 "2.3" "0" N1) +
+(COMMAND "TEXT" "C" T3 "2.3" "0" N2)
+[T1-268]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ T (GETSTRING 1 "Tag name...?")) \+
+(SETQ N (GETSTRING 1 "Tag number...?")) \+
+(COMMAND "INSERT" "C:/GHK/MPID/TAG5" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ 1(CADR P1)))) +
+(SETQ T2 (LIST (CAR P1) (- (CADR P1) 3.3))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.5" "0" T) +
+(COMMAND "TEXT" "C" T2 "2.5" "0" N)
+[T1-269]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ T (GETSTRING 1 "Tag name...?")) \+
+(SETQ N (GETSTRING 1 "Tag number...?")) \+
+(COMMAND "INSERT" "C:/GHK/MPID/TAG9" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ 1.2 (CADR P1)))) +
+(SETQ T2 (LIST (CAR P1) (- (CADR P1) 3.55))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.5" "0" T) +
+(COMMAND "TEXT" "C" T2 "2.5" "0" N) 
+[T1-270]^CINSERT C:/GHK/MPID/TAG6;\;;\
+[T1-271]^CINSERT A;\;;\
+[T1-272]^CINSERT B;\;;\
+[T1-273]^CINSERT C:/GHK/MPID/TKRAIL;\;;\
+[T1-274]^CINSERT C:/GHK/MPID/TRUCK;\;;\
+[T1-275]^CINSERT C:/GHK/MPID/LIQ
+[T1-276]^CINSERT C:/GHK/MPID/TUBNE
+[T1-277]^CINSERT C:/GHK/MPID/MOT;\;;\
+[T1-278]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@19<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL11" "NON" PT "" ""ANG)
+[T1-279]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@19<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/COL11" "NON" PT "" ""ANG)
+[T1-280]^CINSERT C:/GHK/MPID/BY4;\;;\
+[T1-281]^CINSERT C:/GHK/MPID/BY4;\;;\
+[T1-282]^CINSERT C:/GHK/MPID/BY4;\;;\
+[T1-283]^CINSERT C:/GHK/MPID/BY8;\;;\
+[T1-284]^CINSERT C:/GHK/MPID/BY8;\;;\
+[T1-285]^CINSERT C:/GHK/MPID/GL;\;;\
+[T1-286]^CINSERT C:/GHK/MPID/BA;\;;\
+[T1-287]^CINSERT C:/GHK/MPID/HD;\;;\
+[T1-288]^CINSERT C:/GHK/MPID/FTV;\;;\
+[T1-289]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@7<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/FUJ" "NON" PT "" ""ANG)
+[T1-290]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@5<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/DAMP" "NON" PT "" ""ANG)
+[T1-291]^CINSERT C:/GHK/MPID/BRK;\;;\
+[T1-292]^CINSERT C:/GHK/MPID/DUPI
+[T1-293]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ T (GETSTRING 1 "Tag name...?")) \+
+(SETQ N (GETSTRING 1 "Tag number...?")) \+
+(COMMAND "INSERT" "C:/GHK/MPID/PG" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ 18 (CADR P1)))) +
+(SETQ T2 (LIST (CAR P1) (+ (CADR P1) 14))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.5" "0" T) +
+(COMMAND "TEXT" "C" T2 "2.5" "0" N)
+[T1-294]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ T (GETSTRING 1 "Tag name...?")) \+
+(SETQ N (GETSTRING 1 "Tag number...?")) \+
+(COMMAND "INSERT" "C:/GHK/MPID/PG1" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ 22.8 (CADR P1)))) +
+(SETQ T2 (LIST (CAR P1) (+ (CADR P1) 18.8))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.5" "0" T) +
+(COMMAND "TEXT" "C" T2 "2.5" "0" N) 
+[T1-295]^C^C(SETQ P1 (GETPOINT "INSERT POINT...")) \+
+(SETQ N (GETSTRING 1 "Tag number...?")) \+
+(COMMAND "INSERT" "C:/GHK/MPID/FE" P1 "1" "1" "0") +
+(SETQ T1 (LIST (CAR P1) (+ (CADR P1) 12))) +
+(COMMAND "TEXT" "S" "STANDARD" "C" T1 "2.5" "0" N)
+[T1-296]^C(SETQ PT (GETPOINT "INSERT POINT...")) \+
+(SETQ ANG (STRCAT (ANGTOS (GETANGLE PT "ROTATION ANGLE...") 0 4 ))) \+
+(COMMAND "BREAK" "NON" PT "NON" (STRCAT "@2<" ANG)) +
+(COMMAND "INSERT" "C:/GHK/MPID/RO" "NON" PT "" ""ANG)
+[T1-297]^CINSERT C:/GHK/MPID/WATER
+
+
+
+
+
+
+***TABLET2
+[T2-001]
+[T2-002]
+[T2-003]
+[T2-004]
+[T2-005]
+[T2-006]
+[T2-007]
+[T2-008]
+[T2-009]
+[T2-010]
+[T2-011]
+[T2-012]^CTEXT;C;\2.5;\
+[T2-013]^CTEXT;C;\2.5;\
+[T2-014]^CERASE
+[T2-015]^CERASE
+[T2-016]^CSTATUS
+[T2-017]^CCHANGE
+[T2-018]^CLINE
+[T2-019]^CLINE
+[T2-020]^CLINE
+[T2-021]^CZOOM;W
+[T2-022]^CZOOM;W
+[T2-023]^CTEXT;R
+[T2-024]^CTEXT;L
+[T2-025]^COOPS
+[T2-026]^COOPS
+[T2-027]^CLIMITS;;
+[T2-028]^CCHANGE;\;P;C;\;
+[T2-029]^CCHANGE;\;P;C;\;
+[T2-030]^CPLINE
+[T2-031]^CPLINE
+[T2-032]^CZOOM;P
+[T2-033]^CZOOM;P
+[T2-034]^CTEXT;A
+[T2-035]^CTEXT;M
+[T2-036]^CDIST
+[T2-037]^CDIST
+[T2-038]^CPEDIT
+[T2-039]^CCHANGE;\;P;LT;\;
+[T1-040]^CCHANGE;\;P;LT;\;
+[T2-041]^CCIRCLE
+[T2-042]^CARC
+[T2-043]^CZOOM;A
+[T2-044]^CZOOM;A
+[T2-045]^CTEXT;F
+[T2-046]^CTEXT;F
+[T2-047]^CEXTEND
+[T2-048]^CEXTEND
+[T2-049]^CSCALE
+[T2-050]^CCHANGE;\;;;;;;
+[T2-051]^CCHANGE;\;;;;;;
+[T2-052]^CELLIPSE
+[T2-053]^CELLIPSE
+[T2-054]^CZOOM;E
+[T2-055]^CZOOM;E
+[T2-056]^CTEXT;C;\\\%%U\
+[T2-057]^CTEXT;C;\\\%%U\
+[T2-058]^COFFSET
+[T2-059]^COFFSET
+[T2-060]^CDIVIDE
+[T2-061]^CLIST
+[T2-062]^CLIST
+[T2-063]^CELLIPSE;I
+[T2-064]^CELLIPSE;I
+[T2-065]^CZOOM;D
+[T2-066]^CZOOM;D
+[T2-067]^CTEXT;C;\\\%%D\
+[T2-068]^CTEXT;C;\\\%%D\
+[T2-069]^CROTATE
+[T2-070]^CROTATE
+[T2-071]
+[T2-072]^CMOVE
+[T2-073]^CMOVE
+[T2-074]^CPOINT
+[T2-075]^CPOINT
+[T2-076]^CPAN
+[T2-077]^CPAN
+[T2-078]^CTEXT;C;\\\%%C\
+[T2-079]^CTEXT;C;\\\%%P\
+[T2-080]^CTRIM
+[T2-081]^CTRIM
+[T2-082]
+[T2-083]^CBREAK
+[T2-084]^CBREAK
+[T2-085]^CDONUT
+[T2-086]^CDONUT
+[T2-087]^CVIEW
+[T2-088]^CVIEW
+[T2-089]
+[T2-090]
+[T2-091]^CARRAY
+[T2-092]^CARRAY
+[T2-093]
+[T2-094]^CCOPY
+[T2-095]^CCOPY
+[T2-096]
+[T2-097]
+[T2-098]
+[T2-099]
+[T2-100]^CBLOCK
+[T2-101]^CBLOCK
+[T2-102]^CEXPLODE
+[T2-103]^CEXPLODE
+[T2-104]
+[T2-105]^CSTRETCH;C;\
+[T2-106]^CSTRETCH;W;\
+[T2-107]^CINSERT C:/GHK/MPID/F;\;;\
+[T2-108]^CINSERT C:/GHK/MPID/K;\;;\
+[T2-109]^CINSERT C:/GHK/MPID/K1;\;;\
+[T2-110]^CDDRMODES
+[T2-111]^CWBLOCK;\;
+[T2-112]^CWBLOCK;\;
+[T2-113]^CFILLET;R;0;;\
+[T2-114]^CFILLET;R;0;;\
+[T2-115]
+[T2-116]^CFILLET;R;\;\
+[T2-117]^CFILLET;R;\;\
+[T2-118]^CINSERT C:/GHK/MPID/X3;\;;\
+[T2-119]^CINSERT C:/GHK/MPID/X2;\;;\
+[T2-120]^CINSERT C:/GHK/MPID/X1;\;;\
+[T2-121]^CDDRMODES
+[T2-122]^CINSERT
+[T2-123]^CINSERT
+[T2-124]^CCHAMFER;D;\;;
+[T2-125]^CCHAMFER;D;\;;
+[T2-126]
+[T2-127]^CMIRROR
+[T2-128]^CMIRROR
+[T2-129]^CINSERT C:/GHK/MPID/GLL;\;;\
+[T2-130]^CINSERT C:/GHK/MPID/GLL;\;;\
+[T2-131]^CINSERT C:/GHK/MPID/XR;\;;\
+[T2-131]^E
+
+
+
+
+
+***TABLET3
+[T3-001]
+[T3-002]
+[T3-003]
+[T3-004]
+[T3-005]
+[T3-006]
+[T3-007]
+[T3-008]
+[T3-009]
+[T3-010]
+[T3-011]
+[T3-012]
+[T3-013]
+[T3-014]
+[T3-015]
+[T3-016]
+[T3-017]
+[T3-018]
+[T3-019]
+[T3-020]
+[T3-021]
+[T3-022]
+[T3-023]
+[T3-024]
+[T3-025]
+[T3-026]
+[T3-027]
+[T3-028]^CMENU
+[T3-029]^CMENU
+[T3-030]^CLAYER
+[T3-031]^CLAYER;S;\;
+[T3-032]^CSNAP
+[T3-033]^CGRID
+[T3-034]^CAXIS
+[T3-035]^CSTYLE;STANDARD;SIMPLEX;0;;;;;:
+[T3-036]^CSTYLE;STANDARD;SIMPLEX;0;;;;;;
+[T3-037]^CSTYLE;ROMAND;ROMAND;0;;;;;;
+[T3-038]^CSTYLE;ROMAND;ROMAND;0;;;;;;
+[T3-039]U
+[T3-040]NEAR
+[T3-041]CEN
+[T3-042]ENDP
+[T3-043]MID
+[T3-044]INT
+[T3-045]NODE
+[T3-046]PERP
+[T3-047]QUAD
+[T3-048]TAN
+[T3-049]^C(LOAD "KDJ")
+[T3-050]^C(LOAD "KDJ")
+[T3-051]^CCT
+[T3-052]^CCHT
+[T3-053]^CEND
+[T3-054]^CEND
+[T3-055]^CLOAD
+[T3-056]^CLOAD
+[T3-057]^CDDLMODES
+[T3-058]^CLAYER;M
+[T3-059]^CDRAGMODE
+[T3-060]^CBLIPMODE
+[T3-061]^CREGENAUTO
+[T3-062]^CSTYLE;ROMANC;ROMANC;0;;;;;;
+[T3-063]^CSTYLE;ROMANC;ROMANC;0;;;;;;
+[T3-064]^CSTYLE;ROMANT;ROMANT;0;;;;;;
+[T3-065]^CSTYLE;ROMANT;ROMANT;0;;;;;;
+[T3-066]^C
+[T3-067]^C
+[T3-068]^CREDO
+[T3-069]M
+[T3-070]W
+[T3-071]C
+[T3-072]P
+[T3-073]L
+[T3-074]R
+[T3-075]A
+[T3-076]^CTEXT0
+[T3-077]^CDELPTS
+[T3-078]^CTEXTSPC
+[T3-079]^CRETANG
+[T3-080]^CSAVE
+[T3-081]^CSAVE
+[T3-082]^CTABLET;CFG
+[T3-083]^CTABLET;CFG
+[T3-084]^CLAYER;ON
+[T3-085]^CLAYER;OFF
+[T3-086]^CSETVAR;APERTURE
+[T3-087]^CSETVAR;PICKBOX
+[T3-088]^CLTSCALE
+[T3-089]^CSTYLE;ITALICC;ITALICC;0;;;;;;
+[T3-090]^CSTYLE;ITALICC;ITALICC;0;;;;;;
+[T3-091]^CSTYLE;ITALIC;ITALIC;0;;;;;;
+[T3-092]^CSTYLE;ITALIC;ITALIC;0;;;;;;
+[T3-093]^CU
+[T3-094]^CU
+[T3-095]^CLIMITS;;1120,792;STYLE;STANDARD;SIMPLEX;;;;;;;BLIPMODE;OFF;+
+INSERT D:/PID/A-FMTA0;0,0;;;;ZOOM;A
+[T3-096]^CLIMITS;;792,555;STYLE;STANDARD;SIMPLEX;;;;;;;BLIPMODE;OFF;+
+INSERT D:/PID/A-FMTA1;0,0;;;;ZOOM;A
+[T3-097]^CLIMITS;;555,391;STYLE;STANDARD;SIMPLEX;;;;;;;BLIPMODE;OFF;+
+INSERT D:/PID/A-FMTA2;0,0;;;;ZOOM;A
+[T3-098]^CLIMITS;;388,271;STYLE;STANDARD;SIMPLEX;;;;;;;BLIPMODE;OFF;+
+INSERT D:/PID/A-FMTA3;0,0;;;;ZOOM;A
+[T3-099]^CLIMITS;;792,555;STYLE;STANDARD;SIMPLEX;;;;;;;BLIPMODE;OFF;+
+INSERT D:/PID/FMT1;0,0;;;;ZOOM;A
+[T3-100]^CLIMITS;;792,555;STYLE;STANDARD;SIMPLEX;;;;;;;BLIPMODE;OFF;+
+INSERT D:/PID/FMT2;0,0;;;;ZOOM;A
+[T3-101]^CPLOT;L
+[T3-102]^CPLOT;L
+[T3-103]^CTXTIN
+[T3-104]
+[T3-105]
+[T3-106]
+[T3-107]^CQUIT;Y;
+[T3-108]^CFILES;1;
+

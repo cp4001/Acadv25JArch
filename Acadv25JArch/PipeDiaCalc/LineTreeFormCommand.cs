@@ -11,7 +11,7 @@ namespace PipeLoad2
 {
     public class LineTreeFormCommand
     {
-        [CommandMethod("LINETREE_FORM")]
+        [CommandMethod("PipeTree")]
         public void Cmd_LineTreeForm()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;

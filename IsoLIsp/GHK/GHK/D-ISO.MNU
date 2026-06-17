@@ -1,0 +1,3964 @@
+//
+//      AutoCAD menu file - C:\ghk\iso.mnc
+//
+
+***MENUGROUP=ISO
+
+***BUTTONS1
+$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,5),GRIP_),$P0=ACAD.GRIPS $P0=*);
+$P0=SNAP $p0=* 
+^C^C
+^B
+^O
+^G
+^D
+^E
+^T
+
+***BUTTONS2
+$P0=SNAP $p0=* 
+
+***AUX1
+$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,5),GRIP_),$P0=ACAD.GRIPS $P0=*);
+^E
+$P0=SNAP $p0=* 
+^C^C
+^B
+^G
+^D
+^E
+^T
+
+***AUX2
+$P0=SNAP $p0=* 
+$P0=SNAP $p0=* 
+
+***AUX3
+^E
+$P0=SNAP $p0=* 
+
+***AUX4
+^E
+$P0=SNAP $p0=* 
+
+***POP0
+**SNAP
+               [객체 스냅 커서 메뉴(&O)]
+ID_Tracking    [추적하기(&k)]_tracking 
+ID_From        [시작점(&F)]_from 
+ID_MnPointFi   [->점 필터(&l)]
+ID_PointFilx     [.X].X 
+ID_PointFily     [.Y].Y 
+ID_PointFilz     [.Z].Z 
+                 [--]
+ID_PointFixy     [.XY].XY 
+ID_PointFixz     [.XZ].XZ 
+ID_PointFiyz     [<-.YZ].YZ 
+               [--]
+ID_OsnapEndp   [끝점(&E)]_endp 
+ID_OsnapMidp   [중간점(&M)]_mid 
+ID_OsnapInte   [교차점(&I)]_int 
+ID_OsnapAppa   [가상 교차점(&A)]_appint 
+               [--]
+ID_OsnapCent   [중심점(&C)]_cen 
+ID_OsnapQuad   [사분점(&Q)]_qua 
+ID_OsnapTang   [접선(&T)]_tan 
+               [--]
+ID_OsnapPerp   [수직점(&P)]_per 
+ID_OsnapNode   [절점(&d)]_nod 
+ID_OsnapInse   [삽입점(&s)]_ins 
+ID_OsnapNear   [근처(&r)]_nea 
+ID_OsnapNone   [없음(&N)]_non 
+               [--]
+ID_Osnap       [객체스냅 설정값(&O)...]'_osnap 
+
+***POP1
+**FILE
+ID_MnFile      [&File]
+ID_New         [&New...	Ctrl+N]^C^C_new 
+ID_Open        [&Open...	Ctrl+O]^C^C_open 
+               [--]
+ID_Save        [&Save	Ctrl+S]^C^C_qsave 
+ID_Saveas      [Save &As...]^C^C_saveas 
+ID_Export      [&Export...]^C^C_export 
+               [--]
+ID_Config      [P&rinter Setup...]^C^C_config 
+ID_Preview     [Print Pre&view]^C^C_preview 
+ID_Print       [&Print...	Ctrl+P]^C^C_plot 
+               [--]
+ID_MnDrawing   [->Drawing &Utilities]
+ID_Audit         [&Audit]^C^C_audit 
+ID_Recover       [&Recover...]^C^C_recover 
+                 [--]
+ID_MnPurge       [->&Purge]
+ID_PurgeAll        [&All]^C^C_purge _a 
+                   [--]
+ID_PurgeLay        [&Layers]^C^C_purge _la 
+ID_PurgeLin        [Li&netypes]^C^C_purge _lt 
+ID_PurgeTxt        [&Text Styles]^C^C_purge _st 
+ID_PurgeDim        [&Dimension Styles]^C^C_purge _d 
+ID_PurgeMln        [&Multiline Styles]^C^C_purge _m 
+ID_PurgeBlk        [&Blocks]^C^C_purge _b 
+ID_PurgeShp        [<-<-&Shapes]^C^C_purge _sh 
+ID_SendMail    [Sen&d...]
+               [--]
+ID_MRU         [Drawing Histo&ry]
+               [--]
+ID_Quit        [E&xit]^C^C_quit 
+
+***POP2
+**EDIT
+ID_MnEdit      [&Edit]
+ID_U           [&Undo	Ctrl+Z]_u 
+ID_Redo        [&Redo	Ctrl+Y]^C^C_redo 
+               [--]
+ID_Cutclip     [Cu&t	Ctrl+X]'_cutclip 
+ID_Copyclip    [&Copy	Ctrl+C]'_copyclip 
+ID_Copylink    [Copy &Link]^C^C_copylink 
+ID_Pasteclip   [&Paste	Ctrl+V]'_pasteclip 
+ID_Pastesp     [Paste &Special...]^C^C_pastespec 
+ID_Erase       [Cle&ar	Del]^C^C_erase 
+               [--]
+ID_Links       [&OLE Links...]^C^C_olelinks 
+
+***POP3
+**VIEW
+ID_MnView      [&View]
+ID_Redrawall   [&Redraw]'_redrawall 
+ID_Regen       [Re&gen]^C^C_regen 
+ID_Regenall    [Regen &All]^C^C_regenall 
+               [--]
+ID_MnZoom      [->&Zoom]
+ID_ZoomRealt     [&Realtime]'_zoom ;
+                 [--]
+ID_ZoomPrevi     [&Previous]'_zoom _p 
+ID_ZoomWindo     [&Window]'_zoom _w 
+ID_ZoomDynam     [&Dynamic]'_zoom _d 
+ID_ZoomScale     [&Scale]'_zoom _s 
+ID_ZoomCente     [&Center]'_zoom _c 
+                 [--]
+ID_ZoomIn        [&In]'_zoom 2x 
+ID_ZoomOut       [&Out]'_zoom .5x 
+                 [--]
+ID_ZoomAll       [&All]'_zoom _all 
+ID_ZoomExten     [<-&Extents]'_zoom _e 
+ID_MnPan       [->&Pan]
+ID_Pan           [Real &Time]'_pan 
+ID_PanPick       [&Point]'_-pan 
+                 [--]
+ID_PanLeft       [&Left]^P'_-pan (trans (list (* -0.2 (getvar "viewsize")) 0) 0 1) ;^P
+ID_PanRight      [&Right]^P'_-pan (trans (list (* 0.2 (getvar "viewsize")) 0) 0 1) ;^P
+ID_PanUp         [&Up]^P'_-pan (trans (list 0 (* 0.2 (getvar "viewsize"))) 0 1) ;^P
+ID_PanDown       [<-&Down]^P'_-pan (trans (list 0 (* -0.2 (getvar "viewsize"))) 0 1) ;^P
+ID_Dsviewer    [Aerial Vie&w]^C^C_dsviewer 
+               [--]
+ID_Tilemode1   [$(if,$(getvar,tilemode),!.)Model Space (&Tiled)]^C^C^P_ai_tilemode1 ^P
+ID_Ai_fms      [$(if,$(and,$(eq,$(getvar,tilemode),0),$(!=,$(getvar,cvport),1)),!.)Model Space (&Floating)]^C^C^Pai_fms ^P
+ID_Ai_pspace   [$(if,$(and,$(eq,$(getvar,tilemode),0),$(=,$(getvar,cvport),1)),!.)Paper Spa&ce]^C^C^P_ai_pspace ^P
+               [--]
+ID_MnTiledVi   [->$(if,$(getvar,tilemode),,~)Tile&d Viewports]
+ID_Ai_tiledv     [&Layout...]^P(ai_tiledvp_chk T) ^P
+                 [--]
+ID_VportsSin     [&1 Viewport]^C^C_vports _si 
+ID_Vports2       [&2 Viewports]^C^C_vports 2 
+ID_Vports3       [&3 Viewports]^C^C_vports 3 
+ID_Vports4       [&4 Viewports]^C^C_vports 4 
+                 [--]
+ID_VportsRes     [&Restore]^C^C_vports _r 
+ID_VportsDel     [&Delete]^C^C_vports _d 
+ID_VportsJoi     [&Join]^C^C_vports _j 
+                 [--]
+ID_VportsSav     [<-&Save]^C^C_vports _s 
+ID_MnFloatin   [->$(if,$(getvar,tilemode),~)Floating &Viewports]
+ID_Mview1        [&1 Viewport]^C^C_mview _1 
+ID_Mview2        [&2 Viewports]^C^C_mview _2 
+ID_Mview3        [&3 Viewports]^C^C_mview _3 
+ID_Mview4        [&4 Viewports]^C^C_mview _4 
+                 [--]
+ID_MviewRest     [&Restore]^C^C_mview _r 
+                 [--]
+ID_MviewOn       [Viewports O&n]^C^C_mview _on 
+ID_MviewOff      [Viewports O&ff]^C^C_mview _off 
+ID_MviewHide     [<-&Hideplot]^C^C_mview _h 
+               [--]
+ID_Ddview      [&Named Views...]^C^C_ddview 
+ID_MnViewpoi   [->$(if,$(and,$(eq,$(getvar,tilemode),0),$(eq,$(getvar,cvport),1)),~,)&3D Viewpoint]
+ID_Ddvpoint      [Sele&ct...]^C^C_ddvpoint 
+ID_VpointRot     [R&otate]^C^C_vpoint _r 
+ID_VpointTri     [Tripo&d]^C^C_vpoint ;
+ID_Vpoint        [&Vector]^C^C_vpoint 
+ID_MnPlanView    [->&Plan View]
+ID_PlanCurre       [&Current UCS]^C^C_plan ;
+ID_PlanWorld       [&World UCS]^C^C_plan _w 
+ID_PlanUCS         [<-&Named UCS]^C^C_plan _u 
+                 [--]
+ID_VpointTop     [&Top]^C^C_vpoint _non *0,0,1 
+ID_VpointBot     [&Bottom]^C^C_vpoint _non *0,0,-1 
+ID_VpointLef     [&Left]^C^C_vpoint _non *-1,0,0 
+ID_VpointRig     [&Right]^C^C_vpoint _non *1,0,0 
+ID_VpointFro     [&Front]^C^C_vpoint _non *0,-1,0 
+ID_VpointBac     [Bac&k ]^C^C_vpoint _non *0,1,0 
+                 [--]
+ID_VpointSW      [&SW Isometric]^C^C_vpoint _non *-1,-1,1 
+ID_VpointSE      [S&E Isometric]^C^C_vpoint _non *1,-1,1 
+ID_VpointNE      [&NE Isometric]^C^C_vpoint _non *1,1,1 
+ID_VpointNW      [<-N&W Isometric]^C^C_vpoint _non *-1,1,1 
+ID_Dview       [$(if,$(and,$(eq,$(getvar,tilemode),0),$(eq,$(getvar,cvport),1)),~,)3D D&ynamic View]^C^C_dview 
+               [--]
+ID_Hide        [&Hide]^C^C_hide 
+ID_MnShade     [->&Shade]
+ID_Shade0        [&256 Color]^C^C_shadedge 0 _shade 
+ID_Shade1        [256 Color &Edge Highlight]^C^C_shadedge 1 _shade 
+ID_Shade2        [&16 Color Hidden Line]^C^C_shadedge 2 _shade 
+ID_Shade3        [<-16 Color &Filled]^C^C_shadedge 3 _shade 
+ID_MnRender    [->R&ender]
+ID_Render        [&Render...]^C^C_render 
+                 [--]
+ID_Scene         [&Scene...]^C^C_scene 
+ID_Light         [&Light...]^C^C_light 
+ID_Rmat          [&Materials...]^C^C_rmat 
+ID_Matlib        [Ma&terials Library...]^C^C_matlib 
+ID_Setuv         [M&apping...]^C^C_setuv 
+                 [--]
+ID_Backgroun     [&Background...]^C^C_background 
+ID_Fog           [&Fog...]^C^C_fog 
+ID_Lsnew         [Landscape &New...]^C^C_lsnew 
+ID_Lsedit        [Landscape &Edit...]^C^C_lsedit 
+ID_Lslib         [Lands&cape Library...]^C^C_lslib 
+                 [--]
+ID_Rpref         [&Preferences...]^C^C_rpref 
+ID_Stats         [<-S&tatistics...]^C^C_stats 
+               [--]
+ID_MnDisplay   [->Disp&lay]
+ID_MnUCSicon     [->&UCS Icon]
+ID_UcsiconOn       [$(if,$(and,$(getvar,ucsicon),1),!.)&On]$M=$(if,$(and,$(getvar,ucsicon),1),^C^C_ucsicon _off,^C^C_ucsicon _on) 
+ID_UcsiconOr       [<-$(if,$(and,$(getvar,ucsicon),2),!.)O&rigin]$M=$(if,$(and,$(getvar,ucsicon),2),^C^C_ucsicon _no,^C^C_ucsicon _or) 
+ID_MnAttribu     [->&Attribute Display]
+ID_AttdispNo       [$(if,$(eq,$(getvar,attmode),1),!.)&Normal]^C^C_attdisp _n 
+                   [--]
+ID_AttdispOn       [$(if,$(eq,$(getvar,attmode),2),!.)&On]^C^C_attdisp _on 
+ID_AttdispOf       [<-$(if,$(eq,$(getvar,attmode),0),!.)O&ff]^C^C_attdisp _off 
+                 [--]
+ID_Textscr       [<-&Text Window	F2]'_textscr 
+ID_Toolbar     [T&oolbars...]^C^C_toolbar 
+
+***POP4
+**INSERT
+ID_MnInsert    [&Insert]
+ID_Ddinsert    [&Block...]^C^C_ddinsert 
+               [--]
+ID_Xref        [E&xternal Reference...]^C^C_xref 
+ID_Image       [Raster &Image...]^C^C_image 
+               [--]
+ID_3dsin       [&3D Studio...]^C^C_3dsin 
+ID_Acisin      [&ACIS Solid...]^C^C_acisin 
+ID_Dxbin       [Drawing &Exchange Binary...]^C^C_dxbin 
+ID_Wmfin       [&Windows Metafile...]^C^C_wmfin 
+ID_Psin        [Encapsulated &PostScript...]^C^C_psin 
+               [--]
+ID_Insertobj   [&OLE Object...]^C^C_insertobj 
+
+***POP5
+**FORMAT
+ID_MnFormat    [F&ormat]
+ID_Layer       [&Layer...]'_layer 
+ID_Ddcolor     [&Color...]'_ddcolor 
+ID_Linetype    [Li&netype...]'_linetype 
+               [--]
+ID_Style       [Text &Style...]'_style 
+ID_Ddim        [&Dimension Style...]^C^C_ddim 
+ID_Ddptype     [&Point Style...]'_ddptype 
+ID_Mlstyle     [&Multiline Style...]^C^C_mlstyle 
+               [--]
+ID_Ddunits     [&Units...]'_ddunits 
+ID_Thickness   [&Thickness]'_thickness 
+ID_Limits      [Dr&awing Limits]'_limits 
+               [--]
+ID_Ddrename    [&Rename...]^C^C_ddrename 
+
+***POP6
+**TOOLS
+ID_MnTools     [&Tools]
+ID_Spell       [&Spelling]^C^C_spell 
+ID_MnOrder     [->Display &Order]
+ID_DrawordeF     [Bring to &Front]^C^C^P(ai_draworder "_f") ^P
+ID_DrawordeB     [Send to &Back]^C^C^P(ai_draworder "_b") ^P
+                 [--]
+ID_DrawordeA     [Bring &Above Object]^C^C^P(ai_draworder "_a") ^P
+ID_DrawordeU     [<-Send &Under Object]^C^C^P(ai_draworder "_u") ^P
+ID_Inquiry     [->In&quiry]
+ID_Dist          [&Distance]^C^C_dist 
+ID_Area          [&Area]^C^C_area 
+ID_Massprop      [&Mass Properties]^C^C_massprop 
+                 [--]
+ID_List          [&List]^C^C_list 
+ID_Id            [&ID Point]'_id 
+                 [--]
+ID_Time          [&Time]'_time 
+ID_Status        [&Status]'_status 
+ID_Setvar        [<-Set &Variable]'_setvar 
+               [--]
+ID_Appload     [&Load Application...]^C^C_appload 
+ID_Script      [&Run Script...]^C^C_script 
+               [--]
+ID_MnImage     [->&Display Image]
+ID_Replay        [&View...]^C^C_replay 
+ID_Saveimg       [<-&Save...]^C^C_saveimg 
+ID_MnDatabas   [->&External Database]
+ID_Aseadmin      [&Administration...]^C^C_aseadmin 
+                 [--]
+ID_Aserows       [&Rows...]^C^C_aserows 
+ID_Aselinks      [&Links...]^C^C_aselinks 
+                 [--]
+ID_Aseselect     [&Select Objects]^C^C_aseselect 
+ID_Aseexport     [&Export Links...]^C^C_aseexport 
+ID_Asesqled      [<-S&QL Editor...]^C^C_asesqled 
+               [--]
+ID_Osnap       [Object S&nap Settings...]'_osnap 
+ID_Ddrmodes    [Drawing &Aids...]'_ddrmodes 
+ID_MnUCS       [->&UCS]
+ID_Dducsp        [Preset &UCS...]^C^C_dducsp 
+ID_Dducs         [Named U&CS...]^C^C_dducs 
+                 [--]
+ID_UcsPrevio     [&Previous]^C^C_ucs _p 
+                 [--]
+ID_UcsRestor     [&Restore]^C^C_ucs _r 
+ID_UcsSave       [&Save]^C^C_ucs _s 
+ID_UcsDelete     [&Delete]^C^C_ucs _d 
+ID_UcsList       [&List]^C^C_ucs _? 
+                 [--]
+ID_UcsWorld      [&World]^C^C_ucs _w 
+ID_UcsObject     [&Object]^C^C_ucs _ob 
+ID_UcsView       [&View]^C^C_ucs _v 
+                 [--]
+ID_UcsOrigin     [Ori&gin]^C^C_ucs _o 
+ID_UcsZAxVec     [Z &Axis Vector]^C^C_ucs _zaxis 
+ID_Ucs3point     [&3 Point]^C^C_ucs _3 
+                 [--]
+ID_UcsXAxRot     [&X Axis Rotate]^C^C_ucs _x 
+ID_UcsYAxRot     [&Y Axis Rotate]^C^C_ucs _y 
+ID_UcsZAxRot     [<-&Z Axis Rotate]^C^C_ucs _z 
+               [--]
+ID_Ddgrips     [&Grips...]'_ddgrips 
+ID_Ddselect    [Sele&ction...]'_ddselect 
+ID_Group       [O&bject Group...]^C^C_group 
+               [--]
+ID_MnTablet    [->&Tablet]
+ID_TabletOn      [$(if,$(getvar,tabmode),!.)&On]^C^C_tablet _on 
+ID_TabletOff     [$(if,$(eq,$(getvar,tabmode),0),!.)O&ff]^C^C_tablet _off 
+                 [--]
+ID_TabletCal     [&Ca&librate]^C^C_tablet _cal 
+ID_TabletCfg     [<-Co&nfigure]^C^C_tablet _cfg 
+ID_Menuload    [Customize &Menus...]^C^C_menuload 
+ID_Preferenc   [&Preferences...]^C^C_preferences 
+
+***POP7
+**DRAW
+ID_MnDraw      [&Draw]
+ID_Line        [&Line]^C^C_line 
+ID_Ray         [&Ray]^C^C_ray 
+ID_Xline       [Cons&truction Line]^C^C_xline 
+ID_Mline       [&Multiline]^C^C_mline 
+               [--]
+ID_Pline       [&Polyline]^C^C_pline 
+ID_3dpoly      [&3D Polyline]^C^C_3dpoly 
+ID_Polygon     [Pol&ygon]^C^C_polygon 
+ID_Rectang     [Rectan&gle]^C^C_rectang 
+               [--]
+ID_MnArc       [->&Arc]
+ID_Arc3point     [3 &Points]^C^C_arc 
+                 [--]
+ID_ArcStCeEn     [&Start, Center, End]^C^C_arc \_c 
+ID_ArcStCeAn     [S&tart, Center, Angle]^C^C_arc \_c \_a 
+ID_ArcStCeLe     [St&art, Center, Length]^C^C_arc \_c \_l 
+                 [--]
+ID_ArcStEnAg     [Start, E&nd, Angle]^C^C_arc \_e \_a 
+ID_ArcStEnDi     [Start, End, &Direction]^C^C_arc \_e \_d 
+ID_ArcStEnRa     [Start, End, &Radius]^C^C_arc \_e \_r 
+                 [--]
+ID_ArcCeStEn     [&Center, Start, End]^C^C_arc _c 
+ID_ArcCeStAn     [C&enter, Start, Angle]^C^C_arc _c \\_a 
+ID_ArcCeStLe     [Center, Start, &Length]^C^C_arc _c \\_l 
+                 [--]
+ID_ArcContin     [<-C&ontinue]^C^C_arc ;
+ID_MnCircle    [->&Circle]
+ID_CircleRad     [Center, &Radius]^C^C_circle 
+ID_CircleDia     [Center, &Diameter]^C^C_circle \_d 
+                 [--]
+ID_Circle2pt     [&2 Points]^C^C_circle _2p 
+ID_Circle3pt     [&3 Points]^C^C_circle _3p 
+                 [--]
+ID_CircleTTR     [&Tan, Tan, Radius]^C^C_circle _ttr 
+ID_CircleTTT     [<-T&an, Tan, Tan]^C^C_circle _3p _tan \_tan \_tan \
+ID_Donut       [&Donut]^C^C_donut 
+ID_Spline      [&Spline]^C^C_spline 
+ID_MnEllipse   [->&Ellipse]
+ID_EllipseCe     [&Center]^C^C_ellipse _c 
+ID_EllipseAx     [Axis, &End]^C^C_ellipse 
+                 [--]
+ID_EllipseAr     [<-&Arc]^C^C_ellipse _a 
+               [--]
+ID_MnBlock     [->Bloc&k]
+ID_Bmake         [&Make...]^C^C_bmake 
+                 [--]
+ID_Base          [&Base]^C^C_base 
+ID_Ddattdef      [<-&Define Attributes...]^C^C_ddattdef 
+ID_MnPoint     [->P&oint]
+ID_PointSing     [&Single Point]^C^C_point 
+ID_PointMult     [Multiple &Point]*^C^C_point 
+                 [--]
+ID_Divide        [&Divide]^C^C_divide 
+ID_Measure       [<-&Measure]^C^C_measure 
+               [--]
+ID_Bhatch      [&Hatch...]^C^C_bhatch 
+ID_Boundary    [&Boundary...]^C^C_boundary 
+ID_Region      [Regio&n]^C^C_region 
+               [--]
+ID_MnText      [->Te&xt]
+ID_Mtext         [&Multiline Text...]^C^C_mtext 
+ID_Dtext         [<-&Single Line Text]^C^C_dtext 
+               [--]
+ID_MnSurface   [->Sur&faces]
+ID_Solid         [&2D Solid]^C^C_solid 
+ID_3dface        [3D &Face]^C^C_3dface 
+ID_3dsurface     [&3D Surfaces...]$I=ACAD.image_3dobjects $I=ACAD.* 
+                 [--]
+ID_Edge          [&Edge]^C^C_edge 
+ID_3dmesh        [3D &Mesh]^C^C_3dmesh 
+                 [--]
+ID_Revsurf       [Revolved &Surface]^C^C_revsurf 
+ID_Tabsurf       [&Tabulated Surface]^C^C_tabsurf 
+ID_Rulesurf      [&Ruled Surface]^C^C_rulesurf 
+ID_Edgesurf      [<-E&dge Surface]^C^C_edgesurf 
+ID_MnSolids    [->Sol&ids]
+ID_Box           [&Box]^C^C_box 
+ID_Sphere        [&Sphere]^C^C_sphere 
+ID_Cylinder      [&Cylinder]^C^C_cylinder 
+ID_Cone          [C&one]^C^C_cone 
+ID_Wedge         [&Wedge]^C^C_wedge 
+ID_Torus         [&Torus]^C^C_torus 
+                 [--]
+ID_Extrude       [E&xtrude]^C^C_extrude 
+ID_Revolve       [&Revolve]^C^C_revolve 
+                 [--]
+ID_Slice         [S&lice]^C^C_slice 
+ID_Section       [S&ection]^C^C_section 
+ID_Interfere     [&Interference]^C^C_interfere 
+                 [--]
+ID_MnSetup       [->Set&up]
+ID_Soldraw         [&Drawing]^C^C_soldraw 
+ID_Solview         [&View]^C^C_solview 
+ID_Solprof         [<-<-&Profile]^C^C_solprof 
+
+***POP8
+**DIMENSION
+ID_MnDimensi   [Dime&nsion]
+ID_Dimlinear   [&Linear]^C^C_dimlinear 
+ID_Dimaligne   [Ali&gned]^C^C_dimaligned 
+ID_Dimordina   [&Ordinate]^C^C_dimordinate 
+               [--]
+ID_Dimradius   [&Radius]^C^C_dimradius 
+ID_Dimdiamet   [&Diameter]^C^C_dimdiameter 
+ID_Dimangula   [&Angular]^C^C_dimangular 
+               [--]
+ID_Dimbaseli   [&Baseline]^C^C_dimbaseline 
+ID_Dimcontin   [&Continue]^C^C_dimcontinue 
+               [--]
+ID_Leader      [L&eader]^C^C_leader 
+ID_Tolerance   [&Tolerance...]^C^C_tolerance 
+ID_Dimcenter   [Center &Mark]^C^C_dimcenter 
+               [--]
+ID_Dimedit     [Obli&que]^C^C_dimedit _o 
+ID_MnAlign     [->Align Te&xt]
+ID_DimteditH     [&Home]^C^C_dimtedit \_h 
+ID_DimteditA     [&Angle]^C^C_dimtedit \_a 
+                 [--]
+ID_DimteditL     [&Left]^C^C_dimtedit \_l 
+ID_DimteditC     [&Center]^C^C^P_select \(ai_dim_cen) ^P
+ID_DimteditR     [<-&Right]^C^C_dimtedit \_r 
+               [--]
+ID_Ddim        [&Style...]^C^C_ddim 
+ID_Dimoverri   [O&verride]^C^C_dimoverride 
+ID_DimstyleA   [&Update]^C^C_dimstyle _apply 
+
+***POP9
+**MODIFY
+ID_MnModify    [&Modify]
+ID_Ai_propch   [&Properties...]^C^C_ai_propchk 
+ID_Matchprop   [&Match Properties]^C^C_matchprop 
+ID_MnObject    [->&Object]
+ID_MnExterna     [->&External Reference]
+ID_Xbind           [&Bind...]^C^C_xbind 
+                   [--]
+ID_Xclipfram       [<-$(if,$(eq,$(getvar,xclipframe),1),!.)&Frame]$M=$(if,$(eq,$(getvar,xclipframe),1),^C^C_xclipframe 0,^C^C_xclipframe 1) 
+ID_MnImage       [->&Image]
+ID_Imageadju       [&Adjust...]^C^C_imageadjust 
+ID_Imagequal       [&Quality]^C^C_imagequality 
+ID_Transpare       [&Transparency]^C^C_transparency 
+                   [--]
+ID_Imagefram       [<-&Frame]^C^C_imageframe 
+                 [--]
+ID_Xclip         [&Clip]^C^C_xclip 
+ID_Imageclip     [Ima&ge Clip]^C^C_imageclip 
+                 [--]
+ID_Hatchedit     [&Hatch...]^C^C_hatchedit 
+ID_Pedit         [&Polyline]^C^C_pedit 
+ID_Splinedit     [&Spline]^C^C_splinedit 
+ID_Mledit        [&Multiline...]^C^C_mledit 
+ID_MnAttribu     [->&Attribute]
+ID_Ddatte          [&Single...]^C^C_ddatte 
+ID_Attedit         [<-&Global]^C^C_attedit 
+ID_Ddedit        [<-&Text...]^C^C_ddedit 
+               [--]
+ID_Erase       [&Erase]^C^C_erase 
+ID_Copy        [Cop&y]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),GRIP),_copy,^C^C_copy) 
+ID_Mirror      [M&irror]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),GRIP),_mirror,^C^C_mirror) 
+ID_Offset      [Off&set]^C^C_offset 
+ID_Array       [&Array]^C^C_array 
+               [--]
+ID_Move        [Mo&ve]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),GRIP),_move,^C^C_move) 
+ID_Rotate      [&Rotate]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),GRIP),_rotate,^C^C_rotate) 
+ID_Scale       [Sca&le]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),GRIP),_scale,^C^C_scale) 
+ID_Stretch     [Stretc&h]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),GRIP),_stretch,^C^C_stretch) 
+ID_Lengthen    [Len&gthen]^C^C_lengthen 
+               [--]
+ID_Trim        [&Trim]^C^C_trim 
+ID_Extend      [Exten&d]^C^C_extend 
+ID_Break       [Brea&k]^C^C_break 
+ID_Chamfer     [&Chamfer]^C^C_chamfer 
+ID_Fillet      [&Fillet]^C^C_fillet 
+               [--]
+ID_Mn3dopera   [->&3D Operation]
+ID_3darray       [&3D Array]^C^C_3darray 
+ID_Mirror3d      [&Mirror 3D]^C^C_mirror3d 
+ID_Rotate3d      [&Rotate 3D]^C^C_rotate3d 
+                 [--]
+ID_Align         [<-A&lign]^C^C_align 
+ID_MnBoolean   [->&Boolean]
+ID_Union         [&Union]^C^C_union 
+ID_Subtract      [&Subtract]^C^C_subtract 
+ID_Intersect     [<-&Intersect]^C^C_intersect 
+               [--]
+ID_Explode     [E&xplode]^C^C_explode 
+
+***POP10
+**HELP
+ID_MnHelp      [&Help]
+ID_Help        [AutoCAD &Help Topics]'_help 
+               [--]
+ID_Qtour       [&Quick Tour]^P(if (startapp (findfile "qtour.exe")) (princ) (alert "Could not find or could not start Quick Tour.")) ^P
+ID_Wnew        [&What's New]^P(if (startapp (findfile "wnew.exe")) (princ) (alert "Could not find or could not start What's New.")) ^P
+ID_L_acla      [&Learning Assistance]^P(if (startapp (findfile "l_acla.exe")) (princ) (alert "Could not find or could not start Learning Assistance.")) ^P
+ID_Browser     [&Connect to Internet]^C^C_browser ;
+               [--]
+ID_About       [&About AutoCAD]^C^C_about 
+
+***POP11
+**GULSOMSI
+               [&GULSOMSI]
+               [HgTEXT]^C^CHGTEXT 
+               [HgUTIL]^C^CHGUTIL 
+               [HgCHANGE]^C^CHGCHANGE 
+               [--]
+               [HgATTDEF]^C^CHGATTDEF 
+               [HgINSERT]^C^CHGINSERT 
+               [HgCNVTL]^C^CHGCNVTL 
+               [HgCNVTA]^C^CHGCNVTA 
+               [set HANGUL STYLE...]$I=ICON_HFONTS $I=* 
+
+***POP12
+**PIPING1
+               [&Piping1]
+               [->Pipe Size]
+                 [3/8" (10)]^C^C^P(setq ghk  10)(resetiso) ^P
+                 [1/2" (15)]^C^C^P(setq ghk  15)(resetiso) ^P
+                 [3/4" (20)]^C^C^P(setq ghk  20)(resetiso) ^P
+                 [1"   (25)]^C^C^P(setq ghk  25)(resetiso) ^P
+                 [11/2"(40)]^C^C^P(setq ghk  40)(resetiso) ^P
+                 [2"   (50)]^C^C^P(setq ghk  50)(resetiso) ^P
+                 [21/2"(65)]^C^C^P(setq ghk  65)(resetiso) ^P
+                 [3"   (80)]^C^C^P(setq ghk  80)(resetiso) ^P
+                 [4"  (100)]^C^C^P(setq ghk 100)(resetiso) ^P
+                 [5"  (125)]^C^C^P(setq ghk 125)(resetiso) ^P
+                 [6"  (150)]^C^C^P(setq ghk 150)(resetiso) ^P
+                 [8"  (200)]^C^C^P(setq ghk 200)(resetiso) ^P
+                 [10" (250)]^C^C^P(setq ghk 250)(resetiso) ^P
+                 [12" (300)]^C^C^P(setq ghk 300)(resetiso) ^P
+                 [14" (350)]^C^C^P(setq ghk 350)(resetiso) ^P
+                 [16" (400)]^C^C^P(setq ghk 400)(resetiso) ^P
+                 [18" (450)]^C^C^P(setq ghk 450)(resetiso) ^P
+                 [20" (500)]^C^C^P(setq ghk 500)(resetiso) ^P
+                 [22" (550)]^C^C^P(setq ghk 550)(resetiso) ^P
+                 [24" (600)]^C^C^P(setq ghk 600)(resetiso) ^P
+                 [26" (650)]^C^C^P(setq ghk 650)(resetiso) ^P
+                 [28" (700)]^C^C^P(setq ghk 700)(resetiso) ^P
+                 [30" (750)]^C^C^P(setq ghk 750)(resetiso) ^P
+                 [32" (800)]^C^C^P(setq ghk 800)(resetiso) ^P
+                 [34" (850)]^C^C^P(setq ghk 850)(resetiso) ^P
+                 [36" (900)]^C^C^P(setq ghk 900)(resetiso) ^P
+                 [38" (950)]^C^C^P(setq ghk 950)(resetiso) ^P
+                 [<-40"(1000)]^C^C^P(setq ghk 1000)(resetiso) ^P
+               [--]
+               [->Fitting]
+                 [Pipe]^C^C^P(IF (not i-pipe)(load"c:/ghk/iso/i-pipe"))(setq job_direc 1)(i-pipe) ^P
+                 [Nipple]^C^C^P(IF (not i-nip)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-nip) ^P
+                 [45elbow End]^C^C^P(IF (not i-45elbow)(load"c:/ghk/iso/i-elbow"))(setq job_direc 1)(setq v-point 1)(i-45elbow) ^P
+                 [45elbow Cen]^C^C^P(IF (not i-45elbow)(load"c:/ghk/iso/i-elbow"))(setq job_direc 1)(setq v-point 2)(i-45elbow) ^P
+                 [90elbow End]^C^C^P(IF (not i-90elbow)(load"c:/ghk/iso/i-elbow"))(setq job_direc 1)(setq v-point 1)(i-90elbow) ^P
+                 [90elbow Cen]^C^C^P(IF (not i-90elbow)(load"c:/ghk/iso/i-elbow"))(setq job_direc 1)(setq v-point 2)(i-90elbow) ^P
+                 [Tee Main]^C^C^P(IF (not i-tee1)(load"c:/ghk/iso/i-tee"))(setq job_direc 1)(i-tee1) ^P
+                 [Tee Brench]^C^C^P(IF (not i-tee2)(load"c:/ghk/iso/i-tee"))(setq job_direc 1)(i-tee2) ^P
+                 [Rtee Main]^C^C^P(IF (not i-tee3)(load"c:/ghk/iso/i-tee"))(setq job_direc 1)(i-tee3) ^P
+                 [Rtee Brench]^C^C^P(IF (not i-tee4)(load"c:/ghk/iso/i-tee"))(setq job_direc 1)(i-tee4) ^P
+                 [ERE Large]^C^C^P(IF (not i-swg1)(load"c:/ghk/iso/i-red"))(setq job_direc 1)(setq swg-type 3)(i-swg1) ^P
+                 [ERE Small]^C^C^P(IF (not i-swg2)(load"c:/ghk/iso/i-red"))(setq job_direc 1)(setq swg-type 4)(i-swg2) ^P
+                 [CRE Large]^C^C^P(IF (not i-swg1)(load"c:/ghk/iso/i-red"))(setq job_direc 1)(setq swg-type 1)(i-swg1) ^P
+                 [CRE Small]^C^C^P(IF (not i-swg2)(load"c:/ghk/iso/i-red"))(setq job_direc 1)(setq swg-type 2)(i-swg2) ^P
+                 [Union]^C^C^P(IF (not i-uni)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-uni) ^P
+                 [Plug]^C^C^P(IF (not i-plg)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-plg) ^P
+                 [Fcp]^C^C^P(IF (not i-fcp)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-fcp) ^P
+                 [Hcp]^C^C^P(IF (not i-hcp)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-hcp) ^P
+                 [Weldolet]^C^C^P(IF (not i-wol)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-wol) ^P
+                 [Cap]^C^C^P(IF (not i-cap)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-cap) ^P
+                 [Gasket]^C^C^P(IF (not i-gas)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-gas) ^P
+                 [<-Bolt]^C^C^P(IF (not i-blt)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-blt) ^P
+               [--]
+               [->Flange]
+                 [Flange P]^C^C^P(IF (not i-flg)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg) ^P
+                 [Flange F]^C^C^P(IF (not i-flg1)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg1) ^P
+                 [Blind]^C^C^P(IF (not i-flg2)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg2) ^P
+                 [Nozzle P]^C^C^P(IF (not i-flg3)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg3) ^P
+                 [Nozzle F]^C^C^P(IF (not i-flg4)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg4) ^P
+                 [Flow Mater]^C^C^P(IF (not i-flg6)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg6) ^P
+                 [<-Spectacle]^C^C^P(IF (not i-flg5)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg5) ^P
+               [--]
+               [->Valve]
+                 [Gate]^C^C^P(IF (NOT i-gate)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-gate) ^P
+                 [Globe]^C^C^P(IF (NOT i-glov)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-glov) ^P
+                 [Check]^C^C^P(IF (NOT i-che)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-che) ^P
+                 [Ball]^C^C^P(IF (NOT i-ball)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-ball) ^P
+                 [But]^C^C^P(IF (NOT i-but)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-but) ^P
+                 [Dia]^C^C^P(IF (NOT i-dia)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-dia) ^P
+                 [Safety]^C^C^P(IF (NOT i-safety)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-safety) ^P
+                 [TraP]^C^C^P(IF (NOT i-trap)(load"c:/ghk/iso/i-str"))(setq job_direc 1)(i-trap) ^P
+                 [3Way]^C^C^P(if (not i-thway)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-thway) ^P
+                 [Needle]^C^C^P(IF (NOT i-ndl)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-ndl) ^P
+                 [Pinch]^C^C^P(IF (NOT i-pinch)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-pinch) ^P
+                 [Y-Str]^C^C^P(if (not i-ystr)(load"c:/ghk/iso/i-str"))(setq job_direc 1)(i-ystr) ^P
+                 [B-Str]^C^C^P(if (not i-bstr)(load"c:/ghk/iso/i-str"))(setq job_direc 1)(i-bstr) ^P
+                 [<-T-Str]^C^C^P(if (not i-tstr)(load"c:/ghk/iso/i-str"))(setq job_direc 1)(i-tstr) ^P
+               [--]
+               [->Orther]
+                 [Pipe End]^C^C^P(IF (not i-sec)(load"c:/ghk/iso/fitting"))(i-sec) ^P
+                 [Grating]^C^C^P(IF (not i-grat)(load"c:/ghk/iso/fitting"))(i-grat) ^P
+                 [Flow]^C^C^P(IF (not i-flow)(load"c:/ghk/iso/fitting"))(i-flow) ^P
+                 [Spec breack]^C^C^P(IF (not i-specb)(load"c:/ghk/iso/fitting"))(i-specb) ^P
+                 [Lineno]^C^C^P(IF (not lineno)(load"c:/ghk/iso/textang"))(lineno)(prin1) ^P
+                 [Dimension]^C^C^P(IF (not dimen)(load"c:/ghk/iso/dimen"))(dimen) ^P
+                 [PI-Tag]^C^C^P(IF (not pi-tag)(load"c:/ghk/iso/fitting"))(pi-tag) ^P
+                 [XV-Tag]^C^C^P(IF (not xv-tag)(load"c:/ghk/iso/fitting"))(xv-tag) ^P
+                 [Spoon No]^C^C^P(IF (not filedw)(load"c:/ghk/iso/fitting"))(filedw) ^P
+                 [1st BM Tag]^C^C^P(IF (not firstbm)(load"c:/ghk/iso/fitting"))(firstbm) ^P
+                 [Text Db]^C^C^P(IF (not i-chs)(load"c:/ghk/iso/textang"))(i-chs)(prin1) ^P
+                 [TExt Aj]^C^C^P(IF (not i-just)(load"c:/ghk/iso/textang"))(i-just)(prin1) ^P
+                 [T 30]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text1)(prin1) ^P
+                 [T -30]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text2)(prin1) ^P
+                 [T 90]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text3)(prin1) ^P
+                 [T -30]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text4)(prin1) ^P
+                 [T 30]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text5)(prin1) ^P
+                 [T 90]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text6)(prin1) ^P
+                 [T 0]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text7)(prin1) ^P
+                 [T 90]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text8)(prin1) ^P
+                 [<-Scope]^C^C^P(IF (not i-scope)(load"c:/ghk/iso/fitting"))(i-scope) ^P
+               [--]
+               [->Atributer]
+                 [P-Length]^C^C^P(IF (not p-cal1)(load"c:/ghk/iso/TEXTANG"))(p-cal1)^P
+                 [P-Size]^C^C^P(IF (not p-cal2)(load"c:/ghk/iso/TEXTANG"))(p-cal2)^P
+                 [DWG.No]^C^C^P(IF (not p-cal3)(load"c:/ghk/iso/TEXTANG"))(p-cal3)^P
+                 [Spec]^C^C^P(IF (not p-cal4)(load"c:/ghk/iso/TEXTANG"))(p-cal4)^P
+                 [P-Length]^C^C^P(IF (not p-cal5)(load"c:/ghk/iso/TEXTANG"))(p-cal5)^P
+                 [P-lENGTH 1st bm]^C^C^P(IF (not p-cal6)(load"c:/ghk/iso/TEXTANG"))(p-cal6)^P
+                 [--]
+
+***POP13
+**PIPING1
+               [&Piping2]
+               [->Menu]
+                 [Stru]^C^Cmenu STRU (load"c:/ghk/stru/col-base")
+                 [Piping]^C^Cmenu KIC (load"c:/ghk/lsp/planbase")
+                 [Plan Detail]^C^Cmenu D-ISO (load"c:/ghk/iso/detail")
+                 [<-Iso]^C^Cmenu ISO (load"c:/ghk/iso/iso-base") (isobase)
+               [Loading......]^C^C^P(load"c:/ghk/iso/iso-base") ^P
+               [BM reset     ]^C^C^P(IF (not bmreset)(load"c:/ghk/iso/import"))(bmreset) ^P
+               [Menu set     ]^C^C^P(isomenuset) ^P
+               [Spec]^C^C^P(IF (not ssspec)(load"c:/ghk/iso/iso-base"))(c:ssspec)(resetiso) ^P
+               [New]^C^C^P(setq future 1)(setq p-wedth1 (* 0.2 sk1))(setq p-wedth2 (* 0.3 sk1))(setq p-wedth3 (* 0.5 sk1))(setq p-wedth4 (* 0.7 sk1))(resetiso) ^P
+               [Exist]^C^C^P(setq future 0)(setq p-wedth1 (* 0 sk1))(setq p-wedth2 (* 0 sk1))(setq p-wedth3 (* 0 sk1))(setq p-wedth4 (* 0 sk1))(resetiso) ^P
+               [->Rating   ]
+                 [150#]^C^C^P(setq rat1 "A")(resetiso) ^P
+                 [300#]^C^C^P(setq rat1 "B")(resetiso) ^P
+                 [600#]^C^C^P(setq rat1 "C")(resetiso) ^P
+                 [900#]^C^C^P(setq rat1 "D")(resetiso) ^P
+                 [SW]^C^C^P(setq sd1 "SW")(resetiso) ^P
+                 [<-SCR'D]^C^C^P(setq sd1 "SCR'D")(resetiso) ^P
+               [ISO-On]^C^C^PSNAPSTYL 1 ^P
+               [ISO-Off]^C^C^PSNAPSTYL 0 ^P
+               [Auto BM]^C^C^P(IF (not import)(load"c:/ghk/iso/import"))(c:import) ^P
+               [Leader]$s=x $i=leader $i=* 
+               [Break]$s=x $i=breakline $i=* 
+               [Ladder]$s=x $i=ladder $i=* 
+               [Cloud]^C^C^P(IF (not cl)(load"cl"))(cl) ^P
+               [Rev]^C^C^P(IF (not rev)(load"c:/ghk/lsp/flow"))(REV) ^P
+               [->A0 Scale   ]
+                 [ 1/1   ]^C^C^P(setq s 1)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/5   ]^C^C^P(setq s 5)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/10  ]^C^C^P(setq s 10)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/15  ]^C^C^P(setq s 15)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/20  ]^C^C^P(setq s 20)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/30  ]^C^C^P(setq s 30)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/40  ]^C^C^P(setq s 40)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/50  ]^C^C^P(setq s 50)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/60  ]^C^C^P(setq s 60)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/100 ]^C^C^P(setq s 100)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/150 ]^C^C^P(setq s 150)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/200 ]^C^C^P(setq s 200)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/300 ]^C^C^P(setq s 300)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/500 ]^C^C^P(setq s 500)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [ 1/1000]^C^C^P(setq s 1000)(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+                 [<- Spec. ]^C^C^P(setq s(getreal "Do you want Scale :"))(setq maxy 1189)(setq maxx 841)(dwg-scale) ^P
+               [->A1 Scale   ]
+                 [ 1/1   ]^C^C^P(setq s 1)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/5   ]^C^C^P(setq s 5)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/10  ]^C^C^P(setq s 10)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/15  ]^C^C^P(setq s 15)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/20  ]^C^C^P(setq s 20)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/30  ]^C^C^P(setq s 30)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/40  ]^C^C^P(setq s 40)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/50  ]^C^C^P(setq s 50)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/60  ]^C^C^P(setq s 60)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/100 ]^C^C^P(setq s 100)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/150 ]^C^C^P(setq s 150)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/200 ]^C^C^P(setq s 200)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/300 ]^C^C^P(setq s 300)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/500 ]^C^C^P(setq s 500)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [ 1/1000]^C^C^P(setq s 1000)(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+                 [<- Spec. ]^C^C^P(setq s(getreal "Do you want Scale :"))(setq maxy 841)(setq maxx 594)(dwg-scale) ^P
+               [->A2 Scale   ]
+                 [ 1/1   ]^C^C^P(setq s 1)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/5   ]^C^C^P(setq s 5)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/10  ]^C^C^P(setq s 10)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/15  ]^C^C^P(setq s 15)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/20  ]^C^C^P(setq s 20)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/30  ]^C^C^P(setq s 30)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/40  ]^C^C^P(setq s 40)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/50  ]^C^C^P(setq s 50)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/60  ]^C^C^P(setq s 60)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/100 ]^C^C^P(setq s 100)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/150 ]^C^C^P(setq s 150)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/200 ]^C^C^P(setq s 200)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/300 ]^C^C^P(setq s 300)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/500 ]^C^C^P(setq s 500)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [ 1/1000]^C^C^P(setq s 1000)(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+                 [<- Spec. ]^C^C^P(setq s(getreal "Do you want Scale :"))(setq maxy 594)(setq maxx 420)(dwg-scale) ^P
+               [->A3 Scale   ]
+                 [ 1/1 ]^C^Csetvar limmin 0,0;;ltscale 8;;limmax 420,297;;dimscale 1;;dimtxt 2.5;;dimasz 2.5;^C^Czoom a view s z 
+                 [ 1/5 ]^C^Csetvar limmin 0,0;;ltscale 40;;limmax 2100,1485;;dimscale 5;;dimtxt 2.5;;dimasz 2.5;^C^Czoom a view s z 
+                 [ 1/10]^C^Csetvar limmin 0,0;;ltscale 80;;limmax 4200,2970;;dimscale 10;;dimtxt 2.5;;dimasz 2.5;^C^Czoom a view s z 
+                 [ 1/20]^C^Csetvar limmin 0,0;;ltscale 160;;limmax 8400,5940;;dimscale 20;;dimtxt 2.5;;dimasz 2.5;^C^Czoom a view s z 
+                 [ Spec. ]^C^C^P(setq s(getreal "Do you want Scale :"))(setq maxy 420)(setq maxx 297)(dwg-scale) ^P
+                 [->A4 scale]
+                   [  1/1]^C^Csetvar limmin 0,0;;ltscale 80;;limmax 210,297;;dimscale 1;;dimtxt 2.5;;dimasz 2.5;^C^Czoom a view s z 
+                   [<-<- Spec. ]^C^C^P(setq s(getreal "Do you want Scale :"))(setq maxy 297)(setq maxx 210)(dwg-scale) ^P
+
+***POP17
+**GRIPS
+               [&Grips Cursor Menu]
+ID_Enter       [&Enter];
+               [--]
+ID_GripMove    [&Move]_move 
+ID_GripMirro   [M&irror]_mirror 
+ID_GripRotat   [&Rotate]_rotate 
+ID_GripScale   [Sca&le]_scale 
+ID_GripStret   [&Stretch]_stretch 
+               [--]
+ID_GripBase    [&Base Point]_base 
+ID_GripCopy    [&Copy]_copy 
+ID_GripRefer   [$(if,$(or,$(eq,$(getvar,cmdnames),GRIP_SCALE),$(eq,$(getvar,cmdnames),GRIP_ROTATE)),,~)Re&ference]_reference 
+ID_GripUndo    [&Undo]_u 
+               [--]
+ID_Ddmodify    [&Properties...]^C^C_ai_propchk 
+ID_GotoURL     [&Go to URL...]^C^C_gotourl 
+               [--]
+ID_GripExit    [E&xit]_exit 
+
+***TOOLBARS
+**TB_DIMENSION
+**DIMENSION
+ID_TbDimensi   [_Toolbar("Dimension", _Floating, _Hide, 100, 130, 1)]
+ID_Dimlinear   [_Button("Linear Dimension", "ICON_16_DIMLIN", "ICON_24_DIMLIN")]^C^C_dimlinear 
+ID_Dimaligne   [_Button("Aligned Dimension", "ICON_16_DIMALI", "ICON_24_DIMALI")]^C^C_dimaligned 
+ID_Dimordina   [_Button("Ordinate Dimension", "ICON_16_DIMORD", "ICON_24_DIMORD")]^C^C_dimordinate 
+               [--]
+ID_Dimradius   [_Button("Radius Dimension", "ICON_16_DIMRAD", "ICON_24_DIMRAD")]^C^C_dimradius 
+ID_Dimdiamet   [_Button("Diameter Dimension", "ICON_16_DIMDIA", "ICON_24_DIMDIA")]^C^C_dimdiameter 
+ID_Dimangula   [_Button("Angular Dimension", "ICON_16_DIMANG", "ICON_24_DIMANG")]^C^C_dimangular 
+               [--]
+ID_Dimbaseli   [_Button("Baseline Dimension", "ICON_16_DIMBAS", "ICON_24_DIMBAS")]^C^C_dimbaseline 
+ID_Dimcontin   [_Button("Continue Dimension", "ICON_16_DIMCON", "ICON_24_DIMCON")]^C^C_dimcontinue 
+               [--]
+ID_Leader      [_Button("Leader", "ICON_16_DIMLEA", "ICON_24_DIMLEA")]^C^C_leader 
+ID_Tolerance   [_Button("Tolerance", "ICON_16_TOLERA", "ICON_24_TOLERA")]^C^C_tolerance 
+ID_Dimcenter   [_Button("Center Mark", "ICON_16_DIMCEN", "ICON_24_DIMCEN")]^C^C_dimcenter 
+               [--]
+ID_Dimedit     [_Button("Dimension Edit", "ICON_16_DIMNEW", "ICON_24_DIMNEW")]^C^C_dimedit 
+ID_Dimtedit    [_Button("Dimension Text Edit", "ICON_16_DIMHOM", "ICON_24_DIMHOM")]^C^C_dimtedit 
+               [--]
+ID_Ddim        [_Button("Dimension Style", "ICON_16_DIMSTY", "ICON_24_DIMSTY")]^C^C_ddim 
+               [--]
+ID_DimUpdate   [_Button("Dimension Update", "ICON_16_DIMUPD", "ICON_24_DIMUPD")]^C^C_dim _update 
+
+**TB_DRAW
+**DRAW
+ID_TbDraw      [_Toolbar("Draw", _Left, _Hide, 0, 0, 1)]
+ID_Line        [_Button("Line", "ICON_16_LINE", "ICON_24_LINE")]^C^C_line 
+ID_Xline       [_Button("Construction Line", "ICON_16_XLINE", "ICON_24_XLINE")]^C^C_xline 
+ID_Mline       [_Button("Multiline", "ICON_16_MLINE", "ICON_24_MLINE")]^C^C_mline 
+ID_Pline       [_Button("Polyline", "ICON_16_PLINE", "ICON_24_PLINE")]^C^C_pline 
+ID_Polygon     [_Button("Polygon", "ICON_16_POLYGO", "ICON_24_POLYGO")]^C^C_polygon 
+ID_Rectang     [_Button("Rectangle", "ICON_16_RECTAN", "ICON_24_RECTAN")]^C^C_rectang 
+ID_Arc         [_Button("Arc", "ICON_16_ARC3PT", "ICON_24_ARC3PT")]^C^C_arc 
+ID_Circle      [_Button("Circle", "ICON_16_CIRRAD", "ICON_24_CIRRAD")]^C^C_circle 
+ID_Spline      [_Button("Spline", "ICON_16_SPLINE", "ICON_24_SPLINE")]^C^C_spline 
+ID_Ellipse     [_Button("Ellipse", "ICON_16_ELLCEN", "ICON_24_ELLCEN")]^C^C_ellipse 
+ID_TbInsert    [_Flyout("Block", ICON_16_BLOCK, ICON_24_BLOCK, _OtherIcon, ACAD.TB_INSERT)]
+ID_Bmake       [_Button("Make Block", "ICON_16_BLOCK", "ICON_24_BLOCK")]^C^C_bmake 
+ID_Point       [_Button("Point", "ICON_16_POINT", "ICON_24_POINT")]*^C^C_point 
+ID_Bhatch      [_Button("Hatch", "ICON_16_BHATCH", "ICON_24_BHATCH")]^C^C_bhatch 
+ID_Region      [_Button("Region", "ICON_16_REGION", "ICON_24_REGION")]^C^C_region 
+ID_Mtext       [_Button("Multiline Text", "ICON_16_MTEXT", "ICON_24_MTEXT")]^C^C_mtext 
+
+**TB_EXTERNAL_DATABASE
+ID_TbExtdb     [_Toolbar("External Database", _Floating, _Hide, 100, 150, 1)]
+ID_Aseadmin    [_Button("Administration", "ICON_16_ASEADM", "ICON_24_ASEADM")]^C^C_aseadmin 
+ID_Aserows     [_Button("Rows", "ICON_16_ASEROW", "ICON_24_ASEROW")]^C^C_aserows 
+ID_Aselinks    [_Button("Links", "ICON_16_ASELIN", "ICON_24_ASELIN")]^C^C_aselinks 
+ID_Aseselect   [_Button("Select Objects", "ICON_16_ASESEL", "ICON_24_ASESEL")]^C^C_aseselect 
+ID_Aseexport   [_Button("Export Links", "ICON_16_ASEEXP", "ICON_24_ASEEXP")]^C^C_aseexport 
+ID_Asesqled    [_Button("SQL Editor", "ICON_16_ASESQL", "ICON_24_ASESQL")]^C^C_asesqled 
+
+**TB_INQUIRY
+**INQUIRY
+ID_TbInquiry   [_Toolbar("Inquiry", _Floating, _Hide, 100, 170, 1)]
+ID_Dist        [_Button("Distance", "ICON_16_DIST", "ICON_24_DIST")]'_dist 
+ID_Area        [_Button("Area", "ICON_16_AREA", "ICON_24_AREA")]^C^C_area 
+ID_Massprop    [_Button("Mass Properties", "ICON_16_MASSPR", "ICON_24_MASSPR")]^C^C_massprop 
+               [--]
+ID_List        [_Button("List", "ICON_16_LIST", "ICON_24_LIST")]^C^C_list 
+ID_Id          [_Button("Locate Point", "ICON_16_ID", "ICON_24_ID")]'_id 
+
+**TB_INSERT
+**INSERT
+ID_TbInsert    [_Toolbar("Insert", _Floating, _Hide, 100, 190, 1)]
+ID_Ddinsert    [_Button("Insert Block", "ICON_16_DINSER", "ICON_24_DINSER")]^C^C_ddinsert 
+               [--]
+ID_Xref        [_Button("External Reference", "ICON_16_XREATT", "ICON_24_XREATT")]^C^C_xref 
+ID_Image       [_Button("Image", "ICON_16_IMAGE", "ICON_24_IMAGE")]^C^C_image 
+               [--]
+ID_Import      [_Button("Import", "ICON_16_IMPORT", "ICON_24_IMPORT")]^C^C_import 
+               [--]
+ID_Insertobj   [_Button("OLE Object", "ICON_16_INSOLE", "ICON_24_INSOLE")]^C^C_insertobj 
+
+**TB_MODIFY
+**MODIFY
+ID_TbModify    [_Toolbar("Modify", _Left, _Hide, 1, 0, 1)]
+ID_Erase       [_Button("Erase", "ICON_16_ERASE", "ICON_24_ERASE")]^C^C_erase 
+ID_Copy        [_Button("Copy Object", "ICON_16_COPYOB", "ICON_24_COPYOB")]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_copy,^C^C_copy) 
+ID_Mirror      [_Button("Mirror", "ICON_16_MIRROR", "ICON_24_MIRROR")]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_mirror,^C^C_mirror) 
+ID_Offset      [_Button("Offset", "ICON_16_OFFSET", "ICON_24_OFFSET")]^C^C_offset 
+ID_Array       [_Button("Array", "ICON_16_ARRREC", "ICON_24_ARRREC")]^C^C_array 
+ID_Move        [_Button("Move", "ICON_16_MOVE", "ICON_24_MOVE")]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_move,^C^C_move) 
+ID_Rotate      [_Button("Rotate", "ICON_16_ROTATE", "ICON_24_ROTATE")]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_rotate,^C^C_rotate) 
+ID_Scale       [_Button("Scale", "ICON_16_SCALE", "ICON_24_SCALE")]$M=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_scale,^C^C_scale) 
+ID_Stretch     [_Button("Stretch", "ICON_16_STRETC", "ICON_24_STRETC")]^C^C_stretch 
+ID_Lengthen    [_Button("Lengthen", "ICON_16_LENGTH", "ICON_24_LENGTH")]^C^C_lengthen 
+ID_Trim        [_Button("Trim", "ICON_16_TRIM", "ICON_24_TRIM")]^C^C_trim 
+ID_Extend      [_Button("Extend", "ICON_16_EXTEND", "ICON_24_EXTEND")]^C^C_extend 
+ID_Break       [_Button("Break", "ICON_16_BRE2PT", "ICON_24_BRE2PT")]^C^C_break 
+ID_Chamfer     [_Button("Chamfer", "ICON_16_CHAMFE", "ICON_24_CHAMFE")]^C^C_chamfer 
+ID_Fillet      [_Button("Fillet", "ICON_16_FILLET", "ICON_24_FILLET")]^C^C_fillet 
+ID_Explode     [_Button("Explode", "ICON_16_EXPLOD", "ICON_24_EXPLOD")]^C^C_explode 
+
+**TB_MODIFY_II
+ID_TbModifII   [_Toolbar("Modify II", _Floating, _Hide, 100, 270, 1)]
+ID_Draworder   [_Button("Draworder", "ICON_16_DRWORD", "ICON_24_DRWORD")]^C^C_draworder 
+               [--]
+ID_Hatchedit   [_Button("Edit Hatch", "ICON_16_HATEDI", "ICON_24_HATEDI")]^C^C_hatchedit 
+ID_Pedit       [_Button("Edit Polyline", "ICON_16_PEDIT", "ICON_24_PEDIT")]^C^C_pedit 
+ID_Splinedit   [_Button("Edit Spline", "ICON_16_SPLEDI", "ICON_24_SPLEDI")]^C^C_splinedit 
+ID_Mledit      [_Button("Edit Multiline", "ICON_16_MLEDIT", "ICON_24_MLEDIT")]^C^C_mledit 
+ID_Ddatte      [_Button("Edit Attribute", "ICON_16_ATTEDI", "ICON_24_ATTEDI")]^C^C_ddatte 
+ID_Ddedit      [_Button("Edit Text", "ICON_16_TEXEDI", "ICON_24_TEXEDI")]^C^C_ddedit 
+               [--]
+ID_Union       [_Button("Union", "ICON_16_UNION", "ICON_24_UNION")]^C^C_union 
+ID_Subtract    [_Button("Subtract", "ICON_16_SUBTRA", "ICON_24_SUBTRA")]^C^C_subtract 
+ID_Intersect   [_Button("Intersect", "ICON_16_INTERS", "ICON_24_INTERS")]^C^C_intersect 
+
+**TB_OBJECT_PROPERTIES
+**TB__OBJECT_PROPERTIES
+ID_TbObjectP   [_Toolbar("_Object Properties", _Top, _Hide, 0, 1, 1)]
+ID_Ai_molc     [_Button("Make Object's Layer Current", "ICON_16_MOLC", "ICON_24_MOLC")]^C^Cai_molc 
+ID_Layer       [_Button("Layers", "ICON_16_LAYERS", "ICON_24_LAYERS")]'_layer 
+               [--]
+               [_Control(_Layer)]
+               [--]
+               [_Control(_Color)]
+               [--]
+ID_Linetype    [_Button("Linetype", "ICON_16_LINETY", "ICON_24_LINETY")]'_linetype 
+               [--]
+               [_Control(_Linetype)]
+               [--]
+ID_Ai_propch   [_Button("Properties", "ICON_16_MODIFY", "ICON_24_MODIFY")]^C^Cai_propchk 
+
+**TB_OBJECT_SNAP
+ID_TbOsnap     [_Toolbar("Object Snap", _Floating, _Hide, 100, 210, 1)]
+ID_Tracking    [_Button("Tracking", "ICON_16_TRACK", "ICON_24_TRACK")]_tracking 
+ID_From        [_Button("Snap From", "ICON_16_OSNFRO", "ICON_24_OSNFRO")]_from 
+               [--]
+ID_OsnapEndp   [_Button("Snap to Endpoint", "ICON_16_OSNEND", "ICON_24_OSNEND")]_endp 
+ID_OsnapMidp   [_Button("Snap to Midpoint", "ICON_16_OSNMID", "ICON_24_OSNMID")]_mid 
+ID_OsnapInte   [_Button("Snap to Intersection", "ICON_16_OSNINT", "ICON_24_OSNINT")]_int 
+ID_OsnapAppa   [_Button("Snap to Apparent Intersect", "ICON_16_OSNAPP", "ICON_24_OSNAPP")]_appint 
+               [--]
+ID_OsnapCent   [_Button("Snap to Center", "ICON_16_OSNCEN", "ICON_24_OSNCEN")]_cen 
+ID_OsnapQuad   [_Button("Snap to Quadrant", "ICON_16_OSNQUA", "ICON_24_OSNQUA")]_qua 
+ID_OsnapTang   [_Button("Snap to Tangent", "ICON_16_OSNTAN", "ICON_24_OSNTAN")]_tan 
+               [--]
+ID_OsnapPerp   [_Button("Snap to Perpendicular", "ICON_16_OSNPER", "ICON_24_OSNPER")]_per 
+ID_OsnapInse   [_Button("Snap to Insert", "ICON_16_OSNINS", "ICON_24_OSNINS")]_ins 
+ID_OsnapNode   [_Button("Snap to Node", "ICON_16_OSNNOD", "ICON_24_OSNNOD")]_nod 
+               [--]
+ID_OsnapNear   [_Button("Snap to Nearest", "ICON_16_OSNNEA", "ICON_24_OSNNEA")]_nea 
+ID_OsnapQuic   [_Button("Snap to Quick", "ICON_16_OSNQUI", "ICON_24_OSNQUI")]_quick,^Z
+ID_OsnapNone   [_Button("Snap to None", "ICON_16_OSNNON", "ICON_24_OSNNON")]_non 
+               [--]
+ID_Osnap       [_Button("Object Snap Settings", "ICON_16_OSNAP", "ICON_24_OSNAP")]'_osnap 
+
+**TB_REFERENCE
+**REFERENCE
+ID_TbReferen   [_Toolbar("Reference", _Floating, _Hide, 100, 370, 1)]
+ID_Xref        [_Button("External Reference", "ICON_16_XREATT", "ICON_24_XREATT")]^C^C_xref 
+ID_Xattach     [_Button("External Reference Attach", "ICON_16_XATTAC", "ICON_24_XATTAC")]^C^C_xattach 
+ID_Xclip       [_Button("External Reference Clip", "ICON_16_XRECLI", "ICON_24_XRECLI")]^C^C_xclip 
+ID_Xbind       [_Button("External Reference Bind", "ICON_16_XBIND", "ICON_24_XBIND")]^C^C_xbind 
+ID_Xclipfram   [_Button("External Reference Clip Frame", "ICON_16_XCLIPFRAME", "ICON_24_XCLIPFRAME")]^C^C_xclipframe 
+               [--]
+ID_Image       [_Button("Image", "ICON_16_IMAGE", "ICON_24_IMAGE")]^C^C_image 
+ID_ImageAtta   [_Button("Image Attach", "ICON_16_IMGATT", "ICON_24_IMGATT")]^C^C_imageattach 
+ID_Imageclip   [_Button("Image Clip", "ICON_16_IMGCLP", "ICON_24_IMGCLP")]^C^C_imageclip 
+ID_Imageadju   [_Button("Image Adjust", "ICON_16_IMGADJ", "ICON_24_IMGADJ")]^C^C_imageadjust 
+ID_Imagequal   [_Button("Image Quality", "ICON_16_IMGQUA", "ICON_24_IMGQUA")]^C^C_imagequality 
+ID_Transpare   [_Button("Image Transparency", "ICON_16_TRANSP", "ICON_24_TRANSP")]^C^C_transparency 
+ID_Imagefram   [_Button("Image Frame", "ICON_16_IMGFRAME", "ICON_24_IMGFRAME")]^C^C_imageframe 
+
+**TB_RENDER
+**RENDER
+ID_TbRender    [_Toolbar("Render", _Floating, _Hide, 100, 230, 1)]
+ID_Hide        [_Button("Hide", "ICON_16_HIDE", "ICON_24_HIDE")]^C^C_hide 
+ID_Shade       [_Button("Shade", "ICON_16_SHADE", "ICON_24_SHADE")]^C^C_shade 
+               [--]
+ID_Render      [_Button("Render", "ICON_16_RENDER", "ICON_24_RENDER")]^C^C_render 
+               [--]
+ID_Scene       [_Button("Scenes", "ICON_16_SCENE", "ICON_24_SCENE")]^C^C_scene 
+ID_Light       [_Button("Lights", "ICON_16_LIGHT", "ICON_24_LIGHT")]^C^C_light 
+ID_Rmat        [_Button("Materials", "ICON_16_RMAT", "ICON_24_RMAT")]^C^C_rmat 
+ID_Matlib      [_Button("Materials Library", "ICON_16_MATLIB", "ICON_24_MATLIB")]^C^C_matlib 
+ID_Setuv       [_Button("Mapping", "ICON_16_SETUV", "ICON_24_SETUV")]^C^C_setuv 
+               [--]
+ID_Backgroun   [_Button("Background", "ICON_16_BACKGR", "ICON_24_BACKGR")]^C^C_background 
+ID_Fog         [_Button("Fog", "ICON_16_FOG", "ICON_24_FOG")]^C^C_fog 
+ID_Lsnew       [_Button("Landscape New", "ICON_16_LSNEW", "ICON_24_LSNEW")]^C^C_lsnew 
+ID_Lsedit      [_Button("Landscape Edit", "ICON_16_LSEDIT", "ICON_24_LSEDIT")]^C^C_lsedit 
+ID_Lslib       [_Button("Landscape Library", "ICON_16_LSLIB", "ICON_24_LSLIB")]^C^C_lslib 
+               [--]
+ID_Rpref       [_Button("Render Preferences", "ICON_16_RPREF", "ICON_24_RPREF")]^C^C_rpref 
+ID_Stats       [_Button("Statistics", "ICON_16_STATS", "ICON_24_STATS")]^C^C_stats 
+
+**TB_SOLIDS
+**SOLIDS
+ID_TbSolids    [_Toolbar("Solids", _Floating, _Hide, 100, 250, 1)]
+ID_Box         [_Button("Box", "ICON_16_BOX", "ICON_24_BOX")]^C^C_box 
+ID_Sphere      [_Button("Sphere", "ICON_16_SPHERE", "ICON_24_SPHERE")]^C^C_sphere 
+ID_Cylinder    [_Button("Cylinder", "ICON_16_CYLIND", "ICON_24_CYLIND")]^C^C_cylinder 
+ID_Cone        [_Button("Cone", "ICON_16_CONE", "ICON_24_CONE")]^C^C_cone 
+ID_Wedge       [_Button("Wedge", "ICON_16_WEDGE", "ICON_24_WEDGE")]^C^C_wedge 
+ID_Torus       [_Button("Torus", "ICON_16_TORUS", "ICON_24_TORUS")]^C^C_torus 
+               [--]
+ID_Extrude     [_Button("Extrude", "ICON_16_EXTRUD", "ICON_24_EXTRUD")]^C^C_extrude 
+ID_Revolve     [_Button("Revolve", "ICON_16_REVOLV", "ICON_24_REVOLV")]^C^C_revolve 
+               [--]
+ID_Slice       [_Button("Slice", "ICON_16_SLICE", "ICON_24_SLICE")]^C^C_slice 
+ID_Section     [_Button("Section", "ICON_16_SECTIO", "ICON_24_SECTIO")]^C^C_section 
+ID_Interfere   [_Button("Interfere", "ICON_16_INTERF", "ICON_24_INTERF")]^C^C_interfere 
+               [--]
+ID_Soldraw     [_Button("Setup Drawing", "ICON_16_SOLDR", "ICON_24_SOLDR")]^C^C_soldraw 
+ID_Solview     [_Button("Setup View", "ICON_16_SOLVW", "ICON_24_SOLVW")]^C^C_solview 
+ID_Solprof     [_Button("Setup Profile", "ICON_16_SOLPR", "ICON_24_SOLPR")]^C^C_solprof 
+
+**TB_STANDARD
+**TB__STANDARD_TOOLBAR
+ID_TbStandar   [_Toolbar("_Standard Toolbar", _Floating, _Hide, 190, 412, 1)]
+ID_New         [_Button("New", "ICON_16_NEW", "ICON_24_NEW")]^C^C_new 
+ID_Open        [_Button("Open", "ICON_16_OPEN", "ICON_24_OPEN")]^C^C_open 
+ID_Save        [_Button("Save", "ICON_16_SAVE", "ICON_24_SAVE")]^C^C_qsave 
+               [--]
+ID_Print       [_Button("Print", "ICON_16_PRINT", "ICON_24_PRINT")]^C^C_plot 
+ID_Preview     [_Button("Print Preview", "ICON_16_PREVIEW", "ICON_24_PREVIEW")]^C^C_preview 
+ID_Spell       [_Button("Spelling", "ICON_16_SPELL", "ICON_24_SPELL")]^C^C_spell 
+               [--]
+ID_Cutclip     [_Button("Cut to Clipboard", "ICON_16_CUT", "ICON_24_CUT")]'_cutclip 
+ID_Copyclip    [_Button("Copy to Clipboard", "ICON_16_COPY", "ICON_24_COPY")]'_copyclip 
+ID_Pasteclip   [_Button("Paste from Clipboard", "ICON_16_PASTE", "ICON_24_PASTE")]'_pasteclip 
+ID_Matchprop   [_Button("Match Properties", "ICON_16_MATCH", "ICON_24_MATCH")]_matchprop 
+               [--]
+ID_U           [_Button("Undo", "ICON_16_UNDO", "ICON_24_UNDO")]_u 
+ID_Redo        [_Button("Redo", "ICON_16_REDO", "ICON_24_REDO")]^C^C_redo 
+               [--]
+ID_Browser     [_Button("Launch Browser", "ICON_16_URL", "ICON_24_URL")]^C^C_browser;;
+               [--]
+ID_TbOsnap     [_Flyout("Object Snap", ICON_16_OSNAP, ICON_24_OSNAP, _OtherIcon, ACAD.TB_OBJECT_SNAP)]
+ID_TbUcs       [_Flyout("UCS", ICON_16_UCS, ICON_24_UCS, _OtherIcon, ACAD.TB_UCS)]
+ID_TbInquiry   [_Flyout("Inquiry", ICON_16_LIST, ICON_24_LIST, _OtherIcon, ACAD.TB_INQUIRY)]
+               [--]
+ID_Redrawall   [_Button("Redraw All", "ICON_16_REDRAW", "ICON_24_REDRAW")]^C^C_redrawall 
+               [--]
+ID_Dsviewer    [_Button("Aerial View", "ICON_16_AERIAL", "ICON_24_AERIAL")]'_dsviewer 
+ID_TbViewpoi   [_Flyout("Viewpoint", ICON_16_DDVIEW, ICON_24_DDVIEW, _OtherIcon, ACAD.TB_VIEWPOINT)]
+               [--]
+ID_Pan         [_Button("Pan Realtime", "ICON_16_RTPAN", "ICON_24_RTPAN")]'_pan 
+ID_ZoomRealt   [_Button("Zoom Realtime", "ICON_16_RTZOOM", "ICON_24_RTZOOM")]'_zoom ;
+ID_TbZoom      [_Flyout("Zoom", ICON_16_ZOOM, ICON_24_ZOOM, _OtherIcon, ACAD.TB_ZOOM)]
+ID_ZoomPrevi   [_Button("Zoom Previous", "ICON_16_ZOOPRE", "ICON_24_ZOOPRE")]'_zoom;_p 
+               [--]
+ID_Help        [_Button("Help", "ICON_16_HELP", "ICON_24_HELP")]'_help 
+
+**TB_SURFACES
+**SURFACES
+ID_TbSurface   [_Toolbar("Surfaces", _Floating, _Hide, 100, 290, 1)]
+ID_Solid       [_Button("2D Solid", "ICON_16_SOLID", "ICON_24_SOLID")]^C^C_solid 
+ID_3dface      [_Button("3D Face", "ICON_16_3DFACE", "ICON_24_3DFACE")]^C^C_3dface 
+               [--]
+ID_Ai_box      [_Button("Box", "ICON_16_SURBOX", "ICON_24_SURBOX")]^C^Cai_box 
+ID_Ai_wedge    [_Button("Wedge", "ICON_16_SURWED", "ICON_24_SURWED")]^C^Cai_wedge 
+ID_Ai_pyrami   [_Button("Pyramid", "ICON_16_SURPYR", "ICON_24_SURPYR")]^C^Cai_pyramid 
+ID_Ai_cone     [_Button("Cone", "ICON_16_SURCON", "ICON_24_SURCON")]^C^Cai_cone 
+ID_Ai_sphere   [_Button("Sphere", "ICON_16_SURSPH", "ICON_24_SURSPH")]^C^Cai_sphere 
+ID_Ai_dome     [_Button("Dome", "ICON_16_SURDOM", "ICON_24_SURDOM")]^C^Cai_dome 
+ID_Ai_dish     [_Button("Dish", "ICON_16_SURDIS", "ICON_24_SURDIS")]^C^Cai_dish 
+ID_Ai_torus    [_Button("Torus", "ICON_16_SURTOR", "ICON_24_SURTOR")]^C^Cai_torus 
+               [--]
+ID_Edge        [_Button("Edge", "ICON_16_EDGE", "ICON_24_EDGE")]^C^C_edge 
+ID_3dmesh      [_Button("3D Mesh", "ICON_16_3DMESH", "ICON_24_3DMESH")]^C^C_3dmesh 
+               [--]
+ID_Revsurf     [_Button("Revolved Surface", "ICON_16_REVSUR", "ICON_24_REVSUR")]^C^C_revsurf 
+ID_Tabsurf     [_Button("Tabulated Surface", "ICON_16_TABSUR", "ICON_24_TABSUR")]^C^C_tabsurf 
+ID_Rulesurf    [_Button("Ruled Surface", "ICON_16_RULESU", "ICON_24_RULESU")]^C^C_rulesurf 
+ID_Edgesurf    [_Button("Edge Surface", "ICON_16_EDGESU", "ICON_24_EDGESU")]^C^C_edgesurf 
+
+**TB_UCS
+**UCS
+ID_TbUcs       [_Toolbar("UCS", _Floating, _Hide, 100, 310, 1)]
+ID_Ucs         [_Button("UCS", "ICON_16_UCS", "ICON_24_UCS")]^C^C_ucs 
+ID_Dducs       [_Button("Named UCS", "ICON_16_DDUCS", "ICON_24_DDUCS")]^C^C_dducs 
+ID_Dducsp      [_Button("Preset UCS", "ICON_16_UCSP", "ICON_24_UCSP")]^C^C_dducsp 
+               [--]
+ID_UcsPrevio   [_Button("UCS Previous", "ICON_16_UCSPRE", "ICON_24_UCSPRE")]^C^C_ucs _p 
+               [--]
+ID_UcsWorld    [_Button("World UCS", "ICON_16_UCSW", "ICON_24_UCSW")]^C^C_ucs _w 
+ID_UcsObject   [_Button("Object UCS", "ICON_16_UCSOBJ", "ICON_24_UCSOBJ")]^C^C_ucs _ob 
+ID_UcsView     [_Button("View UCS", "ICON_16_UCSVIE", "ICON_24_UCSVIE")]^C^C_ucs _v 
+               [--]
+ID_UcsOrigin   [_Button("Origin UCS", "ICON_16_UCSORI", "ICON_24_UCSORI")]^C^C_ucs _o 
+ID_UcsZAxVec   [_Button("Z Axis Vector UCS", "ICON_16_UCSZAV", "ICON_24_UCSZAV")]^C^C_ucs _zaxis 
+ID_Ucs3point   [_Button("3 Point UCS", "ICON_16_UCS3PT", "ICON_24_UCS3PT")]^C^C_ucs _3 
+               [--]
+ID_UcsXAxRot   [_Button("X Axis Rotate UCS", "ICON_16_UCSXAR", "ICON_24_UCSXAR")]^C^C_ucs _x 
+ID_UcsYAxRot   [_Button("Y Axis Rotate UCS", "ICON_16_UCSYAR", "ICON_24_UCSYAR")]^C^C_ucs _y 
+ID_UcsZAxRot   [_Button("Z Axis Rotate UCS", "ICON_16_UCSZAR", "ICON_24_UCSZAR")]^C^C_ucs _z 
+
+**TB_VIEWPOINT
+**VIEWPOINT
+ID_TbViewpoi   [_Toolbar("Viewpoint", _Floating, _Hide, 100, 330, 1)]
+ID_Ddview      [_Button("Named Views", "ICON_16_DDVIEW", "ICON_24_DDVIEW")]^C^C_ddview 
+               [--]
+ID_VpointTop   [_Button("Top View", "ICON_16_VIETOP", "ICON_24_VIETOP")]^C^C_vpoint _non *0,0,1 
+ID_VpointBot   [_Button("Bottom View", "ICON_16_VIEBOT", "ICON_24_VIEBOT")]^C^C_vpoint _non *0,0,-1 
+ID_VpointLef   [_Button("Left View", "ICON_16_VIELEF", "ICON_24_VIELEF")]^C^C_vpoint _non *-1,0,0 
+ID_VpointRig   [_Button("Right View", "ICON_16_VIERIG", "ICON_24_VIERIG")]^C^C_vpoint _non *1,0,0 
+ID_VpointFro   [_Button("Front View", "ICON_16_VIEFRO", "ICON_24_VIEFRO")]^C^C_vpoint _non *0,-1,0 
+ID_VpointBac   [_Button("Back View", "ICON_16_VIEBAC", "ICON_24_VIEBAC")]^C^C_vpoint _non *0,1,0 
+               [--]
+ID_VpointSW    [_Button("SW Isometric View", "ICON_16_VIESWI", "ICON_24_VIESWI")]^C^C_vpoint _non *-1,-1,1 
+ID_VpointSE    [_Button("SE Isometric View", "ICON_16_VIESEI", "ICON_24_VIESEI")]^C^C_vpoint _non *1,-1,1 
+ID_VpointNE    [_Button("NE Isometric View", "ICON_16_VIENEI", "ICON_24_VIENEI")]^C^C_vpoint _non *1,1,1 
+ID_VpointNW    [_Button("NW Isometric View", "ICON_16_VIENWI", "ICON_24_VIENWI")]^C^C_vpoint _non *-1,1,1 
+
+**TB_ZOOM
+**ZOOM
+ID_TbZoom      [_Toolbar("Zoom", _Floating, _Hide, 100, 350, 1)]
+ID_ZoomWindo   [_Button("Zoom Window", "ICON_16_ZOOWIN", "ICON_24_ZOOWIN")]'_zoom _w 
+ID_ZoomDynam   [_Button("Zoom Dynamic", "ICON_16_ZOODYN", "ICON_24_ZOODYN")]'_zoom _d 
+ID_ZoomScale   [_Button("Zoom Scale", "ICON_16_ZOOSCA", "ICON_24_ZOOSCA")]'_zoom _s 
+ID_ZoomCente   [_Button("Zoom Center", "ICON_16_ZOOCEN", "ICON_24_ZOOCEN")]'_zoom _c 
+               [--]
+ID_ZoomIn      [_Button("Zoom In", "ICON_16_ZOOIN", "ICON_24_ZOOIN")]'_zoom 2x 
+ID_ZoomOut     [_Button("Zoom Out", "ICON_16_ZOOOUT", "ICON_24_ZOOOUT")]'_zoom .5x 
+               [--]
+ID_ZoomAll     [_Button("Zoom All", "ICON_16_ZOOALL", "ICON_24_ZOOALL")]'_zoom _all 
+ID_ZoomExten   [_Button("Zoom Extents", "ICON_16_ZOOEXT", "ICON_24_ZOOEXT")]'_zoom _e 
+
+**PIPING
+**PIPING1
+ID_PIPING_0    [_Toolbar("PIPING1", _Top, _Show, 0, 0, 1)]
+ID__4          [_Flyout("ISO PIPE SIZE", ICON.bmp, ICON5667.bmp, _OtherIcon, ISO.ISO_SIZE)]
+ID__33         [_Button("PIPE", "c:\ghk\icon\i101.bmp", "c:\ghk\icon\i101.bmp")]^C^C^P(IF (not i-pipe)(load"c:/ghk/iso/i-pipe"))(setq job_direc 1)(i-pipe)^P^M
+ID__34         [_Button("NIPPLE", "c:\ghk\icon\i102.bmp", "c:\ghk\icon\i102.bmp")]^C^C^P(IF (not i-nip)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-nip)^P^M
+ID__35         [_Button("45 ELBOW", "c:\ghk\icon\i103.bmp", "c:\ghk\icon\i103.bmp")]^C^C^P(IF (not i-45elbow)(load"c:/ghk/iso/i-elbow"))(setq job_direc 1)(setq v-point 1)(i-45elbow)^P^M
+ID__36         [_Button("90 ELBOW", "c:\ghk\icon\i104.bmp", "c:\ghk\icon\i104.bmp")]^C^C^P(IF (not i-90elbow)(load"c:/ghk/iso/i-elbow"))(setq job_direc 1)(setq v-point 1)(i-90elbow)^P^M
+ID__37         [_Button("TEE", "c:\ghk\icon\i105.bmp", "c:\ghk\icon\i105.bmp")]^C^C^P(IF (not i-tee1)(load"c:/ghk/iso/i-tee"))(setq job_direc 1)(i-tee1)^P^M
+ID__0          [_Button("R.TEE", "c:\ghk\icon\i106.bmp", "c:\ghk\icon\i106.bmp")]^C^C^P(IF (not i-tee3)(load"c:/ghk/iso/i-tee"))(setq job_direc 1)(i-tee3)^P^M
+ID__1          [_Button("ECC. RED (Large start)", "c:\ghk\icon\i107.bmp", "c:\ghk\icon\i107.bmp")]^C^C^P(IF (not i-swg1)(load"c:/ghk/iso/i-red"))(setq job_direc 1)(setq swg-type 3)(i-swg1)^P^M
+ID__2          [_Button("ECC. RED (Small Start)", "c:\ghk\icon\i108.bmp", "c:\ghk\icon\i108.bmp")]^C^C^C^C^P(IF (not i-swg2)(load"c:/ghk/iso/i-red"))(setq job_direc 1)(setq swg-type 4)(i-swg2)^P^M
+ID__3          [_Button("CON.RED (Large Start)", "c:\ghk\icon\i109.bmp", "c:\ghk\icon\i109.bmp")]^C^C^P(IF (not i-swg1)(load"c:/ghk/iso/i-red"))(setq job_direc 1)(setq swg-type 1)(i-swg1)^P^M
+ID__4          [_Button("CON. RED (Small Start)", "c:\ghk\icon\i110.bmp", "c:\ghk\icon\i110.bmp")]^C^C^P(IF (not i-swg2)(load"c:/ghk/iso/i-red"))(setq job_direc 1)(setq swg-type 2)(i-swg2)^P^M
+               [--]
+ID__5          [_Button("Union", "c:\ghk\icon\i111.bmp", "c:\ghk\icon\i111.bmp")]^C^C^P(IF (not i-uni)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-uni)^P^M
+ID__6          [_Button("Plug", "c:\ghk\icon\i112.bmp", "c:\ghk\icon\i112.bmp")]^C^C^P(IF (not i-plg)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-plg)^P^M
+ID__7          [_Button("Full Coupling", "c:\ghk\icon\i113.bmp", "c:\ghk\icon\i113.bmp")]^C^C^P(IF (not i-fcp)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-fcp)^P^M
+ID__8          [_Button("Half Coupling", "c:\ghk\icon\i114.bmp", "c:\ghk\icon\i114.bmp")]^C^C^P(IF (not i-hcp)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-hcp)^P^M
+ID__9          [_Button("Weldolet", "c:\ghk\icon\i115.bmp", "c:\ghk\icon\i115.bmp")]^C^C^P(IF (not i-wol)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-wol)^P^M
+ID__10         [_Button("Cap", "c:\ghk\icon\i116.bmp", "c:\ghk\icon\i116.bmp")]^C^C^P(IF (not i-cap)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-cap)^P^M
+ID__11         [_Button("Gasket", "c:\ghk\icon\i117.bmp", "c:\ghk\icon\i117.bmp")]^C^C^P(IF (not i-gas)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-gas)^P^M
+ID__12         [_Button("Bolt", "c:\ghk\icon\i118.bmp", "c:\ghk\icon\i118.bmp")]^C^C^P(IF (not i-blt)(load"c:/ghk/iso/fitting"))(setq job_direc 1)(i-blt)^P^M
+ID__31         [_Flyout("Flange", ICON2757.bmp, ICON_24_BLANK, _OtherIcon, ISO.ISO_FLANGE)]
+ID__45         [_Flyout("iso valve", ICON3035.bmp, ICON_24_BLANK, _OtherIcon, ISO.ISO_VALVE)]
+ID__17         [_Button("Dimmension", "c:\ghk\icon\i119.bmp", "c:\ghk\icon\i119.bmp")]^C^C^P(IF (not dimen)(load"c:/ghk/iso/dimen"))(dimen)^P^M
+ID__86         [_Button("Spec", "c:\ghk\icon\i120.bmp", "c:\ghk\icon\i120.bmp")]^C^C^P(IF (not ssspec)(load"c:/ghk/iso/iso-base"))(c:ssspec)(resetiso)^P^M
+ID__94         [_Flyout("iso rating", ICON9072.bmp, ICON_24_BLANK, _OtherIcon, ISO.ISO_RATING)]
+ID__91         [_Button("Arto B/M", "c:\ghk\icon\101.bmp", "c:\ghk\icon\101.bmp")]^C^C^P(IF (not import)(load"c:/ghk/iso/import"))(c:import)^P^M
+ID__66         [_Flyout("DWG TYPE", ICON6941.bmp, ICON_24_BLANK, _OtherIcon, ISO.DWG_TYPE)]
+ID__89         [_Flyout("ON OFF", ICON0191.bmp, ICON_24_BLANK, _OtherIcon, ISO.ISO_ONOFF)]
+ID__93         [_Flyout("A0", "C:/GHK/ICON/A17.bmp", ICON_24_BLANK, _OwnIcon, ISO.A0_SCALE)]
+ID__95         [_Flyout("A1", "C:/GHK/ICON/A18.bmp", ICON_24_BLANK, _OwnIcon, ISO.A1_SCALE)]
+ID__97         [_Flyout("A2", "C:/GHK/ICON/A19.bmp", ICON_24_BLANK, _OwnIcon, ISO.A2_SCALE)]
+ID__108        [_Flyout("A3", "C:/GHK/ICON/A20.bmp", ICON_24_BLANK, _OwnIcon, ISO.A3_SCALE)]
+ID__109        [_Flyout("A4", "C:/GHK/ICON/A21.bmp", ICON_24_BLANK, _OwnIcon, ISO.A4_SCALE)]
+
+**ISO_SIZE
+ID_ISO_SIZE_0  [_Toolbar("ISO_SIZE", _Floating, _Hide, 76, 225, 1)]
+ID__1          [_Button("10A (3/8 Inch)", "C:/GHK/icon/i001.bmp", "C:/GHK/icon/i001.bmp")]^C^C^P(setq ghk  10)(resetiso)^P^M
+ID__2          [_Button("15A (1/2 Inch)", "C:/GHK/icon/i002.bmp", "C:/GHK/icon/i002.bmp")]^C^C^P(setq ghk  15)(resetiso)^P^M
+ID__3          [_Button("20A (3/4 Inch)", "C:/GHK/icon/i003.bmp", "C:/GHK/icon/i003.bmp")]^C^C^P(setq ghk  20)(resetiso)^P^M
+ID__4          [_Button("25A (1   Inch)", "C:/GHK/icon/i004.bmp", "C:/GHK/icon/i004.bmp")]^C^C^P(setq ghk  25)(resetiso)^P^M
+ID__5          [_Button("40A (1 1/2 Inch)", "C:/GHK/icon/i005.bmp", "C:/GHK/icon/i005.bmp")]^C^C^P(setq ghk  40)(resetiso)^P^M
+ID__6          [_Button("50A (2   Inch)", "C:/GHK/icon/i006.bmp", "C:/GHK/icon/i006.bmp")]^C^C^P(setq ghk  50)(resetiso)^P^M
+ID__0          [_Button("65A (2 1/2 Inch)", "C:/GHK/icon/i007.bmp", "C:/GHK/icon/i007.bmp")]^C^C^P(setq ghk  65)(resetiso)^P^M
+ID__7          [_Button("80A  (3   Inch)", "C:/GHK/icon/i008.bmp", "C:/GHK/icon/i008.bmp")]^C^C^P(setq ghk  80)(resetiso)^P^M
+ID__8          [_Button("100A (4   Inch)", "C:/GHK/icon/i009.bmp", "C:/GHK/icon/i009.bmp")]^C^C^P(setq ghk  100)(resetiso)^P^M
+ID__27         [_Button("125A (5   Inch)", "C:/GHK/icon/i010.bmp", "C:/GHK/icon/i010.bmp")]^C^C^P(setq ghk  125)(resetiso)^P^M
+ID__30         [_Button("150A (6   Inch)", "C:/GHK/icon/i011.bmp", "C:/GHK/icon/i011.bmp")]^C^C^P(setq ghk  150)(resetiso)^P^M
+ID__29         [_Button("200A (8   Inch)", "C:/GHK/icon/i012.bmp", "C:/GHK/icon/i012.bmp")]^C^C^P(setq ghk  200)(resetiso)^P^M
+ID__26         [_Button("250A (10  Inch)", "C:/GHK/icon/i013.bmp", "C:/GHK/icon/i013.bmp")]^C^C^P(setq ghk  250)(resetiso)^P^M
+ID__25         [_Button("300A (12  Inch)", "C:/GHK/icon/i014.bmp", "C:/GHK/icon/i014.bmp")]^C^C^P(setq ghk  300)(resetiso)^P^M
+ID__23         [_Button("350A (14  Inch)", "C:/GHK/icon/i015.bmp", "C:/GHK/icon/i015.bmp")]^C^C^P(setq ghk  350)(resetiso)^P^M
+ID__24         [_Button("400A (16  Inch)", "C:/GHK/icon/i016.bmp", "C:/GHK/icon/i016.bmp")]^C^C^P(setq ghk  400)(resetiso)^P^M
+ID__19         [_Button("450A (18  Inch)", "C:/GHK/icon/i017.bmp", "C:/GHK/icon/i017.bmp")]^C^C^P(setq ghk  450)(resetiso)^P^M
+ID__22         [_Button("500A (20  Inch)", "C:/GHK/icon/i018.bmp", "C:/GHK/icon/i018.bmp")]^C^C^P(setq ghk  500)(resetiso)^P^M
+ID__21         [_Button("550A (22  Inch)", "C:/GHK/icon/i019.bmp", "C:/GHK/icon/i019.bmp")]^C^C^P(setq ghk  550)(resetiso)^P^M
+ID__20         [_Button("600A (24  Inch)", "C:/GHK/icon/i020.bmp", "C:/GHK/icon/i020.bmp")]^C^C^P(setq ghk  600)(resetiso)^P^M
+ID__9          [_Button("650A (26  Inch)", "C:/GHK/icon/i021.bmp", "C:/GHK/icon/i021.bmp")]^C^C^P(setq ghk  650)(resetiso)^P^M
+ID__18         [_Button("700A (28  Inch)", "C:/GHK/icon/i022.bmp", "C:/GHK/icon/i022.bmp")]^C^C^P(setq ghk  700)(resetiso)^P^M
+ID__10         [_Button("750A (30  Inch)", "C:/GHK/icon/i023.bmp", "C:/GHK/icon/i023.bmp")]^C^C^P(setq ghk  750)(resetiso)^P^M
+ID__11         [_Button("800A (32  Inch)", "C:/GHK/icon/i024.bmp", "C:/GHK/icon/i024.bmp")]^C^C^P(setq ghk  800)(resetiso)^P^M
+ID__13         [_Button("850A (34  Inch)", "C:/GHK/icon/i025.bmp", "C:/GHK/icon/i025.bmp")]^C^C^P(setq ghk  850)(resetiso)^P^M
+ID__14         [_Button("900A (36  Inch)", "C:/GHK/icon/i026.bmp", "C:/GHK/icon/i026.bmp")]^C^C^P(setq ghk  900)(resetiso)^P^M
+ID__16         [_Button("950A (38  Inch)", "C:/GHK/icon/i027.bmp", "C:/GHK/icon/i027.bmp")]^C^C^P(setq ghk  950)(resetiso)^P^M
+ID__28         [_Button("1000A (40 Inch)", "C:/GHK/icon/i028.bmp", "C:/GHK/icon/i028.bmp")]^C^C^P(setq ghk  1000)(resetiso)^P^M
+
+**ISO_FLANGE
+ID_iso_flange_0 [_Toolbar("iso_flange", _Floating, _Hide, 467, 223, 7)]
+ID__38         [_Button("Flange (Pipe conn.)", "c:\ghk\icon\i201.bmp", "c:\ghk\icon\i201.bmp")]^C^C^P(IF (not i-flg)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg)^P^M
+ID__39         [_Button("Flange (Flange conn.)", "c:\ghk\icon\i202.bmp", "c:\ghk\icon\i202.bmp")]^C^C^P(IF (not i-flg1)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg1)^P^M
+ID__40         [_Button("Blind Flange", "c:\ghk\icon\i203.bmp", "c:\ghk\icon\i203.bmp")]^C^C^P(IF (not i-flg2)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg2)^P^M
+ID__41         [_Button("Nozzle (Pipe conn.)", "c:\ghk\icon\i204.bmp", "c:\ghk\icon\i204.bmp")]^C^C^P(IF (not i-flg3)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg3)^P^M
+ID__42         [_Button("Nozzle (Flange conn.)", "c:\ghk\icon\i205.bmp", "c:\ghk\icon\i205.bmp")]^C^C^P(IF (not i-flg4)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg4)^P^M
+ID__43         [_Button("Flow Meter", "c:\ghk\icon\i206.bmp", "c:\ghk\icon\i206.bmp")]^C^C^P(IF (not i-flg6)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg6)^P^M
+ID__44         [_Button("Spectacle", "c:\ghk\icon\i207.bmp", "c:\ghk\icon\i207.bmp")]^C^C^P(IF (not i-flg5)(load"c:/ghk/iso/i-flg"))(setq job_direc 1)(i-flg5)^P^M
+
+**ISO_VALVE
+ID_iso_valve_0 [_Toolbar("iso_valve", _Floating, _Hide, 515, 173, 10)]
+ID__46         [_Button("Gate Valve", "c:\ghk\icon\i301.bmp", "c:\ghk\icon\i301.bmp")]^C^C^P(IF (NOT i-gate)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-gate)^P^M
+ID__47         [_Button("Globe Valve", "c:\ghk\icon\i302.bmp", "c:\ghk\icon\i302.bmp")]^C^C^P(IF (NOT i-glov)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-glov)^P^M
+ID__48         [_Button("Check Valve", "c:\ghk\icon\i303.bmp", "c:\ghk\icon\i303.bmp")]^C^C^P(IF (NOT i-che)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-che)^P^M
+ID__49         [_Button("Ball Valve", "c:\ghk\icon\i304.bmp", "c:\ghk\icon\i304.bmp")]^C^C^P(IF (NOT i-ball)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-ball)^P^M
+ID__50         [_Button("Butterfly Valve", "c:\ghk\icon\i305.bmp", "c:\ghk\icon\i305.bmp")]^C^C^P(IF (NOT i-but)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-but)^P^M
+ID__51         [_Button("Diaphram Valve", "c:\ghk\icon\i306.bmp", "c:\ghk\icon\i306.bmp")]^C^C^P(IF (NOT i-dia)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-dia)^P^M
+ID__52         [_Button("Safety Valve", "c:\ghk\icon\i307.bmp", "c:\ghk\icon\i307.bmp")]^C^C^P(IF (NOT i-safety)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-safety)^P^M
+ID__53         [_Button("Trap", "c:\ghk\icon\i308.bmp", "c:\ghk\icon\i308.bmp")]^C^C^P(IF (NOT i-trap)(load"c:/ghk/iso/i-str"))(setq job_direc 1)(i-trap)^P^M
+ID__54         [_Button("3 Way Valve", "c:\ghk\icon\i309.bmp", "c:\ghk\icon\i309.bmp")]^C^C^P(if (not i-thway)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-thway)^P^M
+ID__55         [_Button("Neddle Valve", "c:\ghk\icon\i310.bmp", "c:\ghk\icon\i310.bmp")]^C^C^P(IF (NOT i-ndl)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-ndl)^P^M
+ID__56         [_Button("Pinch", "c:\ghk\icon\i311.bmp", "c:\ghk\icon\i311.bmp")]^C^C^P(IF (NOT i-pinch)(load"c:/ghk/iso/i-valve"))(setq job_direc 1)(i-pinch)^P^M
+ID__57         [_Button("Y-Strainer", "c:\ghk\icon\i312.bmp", "c:\ghk\icon\i312.bmp")]^C^C^P(if (not i-ystr)(load"c:/ghk/iso/i-str"))(setq job_direc 1)(i-ystr)^P^M
+ID__58         [_Button("B-Strainer", "c:\ghk\icon\i313.bmp", "c:\ghk\icon\i313.bmp")]^C^C^P(if (not i-bstr)(load"c:/ghk/iso/i-str"))(setq job_direc 1)(i-bstr)^P^M
+ID__59         [_Button("T-Strainer", "c:\ghk\icon\i314.bmp", "c:\ghk\icon\i314.bmp")]^C^C^P(if (not i-tstr)(load"c:/ghk/iso/i-str"))(setq job_direc 1)(i-tstr)^P^M
+
+**ISO_TEXT
+ID_iso_text_0  [_Toolbar("iso_text", _Floating, _Hide, 404, 131, 11)]
+ID__69         [_Button("Text Db", "c:\ghk\icon\i901.bmp", "c:\ghk\icon\i901.bmp")]^C^C^P(IF (not i-chs)(load"c:/ghk/iso/textang"))(i-chs)(prin1)^P^M
+ID__70         [_Button("Text A", "c:\ghk\icon\i902.bmp", "c:\ghk\icon\i902.bmp")]^C^C^P(IF (not i-just)(load"c:/ghk/iso/textang"))(i-just)(prin1)^P^M
+ID__71         [_Button("T 30", "c:\ghk\icon\i903.bmp", "c:\ghk\icon\i903.bmp")]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text1)(prin1)^P^M
+ID__73         [_Button("T -30", "c:\ghk\icon\i904.bmp", "c:\ghk\icon\i904.bmp")]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text2)(prin1)^P^M
+ID__74         [_Button("T 90", "c:\ghk\icon\i905.bmp", "c:\ghk\icon\i905.bmp")]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text3)(prin1)^P^M
+ID__75         [_Button("T -30", "c:\ghk\icon\i906.bmp", "c:\ghk\icon\i906.bmp")]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text4)(prin1)^P^M
+ID__76         [_Button("T 30", "c:\ghk\icon\i907.bmp", "c:\ghk\icon\i907.bmp")]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text5)(prin1)^P^M
+ID__77         [_Button("T 90", "c:\ghk\icon\i908.bmp", "c:\ghk\icon\i908.bmp")]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text6)(prin1)^P^M
+ID__78         [_Button("T 0", "c:\ghk\icon\i909.bmp", "c:\ghk\icon\i909.bmp")]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text7)(prin1)^P^M
+ID__79         [_Button("T 90", "c:\ghk\icon\i910.bmp", "c:\ghk\icon\i910.bmp")]^C^C^P(IF (not textang)(load"c:/ghk/iso/textang"))(text8)(prin1)^P^M
+
+**ISO_ATTR.
+ID_iso_attr__0 [_Toolbar("iso_attr.", _Floating, _Hide, 31, 370, 1)]
+ID__63         [_Button("P-Length", "c:\ghk\icon\i701.bmp", "c:\ghk\icon\i701.bmp")]^C^C^P(IF (not p-cal1)(load"c:/ghk/iso/TEXTANG"))(p-cal1)^P^M
+ID__64         [_Button("P-Size", "c:\ghk\icon\i702.bmp", "c:\ghk\icon\i702.bmp")]^C^C^P(IF (not p-cal2)(load"c:/ghk/iso/TEXTANG"))(p-cal2)^P^M
+ID__65         [_Button("DWG.NO", "c:\ghk\icon\i703.bmp", "c:\ghk\icon\i703.bmp")]^C^C^P(IF (not p-cal3)(load"c:/ghk/iso/TEXTANG"))(p-cal3)^P^M
+ID__67         [_Button("Spec.", "c:\ghk\icon\i704.bmp", "c:\ghk\icon\i704.bmp")]^C^C^P(IF (not p-cal4)(load"c:/ghk/iso/TEXTANG"))(p-cal4)^P^M
+ID__81         [_Button("P-Length2", "c:\ghk\icon\i705.bmp", "c:\ghk\icon\i705.bmp")]^C^C^P(IF (not p-cal5)(load"c:/ghk/iso/TEXTANG"))(p-cal5)^P^M
+ID__82         [_Button("P-Length 1st bm", "c:\ghk\icon\i706.bmp", "c:\ghk\icon\i706.bmp")]^C^C^P(IF (not p-cal6)(load"c:/ghk/iso/TEXTANG"))(p-cal6)^P^M
+
+**ISO_MISC
+ID_iso_misc_0  [_Toolbar("iso_misc", _Floating, _Hide, 31, 462, 1)]
+ID__96         [_Button("Leader", "c:\ghk\icon\i801.bmp", "c:\ghk\icon\i801.bmp")]^C^C$s=x $i=leader $i=* 
+ID__98         [_Button("Break", "c:\ghk\icon\i802.bmp", "c:\ghk\icon\i802.bmp")]^C^C$s=x $i=breakline $i=* 
+ID__99         [_Button("Ladder", "c:\ghk\icon\i803.bmp", "c:\ghk\icon\i803.bmp")]^C^C$s=x $i=ladder $i=* 
+ID__100        [_Button("Cloud", "c:\ghk\icon\i804.bmp", "c:\ghk\icon\i804.bmp")]^C^C^P(IF (not cl)(load"cl"))(cl)^P^M
+ID__101        [_Button("Rev", "c:\ghk\icon\i805.bmp", "c:\ghk\icon\i805.bmp")]^C^C^P(IF (not rev)(load"c:/ghk/lsp/flow"))(REV)^P^M
+
+**ISO_RATING
+ID_iso_rating_0 [_Toolbar("iso_rating", _Floating, _Hide, 552, 65, 6)]
+ID__103        [_Button("150 #", "c:\ghk\icon\i401.bmp", "c:\ghk\icon\i401.bmp")]^C^C^P(setq rat1 "A")(resetiso)^P^M
+ID__104        [_Button("300 #", "c:\ghk\icon\i402.bmp", "c:\ghk\icon\i402.bmp")]^C^C^P(setq rat1 "B")(resetiso)^P^M
+ID__105        [_Button("600#", "c:\ghk\icon\i403.bmp", "c:\ghk\icon\i403.bmp")]^C^C^P(setq rat1 "C")(resetiso)^P^M
+ID__110        [_Button("900#", "c:\ghk\icon\i404.bmp", "c:\ghk\icon\i404.bmp")]^C^C^P(setq rat1 "D")(resetiso)^P^M
+ID__106        [_Button("sw", "c:\ghk\icon\i405.bmp", "c:\ghk\icon\i405.bmp")]^C^C^P(setq sd1 "SW")(resetiso)^P^M
+ID__107        [_Button("Scr'd", "c:\ghk\icon\i406.bmp", "c:\ghk\icon\i406.bmp")]^C^C^P(setq sd1 "SCR'D")(resetiso)^P^M
+
+**ISO_ONOFF
+ID_iso_on_off_0 [_Toolbar("iso_onoff", _Floating, _Hide, 904, 248, 1)]
+ID__68         [_Button("ISO ON", "c:\ghk\icon\i601.bmp", "c:\ghk\icon\i601.bmp")]^C^C^PSNAPSTYL;1;^P
+ID__72         [_Button("ISO OFF", "c:\ghk\icon\i602.bmp", "c:\ghk\icon\i602.bmp")]^C^C^PSNAPSTYL;0;^P
+
+**PIPING2
+ID_PIPING2_0   [_Toolbar("PIPING2", _Left, _Show, 0, 0, 1)]
+ID_New_0       [_Button("New", "ICON_16_NEW", "ICON_24_NEW")]^C^C_new 
+ID_Open_0      [_Button("Open", "ICON_16_OPEN", "ICON_24_OPEN")]^C^C_open 
+ID_Save_0      [_Button("Save", "ICON_16_SAVE", "ICON_24_SAVE")]^C^C_qsave 
+ID_Print_0     [_Button("Print", "ICON_16_PRINT", "ICON_24_PRINT")]^C^C_plot 
+ID_Zoom_Window_0 [_Button("Zoom Window", "ICON_16_ZOOWIN", "ICON_24_ZOOWIN")]'_zoom;_w 
+ID_Zoom_Dynamic_0 [_Button("Zoom Dynamic", "ICON_16_ZOODYN", "ICON_24_ZOODYN")]'_zoom;_d 
+ID__60         [_Button("Tag Mark", "c:\ghk\icon\i131.bmp", "c:\ghk\icon\i131.bmp")]^C^C^P(IF (not pi-tag)(load"c:/ghk/iso/fitting"))(pi-tag)^P^M
+ID__61         [_Button("Spool No", "c:\ghk\icon\i132.bmp", "c:\ghk\icon\i132.bmp")]^C^C^P(IF (not filedw)(load"c:/ghk/iso/fitting"))(filedw)^P^M
+ID__13         [_Button("Grating", "c:\ghk\icon\i133.bmp", "c:\ghk\icon\i133.bmp")]^C^C^P(IF (not i-grat)(load"c:/ghk/iso/fitting"))(i-grat)^P^M
+ID__32         [_Button("Pipe End Mark", "c:\ghk\icon\i134.bmp", "c:\ghk\icon\i134.bmp")]^C^C^P(IF (not i-sec)(load"c:/ghk/iso/fitting"))(i-sec)^P^M
+ID__14         [_Button("Flow mark", "c:\ghk\icon\i135.bmp", "c:\ghk\icon\i135.bmp")]^C^C^P(IF (not i-flow)(load"c:/ghk/iso/fitting"))(i-flow)^P^M
+ID__15         [_Button("Spec. Breack", "c:\ghk\icon\i136.bmp", "c:\ghk\icon\i136.bmp")]^C^C^P(IF (not i-specb)(load"c:/ghk/iso/fitting"))(i-specb)^P^M
+ID__62         [_Button("1 st B/M Tag", "c:\ghk\icon\i137.bmp", "c:\ghk\icon\i137.bmp")]^C^C^P(IF (not firstbm)(load"c:/ghk/iso/fitting"))(firstbm)^P^M
+ID__16         [_Button("Line Number", "c:\ghk\icon\i138.bmp", "c:\ghk\icon\i138.bmp")]^C^C^P(IF (not lineno)(load"c:/ghk/iso/textang"))(lineno)(prin1)^P^M
+ID__88         [_Flyout("iso attributer", ICON6541.bmp, ICON_24_BLANK, _OtherIcon, ISO.ISO_ATTR.)]
+ID__83         [_Button("Loading", "c:\ghk\icon\117.bmp", "c:\ghk\icon\117.bmp")]^C^C^P(load"c:/ghk/iso/iso-base")^P^M
+ID__84         [_Button("bm reset", "c:\ghk\icon\i141.bmp", "c:\ghk\icon\i141.bmp")]^C^C^P(IF (not bmreset)(load"c:/ghk/iso/import"))(bmreset)^P^M
+ID__85         [_Button("Menu Set", "c:\ghk\icon\110.bmp", "c:\ghk\icon\i142.bmp")]^C^C^P(isomenuset)^P^M
+ID__102        [_Flyout("iso misc", ICON5829.bmp, ICON_24_BLANK, _OtherIcon, ISO.ISO_MISC)]
+ID__92         [_Flyout("iso text", "c:\ghk\icon\i900.bmp", "c:\ghk\icon\i900.bmp", _OwnIcon, ISO.ISO_TEXT)]
+ID__80         [_Button("Scope", "c:\ghk\icon\i143.bmp", "c:\ghk\icon\i143.bmp")]^C^C^P(IF (not i-scope)(load"c:/ghk/iso/fitting"))(i-scope)^P^M
+
+**DWG_TYPE
+**TB_DWG_TYPE
+ID_DWG_TYPE_0  [_Toolbar("DWG TYPE", _Floating, _Hide, 607, 65, 2)]
+ID__87         [_Button("New", "c:\ghk\icon\i501.bmp", "c:\ghk\icon\i501.bmp")]^C^C^P(setq future 1)(setq p-wedth1 (* 0.2 sk1))(setq p-wedth2 (* 0.3 sk1))(setq p-wedth3 (* 0.5 sk1))(setq p-wedth4 (* 0.7 sk1))(resetiso)^P^M
+ID__90         [_Button("Exist", "c:\ghk\icon\i502.bmp", "c:\ghk\icon\i502.bmp")]^C^C^P(setq future 0)(setq p-wedth1 (* 0 sk1))(setq p-wedth2 (* 0 sk1))(setq p-wedth3 (* 0 sk1))(setq p-wedth4 (* 0 sk1))(resetiso)^P^M
+
+**A0_SCALE
+**TB_A0_SCALE
+ID_A0_SCALE_0  [_Toolbar("A0 SCALE", _Floating, _Hide, 593, 206, 16)]
+ID__0          [_Button("1/1 SCALE", "C:/GHK/ICON/A01.bmp", "C:/GHK/ICON/A01.bmp")]^C^C^P(setq s 1)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__3          [_Button("1/5 SCALE", "C:/GHK/ICON/A02.bmp", "C:/GHK/ICON/A02.bmp")]^C^C^P(setq s 5)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__4          [_Button("1/10 SCALE", "C:/GHK/ICON/A03.bmp", "C:/GHK/ICON/A03.bmp")]^C^C^P(setq s 10)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__5          [_Button("1/15 SCALE", "C:/GHK/ICON/A04.bmp", "C:/GHK/ICON/A04.bmp")]^C^C^P(setq s 15)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__6          [_Button("1/20 SCALE", "C:/GHK/ICON/A05.bmp", "C:/GHK/ICON/A05.bmp")]^C^C^P(setq s 20)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__17         [_Button("1/30 SCALE", "C:/GHK/ICON/A06.bmp", "C:/GHK/ICON/A06.bmp")]^C^C^P(setq s 30)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__16         [_Button("1/40 SCALE", "C:/GHK/ICON/A07.bmp", "C:/GHK/ICON/A07.bmp")]^C^C^P(setq s 40)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__15         [_Button("1/50 SCALE", "C:/GHK/ICON/A08.bmp", "C:/GHK/ICON/A08.bmp")]^C^C^P(setq s 50)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__7          [_Button("1/60 SCALE", "C:/GHK/ICON/A09.bmp", "C:/GHK/ICON/A09.bmp")]^C^C^P(setq s 60)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__8          [_Button("1/100 SCALE", "C:/GHK/ICON/A10.bmp", "C:/GHK/ICON/A10.bmp")]^C^C^P(setq s 100)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__9          [_Button("1/150 SCALE", "C:/GHK/ICON/A11.bmp", "C:/GHK/ICON/A11.bmp")]^C^C^P(setq s 150)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__10         [_Button("1/200 SCALE", "C:/GHK/ICON/A12.bmp", "C:/GHK/ICON/A12.bmp")]^C^C^P(setq s 200)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__11         [_Button("1/300 SCALE", "C:/GHK/ICON/A13.bmp", "C:/GHK/ICON/A13.bmp")]^C^C^P(setq s 300)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__13         [_Button("1/500 SCALE", "C:/GHK/ICON/A14.bmp", "C:/GHK/ICON/A14.bmp")]^C^C^P(setq s 500)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__18         [_Button("1/1000 SCALE", "C:/GHK/ICON/A15.bmp", "C:/GHK/ICON/A15.bmp")]^C^C^P(setq s 1000)(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+ID__12         [_Button("SPECIAL SCALE", "C:/GHK/ICON/A16.bmp", "C:/GHK/ICON/A16.bmp")]^C^C^P(setq s(getreal "Do you want Scale :"))(setq maxy 1189)(setq maxx 841)(dwg-scale)^P^M
+
+**A1_SCALE
+**TB_A1_SCALE
+ID_A1_SCALE_0  [_Toolbar("A1 SCALE", _Floating, _Hide, 322, 191, 1)]
+ID__19         [_Button("1/1 SCALE", "C:/GHK/ICON/A01.bmp", "C:/GHK/ICON/A01.bmp")]^C^C^P(setq s 1)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__21         [_Button("1/5 SCALE", "C:/GHK/ICON/A02.bmp", "C:/GHK/ICON/A02.bmp")]^C^C^P(setq s 5)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__20         [_Button("1/10 SCALE", "C:/GHK/ICON/A03.bmp", "C:/GHK/ICON/A03.bmp")]^C^C^P(setq s 10)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__32         [_Button("1/15 SCALE", "C:/GHK/ICON/A04.bmp", "C:/GHK/ICON/A04.bmp")]^C^C^P(setq s 15)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__31         [_Button("1/20 SCALE", "C:/GHK/ICON/A05.bmp", "C:/GHK/ICON/A05.bmp")]^C^C^P(setq s 20)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__34         [_Button("1/30 SCALE", "C:/GHK/ICON/A06.bmp", "C:/GHK/ICON/A06.bmp")]^C^C^P(setq s 30)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__30         [_Button("1/40 SCALE", "C:/GHK/ICON/A07.bmp", "C:/GHK/ICON/A07.bmp")]^C^C^P(setq s 40)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__22         [_Button("1/50 SCALE", "C:/GHK/ICON/A08.bmp", "C:/GHK/ICON/A08.bmp")]^C^C^P(setq s 50)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__29         [_Button("1/60 SCALE", "C:/GHK/ICON/A09.bmp", "C:/GHK/ICON/A09.bmp")]^C^C^P(setq s 60)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__28         [_Button("1/100 SCALE", "C:/GHK/ICON/A10.bmp", "C:/GHK/ICON/A10.bmp")]^C^C^P(setq s 100)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__23         [_Button("1/150 SCALE", "C:/GHK/ICON/A11.bmp", "C:/GHK/ICON/A11.bmp")]^C^C^P(setq s 150)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__24         [_Button("1/200 SCALE", "C:/GHK/ICON/A12.bmp", "C:/GHK/ICON/A12.bmp")]^C^C^P(setq s 200)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__25         [_Button("1/300 SCALE", "C:/GHK/ICON/A13.bmp", "C:/GHK/ICON/A13.bmp")]^C^C^P(setq s 300)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__26         [_Button("1/500 SCALE", "C:/GHK/ICON/A14.bmp", "C:/GHK/ICON/A14.bmp")]^C^C^P(setq s 500)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__33         [_Button("1/1000 SCALE", "C:/GHK/ICON/A15.bmp", "C:/GHK/ICON/A15.bmp")]^C^C^P(setq s 1000)(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+ID__27         [_Button("SPECIAL SCALE", "C:/GHK/ICON/A16.bmp", "C:/GHK/ICON/A16.bmp")]^C^C^P(setq s(getreal "Do you want Scale :"))(setq maxy 841)(setq maxx 594)(dwg-scale)^P^M
+
+**A2_SCALE
+**TB_A2_SCALE
+ID_A2_SCALE_0  [_Toolbar("A2 SCALE", _Floating, _Hide, 287, 337, 1)]
+ID__35         [_Button("1/1 SCALE", "C:/GHK/ICON/A01.bmp", "C:/GHK/ICON/A01.bmp")]^C^C^P(setq s 1)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__37         [_Button("1/5 SCALE", "C:/GHK/ICON/A02.bmp", "C:/GHK/ICON/A02.bmp")]^C^C^P(setq s 5)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__46         [_Button("1/10 SCALE", "C:/GHK/ICON/A03.bmp", "C:/GHK/ICON/A03.bmp")]^C^C^P(setq s 10)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__49         [_Button("1/15 SCALE", "C:/GHK/ICON/A04.bmp", "C:/GHK/ICON/A04.bmp")]^C^C^P(setq s 15)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__50         [_Button("1/20 SCALE", "C:/GHK/ICON/A05.bmp", "C:/GHK/ICON/A05.bmp")]^C^C^P(setq s 20)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__48         [_Button("1/30 SCALE", "C:/GHK/ICON/A06.bmp", "C:/GHK/ICON/A06.bmp")]^C^C^P(setq s 30)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__47         [_Button("1/40 SCALE", "C:/GHK/ICON/A07.bmp", "C:/GHK/ICON/A07.bmp")]^C^C^P(setq s 40)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__42         [_Button("1/50 SCALE", "C:/GHK/ICON/A08.bmp", "C:/GHK/ICON/A08.bmp")]^C^C^P(setq s 50)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__45         [_Button("1/60 SCALE", "C:/GHK/ICON/A09.bmp", "C:/GHK/ICON/A09.bmp")]^C^C^P(setq s 60)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__44         [_Button("1/100 SCALE", "C:/GHK/ICON/A10.bmp", "C:/GHK/ICON/A10.bmp")]^C^C^P(setq s 100)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__43         [_Button("1/150 SCALE", "C:/GHK/ICON/A11.bmp", "C:/GHK/ICON/A11.bmp")]^C^C^P(setq s 150)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__40         [_Button("1/200 SCALE", "C:/GHK/ICON/A12.bmp", "C:/GHK/ICON/A12.bmp")]^C^C^P(setq s 200)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__41         [_Button("1/300 SCALE", "C:/GHK/ICON/A13.bmp", "C:/GHK/ICON/A13.bmp")]^C^C^P(setq s 300)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__39         [_Button("1/500 SCALE", "C:/GHK/ICON/A14.bmp", "C:/GHK/ICON/A14.bmp")]^C^C^P(setq s 500)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__38         [_Button("1/1000 SCALE", "C:/GHK/ICON/A15.bmp", "C:/GHK/ICON/A15.bmp")]^C^C^P(setq s 1000)(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+ID__36         [_Button("SPECIAL SCALE", "C:/GHK/ICON/A16.bmp", "C:/GHK/ICON/A16.bmp")]^C^C^P(setq s(getreal "Do you want Scale :"))(setq maxy 594)(setq maxx 420)(dwg-scale)^P^M
+
+**A3_SCALE
+**TB_A3_SCALE
+ID_A3_SCALE_0  [_Toolbar("A3 SCALE", _Floating, _Hide, 665, 206, 5)]
+ID__51         [_Button("1/1 SCALE", "C:/GHK/ICON/A01.bmp", "C:/GHK/ICON/A01.bmp")]^C^C^P(setq s 1)(setq maxy 420)(setq maxx 297)(dwg-scale)^P^M
+ID__53         [_Button("1/5 SCALE", "C:/GHK/ICON/A02.bmp", "C:/GHK/ICON/A02.bmp")]^C^C^P(setq s 5)(setq maxy 420)(setq maxx 297)(dwg-scale)^P^M
+ID__55         [_Button("1/10 SCALE", "C:/GHK/ICON/A03.bmp", "C:/GHK/ICON/A03.bmp")]^C^C^P(setq s 10)(setq maxy 420)(setq maxx 297)(dwg-scale)^P^M
+ID__54         [_Button("1/20 SCALE", "C:/GHK/ICON/A05.bmp", "C:/GHK/ICON/A05.bmp")]^C^C^P(setq s 20)(setq maxy 420)(setq maxx 297)(dwg-scale)^P^M
+ID__50         [_Button("SPECIAL SCALE", "C:/GHK/ICON/A16.bmp", "C:/GHK/ICON/A16.bmp")]^C^C^P(setq s(getreal "Do you want Scale :"))(setq maxy 420)(setq maxx 297)(dwg-scale)^P^M
+
+**A4_SCALE
+**TB_A4_SCALE
+ID_A4_SCALE_0  [_Toolbar("A4 SCALE", _Floating, _Hide, 249, 253, 1)]
+ID__56         [_Button("1/1 SCALE", "C:/GHK/ICON/A01.bmp", "C:/GHK/ICON/A01.bmp")]^C^C^P(setq s 1)(setq maxy 297)(setq maxx 210)(dwg-scale)^P^M
+ID__57         [_Button("SPECIAL SCALE", "C:/GHK/ICON/A16.bmp", "C:/GHK/ICON/A16.bmp")]^C^C^P(setq s(getreal "Do you want Scale :"))(setq maxy 297)(setq maxx 210)(dwg-scale)^P^M
+
+
+***IMAGE
+**BREAKLINE
+[Break pipe line marks]
+[iso1(breakl)]^C^C^Portho on insert c:/ghk/dwg/breakl \!s;;\ ^C^Cexplode l 
+[iso1(breakr)]^C^C^Portho on insert c:/ghk/dwg/breakr \!s;;\ ^C^Cexplode l 
+[break1 ]^C^C^Portho on insert *c:/ghk/dwg/break1 \!s;;
+[break2 ]^C^C^Portho on insert *c:/ghk/dwg/break2 \!s;\
+[break3 ]^C^C^Portho on insert *c:/ghk/dwg/break3 \!s;\
+[        ]$i=breakline $i=* 
+[iso1(breakr)]^C^C^Portho on insert c:/ghk/dwg/breakr \!s;;
+[iso1(spbr)]^C^C^Portho on insert c:/ghk/dwg/spbr \!s;;
+[                      ]$i=breakline $i=* 
+[                      ]$i=breakline $i=* 
+[                      ]$i=breakline $i=* 
+[ EXIT]^C^C
+
+**LADDER
+[Leader marks]
+[ghk(lea1)]^C^C^Portho on insert *c:/ghk/dwg/lea1 \;\
+[ghk(lea2)]^C^C^Portho on insert *c:/ghk/dwg/lea2 \;\
+[ ]$i=breakline $i=* 
+[ ]$i=breakline $i=* 
+[ ]$i=breakline $i=* 
+[ ]$i=breakline $i=* 
+[ EXIT]^C^C
+
+**LEADER
+[Leader lines]
+[iso1(leader1)]^C^C^Portho off insert c:/ghk/dwg/leader1 \!s;;\ ^C^Cexplode l 
+[iso1(leader2)]^C^C^Portho off insert c:/ghk/dwg/leader2 \!s;;\ ^C^Cexplode l 
+[iso1(leader3)]^C^C^Portho off insert c:/ghk/dwg/leader3 \!s;;\ ^C^Cexplode l 
+[iso1(leader1b)]^C^C^Portho off insert c:/ghk/dwg/leader1b \!s;;\ ^C^Cexplode l 
+[iso1(leader2b)]^C^C^Portho off insert c:/ghk/dwg/leader2b \!s;;\ ^C^Cexplode l 
+[iso1(leader3b)]^C^C^Portho off insert c:/ghk/dwg/leader3b \!s;;\ ^C^Cexplode l 
+[iso1(leaderl)]^C^C^Cortho off LAYER S 20  DIM1 LEA \\^C^C^P^Clayer S 40;;
+[iso1(leadert)]^C^C^Cortho off LAYER S 20  DIM1 LEA \\^O\ \CHANGE L  P LA 40;;LAYER S 40; ortho off move l;;ins 
+[ EXIT                  ]^C^C
+
+**IMAGE_3DOBJECTS
+[3D Objects]
+[acad(Box3d,Box3d)]^C^Cai_box 
+[acad(Pyramid,Pyramid)]^C^Cai_pyramid 
+[acad(Wedge,Wedge)]^C^Cai_wedge 
+[acad(Dome,Dome)]^C^Cai_dome 
+[acad(Sphere,Sphere)]^C^Cai_sphere 
+[acad(Cone,Cone)]^C^Cai_cone 
+[acad(Torus,Torus)]^C^Cai_torus 
+[acad(Dish,Dish)]^C^Cai_dish 
+[acad(Mesh,Mesh)]^C^Cai_mesh 
+
+**IMAGE_POLY
+[Set Spline Fit Variables]
+[acad(pm-quad,Quadric Fit Mesh)]'_surftype 5 
+[acad(pm-cubic,Cubic Fit Mesh)]'_surftype 6 
+[acad(pm-bezr,Bezier Fit Mesh)]'_surftype 8 
+[acad(pl-quad,Quadric Fit Pline)]'_splinetype 5 
+[acad(pl-cubic,Cubic Fit Pline)]'_splinetype 6 
+
+**IMAGE_VPORTI
+[Tiled Viewport Layout]
+[acad(vport-1,Single)]^C^C(ai_tiledvp 1 nil) 
+[acad(vport-3v,Three: Vertical)]^C^C(ai_tiledvp 3 "_V") 
+[acad(vport-3h,Three: Horizontal)]^C^C(ai_tiledvp 3 "_H") 
+[acad(vport-4,Four:  Equal)]^C^C(ai_tiledvp 4 nil) 
+[acad(vport-2v,Two:   Vertical)]^C^C(ai_tiledvp 2 "_V") 
+[acad(vport-3r,Three: Right)]^C^C(ai_tiledvp 3 "_R") 
+[acad(vport-3l,Three: Left)]^C^C(ai_tiledvp 3 "_L") 
+[acad(vport-4l,Four:  Left)]^C^C(ai_tiledvp 4 "_L") 
+[acad(vport-2h,Two:   Horizontal)]^C^C(ai_tiledvp 2 "_H") 
+[acad(vport-3a,Three: Above)]^C^C(ai_tiledvp 3 "_A") 
+[acad(vport-3b,Three: Below)]^C^C(ai_tiledvp 3 "_B") 
+[acad(vport-4r,Four:  Right)]^C^C(ai_tiledvp 4 "_R") 
+
+
+***SCREEN
+**S
+[AutoCAD ]^C^C^P(ai_rootmenus) ^P
+[* * * * ]$S=ACAD.OSNAP 
+[FILE    ]$S=ACAD.01_FILE 
+[EDIT    ]$S=ACAD.02_EDIT 
+[VIEW 1  ]$S=ACAD.03_VIEW1 
+[VIEW 2  ]$S=ACAD.04_VIEW2 
+[INSERT  ]$S=ACAD.05_INSERT 
+[FORMAT  ]$S=ACAD.06_FORMAT 
+[TOOLS 1 ]$S=ACAD.07_TOOLS1 
+[TOOLS 2 ]$S=ACAD.08_TOOLS2 
+[DRAW 1  ]$S=ACAD.09_DRAW1 
+[DRAW 2  ]$S=ACAD.10_DRAW2 
+[DIMNSION]$S=ACAD.11_DIMENSION 
+[MODIFY1 ]$S=ACAD.12_MODIFY1 
+[MODIFY2 ]$S=ACAD.13_MODIFY2 
+
+[HELP    ]$S=ACAD.14_HELP 
+
+
+
+
+
+
+
+[ASSIST ]$S=ACAD.ASSIST 
+[LAST   ]$S=ACAD. 
+
+**SNAP_TO 28
+[Endpoint]_endp 
+[Midpoint]_mid 
+[Intersec]_int 
+[App Int ]_appint 
+
+[Center  ]_cen 
+[Quadrant]_qua 
+[Tangent ]_tan 
+
+[Perpend ]_per 
+[Node    ]_nod 
+[Insert  ]_ins 
+
+[Nearest ]_nea 
+[Quick   ]_qui,^Z
+[None    ]_non 
+
+[Tracking]_tr 
+[From    ]_from 
+
+
+
+**ASSIST 3
+[Last    ]_l 
+[Previous]_p 
+[All     ]_all 
+[Cpolygon]_cp 
+[Wpolygon]_wp 
+[Fence   ]_f 
+[Group   ]_g 
+[Add     ]_a 
+[Remove  ]_r 
+[Undo    ]_u 
+[Filters ]_'filter 
+[.x ].x 
+[.y ].y 
+[.z ].z 
+[.xy ].xy 
+[.xz ].xz 
+[.yz ].yz 
+[Ddosnap ]'_osnap 
+[Ddrmodes]'_ddrmodes 
+[Layer   ]'_layer 
+[GroupDlg]^C^C_group 
+[OSNAP   ]$S=ACAD.OSNAP 
+**GRIP_EDIT 3
+[Grip    ]
+[Edit   ]
+
+[Move    ]_mo 
+[Mirror  ]_mi 
+[Rotate  ]_ro 
+[Scale   ]_sc 
+[Stretch ]_st 
+
+[Base Pt ]_b 
+[Copy    ]_c 
+[Referenc]_r 
+[Undo    ]_u 
+
+[Propchek]^C^C_ai_propchk 
+[GoTo URL]^C^C_gotourl 
+
+[Exit    ]_x 
+[Cancel  ]^C
+
+
+
+
+
+
+
+**01_FILE 3
+[New     ]^C^C_new 
+[Open    ]^C^C_open 
+
+[Qsave   ]^C^C_qsave 
+[Saveas  ]^C^C_saveas 
+[Export  ]^C^C_export 
+
+[Config  ]^C^C_config 
+[Plot    ]^C^C_plot 
+
+[Audit   ]^C^C_audit 
+[Recover ]^C^C_recover 
+[Purge   ]^C^C_purge 
+
+[Quit    ]^C^C_quit 
+
+
+
+
+
+
+
+**02_EDIT 3
+[Undo    ]_u 
+[Redo    ]^C^C_redo 
+
+[Cutclip ]'_cutclip 
+[Copyclip]'_copyclip 
+[Copylink]^C^C_copylink 
+
+[Pasteclp]'_pasteclip 
+[Pastespe]^C^C_pastespec 
+
+[OLElinks]^C^C_olelinks 
+
+
+
+
+
+
+
+
+
+
+
+**03_VIEW1 3
+[Redraw  ]'_redraw 
+[Redrawal]'_redrawall 
+[Regen   ]^C^C_regen 
+[Regenall]^C^C_regenall 
+
+[Zoom    ]'_zoom 
+[Pan     ]'_pan 
+[Dsviewer]^C^C_dsviewer 
+
+[Tilemode]^C^C_tilemode 
+[Mspace  ]^C^C_mspace 
+[Pspace  ]^C^C_pspace 
+
+[Vports  ]^C^C_vports 
+[Mview   ]^C^C_mview 
+
+[Ddview  ]^C^C_ddview 
+[Ddvpoint]^C^C_ddvpoint 
+[Plan    ]^C^C_plan 
+[Vpoint  ]^C^C_vpoint 
+[Dview   ]^C^C_dview 
+
+**04_VIEW2 3
+[Hide    ]^C^C_hide 
+[Shade   ]^C^C_shade 
+
+[Render  ]^C^C_render 
+[Scene   ]^C^C_scene 
+[Light   ]^C^C_light 
+[Mapping ]^C^C_setuv 
+[Backgrnd]^C^C_background 
+[Fog     ]^C^C_fog 
+[Lsnew   ]^C^C_lsnew 
+[Lsedit  ]^C^C_lsedit 
+[Lslib   ]^C^C_lslib 
+[Rmat    ]^C^C_rmat 
+[Matlib  ]^C^C_matlib 
+[Rpref   ]^C^C_rpref 
+[Stats   ]^C^C_stats 
+
+[UCSicon ]^C^C_ucsicon 
+[Attdisp ]^C^C_attdisp 
+
+[Textscr ]'_textscr 
+[Toolbar ]^C^C_toolbar 
+**05_INSERT 3
+[Ddinsert]^C^C_ddinsert 
+
+[Xref    ]^C^C_xref 
+[Image   ]^C^C_image 
+
+[3DSin   ]^C^C_3dsin 
+[ACISin  ]^C^C_acisin 
+[DXBin   ]^C^C_dxbin 
+[WMFin   ]^C^C_wmfin 
+[PSin    ]^C^C_psin 
+
+[Insertob]^C^C_insertobj 
+
+
+
+
+
+
+
+
+
+
+**06_FORMAT 3
+[Layer   ]'_layer 
+[Ddcolor ]'_ddcolor 
+[Linetype]'_linetype 
+
+[Style   ]'_style 
+[Ddim    ]^C^C_ddim 
+[Ddptype ]'_ddptype 
+[Mlstyle ]^C^C_mlstyle 
+
+[Ddunits ]'_ddunits 
+[Thicknes]'_thickness 
+[Limits  ]'_limits 
+
+[Ddrename]^C^C_ddrename 
+
+
+
+
+
+
+
+
+**07_TOOLS1 3
+[Spell   ]^C^C_spell 
+[Drawordr]^C^C_draworder 
+
+[Dist    ]'_dist 
+[Area    ]^C^C_area 
+[Massprop]^C^C_massprop 
+
+[List    ]^C^C_list 
+[ID      ]'_id 
+
+[Time    ]'_time 
+[Status  ]'_status 
+[Setvar  ]'_setvar 
+
+[Appload ]^C^C_appload 
+[Script  ]^C^C_script 
+
+[Saveimg ]^C^C_saveimg 
+[Replay  ]^C^C_replay 
+
+
+
+**08_TOOLS2 3
+[ASEadmin]^C^C_aseadmin 
+[ASErows ]^C^C_aserows 
+[ASElinks]^C^C_aselinks 
+
+[ASEselec]^C^C_aseselect 
+[ASEexpor]^C^C_aseexport 
+[ASEsqled]^C^C_asesqled 
+
+[Ddosnap ]'_osnap 
+[Ddrmodes]'_ddrmodes 
+
+[Dducsp  ]^C^C_dducsp 
+[Dducs   ]^C^C_dducs 
+[UCS     ]^C^C_ucs 
+
+[Ddgrips ]'_ddgrips 
+[Ddselect]'_ddselect 
+[Group   ]^C^C_group 
+
+[Tablet  ]^C^C_tablet 
+[Menuload]^C^C_menuload 
+[Prefernc]^C^C_preferences 
+**09_DRAW1 3
+[Line    ]^C^C_line 
+[Ray     ]^C^C_ray 
+[Xline   ]^C^C_xline 
+[Mline   ]^C^C_mline 
+
+[Pline   ]^C^C_pline 
+[3Dpoly  ]^C^C_3dpoly 
+[Polygon ]^C^C_polygon 
+[Rectang ]^C^C_rectang 
+
+[Arc     ]^C^C_arc 
+[Circle  ]^C^C_circle 
+[Donut   ]^C^C_donut 
+
+[Spline  ]^C^C_spline 
+[Ellipse ]^C^C_ellipse 
+
+
+
+
+
+
+**10_DRAW2 3
+[Bmake   ]^C^C_bmake 
+[Base    ]^C^C_base 
+[Ddattdef]^C^C_ddattdef 
+
+[Point   ]*^C^C_point 
+[Divide  ]^C^C_divide 
+[Measure ]^C^C_measure 
+
+[Bhatch  ]^C^C_bhatch 
+[Boundary]^C^C_boundary 
+
+[Region  ]^C^C_region 
+
+[Mtext   ]^C^C_mtext 
+[Dtext   ]^C^C_dtext 
+
+[SURFACES]$S=ACAD.3D 
+[SOLIDS  ]$S=ACAD.101_SOLIDS 
+
+
+
+
+**101_SOLIDS 3
+[Box     ]^C^C_box 
+[Sphere  ]^C^C_sphere 
+[Cylinder]^C^C_cylinder 
+[Cone    ]^C^C_cone 
+[Wedge   ]^C^C_wedge 
+[Torus   ]^C^C_torus 
+
+[Extrude ]^C^C_extrude 
+[Revolve ]^C^C_revolve 
+
+[Slice   ]^C^C_slice 
+[Section ]^C^C_section 
+[Interfer]^C^C_interfere 
+
+[Soldraw ]^C^C_soldraw 
+[Solview ]^C^C_solview 
+[Solprof ]^C^C_solprof 
+
+
+
+
+
+**11_DIMENSION 3
+[Linear  ]^C^C_dimlinear 
+[Aligned ]^C^C_dimaligned 
+[Ordinate]^C^C_dimordinate 
+
+[Diameter]^C^C_dimdiameter 
+[Radius  ]^C^C_dimradius 
+[Angular ]^C^C_dimangular 
+
+[Baseline]^C^C_dimbaseline 
+[Continue]^C^C_dimcontinue 
+
+[Leader  ]^C^C_leader 
+[Toleranc]^C^C_tolerance 
+[Center  ]^C^C_dimcenter 
+
+[Dimedit ]^C^C_dimedit 
+[Dimtedit]^C^C_dimtedit 
+
+[Ddim    ]^C^C_ddim 
+[Dimstyle]^C^C_dimstyle 
+[Update  ]^C^C_dim _update 
+
+**12_MODIFY1 3
+[Modify  ]^C^C_ai_propchk 
+[MatchPrp]^C^C_matchprop 
+[Xbind   ]^C^C_xbind 
+[Imageadj]^C^C_imageadjust 
+[Imagequa]^C^C_imagequality 
+[Transpar]^C^C_transparency 
+[Imagefrm]^C^C_imageframe 
+[Xclip   ]^C^C_xclip 
+[Imageclp]^C^C_imageclip 
+[Hatchedt]^C^C_hatchedit 
+[Pedit   ]^C^C_pedit 
+[Splinedt]^C^C_splinedit 
+[Mledit  ]^C^C_mledit 
+[Ddatte  ]^C^C_ddatte 
+[Attedit ]^C^C_attedit 
+[Ddedit  ]^C^C_ddedit 
+
+[Erase   ]^C^C_erase 
+[Copy    ]$m=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_copy,^C^C_copy) 
+[Mirror  ]$m=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_mirror,^C^C_mirror) 
+[Offset  ]^C^C_offset 
+[Array   ]^C^C_array 
+**13_MODIFY2 3
+[Move    ]$m=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_move,^C^C_move) 
+[Rotate  ]$m=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_rotate,^C^C_rotate) 
+[Scale   ]$m=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_scale,^C^C_scale) 
+[Stretch ]$m=$(if,$(eq,$(substr,$(getvar,cmdnames),1,4),grip),_stretch,^C^C_stretch) 
+[Lengthen]^C^C_lengthen 
+
+[Trim    ]^C^C_trim 
+[Extend  ]^C^C_extend 
+[Break   ]^C^C_break 
+[Chamfer ]^C^C_chamfer 
+[Fillet  ]^C^C_fillet 
+
+[3Darray ]^C^C_3darray 
+[Mirror3D]^C^C_mirror3d 
+[Rotate3D]^C^C_rotate3d 
+[Align   ]^C^C_align 
+
+[Union   ]^C^C_union 
+[Subtract]^C^C_subtract 
+[Intrsect]^C^C_intersect 
+
+[Explode ]^C^C_explode 
+**14_HELP 3
+[Help    ]'_help 
+
+[QuikTour]^P(if (startapp (findfile "qtour.exe")) (princ) (alert "Could not find or could not start Quick Tour.")) ^P
+[WhatsNew]^P(if (startapp (findfile "wnew.exe")) (princ) (alert "Could not find or could not start What's New.")) ^P
+[Learning]^P(if (startapp (findfile "l_acla.exe")) (princ) (alert "Could not find or could not start Learning Assistant.")) ^P
+[Browser ]^C^C_browser ;
+
+[About   ]'_about 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**3D 3
+[Solid:  ]^C^C_solid 
+[3Dface  ]^C^C_3dface 
+[3Dobjec:]$I=ACAD.image_3dobjects $I=ACAD.* 
+
+[Edge:   ]^C^C_edge 
+[3Dmesh: ]^C^C_3dmesh 
+
+
+[Revsurf:]^C^C_revsurf 
+[Tabsurf:]^C^C_tabsurf 
+[Rulsurf:]^C^C_rulesurf 
+[Edgsurf:]^C^C_edgesurf 
+
+[Surftb1:]'_surftab1 
+[Surftb2:]'_surftab2 
+[PolyVars]$I=ACAD.image_poly $I=* 
+
+
+
+
+
+
+**3DARRAY 3
+[3Darray:]^C^C_3darray 
+
+[Rectang ]_r 
+[Polar   ]_p 
+
+[Yes     ]_y 
+[No      ]_n 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**3DFACE 3
+[3Dface: ]^C^C_3dface 
+
+[Invisibl]_i 
+
+[ShowEdge]^P(setvar "splframe" 1)(ai_showedge_alert) ^P
+[HideEdge]^P(setvar "splframe" 0)(ai_hideedge_alert) ^P
+
+[Edge:   ]^C^C_edge 
+[Ddmodif:]^C^C_ddmodify 
+
+
+
+
+
+
+
+
+
+
+
+
+
+**3DPOLY 3
+[3Dpoly: ]^C^C_3dpoly 
+
+[Close   ]_c 
+[Undo    ]_u 
+
+[@ ]@ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**ARC 3
+[Arc:    ]^C^C_arc 
+
+[3 Point ]\\
+[St,C,End]\_c \
+[St,C,Ang]\_c \_a 
+[St,C,Len]\_c \_l 
+[St,E,Ang]\_e \_a 
+[St,E,Dir]\_e \_d 
+[St,E,Rad]\_e \_r 
+[Ce,S,End]_c \\
+[Ce,S,Ang]_c \\_a 
+[Ce,S,Len]_c \\_l 
+
+[ArcCont:]^C^C_arc ;
+[LinCont:]^C^C_line ;
+
+
+
+
+
+
+
+**AREA 3
+[Area:   ]^C^C_area 
+
+[Object  ]_o 
+[Add     ]_a 
+[Subtract]_s 
+
+[Boundar:]^C^C_boundary 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**ARRAY 3
+[Array:  ]^C^C_array 
+
+
+
+[Rectang ]_r 
+[Polar   ]_p 
+
+[Yes     ]_y 
+[No      ]_n 
+
+
+
+
+
+
+
+
+
+
+
+
+
+**ATTDISP 3
+[Attdisp:]'_attdisp 
+
+[Normal  ]_n 
+[On      ]_on 
+[Off     ]_off 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**ATTEDIT 3
+[Attedit:]^C^C_attedit 
+
+[DDatte: ]^C^C_ddatte 
+
+[Yes     ]_y 
+[No      ]_n 
+
+[Value   ]_v 
+[Position]_p 
+[Height  ]_h 
+[Angle   ]_a 
+[Style   ]_s 
+[Layer   ]_l 
+[Color   ]_c 
+[Next    ]_n 
+
+[ColorDlg](acad_colordlg 256) 
+
+
+
+
+
+**AUDIT 3
+[Audit:  ]^C^C_audit 
+
+[Yes     ]_y 
+[No      ]_n 
+
+[Auditct:]'_auditctl 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**BREAK 3
+[Break:  ]^C^C_break 
+
+[First   ]_f 
+[@ ]@ 
+
+[Sel, 2nd]\\
+[Sel Pt  ]\@ 
+[Sel,2Pts]\_first \
+[Sel, 1st]\_first \@ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+**CHAMFER 3
+[Chamfer:]^C^C_chamfer 
+
+[Polyline]_p 
+[Distance]_d \\_chamfer 
+[Dist = 0]_d 0 0 _chamfer 
+[Angle   ]_a \\ _chamfer 
+
+[Trim    ]_t 
+[No Trim ]_n 
+
+[Method  ]_m 
+[Distance]_d 
+[Angle   ]_a 
+
+
+
+
+
+
+
+
+
+**CIRCLE 3
+[Circle: ]^C^C_circle 
+
+[Cen,Rad ]\\
+
+[Cen,Dia ]\_d 
+
+[2 Point ]_2p \
+[3 Point ]_3p \\
+
+[TTR     ]_ttr 
+[TanTanTa]_3p _tan \_tan \_tan \
+
+[CopyRad:]^C^C_circlerad '_cal rad;
+
+
+
+
+
+
+
+
+
+**COPY 3
+[Copy:   ]^C^C_copy 
+
+
+
+[Multiple]_m 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMALIGNED 3
+[DimAlin:]^C^C_dimaligned 
+
+[Text    ]_t 
+[Angle   ]_a 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMANGULAR 3
+[DimAngl:]^C^C_dimangular 
+
+[Text    ]_t 
+[Angle   ]_a 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMEDIT 3
+[DimEdit:]^C^C_dimedit 
+
+[Home    ]_h 
+[New     ]_n 
+[Rotate  ]_r 
+[Oblique ]_o 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMLINEAR 3
+[DimLinr:]^C^C_dimlinear 
+
+[Horizont]_h 
+[Vertical]_v 
+
+[Text    ]_t 
+[Angle   ]_a 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMORDINATE 3
+[DimOrdin]^C^C_dimordinate 
+
+[Xdatum  ]_x 
+[Ydatum  ]_y 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMOVERRIDE 3
+[DimOver:]^C^C_dimoverride 
+
+[Clear   ]_c 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIMTEDIT 3
+[DimTedt:]^C^C_dimtedit 
+
+[Left    ]_l 
+[Right   ]_r 
+[Home    ]_h 
+[Angle   ]_a 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DIVIDE 3
+[Divide: ]^C^C_divide 
+
+[Block   ]_b 
+
+[Yes     ]_y 
+[No      ]_n 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DRAWORDER 3
+[Draword:]^C^C_draworder 
+
+[Above   ]_a 
+[Under   ]_u 
+
+[Top     ]_t 
+[Bottom  ]_b 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**DTEXT 3
+[Dtext:  ]^C^C_dtext 
+[Mtext:  ]^C^C_mtext 
+
+[Style   ]_s 
+
+[Justify ]_j 
+[Align   ]_a 
+[Center  ]_c 
+[Fit     ]_f 
+[Middle  ]_m 
+[Right   ]_r 
+[Top Left]_tl 
+[Top Cent]_tc 
+[Top Rght]_tr 
+[Mid Left]_ml 
+[Mid Cent]_mc 
+[Mid Rght]_mr 
+[Bot Left]_bl 
+[Bot Cent]_bc 
+[Bot Rght]_br 
+
+[Style:  ]^C^C_style 
+**DVIEW 3
+[Dview:  ]^C^C_dview 
+
+[Dvwblok:]^C^C_dview ;
+
+[Camera  ]_ca 
+[Target  ]_ta 
+[Distance]_d 
+[Points  ]_po 
+[Pan     ]_pa 
+[Zoom    ]_z 
+[Twist   ]_tw 
+[Clip    ]_cl 
+[Hide    ]_h 
+[Off     ]_off 
+[Undo    ]_u 
+[Exit    ]_x 
+
+[Back    ]_b 
+[Front   ]_f 
+
+[Off     ]_off 
+
+**ELLIPSE 3
+[Ellipse:]^C^C_ellipse 
+
+[Arc     ]_a 
+[Center  ]_c 
+[Rotation]_r 
+
+
+
+
+[Pellips:]'_pellipse 
+
+
+
+
+
+
+
+
+
+
+
+
+**ERASE 3
+[Erase:  ]^C^C_erase 
+
+[Oops:   ]^C^C_oops 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**EXTEND 3
+[Extend: ]^C^C_extend 
+
+[Edge    ]_e 
+[Extend ]_e 
+[NoExten]_n 
+
+[Project ]_p 
+[None   ]_n 
+[UCS    ]_u 
+[View   ]_v 
+
+[Undo    ]_u 
+
+
+
+
+
+
+
+
+
+
+**EXTRUDE 3
+[Extrude:]^C^C_extrude 
+
+[Path    ]_p 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**FILLET 3
+[Fillet: ]^C^C_fillet 
+
+[Polyline]_p 
+
+[Radius  ]_r 
+[Radius 0]_r 0 
+
+[Trim    ]_t 
+[No Trim ]_n 
+
+
+
+
+
+
+
+
+
+
+
+
+
+**IMAGECLIP 3
+[Imagclp:]^C^C_imageclip 
+
+[New    ];
+[On     ]_on 
+[Off    ]_off 
+[Delete ]_d 
+
+
+[Polygon]_p 
+[Rectang];
+
+
+
+
+
+
+
+
+
+
+
+
+**IMAGEQUALITY 3
+[Imagqua:]^C^C_imagequality 
+
+[High    ]_h 
+[Draft   ]_d 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**LEADER 3
+[Leader: ]^C^C_leader 
+
+[Format  ]_f 
+[Undo    ]_u 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**LENGTHEN 3
+[Lengthn:]^C^C_lengthen 
+
+[Delta   ]_de 
+[Percent ]_p 
+[Total   ]_t 
+[Dynamic ]_dy 
+
+[Angle   ]_a 
+[Length  ]_l 
+[Undo    ]_u 
+
+
+
+
+
+
+
+
+
+
+
+
+**LINE 3
+[Line:   ]^C^C_line 
+
+[1 Line: ]^C^C_line \\;
+
+[Continue];
+[Undo    ]_u 
+[Close   ]_c 
+[@ ]@ 
+
+[ArcCont:]^C^C_arc ;
+
+
+
+
+
+
+
+
+
+
+
+
+**MATCHPROP 3
+[Matchpr:]^C^C_matchprop 
+
+[Settings]_s 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**MEASURE 3
+[Measure:]^C^C_measure 
+
+[Block   ]_b 
+
+[Yes     ]_y 
+[No      ]_n 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**MIRROR 3
+[Mirror: ]^C^C_mirror 
+
+[Mirror3:]^C^C_mirror3d 
+
+[Yes     ]_y 
+[No      ]_n 
+
+[Mirrtex:]'_mirrtext 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**MIRROR3D 3
+[Mirror3:]^C^C_mirror3d 
+
+[Entity  ]_e 
+[Z Axis  ]_z 
+[View    ]_v 
+[XY      ]_xy 
+[YZ      ]_yz 
+[ZX      ]_zx 
+[3 Point ]_3 
+
+
+
+
+
+
+
+
+
+
+
+
+
+**MLINE 3
+[Mline:  ]^C^C_mline 
+
+[Justify ]_j 
+[Scale   ]_s 
+[Style   ]_st 
+
+[Undo    ]_u 
+[Close   ]_c 
+[@ ]@ 
+
+[Mlstyle:]^C^C_mlstyle 
+[Mledit  ]^C^C_mledit 
+
+
+
+
+
+
+
+
+
+
+**MVIEW 3
+[Mview:  ]^C^C_mview 
+
+[On      ]_on 
+[Off     ]_off 
+[Hideplot]_h 
+[Fit     ]_f 
+[2 ]2 
+[3 ]3 
+[4 ]4 
+[Restore ]_r 
+
+
+
+
+
+
+
+
+
+
+
+
+**OFFSET 3
+[Offset: ]^C^C_offset 
+
+[Through ]_t 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**OSNAP 3
+[Osnap:  ]'_osnap 
+
+[Tracking]_tracking 
+[From    ]_from 
+
+[Endpoint]_endp 
+[Midpoint]_mid 
+[Intersec]_int 
+[App Int ]_appint 
+
+[Center  ]_cen 
+[Quadrant]_qua 
+[Tangent ]_tan 
+
+[Perpend ]_per 
+[Node    ]_nod 
+[Insert  ]_ins 
+[Nearest ]_nea 
+[None    ]_non 
+[Quick,  ]_qui,^Z
+
+[Ddosnap ]'_Osnap 
+**PEDIT 3
+[Pedit:  ]^C^C_pedit 
+[Break   ]_b 
+[Close   ]_c 
+[Down/Dec]_d 
+[Ed Vertx]_e 
+[Fit     ]_f 
+[Go      ]_g 
+[Insert  ]_i 
+[Join    ]_j 
+[LtypeGen]_l 
+[Move/Opn]_m 
+[Next/Opn]_n 
+[Open    ]_o 
+[Prev    ]_p 
+[Regen/Rt]_r 
+[REdispla]_re 
+[Spln/Str]_s 
+[Tan     ]_t 
+[Undo/Up ]_u 
+[Width   ]_w 
+[eXit    ]_x 
+[Polyvars]$I=ACAD.image_poly $I=* 
+**PLAN 3
+[Plan:   ]^C^C_plan 
+
+[Current ]_c 
+[UCS     ]_u 
+[World   ]_w 
+
+[Follow:]'_ucsfollow 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**PLINE 3
+[Pline:  ]^C^C_pline 
+
+[Arc     ]_a 
+[Close   ]_c 
+[Halfwid ]_h 
+[Length  ]_l 
+[Undo    ]_u 
+[Width   ]_w 
+
+[Angle   ]_a 
+[Center  ]_ce 
+[Close   ]_cl 
+[Direct'n]_d \
+[Line    ]_l 
+[Radius  ]_r 
+[2nd Pt  ]_s \
+
+[Pedit   ]^C^C_pedit 
+
+
+
+
+**POINT 3
+[Point:  ]*^C^C_point 
+
+[Ddptype:]'_ddptype 
+
+[Pdmode: ]'_pdmode 
+[Pdsize: ]'_pdsize 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**POLYGON 3
+[Polygon:]^C^C_polygon 
+
+[Edge    ]_e 
+
+[I-scribe]_i 
+[C-scribe]_c 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**PURGE 3
+[Purge:  ]^C^C_purge 
+
+[Blocks  ]_b 
+[Dimstyle]_d 
+[Layers  ]_la 
+[Ltypes  ]_lt 
+[Shapes  ]_sh 
+[Styles  ]_st 
+[All     ]_a 
+
+[Yes     ]_y 
+[No      ]_n 
+
+
+
+
+
+
+
+
+
+
+**REVOLVE 3
+[Revolve:]^C^C_revolve 
+
+[Object  ]_o 
+[X Axis  ]_x 
+[Y Axis  ]_y 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**ROTATE 3
+[Rotate: ]^C^C_rotate 
+
+[Referenc]_r 
+
+[Rotate3:]^C^C_rotate3d 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**ROTATE3D 3
+[Rotat3d:]^C^C_rotate3d 
+
+[Entity  ]_e 
+[Last    ]_l 
+[View    ]_v 
+[X Axis  ]_x 
+[Y Axis  ]_y 
+[Z Sxis  ]_z 
+[2 Points]_2p 
+
+
+
+
+
+
+
+
+
+
+
+
+
+**SCALE 3
+[Scale:  ]^C^C_scale 
+
+[Referenc]_r 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**SECTION 3
+[Section:]^C^C_section 
+
+[Object  ]_o 
+[Z Axis   ]_z 
+[View    ]_v 
+[XY      ]_xy 
+[YZ      ]_yz 
+[ZX      ]_zx 
+[3 Point ]_3p 
+
+
+
+
+
+
+
+
+
+
+
+
+
+**SETVAR 3
+[Setvar: ]'_setvar 
+
+[List    ]? 
+[* ]* 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**SHADE 3
+[Shade:  ]^C^C_shade 
+
+[Shadedge]
+[256-col]'_shadedge 0 
+[256-edg]'_shadedge 1 
+[Hidden ]'_shadedge 2 
+[Filled ]'_shadedge 3 
+
+[Shadedif]'_shadedif 
+
+[Regen:  ]^C^C_regen 
+
+
+
+
+
+
+
+
+
+
+
+**SLICE 3
+[Slice:  ]^C^C_slice 
+
+[Object  ]_o 
+[Z Axis  ]_z 
+[View    ]_v 
+[XY      ]_xy 
+[YZ      ]_yz 
+[ZX      ]_zx 
+[3 Point ]_3p 
+
+
+
+
+
+
+
+
+
+
+
+
+
+**SPLINE 3
+[Spline: ]^C^C_spline 
+
+[Object  ]_o 
+
+[Close   ]_c 
+[Fit Tol ]_f 
+
+[Splframe]'_splframe 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**SPLINEDIT 3
+[Splnedt:]^C^C_splinedit 
+
+[Fit     ]_fit 
+[Add     ]_add 
+[Delete  ]_delete 
+[Move    ]_move 
+[Purge   ]_purge 
+[Tangents]_tangents 
+[Toleranc]_tolerance 
+[Close   ]_c 
+[Open    ]_o 
+[MoveVert]_v 
+[Next    ]_n 
+[Previous]_p 
+[Select  ]_s 
+[Refine  ]_r 
+[AddPoint]_a 
+[ElevOrdr]_e 
+[Weight  ]_w 
+[Reverse ]_e 
+[Undo    ]_u 
+[Exit    ]_x 
+**TABLET 3
+[Tablet: ]^C^C_tablet 
+
+[Calibrat]_cal 
+[Config  ]_cfg 4 \\\25 9 \\\11 9 \\\9 13 \\\25 7 _y \\_y 
+[Reconfig]_cfg 4 _y \\\;;\\\;;\\\;;\\\;;_y \\
+[Re-DfCfg]_cfg 4 _y \\\25 9 \\\11 9 \\\9 13 \\\25 7 _y \\
+
+[On      ]_on 
+[Off     ]_off 
+[Yes     ]_y 
+[No      ]_n 
+
+[Orthognl]_o 
+[Affine  ]_a 
+[Projectv]_p 
+
+
+
+
+
+
+
+**TRIM 3
+[Trim:   ]^C^C_trim 
+
+[Mledit  ]_e 
+[Extend ]_e 
+[NoExten]_n 
+
+[Project ]_p 
+[None   ]_n 
+[UCS    ]_u 
+[View   ]_v 
+
+[Undo    ]_u 
+
+
+
+
+
+
+
+
+
+
+**UCS 3
+[UCS:    ]^C^C_ucs 
+
+[Origin  ]_o 
+[Z Axis  ]_z 
+[3 Point ]_3p 
+[X       ]_x 
+[Y       ]_y 
+[Z       ]_z 
+[Entity  ]_e 
+[View    ]_v 
+[Previous]_p 
+[Restore ]_r 
+[Save    ]_s 
+[Delete  ]_d 
+[List    ]? 
+[World   ]_w 
+
+[Dducs:  ]^C^C_dducs 
+[Dducsp: ]^C^C_dducsp 
+[Follow: ]'_ucsfollow 
+[UCSicon:]^C^C_ucsicon 
+
+**UCSICON 3
+[UCSicon:]^C^C_ucsicon 
+
+[On      ]_on 
+[Off     ]_off 
+
+[All     ]_all 
+[Origin  ]_or 
+[NoOrigin]_n 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**VIEW 3
+[View:   ]'_view 
+
+[List    ]_? 
+[Delete  ]_d 
+[Restore ]_r 
+[Save    ]_s 
+[Window  ]_w 
+
+
+[Pan:    ]'_pan 
+[Zoom:   ]'_zoom 
+
+[Ddview: ]^C^C_ddview 
+[Plan:   ]^C^C_plan 
+[Dview:  ]^C^C_dview 
+
+
+
+
+
+
+
+**VIEWPORTS 3
+[Vports: ]^C^C_vports 
+[Layout  ]^C^C^P(ai_tiledvp_chk T) ^P
+
+[Save    ]_s 
+[Restore ]_r 
+[Delete  ]_d 
+[Join    ]_j 
+[Single  ]_s 
+[? ]? 
+[2 ]2 
+[3 ]3 
+[4 ]4 
+
+[Horizont]_h 
+[Vertical]_v 
+[Above   ]_a 
+[Below   ]_b 
+[Left    ]_l 
+[Right   ]_r 
+
+
+
+**VPOINT 3
+[Vpoint: ]^C^C_vpoint 
+
+[Rotate  ]_r 
+[Axes    ];
+
+
+[Top     ]_non *0,0,1 
+[Bottom  ]_non *0,0,-1 
+[Left    ]_non *-1,0,0 
+[Right   ]_non *1,0,0 
+[Front   ]_non *0,-1,0 
+[Back    ]_non *0,1,0 
+
+[Iso SW  ]_non *-1,-1,1 
+[Iso SE  ]_non *1,-1,1 
+[Iso NE  ]_non *1,1,1 
+[Iso NW  ]_non *-1,1,1 
+
+[Ddvpoint]^C^C_ddvpoint 
+[Ddview: ]^C^C_ddview 
+[Plan:   ]^C^C_plan 
+[Dview:  ]^C^C_dview 
+**VPORTS 3
+[Vports: ]^C^C_vports 
+[Layout: ]^C^C^P(ai_tiledvp_chk T) ^P
+
+[Save    ]_s 
+[Restore ]_r 
+[Delete  ]_d 
+[Join    ]_j 
+[Single  ]_si 
+[? ]? 
+[2 ]2 
+[3 ]3 
+[4 ]4 
+
+[Horizont]_h 
+[Vertical]_v 
+[Above   ]_a 
+[Below   ]_b 
+[Left    ]_l 
+[Right   ]_r 
+
+
+
+**XCLIP 3
+[Xclip:  ]^C^C_xclip 
+
+[On      ]_on 
+[Off     ]_off 
+
+[Clipdpth]_c 
+[Delete  ]_d 
+[Polyline]_p 
+
+
+[Select  ]_s 
+[Polygon ]_p 
+[Rectang ];
+
+
+
+
+
+
+
+
+
+**XLINE 3
+[Xline:  ]^C^C_xline 
+
+[Horizont]_h 
+[Vertical]_v 
+[Angle   ]_a 
+[Bisect  ]_b 
+[Offset  ]_o 
+
+
+[Ray:    ]^C^C_ray 
+
+
+
+
+
+
+
+
+
+
+
+
+**ZOOM 3
+[Zoom:   ]'_zoom 
+
+[Realtime];
+
+[Previous]_p 
+[Window  ]_w 
+[Dynamic ]_d 
+[Scale   ]_s 
+[Center  ]_c 
+
+[In      ]2x 
+[Out     ].5x 
+
+[All     ]_a 
+[Extents ]_e 
+
+
+
+
+
+
+
+**ENDSCREEN 3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+***ACCELERATORS
+[CONTROL+"K"]$M=$(if,$(and,$(getvar,pickadd),1),'_pickadd 0,'_pickadd 1) 
+[CONTROL+"L"]^O
+[CONTROL+"R"]^V
+ID_Copyclip    [CONTROL+"C"]
+ID_New         [CONTROL+"N"]
+ID_Open        [CONTROL+"O"]
+ID_Print       [CONTROL+"P"]
+ID_Save        [CONTROL+"S"]
+ID_Pasteclip   [CONTROL+"V"]
+ID_Cutclip     [CONTROL+"X"]
+ID_Redo        [CONTROL+"Y"]
+ID_U           [CONTROL+"Z"]
+
+***HELPSTRINGS
+ID_VPORTSJOI   [Combines two adjacent viewports into one larger viewport:  vports]
+ID_VPOINT      [Sets the viewing direction for a three-dimensional visualization of the drawing:  vpoint]
+ID_UCSYAXROT   [Rotates the current UCS about the Y axis:  ucs]
+ID_UCSWORLD    [Sets the UCS to the World Coordinate System:  ucs]
+ID_UCSICONON   [Enables the coordinate system icon:  ucsicon]
+ID_THICKNESS   [Sets the current 3D thickness:  thickness]
+ID_TBSURFACE   [Surfaces toolbar]
+ID_TABLETON    [Turns Tablet mode on:  tablet]
+ID_STRETCH     [Moves or stretches objects:  stretch]
+ID_STATS       [Displays rendering statistics:  stats]
+ID_PURGETXT    [Removes unused text styles from the drawing database:  purge]
+ID_POINTFIYZ   [Specifies a .YZ point filter]
+ID_POINTFIXY   [Specifies a .XY point filter]
+ID_POINT       [Creates a point object:  point]
+ID_PANRIGHT    [Moves the drawing to the right:  pan]
+ID_PANLEFT     [Moves the drawing to the left:  pan]
+ID_OSNAPQUIC   [Snaps to the first snap point found:  qui]
+ID_MNFORMAT    [Changes the appearance or attributes of selected objects]
+ID_MNEDIT      [Undo or redo a command; copy, move, or clear a selection; manage OLE objects]
+ID_MLSTYLE     [Manages styles for multiple parallel lines:  mlstyle]
+ID_GROUP       [Creates a named selection set of objects:  group]
+ID_EXTEND      [Extends an object to meet another object:  extend]
+ID_DIMRADIUS   [Creates radial dimensions for circles and arcs:  dimradius]
+ID_DDUNITS     [Controls coordinate and angle display formats and determines precision:  ddunits]
+ID_DDRENAME    [Changes the names of named objects:  ddrename]
+ID_BREAK       [Erases parts of objects or splits an object in two:  break]
+ID_ARCSTCELE   [Creates an arc using the start point, center, and length of chord:  arc]
+ID_ARCCESTEN   [Creates an arc using the center, start point, and endpoint:  arc]
+ID_ARC3POINT   [Creates an arc using three points:  arc]
+ID_ZOOM_WINDOW_0 [Zooms to display an area specified by a rectangular window:  zoom w]
+ID_VPOINTFRO   [Sets the view point to front:  vpoint]
+ID_UCSXAXROT   [Rotates the current UCS about the X axis:  ucs]
+ID_UCS         [Manages user coordinate systems:  ucs]
+ID_TBRENDER    [Render toolbar]
+ID_STYLE       [Creates named styles:  style]
+ID_SOLVIEW     [Creates floating viewports using orthographic projection to lay out multi- and sectional view drawings of 3D solid and body objects:  solview]
+ID_SAVEIMG     [Saves a rendered image to a file:  saveimg]
+ID_PURGELIN    [Removes unused linetypes from the drawing database:  purge]
+ID_PSIN        [Inserts an Encapsulated PostScript file into the current drawing:  psin]
+ID_POINTFIXZ   [Specifies a .XZ point filter]
+ID_MENULOAD    [Loads partial menu files:  menuload]
+ID_IMAGEFRAM   [Controls whether the image frame is displayed on the screen or hidden from view:  imageframe]
+ID_DRAWORDER   [Changes the display order of images and other objects:  draworder]
+ID_DRAWORDEA   [Forces selected objects to be displayed in front of a reference object:  draworder]
+ID_ASESQLED    [Executes Structured Query Language (SQL) statements:  asesqled]
+ID_ARCCESTLE   [Creates an arc using the center, start point, and length of chord:  arc]
+ID_ARC         [Creates an arc:  arc]
+ID_AI_SPHERE   [Creates a spherical polygon mesh:  ai_sphere]
+ID_AI_MOLC     [Makes the layer of a selected object the current layer: ai_molc]
+ID_3DPOLY      [Creates a polyline of straight line segments in three-dimensional space:  3dpoly]
+ID_ZOOMWINDO   [Zooms to display an area specified by a rectangular window:  zoom]
+ID_ZOOMREALT   [Zooms in realtime:  zoom]
+ID_ZOOMDYNAM   [Zooms to display the generated portion of the drawing:  zoom]
+ID_WNEW        [Starts What's New:  wnew.exe]
+ID_VPORTSSAV   [Saves the current viewport using a specified name:  vports]
+ID_VPOINTTOP   [Sets the view point to top:  vpoint]
+ID_VPOINTSE    [Sets the view point to southeast isometric:  vpoint]
+ID_VPOINTBAC   [Sets the view point to back:  vpoint]
+ID_UCSICONNO   [Displays the icon at the lower-left corner of the viewport regardless of the location of the UCS origin:  ucsicon]
+ID_U           [Reverses the most recent operation:  u]
+ID_TBSOLIDS    [Solids toolbar]
+ID_SUBTRACT    [Creates a composite region or solid by subtraction:  subtract]
+ID_SPLINEDIT   [Edits a spline object:  splinedit]
+ID_SLICE       [Slices a set of solids with a plane:  slice]
+ID_SETUV       [Sets and adjust material mappers on objects:  setuv]
+ID_SECTION     [Uses the intersection of a plane and solids to create a region:  section]
+ID_SCRIPT      [Executes a sequence of commands from a script:  script]
+ID_PURGEBLK    [Removes unused blocks from the drawing database:  purge]
+ID_PURGEALL    [Removes all unused objects from the drawing database:  purge]
+ID_OSNAPAPPA   [Snaps to the apparent intersection of two objects:  app]
+ID_MLINE       [Creates multiple parallel lines:  mline]
+ID_EXPLODE     [Breaks a compound object into its component objects:  explode]
+ID_DRAWORDEB   [Forces selected objects to be displayed behind all other objects:  draworder]
+ID_DIMTEDITR   [Right justifies dimension text:  dimtedit]
+ID_DIMTEDITA   [Rotates dimension text to an angle:  dimtedit]
+ID_DIMLINEAR   [Creates linear dimensions:  dimlinear]
+ID_DIMCENTER   [Creates the center mark or the center lines of circles and arcs:  dimcenter]
+ID_DDUCSP      [Selects a preset user coordinate system:  dducsp]
+ID_BMAKE       [Defines a block using a dialog box:  bmake]
+ID_BHATCH      [Fills an enclosed area with a hatch pattern:  bhatch]
+ID_ARCSTENDI   [Creates an arc using the start point, endpoint, and starting direction:  arc]
+ID_AI_DISH     [Creates the lower half of a spherical polygon mesh:  ai_dish]
+ID_ZOOM_DYNAMIC_0 [Zooms to display the generated portion of the drawing:  zoom d]
+ID_VPORTSSIN   [Returns model space to a single viewport view:  vports]
+ID_VPORTS2     [Divides the current viewport in half:  vports]
+ID_VPOINTSW    [Sets the view point to southwest isometric:  vpoint]
+ID_TBMODIFY    [Modify toolbar]
+ID_ROTATE      [Moves objects about a base point:  rotate]
+ID_REGENALL    [Regenerates the drawing and refreshes all viewports:  regenall]
+ID_PURGELAY    [Removes unused layers from the drawing database:  purge]
+ID_OPEN        [Opens an existing drawing file:  open]
+ID_MNMODIFY    [Edits object geometry, attributes, and properties]
+ID_MNFILE      [Creates, opens, closes, saves, verifies, compacts drawings, or quits AutoCAD]
+ID_LINETYPE    [Creates, loads, and sets linetypes:  linetype]
+ID_GRIPMOVE    [Displaces objects a specified distance in a specified direction]
+ID_GRIPBASE    [Sets the reference point]
+ID_FROM        [Snaps to a temporary reference point:  from]
+ID_DTEXT       [Displays text on screen as it is entered:  dtext]
+ID_DONUT       [Draws filled circles and rings:  donut]
+ID_DIMEDIT     [Edits dimensions:  dimedit]
+ID_DDGRIPS     [Turns on grips and sets their color:  ddgrips]
+ID_CUTCLIP     [Copies objects to the Clipboard and erases the objects from the drawing:  cutclip]
+ID_BACKGROUN   [Sets the rendering background:  background]
+ID_ASEADMIN    [Performs administrative functions for external database commands:  aseadmin]
+ID_ARCSTENAG   [Creates an arc using the start point, endpoint, and included angle:  arc]
+ID_ARCSTCEAN   [Creates an arc using the start point, center, and included angle:  arc]
+ID_AI_TILEDV   [Displays layout options for tiled viewports]
+ID_3DFACE      [Creates a three-dimensional face:  3dface]
+ID_NEW_0       [Creates a new drawing file:  new]
+ID_OPEN_0      [Opens an existing drawing file:  open]
+ID_ZOOMPREVI   [Zooms to display the previous view:  zoom]
+ID_WEDGE       [Creates a 3D solid with a sloped face tapering along the X axis:  wedge]
+ID_VPORTS3     [Divides the current viewport into three viewports:  vports]
+ID_VPOINTROT   [Enters the rotation angles of a view direction:  vpoint]
+ID_UCSICONOR   [Forces the icon to appear at the origin of the current coordinate system:  ucsicon]
+ID_UCS3POINT   [Specifies the new UCS origin and the direction of the X and Y axes:  ucs]
+ID_TILEMODE1   [Switches to tiled model space:  tilemode]
+ID_TBINSERT    [Insert toolbar]
+ID_SPHERE      [Creates a three-dimensional solid sphere:  sphere]
+ID_RECTANG     [Draws a rectangular polyline:  rectang]
+ID_PLANWORLD   [Displays the plan view of the World Coordinate System:  plan]
+ID_OSNAPNODE   [Snaps to a point object:  nod]
+ID_MNINSERT    [Inserts blocks, bitmaps, xrefs, 3D Studio files, DXF files, Windows Metafiles or other objects into the current drawing]
+ID_GRIPSTRET   [Moves or stretches objects]
+ID_GRIPREFER   [Sets the reference point]
+ID_DRAWORDEU   [Forces selected objects to be displayed behind a reference object:  draworder]
+ID_DIMTEDITC   [Centers dimension text:  dimtedit]
+ID_DIMTEDIT    [Moves and rotates dimension text:  dimtedit]
+ID_DIMCONTIN   [Continues a linear, angular, or ordinate dimension from the second extension line of the previous or a selected dimension:  dimcontinue]
+ID_DDUCS       [Manages defined user coordinate systems:  dducs]
+ID_DDATTDEF    [Creates an attribute definition:  ddattdef]
+ID_CIRCLEDIA   [Creates a circle using a specified diameter:  circle]
+ID_CHAMFER     [Bevels the edges of objects:  chamfer]
+ID_ARCCESTAN   [Creates an arc using the center, start point, and included angle:  arc]
+ID_3DMESH      [Creates a free-form polygon mesh:  3dmesh]
+ID_ZOOMOUT     [Decreases the apparent size of objects in the current viewport:  zoom]
+ID_XREF        [Controls external references to drawing files:  xref]
+ID_XBIND       [Binds dependent symbols of an xref to a drawing:  xbind]
+ID_WMFIN       [Imports a Windows metafile:  wmfin]
+ID_VPORTS4     [Divides the current viewport into four viewports of equal size:  vports]
+ID_VPOINTBOT   [Sets the view point to bottom:  vpoint]
+ID_UCSVIEW     [Establishes a new coordinate system with the XY plane parallel to the screen:  ucs]
+ID_UCSDELETE   [Removes the specified UCS from the list of saved coordinate systems:  ucs]
+ID_TORUS       [Creates a donut-shaped solid:  torus]
+ID_TBUCS       [UCS toolbar]
+ID_TBMODIFII   [Modify II toolbar]
+ID_TBOBJECTP   [Object Properties toolbar]
+ID_SENDMAIL    [Faxes or emails the current drawing file]
+ID_RPREF       [Sets rendering preferences:  rpref]
+ID_REVSURF     [Constructs a rotated surface about a selected axis:  revsurf]
+ID_PLINE       [Creates two-dimensional polylines:  pline]
+ID_MVIEWOFF    [Turns off a viewport:  mview]
+ID_MIRROR      [Creates a mirror image copy of objects:  mirror]
+ID_MASSPROP    [Calculates and displays the mass properties of regions or solids:  massprop]
+ID_GRIPUNDO    [Reverses the most recent operation]
+ID_GRIPCOPY    [Duplicates objects]
+ID_ELLIPSEAR   [Creates an elliptical arc:  ellipse]
+ID_DXBIN       [Imports specially coded binary files:  dxbin]
+ID_DDCOLOR     [Sets the color for new objects:  ddcolor]
+ID_COPYLINK    [Copies the current view to the Clipboard for linking to other OLE applications:  copylink]
+ID_ATTDISPOF   [Makes all attributes invisible:  attdisp]
+ID_TOLERANCE   [Creates geometric tolerances:  tolerance]
+ID_TBOSNAP     [Object Snap toolbar]
+ID_SOLPROF     [Creates profile images of three-dimensional solids:  solprof]
+ID_SAVEAS      [Saves an unnamed drawing with a file name or renames the current drawing:  saveas]
+ID_RAY         [Creates a semi-infinite line:  ray]
+ID_PREVIEW     [Displays full page of what will be printed:  preview]
+ID_OSNAPPERP   [Snaps to a point perpendicular to an arc, a line, or a circle:  per]
+ID_OSNAPENDP   [Snaps to the closest endpoint of an arc or a line:  endp]
+ID_LSEDIT      [Modifies an existing landscape object:  lsedit]
+ID_LIGHT       [Manages lights and lighting effects:  light]
+ID_LENGTHEN    [Lengthens an object:  lengthen]
+ID_HATCHEDIT   [Modifies an existing hatch object:  hatchedit]
+ID_EXTRUDE     [Creates unique solid primitives by extruding existing two-dimensional objects:  extrude]
+ID_DRAWORDEF   [Forces selected objects to be displayed in front of all other objects:  draworder]
+ID_CTRLLINET   [Sets the default linetype for new objects and edits the linetype of existing objects]
+ID_CTRLLAYER   [Sets the default layer for new objects, edits the layer of existing objects, and switches between layer properties]
+ID_AREA        [Calculates the area and perimeter of objects or of defined areas:  area]
+ID_ALIGN       [Moves and rotates objects to align with other objects:  align]
+ID_ACISIN      [Imports an ACIS file:  acisin]
+ID_ZOOMSCALE   [Zooms with a specified scale factor:  zoom]
+ID_ZOOMLIMIT   [Zooms to display the objects within the drawing limits:  zoom]
+ID_ZOOMEXTEN   [Zooms to display the drawing extents:  zoom]
+ID_XCLIPFRAM   [Controls the visibility of the xref clipping boundaries:  xclipframe]
+ID_XCLIP       [Defines an xref clipping boundary and sets the front or back clipping planes:  xclip]
+ID_VPORTSDEL   [Deletes a named viewport configuration:  vports]
+ID_VPOINTNE    [Sets the view point to northeast isometric:  vpoint]
+ID_UCSOBJECT   [Defines a new coordinate system based on a selected object:  ucs]
+ID_TOOLBAR     [Displays, hides, and customizes toolbars:  toolbar]
+ID_TBDRAW      [Draw toolbar]
+ID_STATUS      [Displays drawing statistics, modes, and extents:  status]
+ID_RMAT        [Manages rendering materials:  rmat]
+ID_PLANCURRE   [Displays the plan view of the current user coordinate system:  plan]
+ID_MVIEW1      [Creates one viewport that fills the available display area:  mview]
+ID_FILLET      [Rounds and fillets the edges of objects:  fillet]
+ID_ELLIPSECE   [Creates an ellipse using the center:  ellipse]
+ID_EDGE        [Changes the visibility of three-dimensional face edges:  edge]
+ID_CIRCLE      [Creates a circle:  circle]
+ID_3DSURFACE   [Creates three-dimensional surface objects using a dialog box]
+ID_XATTACH     [Attaches an external reference to the current drawing:  xattach]
+ID_VPOINTNW    [Sets the view point to northwest isometric:  vpoint]
+ID_TIME        [Displays the date and time statistics of a drawing:  time]
+ID_TBVIEWPOI   [Viewpoint toolbar]
+ID_TABSURF     [Creates a tabulated surface from a path curve and a direction vector:  tabsurf]
+ID_SPLINE      [Creates a quadratic or cubic spline (NURBS) curve:  spline]
+ID_ROTATE3D    [Moves objects about a three-dimensional axis:  rotate3d]
+ID_REDO        [Reverses the effects of the previous UNDO or U command:  redo]
+ID_QUIT        [Exits AutoCAD:  quit]
+ID_PANUP       [Moves the drawing up:  pan]
+ID_OFFSET      [Creates concentric circles, parallel lines, and parallel curves:  offset]
+ID_MVIEW2      [Divides the specified area into two viewports:  mview]
+ID_MNTOOLS     [Checks, polishes, and finishes drawings; works with macros; and sets AutoCAD Preferences]
+ID_MNHELP      [Accesses information for learning and using AutoCAD]
+ID_LIST        [Displays database information for selected objects:  list]
+ID_IMAGEADJU   [Controls the brightness, contrast and fade values of the selected image:  imageadjust]
+ID_GRIPMIRRO   [Creates a mirror image copy of objects]
+ID_ENTER       [Presses the Enter key]
+ID_DIMUPDATE   [Updates the style of a dimension:  dim]
+ID_DIMOVERRI   [Overrides dimension system variables:  dimoverride]
+ID_CONFIG      [Displays the Preferences dialog box with Printer tab in front:  config]
+ID_ASESELECT   [Creates a selection set from rows linked to textual selection sets and graphic selection sets:  aseselect]
+ID_AI_WEDGE    [Creates a right-angle wedge-shaped polygon mesh with the sloped face tapering along the X axis:  ai_wedge]
+ID_AI_PYRAMI   [Creates a pyramid or a tetrahedron:  ai_pyramid]
+ID_3DSIN       [Imports a 3D Studio file:  3dsin]
+ID_ZOOMALL     [Zooms to display the entire drawing in the current viewport:  zoom]
+ID_VPOINTTRI   [Displays a compass and tripod for defining a view direction:  vpoint]
+ID_UCSICONOF   [Disables the coordinate system icon:  ucsicon]
+ID_TBZOOM      [Zoom toolbar]
+ID_TABLETCAL   [Calibrates the digitizer with the drawing's coordinate system:  tablet]
+ID_SPELL       [Checks spelling in a drawing:  spell]
+ID_SAVE        [Saves the drawing under the current file name or a specified name:  qsave]
+ID_PURGEDIM    [Removes unused dimension styles from the drawing database:  purge]
+ID_POLYGON     [Creates an equilateral closed polyline:  polygon]
+ID_PLANUCS     [Displays the plan view of a previously saved user coordinate system:  plan]
+ID_OSNAPQUAD   [Snaps to a quadrant point of an arc or a circle:  qua]
+ID_OSNAPINTE   [Snaps to the intersection of a line, an arc, or a circle:  int]
+ID_OSNAP       [Sets running object snap modes and changes the target box size:  osnap]
+ID_MVIEW3      [Divides the specified area into three viewports:  mview]
+ID_MNDRAW      [Creates objects]
+ID_LSNEW       [Creates a new landscape object:  lsnew]
+ID_LINKS       [Updates, changes, and cancels existing OLE links:  olelinks]
+ID_IMAGEQUAL   [Controls the display quality of images:  imagequality]
+ID_EXPORT      [Saves objects to other file formats:  export]
+ID_ERASE       [Removes objects from a drawing:  erase]
+ID_DXFIN       [Imports a drawing interchange file:  dxfin]
+ID_DIMTEDITH   [Moves dimension text back to its default position:  dimtedit]
+ID_DIMORDINA   [Creates ordinate point dimensions:  dimordinate]
+ID_DDMODIFY    [Controls properties of existing objects:  ddmodify]
+ID_CYLINDER    [Creates a three-dimensional solid cylinder:  cylinder]
+ID_CIRCLETTR   [Creates a circle tangent to two objects with a specified radius:  circle]
+ID_BOX         [Creates a three-dimensional solid box:  box]
+ID_ARRAY       [Creates multiple copies of objects in a pattern:  array]
+ID_APPLOAD     [Loads AutoLISP, ADS, and ARX applications:  appload]
+ID_AI_TORUS    [Creates a toroidal polygon mesh that is parallel to the XY plane of the current UCS:  ai_torus]
+ID_SAVE_0      [Saves the drawing with the current file name or a specified name:  qsave]
+ID_TABLETOFF   [Turns Tablet mode off:  tablet]
+ID_QTOUR       [Starts the Quick Tour:  qtour.exe]
+ID_PEDIT       [Edits polylines and three-dimensional polygon meshes:  pedit]
+ID_PAN         [Moves the drawing display in the current viewport:  pan]
+ID_OSNAPTANG   [Snaps to the tangent of an arc or a circle:  tan]
+ID_OSNAPNEAR   [Snaps to the nearest point of an arc, a circle, a line, or a point:  nea]
+ID_OSNAPMIDP   [Snaps to the midpoint of an arc or a line:  mid]
+ID_OSNAPINSE   [Snaps to the insertion point of text, a block, a shape, or an attribute:  ins]
+ID_OSNAPCENT   [Snaps to the center of an arc or a circle:  cen]
+ID_MVIEW4      [Divides the specified area into four viewports:  mview]
+ID_MNDIMENSI   [Creates and edits dimension objects]
+ID_MIRROR3D    [Creates a mirror image copy of objects about a plane:  mirror3d]
+ID_IMAGECLIP   [Creates new clipping boundaries for single image objects:  imageclip]
+ID_ID          [Displays the coordinate values of a location:  id]
+ID_DVIEW       [Defines a parallel projection or perspective view:  dview]
+ID_DDINSERT    [Inserts a block or another drawing:  ddinsert]
+ID_DDATTE      [Edits the variable attributes of a block:  ddatte]
+ID_COPYCLIP    [Copies objects to the Clipboard:  copyclip]
+ID_BROWSER     [Launches the default Web browser defined in your system뭩 registry:  browser]
+ID_BOUNDARY    [Creates a region or a polyline from an enclosed area:  boundary]
+ID_AI_PSPACE   [Switches to paper space:  ai_pspace]
+ID_ZOOMCENTE   [Displays a window specified by a center point and height:  zoom]
+ID_VPORTSRES   [Restores a previously saved viewport configuration:  vports]
+ID_VPOINTLEF   [Sets the view point to left:  vpoint]
+ID_TBSTANDAR   [Standard toolbar]
+ID_TBREFEREN   [Reference Toolbar]
+ID_SHADE0      [Displays a shaded image of the drawing in the current viewport using 256 colors:  shade]
+ID_SETVAR      [Lists or changes the values of system variables:  setvar]
+ID_SCALE       [Enlarges or reduces objects equally in the X, Y, and Z directions:  scale]
+ID_REGION      [Constructs a region object from a selection set of existing objects:  region]
+ID_PURGESHP    [Removes unused shapes from the drawing database:  purge]
+ID_POINTFILX   [Specifies a .X point filter]
+ID_PANPICK     [Moves the view of the drawing by the specified distance:  pan]
+ID_OSNAPNONE   [Turns off Object Snap mode:  non]
+ID_IMPORT      [Imports various file formats into AutoCAD:  import]
+ID_IMAGEATTA   [Attaches a new image object and definition:  imageattach]
+ID_HELP        [Displays online help:  help]
+ID_ELLIPSEAX   [Creates an ellipse using a specified axis:  ellipse]
+ID_EDGESURF    [Creates a three-dimensional polygon mesh:  edgesurf]
+ID_DDVPOINT    [Sets the three-dimensional viewing direction:  ddvpoint]
+ID_DDVIEW      [Creates and restores views:  ddview]
+ID_CTRLCOLOR   [Sets the default color for new objects and edits the color of existing objects]
+ID_CIRCLETTT   [Creates a circle tangent to three objects:  circle]
+ID_ARCCONTIN   [Creates an arc tangent to the last line or arc drawn:  arc]
+ID_AI_PROPCH   [Runs DDMODIFY if a single object is selected, otherwise runs DDCHPROP:  ai_propchk]
+ID_AI_DOME     [Creates the upper half of a spherical polygon mesh:  ai_dome]
+ID_AI_CONE     [Creates a cone-shaped polygon mesh:  ai_cone]
+ID_AI_BOX      [Creates a three-dimensional box polygon mesh:  ai_box]
+ID_TRIM        [Trims objects at a cutting edge defined by other objects:  trim]
+ID_SOLID       [Creates solid-filled polygons:  solid]
+ID_SHADE1      [Displays a shaded image of the drawing in the current viewport using 256 colors and highlighting edges:  shade]
+ID_RULESURF    [Constructs a ruled surface between two curves:  rulesurf]
+ID_REVOLVE     [Creates a solid by revolving a two-dimensional object about an axis:  revolve]
+ID_POINTMULT   [Creates multiple points:  point]
+ID_POINTFILY   [Specifies a .Y point filter]
+ID_PANDOWN     [Moves the drawing down:  pan]
+ID_MVIEWHIDE   [Suppresses hidden lines within a viewport in paper space during plotting:  mview]
+ID_MTEXT       [Creates paragraph text:  mtext]
+ID_MOVE        [Displaces objects a specified distance in a specified direction:  move]
+ID_MNVIEW      [Choose alternative views, sets up the drawing, and adjusts the user interface]
+ID_HIDE        [Regenerates a three-dimensional model with hidden lines suppressed:  hide]
+ID_DSVIEWER    [Opens the Aerial View window:  dsviewer]
+ID_DDPTYPE     [Specifies the display style and size of point objects:  ddptype]
+ID_CIRCLERAD   [Creates a circle using a specified radius:  circle]
+ID_BASE        [Sets the insertion base point for the current drawing:  base]
+ID_AI_FMS      [Switches to floating model space:  ai_fms]
+ID_XLINE       [Creates an infinite line:  xline]
+ID_UCSZAXVEC   [Defines a UCS using a positive Z axis extrusion method:  ucs]
+ID_SHADE2      [Displays an image of the drawing in the current viewport with hidden lines removed:  shade]
+ID_SCENE       [Manages scenes in model space:  scene]
+ID_REPLAY      [Displays a BMP, TGA, or TIFF image:  replay]
+ID_RENDER      [Creates a realistically shaded image of a three-dimensional wireframe or solid model:  render]
+ID_REGEN       [Regenerates the drawing and refreshes the current viewport:  regen]
+ID_POINTSING   [Creates a single point:  point]
+ID_POINTFILZ   [Specifies a .Z point filter]
+ID_NEW         [Creates a new drawing file:  new]
+ID_MATLIB      [Imports and exports materials to and from a library of materials:  matlib]
+ID_IMAGE       [Inserts images in many formats into an AutoCAD drawing file: image]
+ID_GOTOURL     [Loads the Web browser and searches for the location embedded in the selected object:  geturl]
+ID_FOG         [Controls the fogging of a rendering:  fog]
+ID_DIMTEDITL   [Left justifies dimension text:  dimtedit]
+ID_DIMDIAMET   [Creates diameter dimensions for circles and arcs:  dimdiameter]
+ID_DDSELECT    [Sets object selection modes:  ddselect]
+ID_CONE        [Creates a three-dimensional solid cone:  cone]
+ID_AUDIT       [Evaluates the integrity of a drawing:  audit]
+ID_ATTEDIT     [Changes attribute information independent of its block definition:  attedit]
+ID_ATTDISPON   [Makes all attributes visible:  attdisp]
+ID_ASELINKS    [Manages links between objects and an external database:  aselinks]
+ID_VPOINTRIG   [Sets the view point to right:  vpoint]
+ID_UCSORIGIN   [Defines a new UCS by shifting the origin:  ucs]
+ID_TBINQUIRY   [Inquiry toolbar]
+ID_TBEXTDB     [External Database toolbar]
+ID_SHADE3      [Displays a shaded image of the drawing in the current viewport using 16 colors:  shade]
+ID_SHADE       [Displays a flat-shaded image of the drawing in the current viewport:  shade]
+ID_PRINT       [Plots a drawing to a plotter, printer, or file:  plot]
+ID_PREFERENC   [Customizes the AutoCAD settings:  preferences]
+ID_PASTESP     [Inserts data from the Clipboard and controls the format of the data:  pastespec]
+ID_PASTECLIP   [Inserts data from the Clipboard:  pasteclip]
+ID_MRU         [Opens this drawing]
+ID_MEASURE     [Places point objects or blocks at measured intervals on an object:  measure]
+ID_INSERTOBJ   [Inserts a linked or embedded object:  insertobj]
+ID_GRIPROTAT   [Moves objects about a base point]
+ID_GRIPEXIT    [Cancels grip edit mode and returns to the command line]
+ID_DIMBASELI   [Continues a linear, angular, or ordinate dimension from the baseline of the previous or selected dimension:  dimbaseline]
+ID_DIMANGULA   [Creates an angular dimension:  dimangular]
+ID_DDIM        [Creates and modifies dimension styles:  ddim]
+ID_COPY        [Duplicates objects:  copy]
+ID_ARCSTENRA   [Creates an arc using the start point, endpoint, and radius:  arc]
+ID_ABOUT       [Displays information about AutoCAD:  about]
+ID_ZOOMIN      [Increases the apparent size of objects in the current viewport:  zoom]
+ID_UCSLIST     [Lists the defined UCS names:  ucs]
+ID_TRACKING    [Locates points relative to other points in the drawing:  tracking]
+ID_TBDIMENSI   [Dimension toolbar]
+ID_SOLDRAW     [Generates profiles and sections in viewports created with the SOLVIEW command:  soldraw]
+ID_REDRAWALL   [Refreshes the display of the all viewports:  redrawall]
+ID_MVIEWREST   [Restores viewport configurations to individual viewports in paper space:  mview]
+ID_MLEDIT      [Edits multiple parallel lines:  mledit]
+ID_LINE        [Creates straight line segments:  line]
+ID_LIMITS      [Sets and controls the drawing boundaries:  limits]
+ID_LEADER      [Creates a line that connects annotation to a feature:  leader]
+ID_INTERSECT   [Creates composite solids or regions from the intersection of two or more solids or regions:  intersect]
+ID_INTERFERE   [Finds the interference of two or more three-dimensional solids and creates a composite 3D solid from their common volume:  interfere]
+ID_DIMSTYLEA   [Updates the dimension objects so they use the current dimensioning system variables settings:  dimstyle]
+ID_DIMALIGNE   [Creates an aligned linear dimension:  dimaligned]
+ID_DDRMODES    [Sets drawing aids:  ddrmodes]
+ID_CIRCLE2PT   [Creates a circle using two endpoints of the diameter:  circle]
+ID_ATTDISPNO   [Visible attributes are displayed; invisible attributes are not displayed:  attdisp]
+ID_ASEEXPORT   [Exports link information for selected objects:  aseexport]
+ID_3DARRAY     [Creates a three-dimensional array:  3darray]
+ID_PRINT_0     [Prints a drawing to a plotter, printer, or file:  plot]
+ID_UNION       [Creates a composite region or solid:  union]
+ID_UCSZAXROT   [Rotates the current UCS about the Z axis:  ucs]
+ID_UCSSAVE     [Saves the current UCS to a specified name:  ucs]
+ID_UCSRESTOR   [Restores a saved UCS so it becomes the current UCS:  ucs]
+ID_UCSPREVIO   [Restores the previous UCS:  ucs]
+ID_TRANSPARE   [Controls whether background pixels in an image are transparent or opaque:  transparency]
+ID_TEXTSCR     [Opens the AutoCAD text window:  textscr]
+ID_TABLETCFG   [Designates or realigns the tablet menu areas:  tablet]
+ID_RECOVER     [Repairs a damaged drawing:  recover]
+ID_PURGEMLN    [Removes unused multiline styles from the drawing database:  purge]
+ID_MVIEWON     [Turns on a viewport:  mview]
+ID_MATCHPROP   [Copies the properties from one object to one or more objects:  matchprop]
+ID_LSLIB       [Manipulates the landscape object library:  lslib]
+ID_LAYER       [Manages layers:  layer]
+ID_L_ACLA      [Starts Learning Assistance:  l_acla.exe]
+ID_GRIPSCALE   [Enlarges or reduces selected objects equally in the X, Y, and Z directions]
+ID_ELLIPSE     [Creates an ellipse or an elliptical arc:  ellipse]
+ID_DIVIDE      [Places evenly spaced point objects or blocks along the length or perimeter of an object:  divide]
+ID_DIST        [Measures the distance and angle between two points:  dist]
+ID_DDEDIT      [Edits text and attribute definitions:  ddedit]
+ID_CIRCLE3PT   [Creates a circle using three points on the circumference:  circle]
+ID_ASEROWS     [Displays and edits table data, and creates links and selection sets:  aserows]
+ID_ARCSTCEEN   [Creates an arc using the start point, center, and endpoint:  arc]
+
+//
+//      End of AutoCAD menu file - C:\ghk\iso.mnc
+//
+

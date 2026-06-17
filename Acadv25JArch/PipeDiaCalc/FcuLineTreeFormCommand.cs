@@ -15,7 +15,7 @@ namespace PipeLoad2
         /// <summary>
         /// FCU 배관 Tree 분석 — Line + Block(FCU) 선택, Root Line 지정, H-W 공식으로 관경 결정.
         /// </summary>
-        [CommandMethod("FCULINETREE")]
+        [CommandMethod("FCUTREE")]
         public void Cmd_FcuLineTreeForm()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;

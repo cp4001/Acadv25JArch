@@ -1,0 +1,16 @@
+(defun valve(val-par1 val-par2)
+    (if (or (= flg_end "F") (= flg_end "W"))
+        (progn
+            (setq val_1 (polar val-par2 val-par1 g))
+            (setq val_2 (polar val_1 val-par1 (- len (* g 2))))
+        )
+        (progn
+            (setq val_1 val-par2)
+            (setq val_2 (polar val_1 val-par1 len))
+        )
+    )
+    (setq val1  (polar val_1 (+ val-par1 1.5708) flghd))
+    (setq val2  (polar val_2 (+ val-par1 1.5708) flghd))
+    (setq val3  (polar val_2 (- val-par1 1.5708) flghd))
+    (setq val4  (polar val_1 (- val-par1 1.5708) flghd))
+)

@@ -500,7 +500,7 @@ namespace PipeLoad2
     public class LineTreeBuilder
     {
         private const double TOLERANCE = 1e-6; // 점 일치 판단 허용 오차
-        private const string COMMAND_NAME = "LINETREE";
+        private const string COMMAND_NAME = "PipeTreeCon";
         private const double RETURN_LEAF_LOAD = 0.105; // 환탕 Leaf 단위 체적(L/m)
 
         /// <summary>관경 계산 모드</summary>
@@ -1228,7 +1228,7 @@ namespace PipeLoad2
             Editor ed = doc.Editor;
 
             ed.WriteMessage("\n=== Line Tree 분석 도구 ===");
-            ed.WriteMessage("\n명령어: LINETREE - Tree 구조 분석 및 색상 적용");
+            ed.WriteMessage("\n명령어: PipeTreeCon - Tree 구조 분석 및 색상 적용");
             ed.WriteMessage("\n명령어: LINETREE_LOADS - 부하 분석 상세 출력");
             ed.WriteMessage("\n명령어: LINETREE_STATS - 이 도움말 표시");
             ed.WriteMessage("\n\n색상 규칙:");

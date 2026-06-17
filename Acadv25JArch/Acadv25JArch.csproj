@@ -122,7 +122,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\DuctSizing.Core\DuctSizing.Core.csproj" />
+		<ProjectReference Include="..\DuctSizing.Core\DuctSizing.Core.csproj">
+		  <Private>True</Private>
+		</ProjectReference>
 	</ItemGroup>
 
   <PropertyGroup>
