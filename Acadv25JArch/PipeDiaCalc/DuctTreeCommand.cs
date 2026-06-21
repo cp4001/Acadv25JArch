@@ -1,12 +1,15 @@
 using AcadFunction;
 using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+using CADExtension;
 using System.Collections.Generic;
 using System.Linq;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
+using Color = Autodesk.AutoCAD.Colors.Color;
 
 namespace PipeLoad2
 {
@@ -120,6 +123,132 @@ namespace PipeLoad2
             {
                 ed.WriteMessage($"\n오류: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 선택한 Line 들에 걸쳐진 Text(덕트 폭)를 읽어 각 Line 의 "a" XData 로 기록.
+        /// 대상 Text 는 Line 에 걸쳐(straddle) 있는 TEXT/MTEXT 중 Line 중심선에 가장 가까운 것.
+        /// 값은 숫자 파싱 없이 TextString 을 그대로 string 으로 저장.
+        /// 걸쳐진 Text 가 없는 Line 은 Yellow(2) 로 표시하고 개수 출력.
+        /// </summary>
+        [CommandMethod("SetDuctWidth", CommandFlags.UsePickSet)]
+        public void Cmd_SetDuctWidth()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db  = doc.Database;
+            Editor   ed  = doc.Editor;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    // 1. Line 선택 (UsePickSet: 사전선택 표시 + 추가/제거 허용)
+                    List<Line> targets = JEntity.GetEntityByTpye<Line>(
+                        "덕트 Line 을 선택 하세요 (Enter 확정)?", JSelFilter.MakeFilterTypes("LINE"));
+                    if (targets == null || targets.Count == 0) return;
+
+                    tr.CheckRegName("a");
+
+                    // 선택 Line 전체가 화면에 보이도록 Zoom fit
+                    // (걸쳐진 Text 추출에 ed.SelectCrossingWindow 사용 → 뷰포트 밖이면 매핑 실패)
+                    ed.ZoomToEntities(targets.Select(l => l.ObjectId));
+
+                    int setCount     = 0;
+                    int missingCount = 0;
+
+                    foreach (var ln in targets)
+                    {
+                        if (ln == null) continue;
+
+                        string width = TryGetWidthTextByLine(ln, ed, tr);
+
+                        ln.UpgradeOpen();
+
+                        if (!string.IsNullOrWhiteSpace(width))
+                        {
+                            JXdata.SetXdata(ln, "a", width);
+                            setCount++;
+                        }
+                        else
+                        {
+                            ln.Color = Color.FromColorIndex(ColorMethod.ByAci, 2); // Yellow
+                            missingCount++;
+                        }
+                    }
+
+                    ed.WriteMessage($"\nDuct Width 설정 완료: {setCount}개");
+                    ed.WriteMessage($"\n걸쳐진 Text 없는 Line: {missingCount}개 (Yellow 표시)");
+
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Line 에 걸쳐진(straddle) TEXT/MTEXT 중 중심선에 가장 가까운 것의 문자열을 반환.
+        /// SelectCrossingWindow 로 Line bbox(축정렬 Line 대비 길이 5% 여유) 안 후보를 모은 뒤,
+        /// Text 중심의 Line 수선거리가 최소이고 임계값(Text 높이) 이내인 것을 선택.
+        /// </summary>
+        private string TryGetWidthTextByLine(Line ln, Editor ed, Transaction tr)
+        {
+            Point3d s = ln.StartPoint;
+            Point3d e = ln.EndPoint;
+
+            // 축정렬 Line 은 bbox 가 납작하므로 길이 5% (최소 1.0) 만큼 여유를 줘서 후보 수집
+            double margin = System.Math.Max(s.DistanceTo(e) * 0.05, 1.0);
+            var min = new Point3d(System.Math.Min(s.X, e.X) - margin, System.Math.Min(s.Y, e.Y) - margin, 0);
+            var max = new Point3d(System.Math.Max(s.X, e.X) + margin, System.Math.Max(s.Y, e.Y) + margin, 0);
+
+            var filter = new SelectionFilter(new[]
+            {
+                new TypedValue((int)DxfCode.Operator, "<OR"),
+                new TypedValue((int)DxfCode.Start, "TEXT"),
+                new TypedValue((int)DxfCode.Start, "MTEXT"),
+                new TypedValue((int)DxfCode.Operator, "OR>")
+            });
+
+            var psr = ed.SelectCrossingWindow(min, max, filter);
+            if (psr.Status != PromptStatus.OK || psr.Value == null) return null;
+
+            string best     = null;
+            double bestDist  = double.MaxValue;
+
+            foreach (SelectedObject so in psr.Value)
+            {
+                var ent = tr.GetObject(so.ObjectId, OpenMode.ForRead) as Entity;
+                string text;
+                double height;
+                switch (ent)
+                {
+                    case DBText dbt: text = dbt.TextString; height = dbt.Height;       break;
+                    case MText mt:   text = mt.Text;        height = mt.ActualHeight;  break;
+                    default: continue;
+                }
+                if (string.IsNullOrWhiteSpace(text)) continue;
+
+                Extents3d tx;
+                try { tx = ent.GeometricExtents; } catch { continue; }
+                var center = new Point3d(
+                    (tx.MinPoint.X + tx.MaxPoint.X) / 2.0,
+                    (tx.MinPoint.Y + tx.MaxPoint.Y) / 2.0, 0);
+
+                // Text 중심이 Line 중심선에 걸쳐 있는지: 선분 범위 내 수선거리가 Text 높이 이내
+                Point3d closest = ln.GetClosestPointTo(center, false);
+                double  dist    = closest.DistanceTo(center);
+                double  thresh  = height > 0 ? height : margin;
+                if (dist > thresh) continue;
+
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    best     = text.Trim();
+                }
+            }
+            return best;
         }
     }
 }

@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
-using ProgramLicenseManager;
+//using ProgramLicenseManager;
 
 namespace HullAlgorithms
 {

@@ -6,7 +6,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using CADExtension;
 using NetWorkTime;
-using ProgramLicenseManager;
+//using ProgramLicenseManager;
 using System;
 using System.Collections.Generic;
 using System.Linq;

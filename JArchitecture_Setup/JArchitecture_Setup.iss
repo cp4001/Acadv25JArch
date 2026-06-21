@@ -29,9 +29,7 @@ Source: "PackageContents.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Jarch25\Acadv25JArch.dll"; DestDir: "{app}\Contents"; Flags: ignoreversion
 Source: "C:\Jarch25\EPPlus.dll"; DestDir: "{app}\Contents"; Flags: ignoreversion
 Source: "C:\Jarch25\DuctSizing.Core.dll"; DestDir: "{app}\Contents"; Flags: ignoreversion
-Source: "C:\Jarch25\x64\Debug\net8.0-windows\PipeLoad.dll"; DestDir: "{app}\Contents"; Flags: ignoreversion   
-Source: "C:\Jarch25\JArchLicense.dll"; DestDir: "{app}\Contents"; Flags: ignoreversion
-
+Source: "C:\Jarch25\x64\Release\net8.0-windows\PipeLoad.dll"; DestDir: "{app}\Contents"; Flags: ignoreversion
 
 ; License DLL
 Source: "C:\Jarch25\JArchLicense.dll"; DestDir: "{app}\Contents"; Flags: ignoreversion

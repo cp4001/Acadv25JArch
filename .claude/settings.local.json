@@ -7,7 +7,19 @@
       "PowerShell(Get-Process *)",
       "PowerShell(dotnet build *)",
       "Bash(git push *)",
-      "Bash(qmd search *)"
+      "Bash(qmd search *)",
+      "Read(//c/Jarch25/**)",
+      "Read(//c/ProgramData/Autodesk/ApplicationPlugins/JArchitecture.bundle/Contents/**)",
+      "PowerShell($dumpbin = Get-ChildItem -Path \"C:\\\\Program Files\\\\Microsoft Visual Studio\",\"C:\\\\Program Files \\(x86\\)\\\\Microsoft Visual Studio\" -Recurse -Filter dumpbin.exe -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName; if \\($dumpbin\\) { Write-Output \"FOUND: $dumpbin\" } else { Write-Output \"dumpbin NOT FOUND\" })",
+      "PowerShell(Select-String *)",
+      "PowerShell($db = \"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\SDK\\\\ScopeCppSDK\\\\vc15\\\\VC\\\\bin\\\\dumpbin.exe\"; $dll = \"C:\\\\Jarch25\\\\JArchLicense.dll\"; Write-Output \"===== DEPENDENTS =====\"; & $db /dependents $dll | Select-String -Pattern \"\\\\.dll\" ; Write-Output \"`n===== EXPORTS =====\"; & $db /exports $dll)",
+      "PowerShell($msbuild = \"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\"; $proj = \"C:\\\\Users\\\\junhoi\\\\Desktop\\\\Work\\\\Acadv25JArch\\\\JArchLicense\\\\JArchLicense.vcxproj\"; & $msbuild $proj /p:Configuration=Release /p:Platform=x64 /t:Rebuild /v:minimal /nologo)",
+      "PowerShell($db = \"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\SDK\\\\ScopeCppSDK\\\\vc15\\\\VC\\\\bin\\\\dumpbin.exe\"; $dll = \"C:\\\\Users\\\\junhoi\\\\Desktop\\\\Work\\\\Acadv25JArch\\\\JArchLicense\\\\bin\\\\x64\\\\Release\\\\JArchLicense.dll\"; Write-Output \"===== MACHINE =====\"; & $db /headers $dll | Select-String \"machine\"; Write-Output \"===== DEPENDENTS =====\"; & $db /dependents $dll | Select-String \"\\\\.dll\"; Write-Output \"===== EXPORTS =====\"; & $db /exports $dll | Select-String \"CheckLicense|GetExpirationDate\")",
+      "PowerShell(Copy-Item *)",
+      "PowerShell($iscc = Get-ChildItem -Path \"C:\\\\Program Files \\(x86\\)\\\\Inno Setup 6\",\"C:\\\\Program Files\\\\Inno Setup 6\",\"C:\\\\Program Files \\(x86\\)\\\\Inno Setup 5\",\"C:\\\\Program Files\\\\Inno Setup 5\" -Filter ISCC.exe -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName; if \\($iscc\\) { Write-Output \"ISCC: $iscc\" } else { $c = \\(Get-Command iscc.exe -ErrorAction SilentlyContinue\\).Source; if \\($c\\) { Write-Output \"ISCC: $c\" } else { Write-Output \"ISCC NOT FOUND\" } })",
+      "PowerShell($iscc = \"C:\\\\Program Files \\(x86\\)\\\\Inno Setup 6\\\\ISCC.exe\"; $iss = \"C:\\\\Users\\\\junhoi\\\\Desktop\\\\Work\\\\Acadv25JArch\\\\JArchitecture_Setup\\\\JArchitecture_Setup.iss\"; & $iscc $iss)",
+      "Read(//d/Dropbox/Obsidian/Projects/Architecture/**)",
+      "Read(//d/Dropbox/Obsidian/Projects/**)"
     ]
   }
 }
