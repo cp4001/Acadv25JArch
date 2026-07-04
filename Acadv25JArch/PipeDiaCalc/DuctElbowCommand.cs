@@ -15,9 +15,12 @@ namespace PipeLoad2
     /// <summary>
     /// Duct_E — 직각으로 만나는 수평 Green(aa) + 수직 Red(bb) 선택 →
     /// 코너에 원호(Arc) 엘보를 포함한 덕트 외곽선(Yellow, 레이어 "Duct_OutLine")을
-    /// Line 8개 + Arc 2개(내측 R−H, 외측 R+H)로 생성. 기준선은 원본 유지.
+    /// Green측 Line 4개 + 외곽 Arc 2개(내측 R−H, 외측 R+H)로 생성
+    /// (Red측 직선 외곽 없음, Green 시작단 폭 방향 마감선 없음).
+    /// 엘보 중심선 Arc(반경 R, Green 속성·XData 승계)를 추가하고,
+    /// 기준선은 Green X측 끝점 → Tg, Red X측 끝점 → Tr 로 단축한다.
     /// 엘보 중심선 반경 R = 1.5 × W_aa (Green 폭 기준).
-    /// 설계 기준: 건축\Duct-OutLine\Duct_Elbow.md (v1.1).
+    /// 설계 기준: 건축\Duct-OutLine\Duct_Elbow.md (v1.3).
     /// 모든 계산은 월드축이 아니라 선택 선의 방향벡터(dirAA/dirBB) 기준으로 수행.
     /// </summary>
     public class DuctElbowCommand
@@ -130,10 +133,8 @@ namespace PipeLoad2
                     Point3d Rout_pt = Tr - dirAA * H;   // Red 외측 접점
                     Point3d GfarIn = aaFar + dirBB * H; // Green 먼 끝 내측
                     Point3d GfarOut = aaFar - dirBB * H;// Green 먼 끝 외측
-                    Point3d BfarIn = bbFar + dirAA * H; // Red 먼 끝 내측
-                    Point3d BfarOut = bbFar - dirAA * H;// Red 먼 끝 외측
 
-                    foreach (var p in new[] { C, Tg, Tr, Gin, Gout, Rin_pt, Rout_pt, GfarIn, GfarOut, BfarIn, BfarOut })
+                    foreach (var p in new[] { C, Tg, Tr, Gin, Gout, Rin_pt, Rout_pt, GfarIn, GfarOut })
                     {
                         if (!double.IsFinite(p.X) || !double.IsFinite(p.Y) || !double.IsFinite(p.Z))
                         {
@@ -165,21 +166,24 @@ namespace PipeLoad2
                     // [7장] 레이어 준비
                     tr.CreateLayer(OutlineLayer, Yellow, LineWeight.ByLayer);
 
-                    // [7장 v1.1] 외곽선 — Line 8개 + Arc 2개 (기준선 aa/bb 는 원본 유지)
+                    // [7장 v1.3] 외곽선 — Green측 Line 4개 + 외곽 Arc 2개 (Red측 직선 외곽·Green 끝단 마감 없음)
                     int created = 0;
                     created += AddOutlineLine(tr, btr, db, GfarIn, Gin);        // 1. Green 내측 외곽
                     created += AddOutlineLine(tr, btr, db, GfarOut, Gout);      // 2. Green 외측 외곽
-                    created += AddOutlineLine(tr, btr, db, Rin_pt, BfarIn);     // 3. Red 내측 외곽
-                    created += AddOutlineLine(tr, btr, db, Rout_pt, BfarOut);   // 4. Red 외측 외곽
-                    created += AddOutlineLine(tr, btr, db, Gin, Gout);          // 5. Green측 이음선 (Tg)
-                    created += AddOutlineLine(tr, btr, db, Rin_pt, Rout_pt);    // 6. Red측 이음선 (Tr)
-                    created += AddOutlineLine(tr, btr, db, GfarIn, GfarOut);    // 7. Green 끝단 마감
-                    created += AddOutlineLine(tr, btr, db, BfarIn, BfarOut);    // 8. Red 끝단 마감
-                    created += AddOutlineArc(tr, btr, db, C, Rin, startAng, endAng);  // 9. 엘보 내측 원호
-                    created += AddOutlineArc(tr, btr, db, C, Rout, startAng, endAng); // 10. 엘보 외측 원호
+                    created += AddOutlineLine(tr, btr, db, Gin, Gout);          // 3. Green측 이음선 (Tg)
+                    created += AddOutlineLine(tr, btr, db, Rin_pt, Rout_pt);    // 4. Red측 이음선 (Tr, 유지)
+                    created += AddOutlineArc(tr, btr, db, C, Rin, startAng, endAng);  // 5. 엘보 내측 원호
+                    created += AddOutlineArc(tr, btr, db, C, Rout, startAng, endAng); // 6. 엘보 외측 원호
 
-                    ed.WriteMessage($"\nDuct_E 완료: 외곽 Line 8개 + Arc 2개 생성 " +
-                                    $"(W={Waa}, R(중심선)={R}, 내측={Rin}, 외측={Rout}). 기준선은 원본 유지.");
+                    // [v1.2] 엘보 중심선 Arc — 반경 R, Green(aa) 속성·XData 승계
+                    AddCenterArc(tr, btr, db, C, R, startAng, endAng, aa);
+
+                    // [v1.2] 기준선 단축 — Green X측 끝점 → Tg, Red X측 끝점 → Tr
+                    MoveEnd(aa, X, Tg);
+                    MoveEnd(bb, X, Tr);
+
+                    ed.WriteMessage($"\nDuct_E 완료: 외곽 Line 4개 + 외곽 Arc 2개 + 중심선 Arc 1개 생성, " +
+                                    $"기준선 단축(Green→Tg, Red→Tr) (W={Waa}, R(중심선)={R}, 내측={Rin}, 외측={Rout}).");
                     tr.Commit();
                 }
             }
@@ -222,6 +226,33 @@ namespace PipeLoad2
         {
             return ln.StartPoint.DistanceTo(refPt) <= ln.EndPoint.DistanceTo(refPt)
                 ? ln.StartPoint : ln.EndPoint;
+        }
+
+        /// <summary>Line 의 기준점 refPt 와 가까운 끝점만 newPt 로 이동.</summary>
+        private void MoveEnd(Line ln, Point3d refPt, Point3d newPt)
+        {
+            ln.UpgradeOpen();
+            if (ln.StartPoint.DistanceTo(refPt) <= ln.EndPoint.DistanceTo(refPt))
+                ln.StartPoint = newPt;
+            else
+                ln.EndPoint = newPt;
+        }
+
+        /// <summary>중심 c, 반경 r 의 중심선 Arc 생성 후 source(Green) 의 색상/레이어/선종류/선가중치/XData 승계.</summary>
+        private void AddCenterArc(Transaction tr, BlockTableRecord btr, Database db, Point3d c, double r, double startAng, double endAng, Line source)
+        {
+            var arc = new Arc(c, r, startAng, endAng);
+            arc.SetDatabaseDefaults(db);
+            btr.AppendEntity(arc);
+            tr.AddNewlyCreatedDBObject(arc, true);
+            arc.Layer = source.Layer;
+            arc.Color = source.Color;
+            arc.Linetype = source.Linetype;
+            arc.LineWeight = source.LineWeight;
+            using (ResultBuffer rb = source.GetXDataForApplication("a"))
+            {
+                if (rb != null) arc.XData = rb;   // RegApp "a" 는 source 가 이미 사용 중이므로 등록되어 있음
+            }
         }
 
         /// <summary>a→b Yellow 외곽선 Line 을 "Duct_OutLine" 레이어에 생성.</summary>
