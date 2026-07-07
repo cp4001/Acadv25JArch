@@ -441,5 +441,218 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
             rat.Add(ratr);
             tr.AddNewlyCreatedDBObject(ratr, true);
         }
+
+        #region SCL - 진행방향 연속 Line 선택
+
+        // SCL 상수
+        private const double SCL_END_TOL = 1.0;      // 끝점 연결 허용 거리
+        private const double SCL_GAP_MAX = 900.0;    // colinear 점프 최대 거리
+        private const double SCL_ANGLE_TOL = 1.0;    // colinear 각도 허용 오차 (도)
+        private const double SCL_OFFSET_TOL = 1.0;   // 수직 투영 오프셋 허용 거리
+        private const double SCL_SEARCH_BOX = 10.0;  // 끝점 연결 검색 박스 크기
+
+        /// <summary>
+        /// SCL: 기준 Line과 진행 방향을 선택하면 연결된 Line들을 연속 선택
+        /// 1) 끝점 연결 Line 우선 추적 (분기 시 모든 경로 추적)
+        /// 2) 연결 없으면 진행 방향 colinear Line으로 점프 (최대 900, 최근접)
+        /// 3) 둘 다 없으면 해당 경로 종료
+        /// </summary>
+        [CommandMethod("SCL")]
+        public void SelectConLine()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 1단계: 기준 Line 선택 (클릭점으로 진행 방향 판정)
+                var peo = new PromptEntityOptions("\n기준 Line 선택 (진행 방향 쪽을 클릭): ");
+                peo.SetRejectMessage("\nLine만 선택할 수 있습니다.");
+                peo.AddAllowedClass(typeof(Line), true);
+
+                var per = ed.GetEntity(peo);
+                if (per.Status != PromptStatus.OK) return;
+
+                // 2단계: 단일 Transaction으로 순회 수행 (중첩 금지 원칙)
+                using var tr = db.TransactionManager.StartTransaction();
+
+                if (tr.GetObject(per.ObjectId, OpenMode.ForRead) is not Line baseLine)
+                {
+                    ed.WriteMessage("\n기준 Line을 열 수 없습니다.");
+                    tr.Commit();
+                    return;
+                }
+
+                // 클릭점에서 가까운 끝점 = 진행 시작점 (그림의 A1)
+                Point3d startPt = NearEndScl(baseLine, per.PickedPoint);
+
+                // 순회: Stack 기반 (분기 시 모든 경로 추적, 재귀 없음)
+                var visited = new HashSet<ObjectId> { per.ObjectId };
+                var stack = new Stack<(ObjectId id, Point3d p)>();
+                stack.Push((per.ObjectId, startPt));
+
+                int jumpCount = 0;
+
+                while (stack.Count > 0)
+                {
+                    var (curId, p) = stack.Pop();
+                    if (tr.GetObject(curId, OpenMode.ForRead) is not Line curLine) continue;
+
+                    // 우선순위 1: 끝점 연결 Line (2개 이상이면 모두 같은 방식으로 추적)
+                    var connected = FindConnectedLines(ed, tr, p, visited);
+                    if (connected.Count > 0)
+                    {
+                        foreach (var next in connected)
+                        {
+                            visited.Add(next.ObjectId);
+                            // 새 진행 끝점 = 연결 Line에서 p의 반대쪽 끝점
+                            stack.Push((next.ObjectId, FarEndScl(next, p)));
+                        }
+                        continue;
+                    }
+
+                    // 우선순위 2: colinear 점프 (최근접 1개만)
+                    // 진행 방향 = 현재 Line의 반대쪽 끝점 → p 방향
+                    Vector3d dir = (p - FarEndScl(curLine, p)).GetNormal();
+                    var jump = FindColinearJump(ed, tr, curLine, p, dir, visited);
+                    if (jump != null)
+                    {
+                        visited.Add(jump.ObjectId);
+                        jumpCount++;
+                        stack.Push((jump.ObjectId, FarEndScl(jump, p)));
+                    }
+                    // 후보 없음 → 이 경로 종료 (그림의 A6 조건)
+                }
+
+                tr.Commit();
+
+                // 3단계: 그립 선택 상태로 설정 (후속 명령에 활용 가능)
+                ed.SetImpliedSelection([.. visited]);
+
+                ed.WriteMessage($"\n총 {visited.Count}개 Line 선택 완료 (colinear 점프 {jumpCount}회).");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 진행 끝점 p 주변에서 끝점이 연결된(END_TOL 이내) 미방문 Line들을 검색
+        /// </summary>
+        private static List<Line> FindConnectedLines(Editor ed, Transaction tr,
+            Point3d p, HashSet<ObjectId> visited)
+        {
+            var result = new List<Line>();
+
+            // p 중심 SEARCH_BOX 크기의 Crossing 검색
+            double half = SCL_SEARCH_BOX * 0.5;
+            var p1 = new Point3d(p.X - half, p.Y - half, 0);
+            var p2 = new Point3d(p.X + half, p.Y + half, 0);
+
+            TypedValue[] filterList = [new TypedValue((int)DxfCode.Start, "LINE")];
+            var psr = ed.SelectCrossingWindow(p1, p2, new SelectionFilter(filterList));
+            if (psr.Status != PromptStatus.OK || psr.Value == null) return result;
+
+            foreach (ObjectId id in psr.Value.GetObjectIds())
+            {
+                if (visited.Contains(id)) continue;
+                if (tr.GetObject(id, OpenMode.ForRead) is not Line line) continue;
+
+                // 끝점 연결 판정: 후보의 양 끝점 중 하나가 p와 END_TOL 이내
+                if (line.StartPoint.DistanceTo(p) <= SCL_END_TOL ||
+                    line.EndPoint.DistanceTo(p) <= SCL_END_TOL)
+                {
+                    result.Add(line);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 진행 끝점 p에서 방향 dir로 colinear한 Line 검색
+        /// 조건: 평행(ANGLE_TOL) + 수직 투영 오프셋(OFFSET_TOL) + 전방(내적>0) + 거리(GAP_MAX)
+        /// 2개 이상이면 가장 가까운 Line 반환, 없으면 null
+        /// </summary>
+        private static Line FindColinearJump(Editor ed, Transaction tr, Line curLine,
+            Point3d p, Vector3d dir, HashSet<ObjectId> visited)
+        {
+            // p 중심 GAP_MAX 크기의 Crossing 검색 후 조건 필터링
+            var p1 = new Point3d(p.X - SCL_GAP_MAX, p.Y - SCL_GAP_MAX, 0);
+            var p2 = new Point3d(p.X + SCL_GAP_MAX, p.Y + SCL_GAP_MAX, 0);
+
+            TypedValue[] filterList = [new TypedValue((int)DxfCode.Start, "LINE")];
+            var psr = ed.SelectCrossingWindow(p1, p2, new SelectionFilter(filterList));
+            if (psr.Status != PromptStatus.OK || psr.Value == null) return null;
+
+            Line best = null;
+            double bestGap = double.MaxValue;
+
+            foreach (ObjectId id in psr.Value.GetObjectIds())
+            {
+                if (visited.Contains(id)) continue;
+                if (tr.GetObject(id, OpenMode.ForRead) is not Line cand) continue;
+
+                // 조건 A: 현재 Line과 평행 (각도 허용 오차 이내)
+                if (!IsParallelScl(curLine, cand, SCL_ANGLE_TOL)) continue;
+
+                // 조건 B: 직선상 판정 - p를 후보 무한직선에 수직 투영
+                Point3d proj = cand.GetClosestPointTo(p, true);
+                if (proj.DistanceTo(p) > SCL_OFFSET_TOL) continue;
+
+                // 조건 C: 후보의 가까운 끝점이 진행 방향 앞쪽 (내적 > 0)
+                Point3d nearEnd = NearEndScl(cand, p);
+                Vector3d toCand = nearEnd - p;
+                if (toCand.DotProduct(dir) <= 0) continue;
+
+                // 조건 D: 점프 거리 GAP_MAX(900) 이내
+                double gap = p.DistanceTo(nearEnd);
+                if (gap > SCL_GAP_MAX) continue;
+
+                // 최근접 후보 선택
+                if (gap < bestGap)
+                {
+                    bestGap = gap;
+                    best = cand;
+                }
+            }
+
+            return best;
+        }
+
+        /// <summary>
+        /// 두 Line이 평행한지 판정 (허용 오차 도 단위, 방향 반대 포함)
+        /// </summary>
+        private static bool IsParallelScl(Line line1, Line line2, double tolDeg)
+        {
+            Vector3d d1 = (line1.EndPoint - line1.StartPoint).GetNormal();
+            Vector3d d2 = (line2.EndPoint - line2.StartPoint).GetNormal();
+
+            // 내적 절댓값 사용 (방향이 반대여도 평행으로 판정)
+            double dot = Math.Abs(d1.DotProduct(d2));
+            double angleDeg = Math.Acos(Math.Min(1.0, dot)) * 180.0 / Math.PI;
+
+            return angleDeg <= tolDeg;
+        }
+
+        /// <summary>
+        /// 점 pt에서 가까운 끝점 반환 (방향 무관 판정, DistanceTo 기반)
+        /// </summary>
+        private static Point3d NearEndScl(Line line, Point3d pt) =>
+            line.StartPoint.DistanceTo(pt) <= line.EndPoint.DistanceTo(pt)
+                ? line.StartPoint
+                : line.EndPoint;
+
+        /// <summary>
+        /// 점 pt에서 먼 끝점 반환 (방향 무관 판정, DistanceTo 기반)
+        /// </summary>
+        private static Point3d FarEndScl(Line line, Point3d pt) =>
+            line.StartPoint.DistanceTo(pt) > line.EndPoint.DistanceTo(pt)
+                ? line.StartPoint
+                : line.EndPoint;
+
+        #endregion
     }
 }
