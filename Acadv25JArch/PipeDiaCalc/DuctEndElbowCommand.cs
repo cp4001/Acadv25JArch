@@ -44,110 +44,13 @@ namespace PipeLoad2
                     if (!PickLine(ed, tr, "기준선(a, Green, 흐름 상류)을 선택하세요?", out Line a)) return;
                     if (!PickLine(ed, tr, "직각 기준선(b, Red, 흐름 하류)을 선택하세요?", out Line b)) return;
 
-                    if (a.ObjectId == b.ObjectId)
+                    if (!TryApply(tr, db, a, b, out string message))
                     {
-                        ed.WriteMessage("\n[E01] 두 Line 은 서로 달라야 합니다.");
+                        ed.WriteMessage("\n" + message);
                         return;
                     }
 
-                    // [3장] XData "a" 폭 읽기
-                    if (!TryReadWidth(a, out double Wa)) { ed.WriteMessage("\n[E02] a XData \"a\"(폭) 를 읽을 수 없습니다."); return; }
-                    if (!TryReadWidth(b, out double Wb)) { ed.WriteMessage("\n[E02] b XData \"a\"(폭) 를 읽을 수 없습니다."); return; }
-                    if (Wa <= 0 || Wb <= 0)
-                    {
-                        ed.WriteMessage("\n[E03] 폭은 0 보다 커야 합니다.");
-                        return;
-                    }
-
-                    // [4장] 교차점 X — b 위 임의의 점(b.StartPoint)을 a(연장 포함)에 수직 투영
-                    Point3d X = a.GetClosestPointTo(b.StartPoint, true);
-
-                    Point3d aFar = FarEnd(a, X);
-                    Point3d bFar = FarEnd(b, X);
-                    Point3d aNear = NearEnd(a, X);
-                    Point3d bNear = NearEnd(b, X);
-
-                    // [2장] a/b 의 X 측 끝점이 실제로 X 와 일치하는지 확인
-                    if (aNear.DistanceTo(X) > JunctionTol || bNear.DistanceTo(X) > JunctionTol)
-                    {
-                        ed.WriteMessage("\n[E04] a/b 의 한쪽 끝점이 교차점 X 와 일치하지 않습니다.");
-                        return;
-                    }
-
-                    Vector3d dirA = (X - aFar).GetNormal();   // a 의 유체 흐름 방향 (a 먼 끝 → X)
-                    Vector3d dirB = (bFar - X).GetNormal();   // b 의 흐름 방향 (상향)
-
-                    // [2장] b ⊥ a 검증
-                    if (System.Math.Abs(dirA.DotProduct(dirB)) > PerpTol)
-                    {
-                        ed.WriteMessage("\n[E05] b 가 a 와 직각이 아닙니다.");
-                        return;
-                    }
-
-                    // [6장] 파생 치수
-                    double Ha = Wa / 2.0;
-                    double Hb = Wb / 2.0;
-                    double Lcol = Wb / 4.0;   // b1–b2 = 컬러 높이 = W_b / 4
-
-                    // [6장] 분할·연장 점
-                    Point3d a1 = X + dirA * Wb;          // 말단 연장 끝 (연장 길이 = b 의 폭)
-                    Point3d b1 = X + dirB * Ha;          // b 와 a 상단 외곽 교차점
-                    Point3d b2 = b1 + dirB * Lcol;       // 컬러 상단 높이
-
-                    // [9장 3번] 길이 충분성 검증
-                    if (aFar.DistanceTo(X) < Hb + Lcol + JunctionTol)
-                    {
-                        ed.WriteMessage("\n[E06] a 길이가 부족합니다 (컬러 사선 시작점보다 길어야 합니다).");
-                        return;
-                    }
-                    if (bFar.DistanceTo(X) < b2.DistanceTo(X) + JunctionTol)
-                    {
-                        ed.WriteMessage("\n[E06] b 길이가 부족합니다 (b2 를 지나야 합니다).");
-                        return;
-                    }
-
-                    // [8장] 외곽선 정점 — 본체 2 + 말단 마감 1 + 컬러 3 (총 6선)
-                    Vector3d up = dirB;
-                    Point3d T1 = aFar + up * Ha;                        // 본체 상단 시작 (a 먼 끝)
-                    Point3d T2 = a1 + up * Ha;                          // 본체 상단 끝 (a1)
-                    Point3d U1 = aFar - up * Ha;                        // 본체 하단 시작
-                    Point3d U2 = a1 - up * Ha;                          // 본체 하단 끝
-                    Point3d S1 = X - dirA * (Hb + Lcol) + up * Ha;      // 컬러 45° 사선 시작 (흐름 상류측)
-                    Point3d S2 = X - dirA * Hb + up * (Ha + Lcol);      // 컬러 45° 사선 끝 = 상단 좌측
-                    Point3d S3 = X + dirA * Hb + up * (Ha + Lcol);      // 컬러 상단 우측
-                    Point3d S4 = X + dirA * Hb + up * Ha;               // 컬러 우측 수직 하단
-
-                    foreach (var p in new[] { a1, b1, b2, T1, T2, U1, U2, S1, S2, S3, S4 })
-                    {
-                        if (!double.IsFinite(p.X) || !double.IsFinite(p.Y) || !double.IsFinite(p.Z))
-                        {
-                            ed.WriteMessage("\n[E07] 계산 결과에 NaN/Infinity 가 포함되어 중단합니다.");
-                            return;
-                        }
-                    }
-
-                    var btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
-
-                    // [8장] 레이어 준비
-                    tr.CreateLayer(OutlineLayer, Yellow, LineWeight.ByLayer);
-
-                    // [7장] a(Green) 연장 1선 생성 (원본 유지, a 속성·XData 승계)
-                    CreateBranchSegment(tr, btr, db, X, a1, a);
-
-                    // [7장] b 3분할 (신규 X–b1, b1–b2 + 원본 X측 끝점 b2 이동, b 승계)
-                    SplitBranch(tr, btr, db, b, X, b1, b2);
-
-                    // [8장] a 외곽선(Yellow) 6선
-                    int created = 0;
-                    created += AddOutlineLine(tr, btr, db, T1, T2); // 1. 본체 상단 (연속, 끊김 없음)
-                    created += AddOutlineLine(tr, btr, db, U1, U2); // 2. 본체 하단 (연속, 끊김 없음)
-                    created += AddOutlineLine(tr, btr, db, T2, U2); // 3. 말단 마감 수직 (a1 위치)
-                    created += AddOutlineLine(tr, btr, db, S1, S2); // 4. 컬러 45° 사선 (흐름 상류측 1개)
-                    created += AddOutlineLine(tr, btr, db, S2, S3); // 5. 컬러 상단 수평
-                    created += AddOutlineLine(tr, btr, db, S3, S4); // 6. 컬러 우측 수직
-
-                    ed.WriteMessage($"\nDuct_EE 완료: a 외곽선 {created}개 생성, Green 연장 1선(X–a1, 길이 {Wb}), b 3분할 " +
-                                    $"(Wa={Wa}, Wb={Wb}, b1-b2={Lcol}).");
+                    ed.WriteMessage("\n" + message);
                     tr.Commit();
                 }
             }
@@ -155,6 +58,123 @@ namespace PipeLoad2
             {
                 ed.WriteMessage($"\n오류 발생: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// a(Green, 흐름 상류) + b(Red, 흐름 하류 직각) 로부터 a 외곽선 6선 생성 + a 연장 1선 +
+        /// b 3분할을 수행한다. 폭(W_a, W_b)은 서로 달라도 된다(원본 스펙 §2 전제 조건).
+        /// 대화형 선택 없이 Line 객체를 직접 받아 검증~계산~생성까지 처리 — DuctTreeOutlineCommand 등에서 재사용.
+        /// 검증 실패 시 false 반환(엔티티 생성 없음, Transaction 은 변경 없음), 성공 시 true + 결과 메시지.
+        /// </summary>
+        public bool TryApply(Transaction tr, Database db, Line a, Line b, out string message)
+        {
+            message = "";
+
+            if (a.ObjectId == b.ObjectId)
+            {
+                message = "[E01] 두 Line 은 서로 달라야 합니다.";
+                return false;
+            }
+
+            // [3장] XData "a" 폭 읽기
+            if (!TryReadWidth(a, out double Wa)) { message = "[E02] a XData \"a\"(폭) 를 읽을 수 없습니다."; return false; }
+            if (!TryReadWidth(b, out double Wb)) { message = "[E02] b XData \"a\"(폭) 를 읽을 수 없습니다."; return false; }
+            if (Wa <= 0 || Wb <= 0)
+            {
+                message = "[E03] 폭은 0 보다 커야 합니다.";
+                return false;
+            }
+
+            // [4장] 교차점 X — b 위 임의의 점(b.StartPoint)을 a(연장 포함)에 수직 투영
+            Point3d X = a.GetClosestPointTo(b.StartPoint, true);
+
+            Point3d aFar = FarEnd(a, X);
+            Point3d bFar = FarEnd(b, X);
+            Point3d aNear = NearEnd(a, X);
+            Point3d bNear = NearEnd(b, X);
+
+            // [2장] a/b 의 X 측 끝점이 실제로 X 와 일치하는지 확인
+            if (aNear.DistanceTo(X) > JunctionTol || bNear.DistanceTo(X) > JunctionTol)
+            {
+                message = "[E04] a/b 의 한쪽 끝점이 교차점 X 와 일치하지 않습니다.";
+                return false;
+            }
+
+            Vector3d dirA = (X - aFar).GetNormal();   // a 의 유체 흐름 방향 (a 먼 끝 → X)
+            Vector3d dirB = (bFar - X).GetNormal();   // b 의 흐름 방향 (상향)
+
+            // [2장] b ⊥ a 검증
+            if (System.Math.Abs(dirA.DotProduct(dirB)) > PerpTol)
+            {
+                message = "[E05] b 가 a 와 직각이 아닙니다.";
+                return false;
+            }
+
+            // [6장] 파생 치수
+            double Ha = Wa / 2.0;
+            double Hb = Wb / 2.0;
+            double Lcol = Wb / 4.0;   // b1–b2 = 컬러 높이 = W_b / 4
+
+            // [6장] 분할·연장 점
+            Point3d a1 = X + dirA * Wb;          // 말단 연장 끝 (연장 길이 = b 의 폭)
+            Point3d b1 = X + dirB * Ha;          // b 와 a 상단 외곽 교차점
+            Point3d b2 = b1 + dirB * Lcol;       // 컬러 상단 높이
+
+            // [9장 3번] 길이 충분성 검증
+            if (aFar.DistanceTo(X) < Hb + Lcol + JunctionTol)
+            {
+                message = "[E06] a 길이가 부족합니다 (컬러 사선 시작점보다 길어야 합니다).";
+                return false;
+            }
+            if (bFar.DistanceTo(X) < b2.DistanceTo(X) + JunctionTol)
+            {
+                message = "[E06] b 길이가 부족합니다 (b2 를 지나야 합니다).";
+                return false;
+            }
+
+            // [8장] 외곽선 정점 — 본체 2 + 말단 마감 1 + 컬러 3 (총 6선)
+            Vector3d up = dirB;
+            Point3d T1 = aFar + up * Ha;                        // 본체 상단 시작 (a 먼 끝)
+            Point3d T2 = a1 + up * Ha;                          // 본체 상단 끝 (a1)
+            Point3d U1 = aFar - up * Ha;                        // 본체 하단 시작
+            Point3d U2 = a1 - up * Ha;                          // 본체 하단 끝
+            Point3d S1 = X - dirA * (Hb + Lcol) + up * Ha;      // 컬러 45° 사선 시작 (흐름 상류측)
+            Point3d S2 = X - dirA * Hb + up * (Ha + Lcol);      // 컬러 45° 사선 끝 = 상단 좌측
+            Point3d S3 = X + dirA * Hb + up * (Ha + Lcol);      // 컬러 상단 우측
+            Point3d S4 = X + dirA * Hb + up * Ha;               // 컬러 우측 수직 하단
+
+            foreach (var p in new[] { a1, b1, b2, T1, T2, U1, U2, S1, S2, S3, S4 })
+            {
+                if (!double.IsFinite(p.X) || !double.IsFinite(p.Y) || !double.IsFinite(p.Z))
+                {
+                    message = "[E07] 계산 결과에 NaN/Infinity 가 포함되어 중단합니다.";
+                    return false;
+                }
+            }
+
+            var btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+
+            // [8장] 레이어 준비
+            tr.CreateLayer(OutlineLayer, Yellow, LineWeight.ByLayer);
+
+            // [7장] a(Green) 연장 1선 생성 (원본 유지, a 속성·XData 승계)
+            CreateBranchSegment(tr, btr, db, X, a1, a);
+
+            // [7장] b 3분할 (신규 X–b1, b1–b2 + 원본 X측 끝점 b2 이동, b 승계)
+            SplitBranch(tr, btr, db, b, X, b1, b2);
+
+            // [8장] a 외곽선(Yellow) 6선
+            int created = 0;
+            created += AddOutlineLine(tr, btr, db, T1, T2); // 1. 본체 상단 (연속, 끊김 없음)
+            created += AddOutlineLine(tr, btr, db, U1, U2); // 2. 본체 하단 (연속, 끊김 없음)
+            created += AddOutlineLine(tr, btr, db, T2, U2); // 3. 말단 마감 수직 (a1 위치)
+            created += AddOutlineLine(tr, btr, db, S1, S2); // 4. 컬러 45° 사선 (흐름 상류측 1개)
+            created += AddOutlineLine(tr, btr, db, S2, S3); // 5. 컬러 상단 수평
+            created += AddOutlineLine(tr, btr, db, S3, S4); // 6. 컬러 우측 수직
+
+            message = $"Duct_EE 완료: a 외곽선 {created}개 생성, Green 연장 1선(X–a1, 길이 {Wb}), b 3분할 " +
+                      $"(Wa={Wa}, Wb={Wb}, b1-b2={Lcol}).";
+            return true;
         }
 
         /// <summary>Line 1개를 GetEntity 로 선택 (Line 만 허용). 취소 시 false.</summary>

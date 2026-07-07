@@ -27,6 +27,7 @@ namespace PipeLoad2
             btnCollapse = new Button();
             btnApply = new Button();
             btnSelect = new Button();
+            btnDuctOutline = new Button();
             btnClose = new Button();
             pnlMode.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numBMin).BeginInit();
@@ -140,6 +141,7 @@ namespace PipeLoad2
             panel.Controls.Add(btnCollapse);
             panel.Controls.Add(btnApply);
             panel.Controls.Add(btnSelect);
+            panel.Controls.Add(btnDuctOutline);
             panel.Controls.Add(btnClose);
             panel.Dock = DockStyle.Bottom;
             panel.Location = new Point(0, 544);
@@ -190,14 +192,27 @@ namespace PipeLoad2
             btnSelect.Text = "Select";
             btnSelect.UseVisualStyleBackColor = false;
             btnSelect.Click += btnSelect_Click;
-            // 
+            //
+            // btnDuctOutline
+            //
+            btnDuctOutline.BackColor = Color.FromArgb(108, 117, 125);
+            btnDuctOutline.FlatStyle = FlatStyle.Flat;
+            btnDuctOutline.ForeColor = Color.White;
+            btnDuctOutline.Location = new Point(489, 6);
+            btnDuctOutline.Name = "btnDuctOutline";
+            btnDuctOutline.Size = new Size(150, 38);
+            btnDuctOutline.TabIndex = 4;
+            btnDuctOutline.Text = "DuctOutLine 생성";
+            btnDuctOutline.UseVisualStyleBackColor = false;
+            btnDuctOutline.Click += btnDuctOutline_Click;
+            //
             // btnClose
-            // 
+            //
             btnClose.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnClose.Location = new Point(770, 10);
             btnClose.Name = "btnClose";
             btnClose.Size = new Size(80, 34);
-            btnClose.TabIndex = 4;
+            btnClose.TabIndex = 5;
             btnClose.Text = "닫기";
             btnClose.Click += btnClose_Click;
             // 
@@ -235,6 +250,7 @@ namespace PipeLoad2
         private System.Windows.Forms.Button      btnCollapse;
         private System.Windows.Forms.Button      btnApply;
         private System.Windows.Forms.Button      btnSelect;
+        private System.Windows.Forms.Button      btnDuctOutline;
         private System.Windows.Forms.Button      btnClose;
     }
 }

@@ -170,5 +170,58 @@ namespace PipeLoad2
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        /// <summary>DuctTreeOutLine.md §10/§11 — 분석된 트리를 위상 판정(§4) 후 Duct_C1/C2/E/EE 로
+        /// 일괄 적용한다. 버튼은 항상 활성화(§12 확정) — Apply 이전에 눌러도 "a" XData 없는 노드는
+        /// 자동 스킵된다.</summary>
+        private void btnDuctOutline_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var doc = Autodesk.AutoCAD.ApplicationServices.Application
+                              .DocumentManager.MdiActiveDocument;
+                var ed = doc.Editor;
+
+                System.Collections.Generic.List<DuctTreeOutlineCommand.JunctionResult> results;
+                using (doc.LockDocument())
+                using (Transaction tr = _db.TransactionManager.StartTransaction())
+                {
+                    var orchestrator = new DuctTreeOutlineCommand();
+                    results = orchestrator.ApplyTree(tr, _db, _rootNode);
+                    tr.Commit();
+                }
+
+                foreach (var r in results)
+                {
+                    string tag = r.Applied ? "적용" : "스킵";
+                    ed.WriteMessage($"\n[DuctOutLine] {tag} [{r.Plan.Node.Handle}] {r.Plan.Pattern}: {r.Message}");
+                }
+
+                int applied = results.Count(r => r.Applied);
+                int none = results.Count(r => !r.Applied && r.Plan.Pattern == DuctTreeOutlineCommand.OutlinePattern.None);
+                int skipped = results.Count - applied - none;
+
+                string appliedDetail = string.Join(", ", results.Where(r => r.Applied)
+                    .GroupBy(r => r.Plan.Pattern)
+                    .OrderBy(g => g.Key.ToString())
+                    .Select(g => $"{g.Key} {g.Count()}"));
+                string skipDetail = string.Join(", ", results.Where(r => !r.Applied && r.Plan.Pattern != DuctTreeOutlineCommand.OutlinePattern.None)
+                    .GroupBy(r => r.Plan.Pattern)
+                    .OrderBy(g => g.Key.ToString())
+                    .Select(g => $"{g.Key} {g.Count()}"));
+
+                string summary =
+                    $"DuctOutLine 완료 — 적용 {applied}건" + (appliedDetail.Length > 0 ? $"({appliedDetail})" : "") +
+                    $", 스킵 {skipped}건" + (skipDetail.Length > 0 ? $"({skipDetail})" : "") +
+                    (none > 0 ? $", 형상 불필요 {none}건(직선 연속)" : "") + ".";
+
+                MessageBox.Show(summary, "DuctOutLine", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"오류: {ex.Message}", "오류",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
 }
