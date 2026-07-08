@@ -23,9 +23,10 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         private const double CHAIN_SEARCH_BOX = 10.0;  // 접속점 주변 검색 박스 반경
 
         // ===== ss2 상수 =====
-        private const double SEARCH_WIDTH = 300.0;     // 검색 폭 ScaleFactor (Q1: 상수)
+        private const double SEARCH_WIDTH = 1.0;       // 검색/접촉/스냅 폭 ScaleFactor (offset 1: 실제 닿는 접속만)
         private const double MIN_TARGET_LENGTH = 50.0; // Target 최소 길이
         private const double END_EXCLUDE_DIST = 10.0;  // Base 끝점 분할 제외 거리
+        private const double THROUGH_EXCLUDE_DIST = 10.0; // 관통 제외: Target 양 끝점~교차점 모두 이 값 이상이면 제외
         private const double SNAP_SKIP_TOL = 0.001;    // 이미 교차점 위 → 스냅 생략 오차
         private const double ON_LINE_TOL = 1e-6;       // 구간 위 판정 오차
 
@@ -177,10 +178,6 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                 PromptSelectionResult basePsr = ed.GetSelection(pso, sfBase);
                 if (basePsr.Status != PromptStatus.OK) return;
 
-                var erasedIds = new HashSet<ObjectId>();  // 분할로 Erase 된 라인 → 이후 skip
-                int totalSplit = 0;
-                int totalSnap = 0;
-
                 using var tr = db.TransactionManager.StartTransaction();
 
                 var baseLines = basePsr.Value.GetObjectIds()
@@ -188,10 +185,14 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                     .OfType<Line>()
                     .ToList();
 
+                // ── 1단계: 계획 수집 (도면 미변경) — 원본 geometry 기준으로 분할점·스냅 대상만 모음
+                //   이 단계에서 아무것도 Erase/생성하지 않으므로 SelectCrossingPolygon 이 항상 원본 상태를 봄
+                //   (Base 끼리 서로 Target 이어도, 먼저 잘려 사라지는 상태 간섭이 없음)
+                var splitPlan = new List<(Line baseLine, List<Point3d> points)>();
+                var snapPlan = new Dictionary<(ObjectId id, bool snapStart), (Point3d inters, double dist)>();
+
                 foreach (var baseLine in baseLines)
                 {
-                    // 이전 처리에서 Erase 된 Base 는 skip (eWasErased 방지)
-                    if (erasedIds.Contains(baseLine.ObjectId)) continue;
                     if (baseLine.Length < ON_LINE_TOL) continue;
 
                     // Base 수직 방향 검색 폴리곤 (폭 2 × scaleFactor)
@@ -208,31 +209,69 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                     };
 
                     PromptSelectionResult psr2 = ed.SelectCrossingPolygon(polyPts, sfTarget);
-                    if (psr2.Status != PromptStatus.OK) continue;  // 후보 없음 → 다음 Base (기존 return 버그 수정)
+                    if (psr2.Status != PromptStatus.OK) continue;  // 후보 없음 → 다음 Base
 
-                    // 접촉 조건 필터링 — extend=false: Base 구간 내 수직 투영만 인정 (Q3)
-                    var targets = new List<Line>();
+                    var basePts = new List<Point3d>();
+
                     foreach (SelectedObject so in psr2.Value)
                     {
                         if (so.ObjectId == baseLine.ObjectId) continue;
-                        if (erasedIds.Contains(so.ObjectId)) continue;
-                        if (tr.GetObject(so.ObjectId, OpenMode.ForWrite) is not Line ssl) continue;
-                        if (ssl.Length <= MIN_TARGET_LENGTH) continue;
+                        if (tr.GetObject(so.ObjectId, OpenMode.ForRead) is not Line ssl) continue;
 
-                        bool contactS = baseLine.GetClosestPointTo(ssl.StartPoint, false)
-                                            .DistanceTo(ssl.StartPoint) < scaleFactor;
-                        bool contactE = baseLine.GetClosestPointTo(ssl.EndPoint, false)
-                                            .DistanceTo(ssl.EndPoint) < scaleFactor;
+                        // 교차점 계산 (양쪽 연장 포함)
+                        var pts = new Point3dCollection();
+                        baseLine.IntersectWith(ssl, Intersect.ExtendBoth, pts, IntPtr.Zero, IntPtr.Zero);
+                        if (pts.Count != 1) continue;  // 평행/공선 skip
 
-                        if (contactS || contactE) targets.Add(ssl);
+                        Point3d inters = pts[0];
+
+                        // 실제 Base 세그먼트 위 교차만 인정
+                        if (!IsPointOnLineSegment(baseLine, inters)) continue;
+
+                        double tS = ssl.StartPoint.DistanceTo(inters);
+                        double tE = ssl.EndPoint.DistanceTo(inters);
+
+                        // 관통 제외: Target 양 끝점이 모두 교차점에서 THROUGH_EXCLUDE_DIST(10) 이상이면 제외
+                        if (tS >= THROUGH_EXCLUDE_DIST && tE >= THROUGH_EXCLUDE_DIST) continue;
+
+                        // 분할점: Base 끝점 제외거리 초과 + 근접 중복점 제외(0길이 분할 방지)
+                        if (baseLine.StartPoint.DistanceTo(inters) > END_EXCLUDE_DIST &&
+                            baseLine.EndPoint.DistanceTo(inters) > END_EXCLUDE_DIST &&
+                            !basePts.Any(q => q.DistanceTo(inters) < SNAP_SKIP_TOL))
+                        {
+                            basePts.Add(inters);
+                        }
+
+                        // 스냅 대상 수집: 교차점에 가까운 Target 끝점 (범위 내 최소 이동 우선)
+                        bool snapStart = tS <= tE;
+                        double moveDist = snapStart ? tS : tE;
+                        if (moveDist > SNAP_SKIP_TOL && moveDist <= scaleFactor)
+                        {
+                            var key = (so.ObjectId, snapStart);
+                            if (!snapPlan.TryGetValue(key, out var cur) || moveDist < cur.dist)
+                                snapPlan[key] = (inters, moveDist);
+                        }
                     }
-                    if (targets.Count == 0) continue;
 
-                    // 교차 분할 + 스냅 (Transaction 주입 — 단일 Transaction 원칙)
-                    var (splitCount, snapCount) =
-                        InterPointsMLiness2(tr, baseLine, targets, erasedIds, scaleFactor);
-                    totalSplit += splitCount;
-                    totalSnap += snapCount;
+                    if (basePts.Count > 0)
+                        splitPlan.Add((baseLine, basePts));
+                }
+
+                // ── 2단계: 적용 (여기서만 도면 변경) — 스냅 먼저, 그다음 Base 분할
+                int totalSnap = 0;
+                foreach (var kv in snapPlan)
+                {
+                    if (tr.GetObject(kv.Key.id, OpenMode.ForWrite) is not Line t) continue;
+                    if (kv.Key.snapStart) t.StartPoint = kv.Value.inters;
+                    else t.EndPoint = kv.Value.inters;
+                    totalSnap++;
+                }
+
+                int totalSplit = 0;
+                var btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+                foreach (var (baseLine, points) in splitPlan)
+                {
+                    totalSplit += SplitBaseAt(tr, btr, baseLine, points);
                 }
 
                 tr.Commit();
@@ -245,66 +284,19 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         }
 
         /// <summary>
-        /// Base 와 Target 들의 교차점 계산 → Target 끝점 스냅 + Base 분할
-        /// Transaction 은 호출측에서 주입 (중첩 Transaction 제거)
-        /// 반환: (분할 생성 라인 수, 스냅 수행 수)
+        /// Base 를 주어진 분할점들에서 GetSplitCurves 로 분할 → 새 Line 등록 + 원본 Erase
+        /// (2단계 구조의 '적용' 전용 — 계획 단계에서 수집한 점만 사용, 도면 재선택 없음)
+        /// 반환: 생성된 분할 라인 수
         /// </summary>
-        private static (int splitCount, int snapCount) InterPointsMLiness2(
-            Transaction tr, Line baseLine, List<Line> targetLines,
-            HashSet<ObjectId> erasedIds, double snapMaxDist)
+        private static int SplitBaseAt(
+            Transaction tr, BlockTableRecord btr, Line baseLine, List<Point3d> points)
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-
-            int snapCount = 0;
-            var interPoints = new List<Point3d>();
-
-            var btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
-
-            foreach (var sl in targetLines)
-            {
-                // 교차점 계산 (양쪽 연장 포함)
-                var pts = new Point3dCollection();
-                baseLine.IntersectWith(sl, Intersect.ExtendBoth, pts, IntPtr.Zero, IntPtr.Zero);
-
-                // 평행(0개)/공선(2개 이상)은 조용히 skip — 개별 메시지 노이즈 제거
-                if (pts.Count != 1) continue;
-
-                Point3d inters = pts[0];
-
-                // 분할점 수집: Base 끝점 제외거리 초과 + 실제 Base 구간 위에 있는 경우만
-                if (baseLine.StartPoint.DistanceTo(inters) > END_EXCLUDE_DIST &&
-                    baseLine.EndPoint.DistanceTo(inters) > END_EXCLUDE_DIST &&
-                    IsPointOnLineSegment(baseLine, inters))
-                {
-                    interPoints.Add(inters);
-                }
-
-                // Target 끝점 스냅 — 분할점 채택 여부와 무관하게 항상 시도 (Q4)
-                // 교차점에 가까운 쪽 끝점 선택
-                bool snapStart = sl.StartPoint.DistanceTo(inters) <= sl.EndPoint.DistanceTo(inters);
-                Point3d nearEnd = snapStart ? sl.StartPoint : sl.EndPoint;
-                double moveDist = nearEnd.DistanceTo(inters);
-
-                // Q5: 이미 교차점 위(0.001 이내)면 생략 / Q1: 상한(scaleFactor) 초과 시 폭주 방지
-                if (moveDist > SNAP_SKIP_TOL && moveDist <= snapMaxDist)
-                {
-                    if (!sl.IsWriteEnabled) sl.UpgradeOpen();  // 이미 ForWrite 면 중복 호출 방지
-
-                    if (snapStart) sl.StartPoint = inters;
-                    else sl.EndPoint = inters;
-
-                    snapCount++;
-                }
-            }
-
-            // 분할점 없으면 Split 생략
-            if (interPoints.Count == 0) return (0, snapCount);
+            if (points.Count == 0) return 0;
 
             // 분할점을 Base StartPoint 거리순으로 정렬 (GetSplitCurves 는 순서 필요)
             Point3d baseSPt = baseLine.StartPoint;
             var sortPoints = new Point3dCollection();
-            foreach (var p in interPoints.OrderBy(p => p.DistanceTo(baseSPt)))
+            foreach (var p in points.OrderBy(p => p.DistanceTo(baseSPt)))
             {
                 sortPoints.Add(p);
             }
@@ -322,7 +314,6 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                         continue;
                     }
 
-                    // Q3: 방향 정규화 없이 분할 결과 그대로 사용
                     btr.AppendEntity(scLine);
                     tr.AddNewlyCreatedDBObject(scLine, true);
 
@@ -332,9 +323,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                     splitCount++;
                 }
 
-                // 원본 Base Erase + erasedIds 등록 (이후 루프에서 skip — Q2)
                 if (!baseLine.IsWriteEnabled) baseLine.UpgradeOpen();
-                erasedIds.Add(baseLine.ObjectId);
                 baseLine.Erase();
             }
             else
@@ -343,7 +332,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                 foreach (DBObject obj in mlines) obj.Dispose();
             }
 
-            return (splitCount, snapCount);
+            return splitCount;
         }
 
         /// <summary>
