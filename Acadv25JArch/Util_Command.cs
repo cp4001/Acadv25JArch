@@ -428,6 +428,58 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
             }
         }
 
+        // =====================================================================
+        // To_Duct — 선택 Entity(Line/Arc/Polyline)에 XData RegApp "Duct" 지정
+        // 값: 문자열 "Duct" (DxfCode 1000)
+        // =====================================================================
+        [CommandMethod("To_Pipe", CommandFlags.UsePickSet)]
+        public static void SetXdataToPipe()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 필터: LINE/ARC/LWPOLYLINE (지정 전이므로 XData 조건 없음)
+                TypedValue[] tvs = [new((int)DxfCode.Start, "LINE,ARC,LWPOLYLINE")];
+                var sf = new SelectionFilter(tvs);
+                var pso = new PromptSelectionOptions { MessageForAdding = "\nDuct 지정할 Entity 선택: " };
+
+                PromptSelectionResult psr = ed.GetSelection(pso, sf);
+                if (psr.Status != PromptStatus.OK) return;
+
+                int count = 0;
+
+                using var tr = db.TransactionManager.StartTransaction();
+
+                // RegApp "PIpe" 등록 확인 — 미등록 상태로 XData 를 쓰면 예외 발생
+                EnsureRegApp(tr, db, "Pipe");
+
+                foreach (SelectedObject so in psr.Value)
+                {
+                    if (tr.GetObject(so.ObjectId, OpenMode.ForWrite) is not Entity ent) continue;
+
+                    // XData 지정: 1001(RegAppName) + 1000(문자열 값)
+                    // 해당 RegApp 항목만 교체되며 다른 RegApp 의 XData 는 보존됨
+                    using var rb = new ResultBuffer(
+                        new TypedValue((int)DxfCode.ExtendedDataRegAppName, "Pipe"),
+                        new TypedValue((int)DxfCode.ExtendedDataAsciiString,"Pipe"));
+
+                    ent.XData = rb;
+                    count++;
+                }
+
+                tr.Commit();
+                ed.WriteMessage($"\nXData 지정 완료: {count}개 Entity → RegApp \"Pipe\", 값 \"Pipe\"");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+
         /// <summary>
         /// RegAppTable 에 해당 RegApp 이 없으면 등록
         /// </summary>
@@ -594,7 +646,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
 
         // SCL 상수
         private const double SCL_END_TOL = 1.0;      // 끝점 연결 허용 거리
-        private const double SCL_GAP_MAX = 900.0;    // colinear 점프 최대 거리
+        private const double SCL_GAP_MAX_DEFAULT = 900.0;    // colinear 점프 최대 거리 (기본값)
         private const double SCL_ANGLE_TOL = 1.0;    // colinear 각도 허용 오차 (도)
         private const double SCL_OFFSET_TOL = 1.0;   // 수직 투영 오프셋 허용 거리
         private const double SCL_SEARCH_BOX = 10.0;  // 끝점 연결 검색 박스 크기
@@ -615,11 +667,37 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
             try
             {
                 // 1단계: 기준 Line 선택 (클릭점으로 진행 방향 판정)
-                var peo = new PromptEntityOptions("\n기준 Line 선택 (진행 방향 쪽을 클릭): ");
-                peo.SetRejectMessage("\nLine만 선택할 수 있습니다.");
-                peo.AddAllowedClass(typeof(Line), true);
+                // 그냥 Line 클릭 → 기본 추적거리(900) 사용, "D" 입력 → 추적거리 변경 후 재선택
+                double gapMax = SCL_GAP_MAX_DEFAULT;
 
-                var per = ed.GetEntity(peo);
+                PromptEntityResult per;
+                while (true)
+                {
+                    var peo = new PromptEntityOptions("");
+                    peo.SetMessageAndKeywords(
+                        $"\n기준 Line 선택 (진행 방향 쪽 클릭) 또는 [추적거리(D)] <{gapMax}>: ", "D");
+                    peo.SetRejectMessage("\nLine만 선택할 수 있습니다.");
+                    peo.AddAllowedClass(typeof(Line), true);
+
+                    per = ed.GetEntity(peo);
+
+                    if (per.Status == PromptStatus.Keyword)   // "D": 추적거리 입력
+                    {
+                        var pdo = new PromptDoubleOptions($"\ncolinear 추적 거리 <{gapMax}>: ")
+                        {
+                            DefaultValue = gapMax,
+                            AllowNegative = false,
+                            AllowZero = false,
+                            AllowNone = true   // Enter = 현재값 유지
+                        };
+                        var pdr = ed.GetDouble(pdo);
+                        if (pdr.Status == PromptStatus.OK) gapMax = pdr.Value;
+                        continue;   // 다시 Line 선택으로
+                    }
+
+                    break;   // OK 또는 취소/실패
+                }
+
                 if (per.Status != PromptStatus.OK) return;
 
                 // 2단계: 단일 Transaction으로 순회 수행 (중첩 금지 원칙)
@@ -663,7 +741,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                     // 우선순위 2: colinear 점프 (최근접 1개만)
                     // 진행 방향 = 현재 Line의 반대쪽 끝점 → p 방향
                     Vector3d dir = (p - FarEndScl(curLine, p)).GetNormal();
-                    var jump = FindColinearJump(ed, tr, curLine, p, dir, visited);
+                    var jump = FindColinearJump(ed, tr, curLine, p, dir, visited, gapMax);
                     if (jump != null)
                     {
                         visited.Add(jump.ObjectId);
@@ -721,15 +799,15 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
 
         /// <summary>
         /// 진행 끝점 p에서 방향 dir로 colinear한 Line 검색
-        /// 조건: 평행(ANGLE_TOL) + 수직 투영 오프셋(OFFSET_TOL) + 전방(내적>0) + 거리(GAP_MAX)
+        /// 조건: 평행(ANGLE_TOL) + 수직 투영 오프셋(OFFSET_TOL) + 전방(내적>0) + 거리(gapMax)
         /// 2개 이상이면 가장 가까운 Line 반환, 없으면 null
         /// </summary>
         private static Line FindColinearJump(Editor ed, Transaction tr, Line curLine,
-            Point3d p, Vector3d dir, HashSet<ObjectId> visited)
+            Point3d p, Vector3d dir, HashSet<ObjectId> visited, double gapMax)
         {
-            // p 중심 GAP_MAX 크기의 Crossing 검색 후 조건 필터링
-            var p1 = new Point3d(p.X - SCL_GAP_MAX, p.Y - SCL_GAP_MAX, 0);
-            var p2 = new Point3d(p.X + SCL_GAP_MAX, p.Y + SCL_GAP_MAX, 0);
+            // p 중심 gapMax 크기의 Crossing 검색 후 조건 필터링
+            var p1 = new Point3d(p.X - gapMax, p.Y - gapMax, 0);
+            var p2 = new Point3d(p.X + gapMax, p.Y + gapMax, 0);
 
             TypedValue[] filterList = [new TypedValue((int)DxfCode.Start, "LINE")];
             var psr = ed.SelectCrossingWindow(p1, p2, new SelectionFilter(filterList));
@@ -755,9 +833,9 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                 Vector3d toCand = nearEnd - p;
                 if (toCand.DotProduct(dir) <= 0) continue;
 
-                // 조건 D: 점프 거리 GAP_MAX(900) 이내
+                // 조건 D: 점프 거리 gapMax 이내 (기본 900, 사용자 입력 가능)
                 double gap = p.DistanceTo(nearEnd);
-                if (gap > SCL_GAP_MAX) continue;
+                if (gap > gapMax) continue;
 
                 // 최근접 후보 선택
                 if (gap < bestGap)
