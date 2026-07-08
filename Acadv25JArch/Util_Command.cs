@@ -811,7 +811,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
 
         /// <summary>
         /// T3: 3개 Line 선택 → colinear 쌍(L1,L3)과 각도를 가진 L2 자동 판별
-        /// L1·L2 교차점을 구해 L1, L3 의 가까운 끝점을 교차점으로 이동(연장/자르기)
+        /// L1·L2 교차점을 구해 L1, L2, L3 세 Line 의 가까운 끝점을 교차점으로 이동(연장/자르기)
         /// L1,L3 가 colinear 조건이 아니면 메시지 출력 후 명령 중단
         /// </summary>
         [CommandMethod("T3", CommandFlags.UsePickSet)]
@@ -889,12 +889,13 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
 
                 Point3d inters = pts[0];
 
-                // L1, L3 의 교차점에 가까운 끝점을 교차점으로 이동 (연장/자르기 공용). L2는 변경하지 않음
+                // L1, L2, L3 세 Line 모두 교차점에 가까운 끝점을 교차점으로 이동 (연장/자르기 공용)
                 MoveNearEndT3(l1, inters);
+                MoveNearEndT3(l2, inters);
                 MoveNearEndT3(l3, inters);
 
                 tr.Commit();
-                ed.WriteMessage("\n완료 — L1, L3를 교차점으로 정리했습니다.");
+                ed.WriteMessage("\n완료 — L1, L2, L3를 교차점으로 정리했습니다.");
             }
             catch (System.Exception ex)
             {

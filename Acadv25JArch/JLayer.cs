@@ -124,7 +124,7 @@ namespace JTechLayerTools
         /// <summary>
         /// (SCL) 현재 레이어로 설정: 선택한 객체의 레이어를 현재 작업 레이어로 설정합니다.
         /// </summary>
-        [CommandMethod("SCL")]
+        [CommandMethod("SetCL")]
         public static void SetCurrentLayerByObject()
         {
             Document doc = AcApp.DocumentManager.MdiActiveDocument;
