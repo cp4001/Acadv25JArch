@@ -442,6 +442,154 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
             tr.AddNewlyCreatedDBObject(ratr, true);
         }
 
+        // =====================================================================
+        // ZZERO — 선택 Entity 의 Z값(좌표 Z / elevation / thickness)을 0으로 설정
+        // 미리 선택 우선(ssget "_I") → 없으면 선택 요청. 원본 LISP zzero.lsp 포팅
+        // =====================================================================
+        [CommandMethod("ZZERO", CommandFlags.UsePickSet)]
+        public void ZeroZValue()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 미리 선택된 객체가 있으면 사용, 없으면 선택 요청
+                PromptSelectionResult psr = ed.SelectImplied();
+                if (psr.Status != PromptStatus.OK || psr.Value == null || psr.Value.Count == 0)
+                {
+                    var pso = new PromptSelectionOptions { MessageForAdding = "\nZ값을 0으로 만들 Entity 선택: " };
+                    psr = ed.GetSelection(pso);
+                }
+                if (psr.Status != PromptStatus.OK || psr.Value == null) return;
+
+                int count = 0;
+
+                using var tr = db.TransactionManager.StartTransaction();
+
+                foreach (SelectedObject so in psr.Value)
+                {
+                    if (so == null) continue;
+                    if (tr.GetObject(so.ObjectId, OpenMode.ForWrite, false, true) is not Entity ent) continue;
+                    if (FlattenEntityZ(ent, tr)) count++;
+                }
+
+                tr.Commit();
+
+                // 처리 후 선택 유지
+                ed.SetImpliedSelection(psr.Value.GetObjectIds());
+                ed.WriteMessage($"\n{count}개 객체의 Z값을 0으로 설정했습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        // Point3d 의 Z만 0으로 만든 새 값 반환 (ZZERO 전용)
+        private static Point3d ZeroZ(Point3d p) => new(p.X, p.Y, 0.0);
+
+        /// <summary>
+        /// 엔티티 타입별로 Z(및 elevation/thickness)를 0으로 설정. 처리하면 true.
+        /// 명시적으로 처리하지 않는 타입은 XY평면(Z=0)으로 수직 투영 (fallback)
+        /// </summary>
+        private static bool FlattenEntityZ(Entity ent, Transaction tr)
+        {
+            switch (ent)
+            {
+                case Line line:
+                    line.StartPoint = ZeroZ(line.StartPoint);
+                    line.EndPoint = ZeroZ(line.EndPoint);
+                    line.Thickness = 0.0;
+                    return true;
+
+                case DBPoint pt:
+                    pt.Position = ZeroZ(pt.Position);
+                    pt.Thickness = 0.0;
+                    return true;
+
+                case Circle circle:   // Arc 는 Circle 을 상속하지 않으므로 별도 처리
+                    circle.Center = ZeroZ(circle.Center);
+                    circle.Thickness = 0.0;
+                    return true;
+
+                case Arc arc:
+                    arc.Center = ZeroZ(arc.Center);
+                    arc.Thickness = 0.0;
+                    return true;
+
+                case Ellipse ellipse:
+                    ellipse.Center = ZeroZ(ellipse.Center);
+                    return true;
+
+                case DBText text:   // MText 는 DBText 를 상속하지 않으므로 별도 처리
+                    text.Position = ZeroZ(text.Position);
+                    // 정렬(자리맞춤)이 지정된 경우에만 AlignmentPoint 반영
+                    if (text.HorizontalMode != TextHorizontalMode.TextLeft ||
+                        text.VerticalMode != TextVerticalMode.TextBase)
+                    {
+                        text.AlignmentPoint = ZeroZ(text.AlignmentPoint);
+                    }
+                    text.Thickness = 0.0;
+                    return true;
+
+                case MText mtext:
+                    mtext.Location = ZeroZ(mtext.Location);
+                    return true;
+
+                case Polyline lwpoly:   // LWPOLYLINE
+                    lwpoly.Elevation = 0.0;
+                    lwpoly.Thickness = 0.0;
+                    return true;
+
+                case Polyline2d poly2d:
+                    poly2d.Elevation = 0.0;
+                    poly2d.Thickness = 0.0;
+                    return true;
+
+                case Polyline3d poly3d:
+                    foreach (ObjectId vId in poly3d)
+                    {
+                        if (tr.GetObject(vId, OpenMode.ForWrite) is PolylineVertex3d v)
+                            v.Position = ZeroZ(v.Position);
+                    }
+                    return true;
+
+                case BlockReference blockRef:
+                    blockRef.Position = ZeroZ(blockRef.Position);
+                    return true;
+
+                case Hatch hatch:
+                    hatch.Elevation = 0.0;
+                    return true;
+
+                case Leader leader:
+                    for (int k = 0; k < leader.NumVertices; k++)
+                        leader.SetVertexAt(k, ZeroZ(leader.VertexAt(k)));
+                    return true;
+
+                case Spline spline:
+                    for (int k = 0; k < spline.NumControlPoints; k++)
+                        spline.SetControlPointAt(k, ZeroZ(spline.GetControlPointAt(k)));
+                    return true;
+
+                default:
+                    try
+                    {
+                        Matrix3d proj = Matrix3d.Projection(
+                            new Plane(Point3d.Origin, Vector3d.ZAxis),
+                            Vector3d.ZAxis);
+                        ent.TransformBy(proj);
+                        return true;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+            }
+        }
+
         #region SCL - 진행방향 연속 Line 선택
 
         // SCL 상수
@@ -652,6 +800,134 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
             line.StartPoint.DistanceTo(pt) > line.EndPoint.DistanceTo(pt)
                 ? line.StartPoint
                 : line.EndPoint;
+
+        #endregion
+
+        #region T3 - colinear L1·L3 을 L2 교차점으로 정리
+
+        // T3 상수
+        private const double T3_ANGLE_TOL = 1.0;    // colinear 각도 허용 오차 (도)
+        private const double T3_OFFSET_TOL = 1.0;   // 수직 투영 오프셋 허용 거리
+
+        /// <summary>
+        /// T3: 3개 Line 선택 → colinear 쌍(L1,L3)과 각도를 가진 L2 자동 판별
+        /// L1·L2 교차점을 구해 L1, L3 의 가까운 끝점을 교차점으로 이동(연장/자르기)
+        /// L1,L3 가 colinear 조건이 아니면 메시지 출력 후 명령 중단
+        /// </summary>
+        [CommandMethod("T3", CommandFlags.UsePickSet)]
+        public static void TrimColinearToCross()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // LINE 필터로 3개 선택
+                TypedValue[] tvs = [new((int)DxfCode.Start, "LINE")];
+                var sf = new SelectionFilter(tvs);
+                var pso = new PromptSelectionOptions { MessageForAdding = "\n3개 Line 선택 (colinear 2개 + 각도 1개): " };
+
+                PromptSelectionResult psr = ed.GetSelection(pso, sf);
+                if (psr.Status != PromptStatus.OK) return;
+
+                if (psr.Value.Count != 3)
+                {
+                    ed.WriteMessage("\n3개의 Line을 선택해야 합니다. 명령을 중단합니다.");
+                    return;
+                }
+
+                using var tr = db.TransactionManager.StartTransaction();
+
+                var lines = psr.Value.GetObjectIds()
+                    .Select(id => tr.GetObject(id, OpenMode.ForRead))
+                    .OfType<Line>()
+                    .ToList();
+
+                if (lines.Count != 3)
+                {
+                    ed.WriteMessage("\nLine 3개를 열 수 없습니다. 명령을 중단합니다.");
+                    tr.Commit();
+                    return;
+                }
+
+                // colinear 쌍 자동 판별 — 3쌍 중 평행 + 오프셋 조건 만족 쌍 = (L1,L3), 나머지 = L2
+                Line l1 = null, l2 = null, l3 = null;
+                int colinearPairCount = 0;
+
+                for (int i = 0; i < 3; i++)
+                {
+                    for (int j = i + 1; j < 3; j++)
+                    {
+                        if (IsColinearT3(lines[i], lines[j]))
+                        {
+                            colinearPairCount++;
+                            l1 = lines[i];
+                            l3 = lines[j];
+                            l2 = lines[3 - i - j];  // 나머지 인덱스 (0+1+2=3)
+                        }
+                    }
+                }
+
+                // colinear 쌍이 정확히 하나가 아니면 중단
+                if (colinearPairCount != 1)
+                {
+                    ed.WriteMessage("\nL1, L3가 colinear 조건이 아닙니다. 명령을 중단합니다.");
+                    tr.Commit();
+                    return;
+                }
+
+                // L1·L2 교차점 계산 (양쪽 무한 연장)
+                var pts = new Point3dCollection();
+                l1.IntersectWith(l2, Intersect.ExtendBoth, pts, IntPtr.Zero, IntPtr.Zero);
+                if (pts.Count != 1)
+                {
+                    ed.WriteMessage("\nL1·L2 교차점을 찾을 수 없습니다. 명령을 중단합니다.");
+                    tr.Commit();
+                    return;
+                }
+
+                Point3d inters = pts[0];
+
+                // L1, L3 의 교차점에 가까운 끝점을 교차점으로 이동 (연장/자르기 공용). L2는 변경하지 않음
+                MoveNearEndT3(l1, inters);
+                MoveNearEndT3(l3, inters);
+
+                tr.Commit();
+                ed.WriteMessage("\n완료 — L1, L3를 교차점으로 정리했습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 두 Line 이 colinear 인지 판정: 평행(ANGLE_TOL) + 상대 끝점 수직 오프셋(OFFSET_TOL)
+        /// </summary>
+        private static bool IsColinearT3(Line a, Line b)
+        {
+            // 평행 판정 (방향 반대 포함) — SCL 방식 재사용
+            if (!IsParallelScl(a, b, T3_ANGLE_TOL)) return false;
+
+            // b 의 양 끝점을 a 의 무한직선에 수직 투영 → 오프셋이 모두 오차 이내면 동일 직선
+            double offS = a.GetClosestPointTo(b.StartPoint, true).DistanceTo(b.StartPoint);
+            double offE = a.GetClosestPointTo(b.EndPoint, true).DistanceTo(b.EndPoint);
+            return offS <= T3_OFFSET_TOL && offE <= T3_OFFSET_TOL;
+        }
+
+        /// <summary>
+        /// Line 의 target 에 가까운 끝점을 target 으로 이동 (연장/자르기 공용)
+        /// </summary>
+        private static void MoveNearEndT3(Line line, Point3d target)
+        {
+            if (!line.IsWriteEnabled) line.UpgradeOpen();
+
+            if (line.StartPoint.DistanceTo(target) <= line.EndPoint.DistanceTo(target))
+                line.StartPoint = target;
+            else
+                line.EndPoint = target;
+        }
 
         #endregion
     }
