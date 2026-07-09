@@ -998,5 +998,100 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         }
 
         #endregion
+
+        #region EC — 근접 끝점(L코너) 교차점 일치
+        // =====================================================================
+        // EC — 선택한 Line 들 중 두 Line 의 끝점이 근접(미세하게 어긋난 L코너)한
+        //      지점을 두 Line 의 실제 교차점(양방향 무한 연장)으로 이동시켜
+        //      연결점을 정확히 일치시킴
+        //   · 대상 : 끝점–끝점(L코너) 만
+        //   · 판정 : 두 끝점 거리 ≤ CHAIN_END_TOL(1.0)
+        //   · 목표점: a·b 실제 교차점 (IntersectWith, Intersect.ExtendBoth)
+        // =====================================================================
+        [CommandMethod("EC", CommandFlags.UsePickSet)]
+        public static void EndPoint_ConnectToIntersection()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // Line 만 선택
+                TypedValue[] tvs = [ new((int)DxfCode.Start, "LINE") ];
+                var sf = new SelectionFilter(tvs);
+                var pso = new PromptSelectionOptions { MessageForAdding = "\nLine 선택: " };
+
+                PromptSelectionResult psr = ed.GetSelection(pso, sf);
+                if (psr.Status != PromptStatus.OK) return;
+
+                using var tr = db.TransactionManager.StartTransaction();
+
+                // 선택된 Line 수집 (ForRead — 이동 시 UpgradeOpen)
+                var lines = new List<Line>();
+                foreach (SelectedObject so in psr.Value)
+                {
+                    if (tr.GetObject(so.ObjectId, OpenMode.ForRead) is Line ln)
+                        lines.Add(ln);
+                }
+
+                int fixedCount = 0;
+
+                // 모든 Line 쌍 순회 → 근접 끝점(L코너) 검출
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    for (int j = i + 1; j < lines.Count; j++)
+                    {
+                        Line a = lines[i];
+                        Line b = lines[j];
+
+                        // a·b 의 끝점 4조합 중 최소 거리
+                        double best = double.MaxValue;
+                        foreach (Point3d pa in new[] { a.StartPoint, a.EndPoint })
+                            foreach (Point3d pb in new[] { b.StartPoint, b.EndPoint })
+                            {
+                                double d = pa.DistanceTo(pb);
+                                if (d < best) best = d;
+                            }
+
+                        // 근접(연결점) 아님 → 건너뜀
+                        if (best > CHAIN_END_TOL) continue;
+
+                        // a·b 실제 교차점 (양방향 무한 연장)
+                        var pts = new Point3dCollection();
+                        a.IntersectWith(b, Intersect.ExtendBoth, pts, IntPtr.Zero, IntPtr.Zero);
+                        if (pts.Count != 1) continue;   // 평행 등 → 건너뜀
+
+                        Point3d inter = pts[0];
+
+                        // 두 Line 의 코너(근접) 끝점을 교차점으로 이동
+                        MoveNearEndEc(a, inter);
+                        MoveNearEndEc(b, inter);
+                        fixedCount++;
+                    }
+                }
+
+                tr.Commit();
+                ed.WriteMessage($"\n완료 — 연결점 {fixedCount}곳을 교차점으로 일치시켰습니다.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Line 의 target 에 가까운 끝점을 target 으로 이동 (EC 전용)
+        /// </summary>
+        private static void MoveNearEndEc(Line line, Point3d target)
+        {
+            if (!line.IsWriteEnabled) line.UpgradeOpen();
+
+            if (line.StartPoint.DistanceTo(target) <= line.EndPoint.DistanceTo(target))
+                line.StartPoint = target;
+            else
+                line.EndPoint = target;
+        }
+        #endregion
     }
 }
