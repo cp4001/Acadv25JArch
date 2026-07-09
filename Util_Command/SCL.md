@@ -1,12 +1,13 @@
 # SCL 커맨드 사양서 — 진행방향 연속 Line 선택 (SelectConLine)
 
-- **문서 버전**: v1.0 (구현 완료 기준 정리)
-- **작성일**: 2026-07-08
+- **문서 버전**: v1.1 (거리 입력 기능 반영)
+- **작성일**: 2026-07-08 (v1.1: 2026-07-09)
 - **커맨드명**: `SCL`
+- **메서드명**: `SCL_SelectConLine` (v1.0 당시 `SelectConLine`에서 개명 — "CommandUtil 명령어 정리" 커밋)
 - **네임스페이스**: PipeLoad2 (`CommandUtil` 클래스, `Util_Command.cs`)
 - **대상 환경**: AutoCAD 2025 (.NET 8.0), Windows 11
 - **시스템**: 신규 시스템 — 외부 유틸 의존 없음
-- **상태**: 구현 완료 (2026-07-07 커밋 "scl 연속 line 선택")
+- **상태**: 구현 완료 (2026-07-07 커밋 "scl 연속 line 선택", 2026-07-08 커밋 "scl 거리 입력 기능 추가")
 - **관련 문서**: `CSS.md`(체인 선택, XData 필터 + 끝점 연결 전용), `SS1.md`(교차 분할) — SCL 은 "진행 방향"과 "collinear 점프"가 추가된 점이 다름
 
 ---
@@ -40,10 +41,13 @@
 
 ## 2. 명령 절차
 
-1. `PromptEntityOptions` 로 Line 1개 선택 — 클릭 지점(`PickedPoint`)에서 가까운 끝점을 진행 시작점으로 결정
+1. **기준 Line 선택 루프** (v1.1 신규 — `SetMessageAndKeywords`로 "D" 키워드 추가):
+   - 그냥 Line 클릭 → 현재 `gapMax`(기본값 `SCL_GAP_MAX_DEFAULT`=900) 로 바로 진행
+   - `D` 입력 → `PromptDoubleOptions`(기본값 = 현재 `gapMax`, 음수/0 불가, Enter = 유지)로 collinear 추적 거리를 새로 입력받고 다시 Line 선택으로 복귀(반복 가능)
+   - 클릭 지점(`PickedPoint`)에서 가까운 끝점을 진행 시작점으로 결정
 2. Stack 기반 반복 순회 (재귀 아님):
    - **우선순위 1**: 진행 끝점 주변 `SEARCH_BOX`(10) Crossing 검색으로 끝점 연결된 미방문 Line 전부 추적(`FindConnectedLines`)
-   - **우선순위 2**: 연결 없으면 `FindColinearJump` 로 `GAP_MAX`(900) 이내 최근접 collinear Line 1개로 점프
+   - **우선순위 2**: 연결 없으면 `FindColinearJump` 로 (1단계에서 정한) `gapMax` 이내 최근접 collinear Line 1개로 점프
    - 후보가 전혀 없으면 해당 경로 종료
 3. 방문 집합(`HashSet<ObjectId>`) 전체를 `ed.SetImpliedSelection`
 4. 결과 메시지: 총 Line 개수 + collinear 점프 횟수
@@ -64,7 +68,7 @@
 | A. 평행 | 현재 Line 과 평행 (방향 반대 허용, 내적 절댓값 기준) | `ANGLE_TOL = 1.0°` |
 | B. 직선상 | p 를 후보의 무한직선에 수직 투영한 거리가 오차 이내 | `OFFSET_TOL = 1.0` |
 | C. 전방 | 후보의 가까운 끝점이 진행 방향(dir) 앞쪽(내적 > 0) | - |
-| D. 거리 | 진행 끝점 → 후보 근접 끝점 거리가 최대 거리 이내 | `GAP_MAX = 900.0` |
+| D. 거리 | 진행 끝점 → 후보 근접 끝점 거리가 최대 거리 이내 | `gapMax` (기본 `SCL_GAP_MAX_DEFAULT = 900.0`, "D" 키워드로 실행 중 변경 가능, v1.1) |
 
 - 조건을 만족하는 후보가 여러 개면 거리(gap)가 가장 짧은 1개만 채택
 
@@ -75,7 +79,7 @@
 | 상수 | 값 | 의미 |
 |---|---|---|
 | `SCL_END_TOL` | 1.0 | 끝점 연결 허용 거리 |
-| `SCL_GAP_MAX` | 900.0 | collinear 점프 최대 거리 |
+| `SCL_GAP_MAX_DEFAULT` | 900.0 | collinear 점프 최대 거리의 **기본값** (v1.1 — "D" 키워드로 실행 중 재입력 가능, 고정값 아님) |
 | `SCL_ANGLE_TOL` | 1.0 | collinear 각도 허용 오차(도) |
 | `SCL_OFFSET_TOL` | 1.0 | 수직 투영 오프셋 허용 거리 |
 | `SCL_SEARCH_BOX` | 10.0 | 끝점 연결 검색 박스 크기 |
@@ -87,6 +91,8 @@
 | API | Return 유형 | 용도 |
 |---|---|---|
 | `Editor.GetEntity(PromptEntityOptions)` | `PromptEntityResult` | 기준 Line + 클릭점(`PickedPoint`) 획득 |
+| `PromptEntityOptions.SetMessageAndKeywords` / `PromptStatus.Keyword` | - | "D"(거리 변경) 키워드 처리(v1.1) |
+| `Editor.GetDouble(PromptDoubleOptions)` | `PromptDoubleResult` | `gapMax` 값 재입력(v1.1, `DefaultValue`/`AllowNone` 사용) |
 | `Editor.SelectCrossingWindow(Point3d, Point3d, SelectionFilter)` | `PromptSelectionResult` | 끝점 연결/collinear 후보 검색 |
 | `Editor.SetImpliedSelection(ObjectId[])` | `void` | 결과 선택 표시 |
 | `Curve.GetClosestPointTo(Point3d, bool)` | `Point3d` | collinear 직선상 판정(수직 투영, `extend=true`) |
@@ -99,7 +105,8 @@
 
 1. **`SetImpliedSelection` 호출 시점** — §1.2 표 참고. CSS 는 Idle 지연 방식으로 수정된 반면 SCL 은
    명령 내 직접 호출 — 실사용 중 선택이 유지되지 않으면 CSS 와 동일한 Idle 지연 패턴 적용 필요.
-2. **`GAP_MAX = 900.0` 고정값의 근거** — 도면/축척에 따라 조정이 필요한지 확인 필요(현재 하드코딩).
+   (v1.1 에서도 미해결 — 여전히 명령 내 직접 호출)
+2. ~~`GAP_MAX = 900.0` 고정값의 근거~~ — **v1.1 로 해결**: "D" 키워드로 실행 중 사용자가 직접 조정 가능해짐(기본값만 900 유지).
 
 ---
 
@@ -108,3 +115,4 @@
 | 버전 | 일자 | 내용 |
 |---|---|---|
 | v1.0 | 2026-07-08 | 2026-07-07 커밋("scl 연속 line 선택")으로 구현 완료된 SCL 커맨드 기준 사양서 최초 작성 |
+| v1.1 | 2026-07-09 | 2026-07-08 커밋("scl 거리 입력 기능 추가") 반영 — `gapMax`를 "D" 키워드로 실행 중 재입력 가능하도록 변경(`SCL_GAP_MAX` → `SCL_GAP_MAX_DEFAULT`), 메서드명 `SCL_SelectConLine`으로 개명 |

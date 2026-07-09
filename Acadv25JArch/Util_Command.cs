@@ -45,7 +45,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         // 시작 Entity 의 양 끝점에서 연결된 Entity 를 추적하여 전체 체인 선택
         // =====================================================================
         [CommandMethod("CSS", CommandFlags.UsePickSet)]
-        public static void DuctPipe_SelectChain()
+        public static void CSS_DuctPipe_SelectChain()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -152,8 +152,8 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         // ss2 — Base Line 교차 분할 + Target 끝점 스냅 (SS1.md v1.1)
         // Base 주변 폭(2×ScaleFactor) 내 접촉 Target 을 교차점 스냅 후 Base 분할
         // =====================================================================
-        [CommandMethod("ss2", CommandFlags.UsePickSet)]
-        public static void MultiLineSplit_v2()
+        [CommandMethod("ss1", CommandFlags.UsePickSet)]
+        public static void SS1_MultiLineSplit_v2()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -371,7 +371,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         // 값: 문자열 "Duct" (DxfCode 1000)
         // =====================================================================
         [CommandMethod("To_Duct", CommandFlags.UsePickSet)]
-        public static void SetXdataToDuct()
+        public static void ToDUct_SetXdataToDuct()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -422,7 +422,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         // 값: 문자열 "Duct" (DxfCode 1000)
         // =====================================================================
         [CommandMethod("To_Pipe", CommandFlags.UsePickSet)]
-        public static void SetXdataToPipe()
+        public static void ToPipe_SetXdataToPipe()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -647,7 +647,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         /// 3) 둘 다 없으면 해당 경로 종료
         /// </summary>
         [CommandMethod("SCL")]
-        public void SelectConLine()
+        public void SCL_SelectConLine()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -882,7 +882,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         /// L1,L3 가 colinear 조건이 아니면 메시지 출력 후 명령 중단
         /// </summary>
         [CommandMethod("T3", CommandFlags.UsePickSet)]
-        public static void TrimColinearToCross()
+        public static void T3_TrimColinearToCross()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -1009,7 +1009,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         //   · 목표점: a·b 실제 교차점 (IntersectWith, Intersect.ExtendBoth)
         // =====================================================================
         [CommandMethod("EC", CommandFlags.UsePickSet)]
-        public static void EndPoint_ConnectToIntersection()
+        public static void EC_EndPoint_ConnectToIntersection()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;

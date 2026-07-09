@@ -1,12 +1,12 @@
 # SS1 커맨드 사양서 — Base Line 교차 분할 + Target 끝점 스냅 (MultiLineSplit)
 
-- **문서 버전**: v1.2 (확정)
-- **작성일**: 2026-07-06
-- **커맨드명**: `ss2`
-- **구성**: `MultiLineSplit_v2` (커맨드) + `InterPointsMLiness2` (핵심 처리 함수)
+- **문서 버전**: v2.0 (2026-07-08 커밋 "ss2 교차점 수정" 반영 — §9 참고)
+- **작성일**: 2026-07-06 (v2.0: 2026-07-09)
+- **커맨드명**: `ss1` (**v1.x 당시 `ss2`에서 변경** — 커맨드명/메서드명 모두 "ss1" 계열로 통일, "CommandUtil 명령어 정리" 커밋)
+- **구성**: `SS1_MultiLineSplit_v2` 단일 메서드 (v2.0 — 별도 `InterPointsMLiness2` 함수는 제거되고 계획/적용 로직이 인라인화, `SplitBaseAt`/`CopyLineProperties`/`IsPointOnLineSegment` 헬퍼로 분리)
 - **대상 환경**: AutoCAD 2025 (.NET 8.0), Windows 11
 - **시스템**: 신규 시스템 — 외부 유틸 의존 없음, 전 기능 자체 구현
-- **상태**: 전 항목 확정 — 구현 완료 (Util_Command.cs)
+- **상태**: 구현 완료 (Util_Command.cs) — v1.2 이후 실사용 중 §9 사유로 알고리즘 재수정
 
 ---
 
@@ -34,13 +34,19 @@ Pipe/Duct 계열 Target Line을 찾아 다음 두 가지를 수행한다.
 | Base | LINE | 없음 (전체) |
 | Target | LINE | `FirePipe, Pipe, Duct, MainPipe` |
 
-- 검색 폭(ScaleFactor): 컴파일 타임 상수 `SEARCH_WIDTH = 300.0` (Q1 확정)
-- Target 최소 길이: 50 초과 → 상수 `MIN_TARGET_LENGTH`
+- 검색 폭(ScaleFactor): 컴파일 타임 상수 `SEARCH_WIDTH` — **v2.0 에서 `300.0` → `1.0` 으로 변경**
+  ("offset 1: 실제 닿는 접속만" — 넓은 밴드 검색에서 사실상 접촉하는 대상만 인정하는 좁은 폭으로 축소)
+- Target 최소 길이: 50 초과 → 상수 `MIN_TARGET_LENGTH` (v2.0 코드상 값 정의는 유지, 실사용 여부 재확인 필요)
 - Base 끝점 제외 거리: 10.0 → 상수 `END_EXCLUDE_DIST`
+- **관통 제외**(v2.0 신규): `THROUGH_EXCLUDE_DIST = 10.0` — Target 의 양 끝점이 모두 교차점에서
+  이 값 이상 떨어져 있으면(= Target 이 Base 를 그냥 관통해 지나가는 선) 분할/스냅 대상에서 제외
 
 ---
 
-## 3. 기존 코드 문제점 및 보완 사항 (확정)
+## 3. 기존 코드 문제점 및 보완 사항 (v1.x 히스토리 — 원문 유지)
+
+> **명칭 주의**: 아래 "3.1 MultiLineSplit_v1 (ss1)"의 `ss1`은 **이 사양서가 만들어질 당시의 구 버전(포팅 대상 원본) 커맨드명**이며,
+> 현재(v2.0) 실제 구현된 커맨드명 `ss1`(옛 `ss2`에서 개명)과 **같은 글자이지만 다른 대상**이다 — 혼동 주의.
 
 ### 3.1 MultiLineSplit_v1 (ss1)
 
@@ -71,46 +77,63 @@ Pipe/Duct 계열 Target Line을 찾아 다음 두 가지를 수행한다.
 
 ---
 
-## 4. 보완 후 핵심 로직 (확정)
+## 4. 핵심 로직 (v2.0 — 실제 구현 기준)
 
-### 4.1 전체 흐름 (단일 Transaction)
+### 4.1 전체 흐름 (단일 Transaction, 2단계: 계획 → 적용)
+
 ```
-ss2 실행
- ├─ 1. 검색 폭 = SEARCH_WIDTH 상수 (300.0)
- ├─ 2. Base Line 선택 (GetSelection + sf)
+ss1 실행
+ ├─ 1. 검색 폭 = SEARCH_WIDTH 상수 (1.0, v2.0)
+ ├─ 2. Base Line 선택 (GetSelection + sfBase, XData 조건 없음)
  ├─ 3. 단일 Transaction 시작
- │    └─ Base Line 별 루프:
- │        ├─ 처리 완료 HashSet 에 있으면 skip
- │        ├─ 수직 벡터 계산: (E-S).CrossProduct(Normal).GetNormal()
- │        ├─ 폴리곤 4점 생성 (S±offset, E±offset)
- │        ├─ SelectCrossingPolygon(points, sf1)
- │        │    └─ Status != OK → continue
- │        ├─ 접촉 필터: GetClosestPointTo 거리 < ScaleFactor
- │        ├─ InterPointsMLiness2(tr, baseLine, targets, erasedIds)
- │        │    ├─ IntersectWith(ExtendBoth) 교차점 계산
- │        │    ├─ Target 끝점 스냅 (거리 상한 체크 후)
- │        │    ├─ 분할점 수집 (끝점 10.0 제외 + 구간 위 확인)
- │        │    ├─ StartPoint 거리순 정렬 → GetSplitCurves
- │        │    └─ 새 라인 등록 → 속성+XData 복사 → 원본 Erase
- │        └─ Erase 된 ObjectId → HashSet 등록
+ │    ├─ ── 1단계: 계획 수집 (도면 미변경) ──
+ │    │    Base Line 별 루프:
+ │    │    ├─ 수직 벡터 계산: (E-S).CrossProduct(Normal).GetNormal() × scaleFactor
+ │    │    ├─ 폴리곤 4점 생성 (S±offset, E±offset) → SelectCrossingPolygon(sfTarget)
+ │    │    │    └─ Status != OK → continue (다음 Base)
+ │    │    ├─ Target 후보별:
+ │    │    │    ├─ IntersectWith(ExtendBoth) 교차점 계산 (1개 아니면 skip — 평행/공선)
+ │    │    │    ├─ 교차점이 Base 구간 위인지 확인(IsPointOnLineSegment) — 아니면 skip
+ │    │    │    ├─ **관통 제외**: Target 양 끝점이 모두 교차점에서 THROUGH_EXCLUDE_DIST(10) 이상이면 skip
+ │    │    │    ├─ 분할점 후보 등록(Base 끝점 제외거리 초과 + 중복점 제외) → splitPlan
+ │    │    │    └─ 스냅 대상 등록(교차점에 가까운 Target 끝점, 이동거리 ≤ scaleFactor 중 최소) → snapPlan
+ │    │    └─ splitPlan/snapPlan 은 원본 geometry 기준으로만 채워짐(아직 Erase/생성 없음
+ │    │       → Base 끼리 서로 Target 이어도 먼저 잘려 사라지는 간섭이 없음)
+ │    ├─ ── 2단계: 적용 (여기서만 도면 변경) ──
+ │    │    ├─ snapPlan 적용: Target 끝점을 교차점으로 이동 (스냅 먼저)
+ │    │    └─ splitPlan 적용: `SplitBaseAt` 으로 Base 분할(스냅 이후 수행)
  ├─ 4. Transaction Commit (1회)
- └─ 5. 결과 요약 출력 (분할 수 / 스냅 수)
+ └─ 5. 결과 요약 출력 (분할 생성 수 / 끝점 스냅 수)
 ```
 
-### 4.2 접촉 판정 (확정 — Q3: extend=false)
-- `baseLine.GetClosestPointTo(ssl.StartPoint, false)` 수직 투영 우선 사용
-- **extend=false**: 실제 Base 구간 내 투영만 인정 (연장선 오탐 제거)
-- Target 끝점 중 하나라도 투영 거리 < ScaleFactor 이면 채택
+> **v1.x 대비 구조 변화**: v1.x 는 Base 하나를 처리할 때마다 즉시 분할/스냅까지 실행하면서
+> "Erase 된 ObjectId를 HashSet 으로 추적"(§3.2 Q2)해 Base 간 상호 참조 문제를 방지했다.
+> v2.0 은 아예 **모든 Base 의 계획을 먼저 다 세운 뒤 한꺼번에 적용**하는 방식으로 바꿔
+> 같은 문제를 구조적으로 제거했다(계획 단계에서는 어떤 Base 도 아직 안 잘려 있으므로 서로의
+> Target 탐색이 항상 원본 상태를 봄).
 
-### 4.3 함수 시그니처 (확정)
+### 4.2 접촉 판정
+
+- 교차점이 **Base 구간 위**에 있는지는 `IsPointOnLineSegment`(`GetClosestPointTo(pt, false)` 수직 투영, `extend=false`)로 판정 — 연장선 오탐 제거
+- 폴리곤 검색 폭 자체가 `SEARCH_WIDTH`(v2.0 = 1.0)로 좁아졌으므로, 폴리곤 안에 잡힌 후보는
+  사실상 Base 에 실제로 닿은 것만 남는다(v1.x 의 300 폭 넓은 밴드 검색과 다른 철학)
+
+### 4.3 함수 구성 (v2.0)
+
 ```csharp
-// 대상 Entity 를 직접 인수로 사용 (가독성)
-// Transaction 은 호출측에서 주입 — 단일 Transaction 원칙
-// 반환: 분할 수 / 스냅 수 (Q6=3안)
-static (int splitCount, int snapCount) InterPointsMLiness2(Transaction tr, Line baseLine, List<Line> targetLines, HashSet<ObjectId> erasedIds)
+// 커맨드 본체에 계획 수집 + 적용을 인라인으로 구현(별도 InterPointsMLiness2 없음)
+[CommandMethod("ss1", CommandFlags.UsePickSet)]
+public static void SS1_MultiLineSplit_v2()
+
+// 계획 단계에서 확정된 분할점으로 Base 를 분할(적용 전용, 도면 재선택 없음)
+private static int SplitBaseAt(Transaction tr, BlockTableRecord btr, Line baseLine, List<Point3d> points)
+
+// 점이 Line 의 실제 구간 위에 있는지 판정 (수직 투영, extend=false)
+private static bool IsPointOnLineSegment(Line line, Point3d pt)
 ```
 
-### 4.4 속성 복사 — 자체 구현 `CopyLineProperties(Line src, Line dst)` (신규)
+### 4.4 속성 복사 — 자체 구현 `CopyLineProperties(Line src, Line dst)`
+
 - 기본 속성: `Layer, Color, Linetype, LinetypeScale, LineWeight`
 - **XData 전체 복사**: `dst.XData = src.XData` — Pipe 계열 RegApp 데이터 유지
 - 새 라인을 DB 등록(AppendEntity + AddNewlyCreatedDBObject) **후** 복사 수행
@@ -134,6 +157,7 @@ static (int splitCount, int snapCount) InterPointsMLiness2(Transaction tr, Line 
 | `DBObject.IsWriteEnabled` | `bool` | UpgradeOpen 필요 여부 판단 |
 | `Entity.Erase()` | `void` | 원본 삭제 |
 | `BlockTableRecord.AppendEntity(Entity)` | `ObjectId` | 새 라인 등록 |
+| `Point3d.DistanceTo(Point3d)` (스냅 이동거리 비교) | `double` | v2.0 — 스냅 후보 중 최소 이동거리 선택 |
 | `Transaction.AddNewlyCreatedDBObject(DBObject, bool)` | `void` | 등록 |
 | `Entity.XData` (get/set) | `ResultBuffer` | XData 전체 복사 |
 | `Point3d.DistanceTo(Point3d)` | `double` | 거리 |
@@ -207,3 +231,15 @@ static (int splitCount, int snapCount) InterPointsMLiness2(Transaction tr, Line 
 | v1.0 | 2026-07-06 | 초안. ss1 문제 8건 + InterPointsMLiness 문제 9건 보완 방향 확정. Q1~Q6 확인 대기 |
 | v1.1 | 2026-07-06 | Q1~Q6 전 항목 확정 (Q3=false). 커맨드명 ss2, 함수명 InterPointsMLiness2 로 확정. 구현 진행 가능 |
 | v1.2 | 2026-07-06 | 신규 시스템 전환 — 외부 유틸 의존 제거. 검색 폭 상수 SEARCH_WIDTH=300.0, 속성+XData 복사 자체 구현(CopyLineProperties), 방향 정규화 제거. Util_Command.cs 구현 완료 |
+| v2.0 | 2026-07-09 | 2026-07-08 커밋("ss2 교차점 수정") 반영. **커맨드명 `ss2`→`ss1`로 변경**(§9 없이 헤더에서 바로 반영). 구조를 "1단계 계획 수집(도면 미변경) → 2단계 적용" 으로 재작성해 `InterPointsMLiness2` 별도 함수 제거(인라인화) + `SplitBaseAt` 헬퍼 분리. `SEARCH_WIDTH` 300.0→1.0(실제 접촉만 인정). `THROUGH_EXCLUDE_DIST`(관통 제외) 신규 추가 |
+
+---
+
+## 9. v2.0 변경 근거 요약
+
+- **`SEARCH_WIDTH` 축소(300→1.0)**: 실사용 중 넓은 밴드(300) 검색이 실제로 닿지 않는 먼 Target 까지
+  끌어들여 원치 않는 분할/스냅을 만드는 문제가 있어, 폭을 좁혀 "실제 접촉"만 잡도록 조정.
+- **관통 제외(`THROUGH_EXCLUDE_DIST`) 추가**: Target 이 Base 를 그냥 가로질러 지나가기만 하는 경우
+  (양 끝점이 교차점에서 모두 멀리 떨어짐) 분할 대상에서 제외 — 실제 접속(끝점이 근처)만 인정.
+- **계획/적용 2단계 재구조화**: 기존 즉시 처리 방식이 요구했던 "Erase 된 ObjectId 추적"(§3.2 Q2)을
+  아예 구조적으로 없앰 — 모든 Base 의 대상을 원본 상태에서 먼저 다 찾아둔 뒤에만 실제 변경 수행.
