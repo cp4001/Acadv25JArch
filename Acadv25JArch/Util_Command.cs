@@ -6,6 +6,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+using CADExtension;   // XdataCopy 확장 메서드 (Entity → Entity 전체 XData 복사)
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞게 조정
@@ -468,6 +469,69 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
             }
         }
 
+        // =====================================================================
+        // To_Group — 선택 Line 에 XData RegApp "Group" 지정 (To_Pipe 패턴)
+        // 값: 사용자가 입력한 Group 문자열 (DxfCode 1000)
+        // =====================================================================
+        [CommandMethod("To_Group", CommandFlags.UsePickSet)]
+        public static void ToGroup_SetXdataToGroup()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            try
+            {
+                // 필터: LINE (지정 전이므로 XData 조건 없음)
+                TypedValue[] tvs = [new((int)DxfCode.Start, "LINE")];
+                var sf = new SelectionFilter(tvs);
+                var pso = new PromptSelectionOptions { MessageForAdding = "\nGroup 지정할 Line 선택: " };
+
+                PromptSelectionResult psr = ed.GetSelection(pso, sf);
+                if (psr.Status != PromptStatus.OK) return;
+
+                // Group 문자열 입력 (공백 허용, 빈 문자열 불가)
+                var pstro = new PromptStringOptions("\n기록할 Group 값 입력: ") { AllowSpaces = true };
+                PromptResult pstr = ed.GetString(pstro);
+                if (pstr.Status != PromptStatus.OK) return;
+
+                string groupValue = pstr.StringResult?.Trim();
+                if (string.IsNullOrEmpty(groupValue))
+                {
+                    ed.WriteMessage("\nGroup 값이 비어 있어 취소되었습니다.");
+                    return;
+                }
+
+                int count = 0;
+
+                using var tr = db.TransactionManager.StartTransaction();
+
+                // RegApp "Group" 등록 확인 — 미등록 상태로 XData 를 쓰면 예외 발생
+                EnsureRegApp(tr, db, "Group");
+
+                foreach (SelectedObject so in psr.Value)
+                {
+                    if (tr.GetObject(so.ObjectId, OpenMode.ForWrite) is not Entity ent) continue;
+
+                    // XData 지정: 1001(RegAppName) + 1000(문자열 값)
+                    // 해당 RegApp 항목만 교체되며 다른 RegApp 의 XData 는 보존됨
+                    using var rb = new ResultBuffer(
+                        new TypedValue((int)DxfCode.ExtendedDataRegAppName, "Group"),
+                        new TypedValue((int)DxfCode.ExtendedDataAsciiString, groupValue));
+
+                    ent.XData = rb;
+                    count++;
+                }
+
+                tr.Commit();
+                ed.WriteMessage($"\nXData 지정 완료: {count}개 Line → RegApp \"Group\", 값 \"{groupValue}\"");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
 
         /// <summary>
         /// RegAppTable 에 해당 RegApp 이 없으면 등록
@@ -645,6 +709,9 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         /// 1) 끝점 연결 Line 우선 추적 (분기 시 모든 경로 추적)
         /// 2) 연결 없으면 진행 방향 colinear Line으로 점프 (최대 900, 최근접)
         /// 3) 둘 다 없으면 해당 경로 종료
+        /// 4) 발견한 Line 을 하이라이트로 미리 보여주고 [선택/취소] 확인
+        /// 5) 선택 시 기준 Line 의 XData 를 대상 Line 들에 복사 (기준 Line 에 XData 가 있을 때만)
+        /// 6) 명령 종료 후에도 선택 상태 유지 (CSS 와 동일한 Idle 지연 패턴)
         /// </summary>
         [CommandMethod("SCL")]
         public void SCL_SelectConLine()
@@ -689,63 +756,117 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
 
                 if (per.Status != PromptStatus.OK) return;
 
-                // 2단계: 단일 Transaction으로 순회 수행 (중첩 금지 원칙)
-                using var tr = db.TransactionManager.StartTransaction();
+                // 2단계: 순회로 대상 Line 수집 (ForRead) — 블록 종료 시 Transaction 즉시 dispose (중첩 금지)
+                ObjectId[] allIds;
+                bool baseHasXData;
+                int jumpCount = 0;
 
-                if (tr.GetObject(per.ObjectId, OpenMode.ForRead) is not Line baseLine)
+                using (var tr = db.TransactionManager.StartTransaction())
                 {
-                    ed.WriteMessage("\n기준 Line을 열 수 없습니다.");
+                    if (tr.GetObject(per.ObjectId, OpenMode.ForRead) is not Line baseLine)
+                    {
+                        ed.WriteMessage("\n기준 Line을 열 수 없습니다.");
+                        return;
+                    }
+
+                    // 기준 Line 의 XData 존재 여부 (복사 대상 판단용)
+                    baseHasXData = baseLine.XData != null;
+
+                    // 클릭점에서 가까운 끝점 = 진행 시작점 (그림의 A1)
+                    Point3d startPt = NearEndScl(baseLine, per.PickedPoint);
+
+                    // 순회: Stack 기반 (분기 시 모든 경로 추적, 재귀 없음)
+                    var visited = new HashSet<ObjectId> { per.ObjectId };
+                    var stack = new Stack<(ObjectId id, Point3d p)>();
+                    stack.Push((per.ObjectId, startPt));
+
+                    while (stack.Count > 0)
+                    {
+                        var (curId, p) = stack.Pop();
+                        if (tr.GetObject(curId, OpenMode.ForRead) is not Line curLine) continue;
+
+                        // 우선순위 1: 끝점 연결 Line (2개 이상이면 모두 같은 방식으로 추적)
+                        var connected = FindConnectedLines(ed, tr, p, visited);
+                        if (connected.Count > 0)
+                        {
+                            foreach (var next in connected)
+                            {
+                                visited.Add(next.ObjectId);
+                                // 새 진행 끝점 = 연결 Line에서 p의 반대쪽 끝점
+                                stack.Push((next.ObjectId, FarEndScl(next, p)));
+                            }
+                            continue;
+                        }
+
+                        // 우선순위 2: colinear 점프 (최근접 1개만)
+                        // 진행 방향 = 현재 Line의 반대쪽 끝점 → p 방향
+                        Vector3d dir = (p - FarEndScl(curLine, p)).GetNormal();
+                        var jump = FindColinearJump(ed, tr, curLine, p, dir, visited, gapMax);
+                        if (jump != null)
+                        {
+                            visited.Add(jump.ObjectId);
+                            jumpCount++;
+                            stack.Push((jump.ObjectId, FarEndScl(jump, p)));
+                        }
+                        // 후보 없음 → 이 경로 종료 (그림의 A6 조건)
+                    }
+
+                    allIds = [.. visited];
                     tr.Commit();
+                }
+
+                // 3단계: 발견한 Line 하이라이트 (사용자 확인용 미리보기)
+                SetHighlightScl(db, allIds, true);
+                ed.UpdateScreen();
+
+                // 4단계: 결과를 적용(복사·선택)할지 취소할지 확인
+                string xinfo = baseHasXData
+                    ? "기준 XData 를 대상에 복사"
+                    : "기준 Line 에 XData 없음 (복사 생략)";
+                var pko = new PromptKeywordOptions("");
+                pko.SetMessageAndKeywords(
+                    $"\n총 {allIds.Length}개 Line 발견 — {xinfo}. 결과 적용 [선택(Y)/취소(N)] <선택>: ",
+                    "Yes No");
+                pko.AllowNone = true;   // Enter = 기본값(선택)
+
+                var pkr = ed.GetKeywords(pko);
+                bool accepted = pkr.Status == PromptStatus.None
+                             || (pkr.Status == PromptStatus.OK && pkr.StringResult == "Yes");
+
+                // 하이라이트 해제 (선택/취소 공통)
+                SetHighlightScl(db, allIds, false);
+                ed.UpdateScreen();
+
+                if (!accepted)
+                {
+                    ed.WriteMessage("\n취소되었습니다. (변경 없음)");
                     return;
                 }
 
-                // 클릭점에서 가까운 끝점 = 진행 시작점 (그림의 A1)
-                Point3d startPt = NearEndScl(baseLine, per.PickedPoint);
-
-                // 순회: Stack 기반 (분기 시 모든 경로 추적, 재귀 없음)
-                var visited = new HashSet<ObjectId> { per.ObjectId };
-                var stack = new Stack<(ObjectId id, Point3d p)>();
-                stack.Push((per.ObjectId, startPt));
-
-                int jumpCount = 0;
-
-                while (stack.Count > 0)
+                // 5단계: XData 복사 (기준 Line → 대상 Line, 기준 Line 자신은 제외)
+                int copied = 0;
+                if (baseHasXData)
                 {
-                    var (curId, p) = stack.Pop();
-                    if (tr.GetObject(curId, OpenMode.ForRead) is not Line curLine) continue;
-
-                    // 우선순위 1: 끝점 연결 Line (2개 이상이면 모두 같은 방식으로 추적)
-                    var connected = FindConnectedLines(ed, tr, p, visited);
-                    if (connected.Count > 0)
+                    using var tr2 = db.TransactionManager.StartTransaction();
+                    if (tr2.GetObject(per.ObjectId, OpenMode.ForRead) is Line src && src.XData != null)
                     {
-                        foreach (var next in connected)
+                        foreach (ObjectId id in allIds)
                         {
-                            visited.Add(next.ObjectId);
-                            // 새 진행 끝점 = 연결 Line에서 p의 반대쪽 끝점
-                            stack.Push((next.ObjectId, FarEndScl(next, p)));
+                            if (id == per.ObjectId) continue;   // 기준 Line 제외
+                            if (tr2.GetObject(id, OpenMode.ForWrite) is not Line tgt) continue;
+                            src.XdataCopy(tgt);   // 기준의 모든 RegApp XData 를 대상에 복사(덮어쓰기)
+                            copied++;
                         }
-                        continue;
                     }
-
-                    // 우선순위 2: colinear 점프 (최근접 1개만)
-                    // 진행 방향 = 현재 Line의 반대쪽 끝점 → p 방향
-                    Vector3d dir = (p - FarEndScl(curLine, p)).GetNormal();
-                    var jump = FindColinearJump(ed, tr, curLine, p, dir, visited, gapMax);
-                    if (jump != null)
-                    {
-                        visited.Add(jump.ObjectId);
-                        jumpCount++;
-                        stack.Push((jump.ObjectId, FarEndScl(jump, p)));
-                    }
-                    // 후보 없음 → 이 경로 종료 (그림의 A6 조건)
+                    tr2.Commit();
                 }
 
-                tr.Commit();
+                // 6단계: 선택 상태 유지 — 명령 종료 후 첫 Idle 시점에 실행 (직접 호출은 종료 시 무효화됨)
+                _pendingSelectIds = allIds;
+                Application.Idle += OnIdleSetSelection;
 
-                // 3단계: 그립 선택 상태로 설정 (후속 명령에 활용 가능)
-                ed.SetImpliedSelection([.. visited]);
-
-                ed.WriteMessage($"\n총 {visited.Count}개 Line 선택 완료 (colinear 점프 {jumpCount}회).");
+                ed.WriteMessage(
+                    $"\n총 {allIds.Length}개 Line 선택 완료 (colinear 점프 {jumpCount}회, XData 복사 {copied}개).");
             }
             catch (System.Exception ex)
             {
@@ -867,6 +988,21 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
             line.StartPoint.DistanceTo(pt) > line.EndPoint.DistanceTo(pt)
                 ? line.StartPoint
                 : line.EndPoint;
+
+        /// <summary>
+        /// 지정한 Entity 들의 하이라이트를 켜거나(on=true) 끈다(on=false) — 확인 프롬프트용 미리보기
+        /// </summary>
+        private static void SetHighlightScl(Database db, ObjectId[] ids, bool on)
+        {
+            using var tr = db.TransactionManager.StartTransaction();
+            foreach (ObjectId id in ids)
+            {
+                if (tr.GetObject(id, OpenMode.ForRead) is not Entity ent) continue;
+                if (on) ent.Highlight();
+                else ent.Unhighlight();
+            }
+            tr.Commit();
+        }
 
         #endregion
 
