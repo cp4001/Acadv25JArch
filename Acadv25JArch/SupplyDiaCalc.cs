@@ -4,7 +4,8 @@ namespace PipeLoad2
 {
     /// <summary>
     /// 급수배관 관경결정 알고리즘 (관균등표법)
-    /// 출처: 건축 급배수.위생설비 (세진사)
+    /// 출처: 균등값·관균등표 = 건축 급배수.위생설비 (세진사)
+    ///       동시사용율      = 공조위생 기술데이터북 (한미)
     /// </summary>
     public static class SupplyDiaCalc
     {
@@ -63,42 +64,53 @@ namespace PipeLoad2
                 ? generalEquivSum * GetGeneralRate(generalCount) / 100.0 : 0;
             total = toiletSimul + generalSimul;
 
+            return FromTotal(total);
+        }
+
+        /// <summary>균등값×동시사용율 합계(total)로 관경 lookup</summary>
+        public static int FromTotal(double total)
+        {
             foreach (var (dia, limit) in DiaTable)
                 if (total <= limit) return dia;
 
             return 150;
         }
 
-        // 대변기(세정밸브) 동시사용율 테이블
-        private static double GetToiletRate(int count)
+        // 동시사용율 테이블 [기구수, 동시사용율 %] — 공조위생 기술데이터북(한미)
+        // 기구수 1~24 는 개별 명시, 이후 32/40/50/70/100 만 수록
+        // 표에 없는 기구수는 상위 구간값 적용 (급수관경결정.xlsm 규칙: 일반기구 28개 → 32개 칸의 45%)
+
+        // 대변기(세정밸브)
+        private static readonly (int count, double rate)[] ToiletRates =
         {
-            if (count == 1)          return 100;
-            if (count <= 4)          return 50;
-            if (count <= 8)          return 40;
-            if (count <= 12)         return 30;
-            if (count <= 16)         return 27;
-            if (count <= 24)         return 23;
-            if (count <= 32)         return 19;
-            if (count <= 40)         return 17;
-            if (count <= 50)         return 15;
-            if (count <= 70)         return 12;
-            return 10;
+            (1, 100),    (2, 100),   (3, 82.5),   (4, 65),     (5, 60),
+            (6, 55),     (7, 50),    (8, 45),     (9, 43.75),  (10, 42.5),
+            (11, 41.25), (12, 40),   (13, 38.75), (14, 37.5),  (15, 36.25),
+            (16, 35),    (17, 33.75),(18, 32.5),  (19, 31.25), (20, 30),
+            (21, 28.75), (22, 27.5), (23, 26.25), (24, 25),
+            (32, 19),    (40, 17),   (50, 15),    (70, 12),    (100, 10)
+        };
+
+        // 일반기구
+        private static readonly (int count, double rate)[] GeneralRates =
+        {
+            (1, 100),    (2, 100),   (3, 90),     (4, 80),     (5, 77.5),
+            (6, 75),     (7, 72.5),  (8, 70),     (9, 66.25),  (10, 62.5),
+            (11, 58.75), (12, 55),   (13, 53.75), (14, 52.5),  (15, 51.25),
+            (16, 50),    (17, 49.75),(18, 49.5),  (19, 49.25), (20, 49),
+            (21, 48.75), (22, 48.5), (23, 48.25), (24, 48),
+            (32, 45),    (40, 40),   (50, 38),    (70, 35),    (100, 33)
+        };
+
+        private static double LookupRate((int count, double rate)[] table, int count)
+        {
+            foreach (var (c, rate) in table)
+                if (count <= c) return rate;
+
+            return table[^1].rate;   // 100개 초과
         }
 
-        // 일반기구 동시사용율 테이블
-        private static double GetGeneralRate(int count)
-        {
-            if (count <= 2)          return 100;
-            if (count <= 4)          return 70;
-            if (count <= 8)          return 55;
-            if (count <= 12)         return 48;
-            if (count <= 16)         return 45;
-            if (count <= 24)         return 42;
-            if (count <= 32)         return 40;
-            if (count <= 40)         return 39;
-            if (count <= 50)         return 38;
-            if (count <= 70)         return 35;
-            return 33;
-        }
+        private static double GetToiletRate(int count)  => LookupRate(ToiletRates,  count);
+        private static double GetGeneralRate(int count) => LookupRate(GeneralRates, count);
     }
 }

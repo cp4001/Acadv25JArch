@@ -1069,9 +1069,17 @@ namespace PipeLoad2
             CollectEquiv(node, ref toiletEquiv, ref toiletCount,
                                ref generalEquiv, ref generalCount);
 
-            node.Diameter = SupplyDiaCalc.Calculate2(
+            _ = SupplyDiaCalc.Calculate2(
                 toiletCount, toiletEquiv, generalCount, generalEquiv, out double total);
+
+            // 동시사용율 표가 25개 이상 구간(32/40/50/70/100)에서 성기어, 구간 경계에서
+            // 기구가 늘었는데 total 이 줄어드는 역전이 남음 (대변기 50개 245×15%=36.75 > 51개 249.9×12%=29.99)
+            // → 상류 total 이 하류 최대값보다 작아지지 않도록 보정 후 관경 결정
+            foreach (var child in node.Children)
+                if (child.TotalEquiv > total) total = child.TotalEquiv;
+
             node.TotalEquiv = total;
+            node.Diameter   = SupplyDiaCalc.FromTotal(total);
         }
 
         /// <summary>계산된 Diameter를 XData "Dia" 에, 노드 종류를 XData "Tree"(Root/Mid/Leaf) 에 저장</summary>

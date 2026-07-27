@@ -3,7 +3,8 @@
     "allow": [
       "Bash(dotnet build:*)",
       "Bash(/c/home/jjh/.npm-global/qmd collection:*)",
-      "Bash(/c/home/jjh/.npm-global/qmd embed:*)"
+      "Bash(/c/home/jjh/.npm-global/qmd embed:*)",
+      "PowerShell(dotnet build *)"
     ]
   }
 }
