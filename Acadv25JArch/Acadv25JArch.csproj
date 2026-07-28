@@ -7,12 +7,24 @@
     <Nullable>enable</Nullable>
 	  <!-- 출력 경로 설정 - 하위 폴더 생성 방지 -->
 	  <BaseOutputPath>C:\Jarch25\</BaseOutputPath>
-	  <OutputPath>C:\Jarch25\</OutputPath>
 	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <EnableNETAnalyzers>False</EnableNETAnalyzers>
     <Platforms>AnyCPU;x64</Platforms>
-	  
+
+  </PropertyGroup>
+
+  <!-- 출력 경로를 구성별로 분리.
+       Debug   : C:\Jarch25\        (개발용 NETLOAD 경로 - 기존과 동일하게 유지)
+       Release : C:\Jarch25\Release\ (배포용 - 인스톨러가 이 경로를 참조)
+       한 폴더를 공유하면 경로만 봐서는 Debug/Release 구분이 안 되어
+       Debug 산출물이 배포본에 섞이는 사고가 난다. -->
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <OutputPath>C:\Jarch25\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <OutputPath>C:\Jarch25\Release\</OutputPath>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -40,17 +52,19 @@
     <NoWarn>0067;0414;1701;1702;8073;8600;8601;8602;8603;8604;8612;8618;8619;8620;8629;8767;MSB3277</NoWarn>
   </PropertyGroup>
 
+  <!-- Release 는 실제로 최적화된 산출물이어야 한다.
+       (기존에는 Optimize=False + DebugType=full 이라 이름만 Release 인 Debug 빌드였다) -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <Optimize>False</Optimize>
+    <Optimize>True</Optimize>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <DebugType>full</DebugType>
+    <DebugType>portable</DebugType>
     <NoWarn>0067;0414;1701;1702;8073;8600;8601;8602;8603;8604;8612;8618;8619;8620;8629;8767;MSB3277</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Optimize>False</Optimize>
+    <Optimize>True</Optimize>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <DebugType>full</DebugType>
+    <DebugType>portable</DebugType>
     <NoWarn>0067;0414;1701;1702;8073;8600;8601;8602;8603;8604;8612;8618;8619;8620;8629;8767;MSB3277</NoWarn>
   </PropertyGroup>
 
@@ -126,6 +140,27 @@
   <PropertyGroup>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
+
+  <!-- ===== 연결 빌드: 한 번 빌드하면 Debug/Release 두 구성이 모두 갱신된다 =====
+       Debug 를 빌드하면 Release 도, Release 를 빌드하면 Debug 도 이어서 빌드한다.
+       (C:\Jarch25\ = Debug, C:\Jarch25\Release\ = Release 두 폴더가 항상 최신 유지)
+
+       ChainedBuild=true 는 이어붙인 쪽 빌드에만 전달되므로 무한 재귀가 없다.
+       끄려면:  dotnet build -p:BuildBothConfigurations=false
+                (또는 아래 기본값을 false 로 변경) -->
+  <PropertyGroup>
+    <BuildBothConfigurations Condition="'$(BuildBothConfigurations)'==''">true</BuildBothConfigurations>
+    <_OtherConfiguration Condition="'$(Configuration)'=='Debug'">Release</_OtherConfiguration>
+    <_OtherConfiguration Condition="'$(Configuration)'=='Release'">Debug</_OtherConfiguration>
+  </PropertyGroup>
+
+  <Target Name="BuildOtherConfiguration" AfterTargets="Build"
+          Condition="'$(BuildBothConfigurations)'=='true' AND '$(ChainedBuild)'!='true' AND '$(_OtherConfiguration)'!=''">
+    <Message Importance="high" Text="[연결 빌드] $(_OtherConfiguration) 구성도 함께 빌드합니다..." />
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+             Targets="Build"
+             Properties="Configuration=$(_OtherConfiguration);Platform=$(Platform);ChainedBuild=true" />
+  </Target>
 	
 
 </Project>
