@@ -153,6 +153,33 @@ namespace PipeLoad2
             }
         }
 
+
+        [CommandMethod("LPMT", CommandFlags.UsePickSet)]
+        public void Cmd_Block_SetLPM_Typed()
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database; var ed = doc.Editor;
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                var targets = JEntity.GetEntityByTpye<BlockReference>("Block 선택 (Enter 확정)?", JSelFilter.MakeFilterTypes("INSERT"));
+                if (targets == null || targets.Count == 0) { tr.Commit(); return; }
+                // 숫자만 입력 (GetDouble 이 비숫자 입력을 거부)
+                var pdo = new PromptDoubleOptions("\n기록할 유량(LPM) 값 입력: ") { AllowNone = false };
+                var pdr = ed.GetDouble(pdo);
+                if (pdr.Status != PromptStatus.OK) { tr.Commit(); return; }
+                string v = pdr.Value.ToString();
+                tr.CheckRegName("LPM"); tr.CheckRegName("Disp");
+                int set = 0;
+                foreach (var br in targets)
+                {
+                    br.UpgradeOpen();
+                    JXdata.SetXdata(br, "LPM", v); JXdata.SetXdata(br, "Disp", v); set++;
+                }
+                ed.WriteMessage("\nLPM 설정 {0}개 (입력값 {1})", set, v);
+                tr.Commit();
+            }
+        }
+
         /// <summary>
         /// 선택  block  "CMH" Xdata를 설정하는 커맨드 (디퓨져 유량, ㎥/h)
         /// CMH 값은 Block BoundingBox 영역 안에 있는 Text/MText 엔티티에서 읽음
@@ -296,7 +323,7 @@ namespace PipeLoad2
                 new TypedValue((int)DxfCode.Operator, "OR>")
             });
 
-            var psr = ed.SelectWindow(ext.MinPoint, ext.MaxPoint, filter);
+            var psr = ed.SelectCrossingWindow(ext.MinPoint, ext.MaxPoint, filter); 
             if (psr.Status != PromptStatus.OK || psr.Value == null) return null;
 
             foreach (SelectedObject so in psr.Value)

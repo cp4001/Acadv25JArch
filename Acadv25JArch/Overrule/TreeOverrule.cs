@@ -149,7 +149,8 @@ namespace PipeLoad2
                 else
                 {
                     string? dia      = JXdata.GetXdata(line, "Dia")      ?? "00";
-                    string? total15A = JXdata.GetXdata(line, "Total15A") ?? "00";
+                    string? total15A = JXdata.GetXdata(line, "Total15A");//?? "00"; //TotalLPM
+                    string? totalLPM = JXdata.GetXdata(line, "TotalLPM");// ?? "00";
                     string? lpm15A   = JXdata.GetXdata(line, "15A");
 
                     if (!string.IsNullOrEmpty(lpm15A))
@@ -160,6 +161,12 @@ namespace PipeLoad2
                     {
                         label = $"{dia}[{total15A}]";
                     }
+
+                    if (!string.IsNullOrEmpty(totalLPM))
+                    {
+                        label = $"{dia}[{totalLPM}]";
+                    }
+
                 }
                 //else if (!string.IsNullOrEmpty(total15A))
                 //{
