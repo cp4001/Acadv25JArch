@@ -22,12 +22,15 @@ namespace PipeLoad2
     /// 엘보 중심선 반경 R = 1.5 × W_aa (Green 폭 기준).
     /// 설계 기준: 건축\Duct-OutLine\Duct_Elbow.md (v1.3).
     /// 모든 계산은 월드축이 아니라 선택 선의 방향벡터(dirAA/dirBB) 기준으로 수행.
+    ///
+    /// Duct_Etv — Duct_E 로 만든 원호 엘보를 각진(마이터) 엘보로 되돌리는 역변환 명령.
     /// </summary>
     public class DuctElbowCommand
     {
         private const double JunctionTol = 1e-3;   // X 접합점 일치 거리
         private const double PerpTol = 0.02;       // 직각 판정 (약 ±1.15°)
         private const double WidthTol = 1e-6;      // 폭 동일 판정
+        private const double TangentTol = 0.9;     // Arc 접선 판정 (|Line 방향 · 접선|)
         private const int Yellow = 2;              // 외곽선 ACI
         private const string OutlineLayer = "Duct_OutLine";
 
@@ -60,6 +63,276 @@ namespace PipeLoad2
             {
                 ed.WriteMessage($"\n오류 발생: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Duct_Etv — 원호 엘보 → 각진(마이터) 엘보 역변환.
+        /// Arc 와 Line 을 한 번에 선택하면, 선택된 각 Arc 의 양 끝점에 접선으로 연결된 Line 2개를
+        /// 서로의 교차점까지 연장/단축해 뾰족한 코너로 만들고 Arc 를 삭제한다.
+        /// 동심 Arc 가 2개 이상 처리되면(내측/외측/중심선) 가장 안쪽 코너점과 가장 바깥 코너점을 잇는
+        /// 마이터 대각선(Yellow, "Duct_OutLine" 레이어) 1개를 그룹마다 추가 생성하고,
+        /// 폭 방향 이음선(Gin→Gout / Rin→Rout)을 덕트 축 방향으로 이동시켜
+        /// **외측 코너로부터 대각선 길이(L = W√2)만큼 떨어진 위치**에 맞춘다.
+        /// </summary>
+        [CommandMethod("Duct_Etv", CommandFlags.UsePickSet)]
+        public void Cmd_DuctEtv()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            // Editor selection 은 Transaction 밖에서 호출 (프로젝트 컨벤션)
+            var filter = new SelectionFilter(new[]
+            {
+                new TypedValue((int)DxfCode.Operator, "<or"),
+                new TypedValue((int)DxfCode.Start, "ARC"),
+                new TypedValue((int)DxfCode.Start, "LINE"),
+                new TypedValue((int)DxfCode.Operator, "or>")
+            });
+            var pso = new PromptSelectionOptions();
+            pso.MessageForAdding = "\nArc 와 그 끝단에 연결된 Line 을 선택하세요";
+            PromptSelectionResult psr = ed.GetSelection(pso, filter);
+            if (psr.Status != PromptStatus.OK) return;
+
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    var arcs = new List<Arc>();
+                    var lines = new List<Line>();
+                    foreach (ObjectId id in psr.Value.GetObjectIds())
+                    {
+                        var ent = tr.GetObject(id, OpenMode.ForRead);
+                        if (ent is Arc a) arcs.Add(a);
+                        else if (ent is Line ln) lines.Add(ln);
+                    }
+
+                    if (arcs.Count == 0) { ed.WriteMessage("\n[E01] 선택 안에 Arc 가 없습니다."); return; }
+                    if (lines.Count < 2) { ed.WriteMessage("\n[E02] 선택 안에 Line 이 2개 이상 있어야 합니다."); return; }
+
+                    var btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+                    tr.CreateLayer(OutlineLayer, Yellow, LineWeight.ByLayer);
+
+                    // 처리된 Arc 별 (원호 중심, 반경, 새 코너점) — 마이터 대각선 산출용
+                    var corners = new List<(Point3d Center, double Radius, Point3d Corner)>();
+                    // Arc 끝점에 반경 방향으로 붙은 폭 방향 이음선 — (원호 중심, 이음선 Id, 이음선 위 한 점, 덕트 축 방향)
+                    var seams = new List<(Point3d Center, ObjectId Id, Point3d Pt, Vector3d Axis)>();
+                    // 이음선 위치에 겹쳐 있던 중복 Line — 이동 대상 1개만 남기고 삭제
+                    var dupes = new List<ObjectId>();
+                    int skipped = 0;
+
+                    foreach (Arc arc in arcs)
+                    {
+                        if (!TryUnfillet(tr, arc, lines, seams, dupes, out Point3d corner, out string err))
+                        {
+                            ed.WriteMessage($"\n{err} (Arc 핸들 {arc.Handle})");
+                            skipped++;
+                            continue;
+                        }
+                        corners.Add((arc.Center, arc.Radius, corner));
+                        arc.UpgradeOpen();
+                        arc.Erase();
+                    }
+
+                    // 동심(중심 일치) Arc 그룹마다 내측 코너 → 외측 코너 마이터 대각선 1개
+                    int miter = 0, seamMoved = 0;
+                    var used = new bool[corners.Count];
+                    var movedSeams = new List<ObjectId>();
+                    for (int i = 0; i < corners.Count; i++)
+                    {
+                        if (used[i]) continue;
+                        used[i] = true;
+                        int innerIdx = i, outerIdx = i, members = 1;
+                        for (int j = i + 1; j < corners.Count; j++)
+                        {
+                            if (used[j] || corners[j].Center.DistanceTo(corners[i].Center) > JunctionTol) continue;
+                            used[j] = true;
+                            members++;
+                            if (corners[j].Radius < corners[innerIdx].Radius) innerIdx = j;
+                            if (corners[j].Radius > corners[outerIdx].Radius) outerIdx = j;
+                        }
+                        if (members < 2) continue;
+
+                        Point3d innerPt = corners[innerIdx].Corner;
+                        Point3d outerPt = corners[outerIdx].Corner;
+                        AddOutlineLine(tr, btr, db, innerPt, outerPt);
+                        miter++;
+
+                        // 이음선 재배치 — 외측 코너에서 덕트 축 방향으로 대각선 길이 L 만큼 떨어진 위치
+                        double L = innerPt.DistanceTo(outerPt);
+                        foreach (var s in seams)
+                        {
+                            if (s.Center.DistanceTo(corners[i].Center) > JunctionTol) continue;
+                            if (movedSeams.Contains(s.Id)) continue;
+                            movedSeams.Add(s.Id);
+
+                            double cur = (s.Pt - outerPt).DotProduct(s.Axis);
+                            Vector3d delta = s.Axis * (L - cur);
+                            if (delta.Length < JunctionTol) continue;
+                            var seamLn = (Line)tr.GetObject(s.Id, OpenMode.ForWrite);
+                            seamLn.TransformBy(Matrix3d.Displacement(delta));
+                            seamMoved++;
+                        }
+                    }
+
+                    // 이음선 자리에 겹쳐 있던 중복 Line 삭제 (이동 대상으로 채택된 것은 제외)
+                    int dupErased = 0;
+                    foreach (ObjectId id in dupes)
+                    {
+                        bool kept = false;
+                        foreach (var s in seams) { if (s.Id == id) { kept = true; break; } }
+                        if (kept) continue;
+
+                        var dup = (Line)tr.GetObject(id, OpenMode.ForWrite);
+                        if (dup.IsErased) continue;
+                        dup.Erase();
+                        dupErased++;
+                    }
+
+                    ed.WriteMessage($"\nDuct_Etv 완료: Arc {corners.Count}개 삭제 + Line {corners.Count * 2}개 교차점 연결, " +
+                                    $"마이터 대각선 {miter}개 생성, 이음선 {seamMoved}개 재배치, 중복 이음선 {dupErased}개 삭제" +
+                                    (skipped > 0 ? $" (건너뜀 {skipped}개)" : "") + ".");
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류 발생: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Arc 양 끝점에 접선으로 연결된 Line 2개를 pool 에서 찾아 교차점까지 연장/단축하고
+        /// 그 교차점(corner)을 돌려준다. 같은 끝점에 반경 방향으로 붙은 폭 방향 이음선은 seams 에 수집한다.
+        /// Arc 자체는 삭제하지 않는다(호출측 담당).
+        /// </summary>
+        private bool TryUnfillet(Transaction tr, Arc arc, List<Line> pool,
+            List<(Point3d Center, ObjectId Id, Point3d Pt, Vector3d Axis)> seams, List<ObjectId> dupes,
+            out Point3d corner, out string err)
+        {
+            corner = Point3d.Origin;
+            err = "";
+
+            if (!TryPickTangentLine(arc, arc.StartPoint, pool, null, out Line l1))
+            {
+                err = "[E03] Arc 시작점에 접선으로 연결된 Line 을 찾지 못했습니다.";
+                return false;
+            }
+            if (!TryPickTangentLine(arc, arc.EndPoint, pool, l1, out Line l2))
+            {
+                err = "[E04] Arc 끝점에 접선으로 연결된 Line 을 찾지 못했습니다.";
+                return false;
+            }
+
+            using (var pts = new Point3dCollection())
+            {
+                l1.IntersectWith(l2, Intersect.ExtendBoth, pts, System.IntPtr.Zero, System.IntPtr.Zero);
+                if (pts.Count == 0)
+                {
+                    err = "[E05] 연결된 두 Line 이 평행/엇갈려 교차점이 없습니다.";
+                    return false;
+                }
+                corner = pts[0];
+            }
+
+            if (!double.IsFinite(corner.X) || !double.IsFinite(corner.Y) || !double.IsFinite(corner.Z))
+            {
+                err = "[E06] 교차점 계산 결과에 NaN/Infinity 가 포함됩니다.";
+                return false;
+            }
+
+            // 폭 방향 이음선 수집 (Line 이동 전후 무관 — 이음선 자체는 건드리지 않음)
+            CollectSeam(arc, arc.StartPoint, pool, l1, corner, seams, dupes);
+            CollectSeam(arc, arc.EndPoint, pool, l2, corner, seams, dupes);
+
+            // 각 Line 의 Arc 접점 쪽 끝점만 교차점으로 이동
+            MoveEndTo(tr, l1, arc.StartPoint, corner);
+            MoveEndTo(tr, l2, arc.EndPoint, corner);
+            return true;
+        }
+
+        /// <summary>
+        /// conn(Arc 끝점)에 끝점이 닿아 있는 Line 중 반경 방향과 가장 나란한 것(= 폭 방향 이음선)을 수집.
+        /// 덕트 축 방향(Axis)은 corner → conn 방향, 즉 코너에서 멀어지는 쪽.
+        /// 같은 접점에 **겹쳐 있는 중복 이음선**(평행 = 동일 직선)은 dupes 에 담아 호출측이 삭제한다.
+        /// </summary>
+        private void CollectSeam(Arc arc, Point3d conn, List<Line> pool, Line exclude, Point3d corner,
+            List<(Point3d Center, ObjectId Id, Point3d Pt, Vector3d Axis)> seams, List<ObjectId> dupes)
+        {
+            Vector3d radial = (conn - arc.Center).GetNormal();
+            Line best = null;
+            double bestScore = TangentTol;
+            var found = new List<Line>();
+
+            foreach (Line ln in pool)
+            {
+                if (ln.ObjectId == exclude.ObjectId) continue;
+
+                bool atStart = ln.StartPoint.DistanceTo(conn) <= JunctionTol;
+                bool atEnd = ln.EndPoint.DistanceTo(conn) <= JunctionTol;
+                if (!atStart && !atEnd) continue;
+
+                Vector3d dir = (atStart ? ln.EndPoint : ln.StartPoint) - conn;
+                if (dir.Length < JunctionTol) continue;
+
+                double score = System.Math.Abs(dir.GetNormal().DotProduct(radial));
+                if (score <= TangentTol) continue;
+                found.Add(ln);
+                if (score > bestScore) { bestScore = score; best = ln; }
+            }
+            if (best == null) return;
+
+            Vector3d axis = conn - corner;
+            if (axis.Length < JunctionTol) return;
+            seams.Add((arc.Center, best.ObjectId, conn, axis.GetNormal()));
+
+            // conn 을 공유하면서 유지 대상과 평행 ⇒ 동일 직선 위에 겹친 중복선
+            Vector3d keepDir = (best.EndPoint - best.StartPoint).GetNormal();
+            foreach (Line ln in found)
+            {
+                if (ln.ObjectId == best.ObjectId) continue;
+                Vector3d d = (ln.EndPoint - ln.StartPoint).GetNormal();
+                if (System.Math.Abs(d.DotProduct(keepDir)) < 0.9999) continue;
+                if (!dupes.Contains(ln.ObjectId)) dupes.Add(ln.ObjectId);
+            }
+        }
+
+        /// <summary>
+        /// conn(Arc 끝점)에 끝점이 닿아 있는 Line 중 Arc 접선 방향과 가장 나란한 것을 고른다.
+        /// 폭 방향 이음선(Gin→Gout 등)은 반경 방향이라 TangentTol 로 걸러진다.
+        /// </summary>
+        private bool TryPickTangentLine(Arc arc, Point3d conn, List<Line> pool, Line exclude, out Line best)
+        {
+            best = null;
+            Vector3d radial = (conn - arc.Center).GetNormal();
+            Vector3d tangent = arc.Normal.CrossProduct(radial).GetNormal();
+            double bestScore = TangentTol;
+
+            foreach (Line ln in pool)
+            {
+                if (exclude != null && ln.ObjectId == exclude.ObjectId) continue;
+
+                bool atStart = ln.StartPoint.DistanceTo(conn) <= JunctionTol;
+                bool atEnd = ln.EndPoint.DistanceTo(conn) <= JunctionTol;
+                if (!atStart && !atEnd) continue;
+
+                Vector3d dir = (atStart ? ln.EndPoint : ln.StartPoint) - conn;
+                if (dir.Length < JunctionTol) continue;
+
+                double score = System.Math.Abs(dir.GetNormal().DotProduct(tangent));
+                if (score > bestScore) { bestScore = score; best = ln; }
+            }
+            return best != null;
+        }
+
+        /// <summary>ForRead 로 열린 Line 을 ForWrite 로 승격해 refPt 쪽 끝점만 newPt 로 이동.</summary>
+        private void MoveEndTo(Transaction tr, Line ln, Point3d refPt, Point3d newPt)
+        {
+            var w = (Line)tr.GetObject(ln.ObjectId, OpenMode.ForWrite);
+            if (w.StartPoint.DistanceTo(refPt) <= w.EndPoint.DistanceTo(refPt))
+                w.StartPoint = newPt;
+            else
+                w.EndPoint = newPt;
         }
 
         /// <summary>
