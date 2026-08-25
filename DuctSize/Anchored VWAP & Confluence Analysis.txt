@@ -1,0 +1,66 @@
+Anchored VWAP & Confluence Analysis Guideline
+1. 개요 (Overview)본 문서는 주식 데이터(OHLCV)를 기반으로 **Anchored VWAP(거래량 가중 평균 가격)**을 계산하고 분석하기 위한 기술 지침이다. 특히 **최대 거래량(Max Volume)**과 최저가(Min Price) 두 가지 앵커 포인트를 동시에 사용하여, 두 지표가 수렴하는 **Confluence Zone(신뢰도가 높은 지지/저항 구간)**을 식별하는 것을 목표로 한다.
+2. 입력 데이터 형식 (Input Data Spec)분석 대상 데이터는 Pandas DataFrame 형태여야 하며, 다음 컬럼을 필수적으로 포함해야 한다.Date: 날짜 (Datetime 객체)Close: 종가 (Float)Low: 저가 (Float) - Min Price 앵커 탐색용Volume: 거래량 (Float/Int) - Max Volume 앵커 탐색용
+3. 분석 전략 (Strategies)전략 A: 세력 평단가 (Max Volume Anchor)논리: 특정 기간 내 가장 많은 거래량이 터진 날은 주요 시장 참여자(세력/기관)가 대거 진입한 시점이다. 이들의 평균 단가는 강력한 기준선이 된다.앵커 선정 기준: 분석 기간($N$일) 내 Volume이 최대인 날짜.전략 B: 바닥권 심리선 (Min Price Anchor)논리: 특정 기간 내 최저점을 찍은 날부터 매수한 참여자들의 평균 단가다. 이 선은 "바닥에서 잡은" 스마트 머니의 수익 분기점이자 심리적 마지노선이다.앵커 선정 기준: 분석 기간($N$일) 내 Low가 최소인 날짜.핵심 목표: 컨플루언스 (Confluence) 도출정의: 전략 A의 라인과 전략 B의 라인이 특정 가격대에서 **근접(Convergence)**하는 현상.의미: 서로 다른 근거(거래량 vs 가격)를 가진 두 개의 중요 지표가 일치하는 구간으로, 매우 강력한 지지(Support) 또는 저항(Resistance) 역할을 한다.
+4. 계산 알고리즘 (Calculation Logic)공식 (Formula)$$Anchored\ VWAP_t = \frac{\sum_{i=start}^{t} (Price_i \times Volume_i)}{\sum_{i=start}^{t} Volume_i}$$Python 구현 가이드 (Reference Code)AI는 아래의 로직을 사용하여 데이터를 처리해야 한다.Pythonimport pandas as pd
+import numpy as np
+
+def analyze_vwap_confluence(df, window=120, threshold_pct=0.02):
+    """
+    df: OHLCV DataFrame
+    window: 앵커를 탐색할 최근 기간 (예: 6개월=120일)
+    threshold_pct: 컨플루언스 판단 기준 (두 라인의 가격 차이 비율, 예: 2%)
+    """
+    # 데이터 슬라이싱 (최근 N일)
+    recent_df = df.tail(window).copy()
+    
+    # 1. 앵커 포인트 식별
+    idx_max_vol = recent_df['Volume'].idxmax()
+    date_max_vol = recent_df.loc[idx_max_vol, 'Date']
+    
+    idx_min_price = recent_df['Low'].idxmin()
+    date_min_price = recent_df.loc[idx_min_price, 'Date']
+    
+    # 2. VWAP 계산 함수 (내부 함수)
+    def calculate_avwap(start_date):
+        mask = recent_df['Date'] >= start_date
+        sub_df = recent_df.loc[mask].copy()
+        sub_df['PV'] = sub_df['Close'] * sub_df['Volume']
+        # 누적 합 계산
+        cum_pv = sub_df['PV'].cumsum()
+        cum_vol = sub_df['Volume'].cumsum()
+        return sub_df.index, cum_pv / cum_vol
+
+    # 3. 각 전략별 계산
+    # 전략 A: Max Volume
+    idx_a, val_a = calculate_avwap(date_max_vol)
+    recent_df.loc[idx_a, 'AVWAP_MaxVol'] = val_a
+    
+    # 전략 B: Min Price
+    idx_b, val_b = calculate_avwap(date_min_price)
+    recent_df.loc[idx_b, 'AVWAP_MinPrice'] = val_b
+    
+    # 4. 컨플루언스 분석 (최근 종가 기준)
+    current_price = recent_df['Close'].iloc[-1]
+    last_avwap_vol = recent_df['AVWAP_MaxVol'].iloc[-1]
+    last_avwap_price = recent_df['AVWAP_MinPrice'].iloc[-1]
+    
+    # 두 VWAP 간의 괴리율 계산
+    diff_pct = abs(last_avwap_vol - last_avwap_price) / last_avwap_price
+    
+    is_confluence = diff_pct <= threshold_pct
+    
+    result = {
+        "current_price": current_price,
+        "avwap_max_vol": last_avwap_vol,
+        "avwap_min_price": last_avwap_price,
+        "gap_percentage": diff_pct * 100,
+        "is_confluence": is_confluence,
+        "anchor_dates": {
+            "max_volume": date_max_vol,
+            "min_price": date_min_price
+        }
+    }
+    
+    return recent_df, result
+5. 결과 해석 지침 (Interpretation Guidelines)AI는 계산된 result 딕셔너리를 바탕으로 다음과 같이 상황을 진단해야 한다.1) 컨플루언스 발생 시 (is_confluence == True)상태: 두 개의 강력한 에너지(거래량 모멘텀 + 바닥권 매수세)가 한 지점에 모여 있음.Action Suggestion:주가 > 컨플루언스 가격대: "강력 매수 구간". 주가가 이 가격대 근처로 내려오면 기술적 반등 확률이 매우 높음 (N자형 반등).주가 < 컨플루언스 가격대: "강력 저항 구간". 주가가 상승 시 이 가격대에서 매도 물량이 쏟아질 확률이 높음. 돌파 시 큰 시세 분출 가능.2) 이격 발생 시 (is_confluence == False)상태: 세력 평단가와 바닥권 평단가가 벌어져 있음.해석:Max Volume Line (세력선): 단기적인 수급의 중심선으로 활용.Min Price Line (생명선): 최후의 방어선으로 활용.두 라인 사이의 공간은 "트레이딩 구간(Range)"으로 해석.6. 시각화 가이드 (Visualization for UI)Streamlit 등의 차트 라이브러리(Plotly/Matplotlib) 사용 시:AVWAP_MaxVol: 굵은 실선 (색상: 예 - 주황색/빨간색)으로 표시. 중요도 최상.AVWAP_MinPrice: 점선 (색상: 예 - 파란색/초록색)으로 표시. 중요도 상.Confluence Highlight: 두 선의 차이가 threshold 이내인 구간은 배경색을 칠하거나(Fill Between), 별도의 마커로 강조 표시.

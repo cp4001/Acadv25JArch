@@ -1,0 +1,5 @@
+https://soumyajit.vercel.app/
+는 React trailwinf 로 작성된 사이트인데 
+이 사이틀를 참고로 나에 대한  소개 사이트를 작성하고 싶어.
+나는  AutoCAD Revit API  전문가 이고 
+특히 건축적산분야와  2D 데이타 3차원 변환 API 전문가야 

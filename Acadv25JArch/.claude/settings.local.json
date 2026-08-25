@@ -11,7 +11,8 @@
       "Read(//d/Dropbox/Obsidian/Projects/Architecture/**)",
       "PowerShell(& \"C:\\\\Program Files \\(x86\\)\\\\Inno Setup 6\\\\ISCC.exe\" \"C:\\\\Users\\\\junhoi\\\\Desktop\\\\Work\\\\Acadv25JArch\\\\JArchitecture_Setup\\\\JArchitecture_Setup.iss\" 2>&1 | Select-Object -Last 6)",
       "Bash(python -)",
-      "PowerShell(& \"C:\\\\Program Files \\(x86\\)\\\\Inno Setup 6\\\\ISCC.exe\" \"C:\\\\Users\\\\junhoi\\\\Desktop\\\\Work\\\\Acadv25JArch\\\\JArchitecture_Setup\\\\JArchitecture_Setup.iss\" 2>&1 | Select-Object -Last 40)"
+      "PowerShell(& \"C:\\\\Program Files \\(x86\\)\\\\Inno Setup 6\\\\ISCC.exe\" \"C:\\\\Users\\\\junhoi\\\\Desktop\\\\Work\\\\Acadv25JArch\\\\JArchitecture_Setup\\\\JArchitecture_Setup.iss\" 2>&1 | Select-Object -Last 40)",
+      "PowerShell(foreach \\($d in @\\(\"C:\\\\Jarch25\\\\Debug\",\"C:\\\\Jarch25\\\\x64\"\\)\\) { Write-Output \"=== $d ===\"; Get-ChildItem $d -Recurse -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 4 FullName, LastWriteTime })"
     ]
   }
 }

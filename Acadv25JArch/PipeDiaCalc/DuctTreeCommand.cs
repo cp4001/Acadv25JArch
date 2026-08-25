@@ -76,12 +76,12 @@ namespace PipeLoad2
                 ed.WriteMessage($"\n[Pre] rootLayer={rootLayer}, lines={lineEndpoints.Count}, CMH blocks={cmhBlockHandles.Count}");
 
                 // 3.5. Zoom fit — 선택 Entity 전체가 화면에 보이도록
-                // (SelectCrossingWindow 가 뷰포트 범위 기준이므로 분석 전 필수)
+                // (SelectFence 가 뷰포트 범위 기준이므로 분석 전 필수)
                 ed.ZoomToEntities(psr.Value.GetObjectIds());
 
-                // 4. Tree 분석 → Leaf tp 에서 CrossingWindow 로 CMH Block 매핑
+                // 4. Tree 분석 → Leaf Line 중간점~tp 구간 Fence 로 CMH Block 매핑
                 var blockToLine = DuctTreeBuilder.MapLeafTerminalsToCmhBlocks(
-                    ed, rootHandle, lineEndpoints, cmhBlockHandles, margin: 10.0);
+                    ed, rootHandle, lineEndpoints, cmhBlockHandles);
 
                 // 5. Main Transaction — Entity 재취득 (CMH 없는 Block 은 제외)
                 using (var tr = db.TransactionManager.StartTransaction())

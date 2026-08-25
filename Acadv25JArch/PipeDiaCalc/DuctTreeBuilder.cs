@@ -19,7 +19,7 @@ namespace PipeLoad2
     /// </summary>
     public class DuctTreeBuilder
     {
-        private const double TOLERANCE = 1.0;  // mm
+        private const double TOLERANCE = 2.0;  // mm
 
         public enum DuctNodeType { Root, Mid, Leaf, Block }
 
@@ -73,16 +73,15 @@ namespace PipeLoad2
         }
 
         /// <summary>
-        /// Root 에서 BFS 로 Tree 분석 → Leaf Line 의 tp(타 Line 과 연결 없는 끝점)에서
-        /// ±margin 사각으로 SelectCrossingWindow → CMH Block 만 매핑.
+        /// Root 에서 BFS 로 Tree 분석 → Leaf Line 의 중간점 ~ tp(타 Line 과 연결 없는 끝점)
+        /// 구간을 SelectFence 로 훑어 걸쳐진 CMH Block 만 매핑.
         /// Transaction 밖에서 호출.
         /// </summary>
         public static Dictionary<string, string> MapLeafTerminalsToCmhBlocks(
             Editor ed,
             string rootHandle,
             List<(string handle, Point3d s, Point3d e)> lineEndpoints,
-            HashSet<string> cmhBlockHandles,
-            double margin = 10.0)
+            HashSet<string> cmhBlockHandles)
         {
             var map   = new Dictionary<string, string>();
             var epMap = lineEndpoints.ToDictionary(x => x.handle, x => (x.s, x.e));
@@ -125,16 +124,16 @@ namespace PipeLoad2
             }
 
             var leaves = visited.Where(h => childCount[h] == 0 && h != rootHandle).ToList();
-            ed.WriteMessage($"\n[MapLeaf] 진입: tree nodes={visited.Count}, leaves={leaves.Count}, cmhBlocks={cmhBlockHandles.Count}, margin={margin}");
+            ed.WriteMessage($"\n[MapLeaf] 진입: tree nodes={visited.Count}, leaves={leaves.Count}, cmhBlocks={cmhBlockHandles.Count}");
 
-            // 3. 각 leaf 의 tp 에서 CrossingWindow
+            // 3. 각 leaf 의 중간점 ~ tp 구간을 Fence 로 선택
             var filter = new SelectionFilter(new[]
             {
                 new TypedValue((int)DxfCode.Start, "INSERT")
             });
 
             int leafIdx = 0;
-            int winCallCount = 0;
+            int fenceCallCount = 0;
             foreach (var leafHandle in leaves)
             {
                 leafIdx++;
@@ -151,15 +150,17 @@ namespace PipeLoad2
                     continue;
                 }
 
-                ed.WriteMessage($"\n  [MapLeaf] Leaf#{leafIdx} h={leafHandle} tp=({tp.X:F1},{tp.Y:F1})");
+                // Leaf Line 중간점 → tp 구간을 Fence 경로로 사용
+                var mid = new Point3d((s.X + e.X) / 2.0, (s.Y + e.Y) / 2.0, (s.Z + e.Z) / 2.0);
 
-                var p1 = new Point3d(tp.X - margin, tp.Y - margin, tp.Z);
-                var p2 = new Point3d(tp.X + margin, tp.Y + margin, tp.Z);
+                ed.WriteMessage($"\n  [MapLeaf] Leaf#{leafIdx} h={leafHandle} mid=({mid.X:F1},{mid.Y:F1}) tp=({tp.X:F1},{tp.Y:F1})");
+
+                var fence = new Point3dCollection { mid, tp };
                 PromptSelectionResult psr;
                 try
                 {
-                    psr = ed.SelectCrossingWindow(p1, p2, filter);
-                    winCallCount++;
+                    psr = ed.SelectFence(fence, filter);
+                    fenceCallCount++;
                 }
                 catch (System.Exception ex)
                 {
@@ -180,7 +181,7 @@ namespace PipeLoad2
                 }
             }
 
-            ed.WriteMessage($"\n[MapLeaf] 종료: SelectCrossingWindow 호출={winCallCount}회, 매핑={map.Count}건");
+            ed.WriteMessage($"\n[MapLeaf] 종료: SelectFence 호출={fenceCallCount}회, 매핑={map.Count}건");
             return map;
         }
 

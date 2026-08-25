@@ -1,0 +1,3 @@
+명령: NETLOAD 조립품 파일 이름: "C:\\Jarch25\\Debug\\net8.0\\Acadv25JArch.dll"
+C:\\Jarch25\\Debug\\net8.0\\Acadv25JArch.dll 조립품을 로드할 수 없습니다.
+명령: InitAddinManager
