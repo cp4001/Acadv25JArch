@@ -204,7 +204,6 @@ namespace PipeLoad2
             btnDuctOutline.TabIndex = 4;
             btnDuctOutline.Text = "DuctOutLine 생성";
             btnDuctOutline.UseVisualStyleBackColor = false;
-            btnDuctOutline.Visible = false;
             btnDuctOutline.Click += btnDuctOutline_Click;
             // 
             // btnClose
