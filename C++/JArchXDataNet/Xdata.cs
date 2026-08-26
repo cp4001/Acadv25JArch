@@ -1,0 +1,126 @@
+using System;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Runtime;
+
+namespace JArch
+{
+    /// <summary>
+    /// JArchXData.arx 의 Xdata 쓰기 함수를 감싼 래퍼.
+    /// AutoCAD 프로세스 안(NETLOAD 된 어셈블리)에서만 사용할 수 있다.
+    /// </summary>
+    public static class Xdata
+    {
+        private const string ArxModule = "JArchXData.arx";
+
+        [DllImport(ArxModule, CallingConvention = CallingConvention.Cdecl,
+                   CharSet = CharSet.Unicode)]
+        private static extern int JArchXDataSet(IntPtr objId, string regName, string value);
+
+        [DllImport(ArxModule, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int JArchGetLicenseInfo(out SYSTEMTIME nowUtc,
+                                                      out SYSTEMTIME endUtc,
+                                                      out int fromInternet);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct SYSTEMTIME
+        {
+            public ushort Year, Month, DayOfWeek, Day, Hour, Minute, Second, Milliseconds;
+
+            public DateTime ToUtc()
+            {
+                // 확정 실패 등으로 0 이 오면 최소값으로 방어.
+                if (Year == 0)
+                    return DateTime.MinValue;
+                return new DateTime(Year, Month, Day, Hour, Minute, Second,
+                                    DateTimeKind.Utc);
+            }
+        }
+
+        /// <summary>로드 시 표시할 라이선스 정보.</summary>
+        public sealed class LicenseInfo
+        {
+            public DateTime NowUtc;       // 확정된 현재 시각(UTC)
+            public DateTime EndDateUtc;   // 만료일(UTC) - 네이티브에서 옴
+            public bool     FromInternet; // true = 인터넷 시각 확인됨
+            public bool     Expired;      // true = 사용기한 지남
+
+            /// <summary>프롬프트 표시용 만료일 (로컬 날짜).</summary>
+            public DateTime EndDate => EndDateUtc.ToLocalTime().Date;
+        }
+
+        static Xdata()
+        {
+            // 안전망: 어떤 경로로 처음 호출되든 .arx 로드는 보장한다.
+            // (정상 흐름에서는 Startup.Initialize 가 NETLOAD 시점에 이미 로드함)
+            EnsureArxLoaded();
+        }
+
+        /// <summary>
+        /// 이 어셈블리와 같은 폴더의 JArchXData.arx 를 로드한다(이미 로드돼 있으면 무시).
+        /// </summary>
+        public static void EnsureArxLoaded()
+        {
+            string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string path = Path.Combine(dir, ArxModule);
+            if (File.Exists(path) && !SystemObjects.DynamicLinker.IsModuleLoaded(path))
+                SystemObjects.DynamicLinker.LoadModule(path, false, false);
+        }
+
+        /// <summary>
+        /// 활성 문서 명령창에 라이선스 만료일을 출력한다.
+        /// 최초 호출 시 인터넷 시각을 한 번 확인한다(이후 Set 은 재사용).
+        /// </summary>
+        public static void ShowBanner()
+        {
+            LicenseInfo lic = GetInfo();
+
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            if (doc == null)
+                return;
+
+            Editor ed = doc.Editor;
+            ed.WriteMessage("\n[JArch] 사용기한: {0:yyyy-MM-dd}  (확인 {1:yyyy-MM-dd}, {2})",
+                            lic.EndDate,
+                            lic.NowUtc.ToLocalTime(),
+                            lic.FromInternet ? "인터넷" : "로컬");
+            if (lic.Expired)
+                ed.WriteMessage("\n[JArch] 사용기한이 지났습니다.");
+        }
+
+        /// <summary>
+        /// 엔티티에 Xdata (1001 . regName) (1000 . value) 를 기록한다.
+        /// 같은 regName 의 기존 Xdata 는 교체되고, 다른 앱의 Xdata 는 유지된다.
+        /// 문서 잠금이 걸린 상태(CommandMethod 안 등)에서 호출해야 한다.
+        /// </summary>
+        public static void Set(ObjectId id, string regName, string value)
+        {
+            ErrorStatus es = (ErrorStatus)JArchXDataSet(id.OldIdPtr, regName, value);
+            if (es != ErrorStatus.OK)
+                throw new Autodesk.AutoCAD.Runtime.Exception(es);
+        }
+
+        /// <summary>
+        /// 라이선스 정보를 조회한다. 최초 호출에서 인터넷 시각을 한 번 확인/확정하며,
+        /// 이후 Set() 은 이 확정값을 재사용해 다시 네트워크를 타지 않는다.
+        /// 보통 모듈 로드 직후 1회 호출해 프롬프트에 EndDate 를 표시하는 용도.
+        /// </summary>
+        public static LicenseInfo GetInfo()
+        {
+            int expired = JArchGetLicenseInfo(out SYSTEMTIME now,
+                                              out SYSTEMTIME end,
+                                              out int fromNet);
+            return new LicenseInfo
+            {
+                NowUtc       = now.ToUtc(),
+                EndDateUtc   = end.ToUtc(),
+                FromInternet = fromNet != 0,
+                Expired      = expired == 1,
+            };
+        }
+    }
+}
