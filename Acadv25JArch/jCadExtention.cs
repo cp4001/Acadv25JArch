@@ -193,20 +193,12 @@ namespace CADExtension //Graphic JEntity JDBtext JObjectID JDouble
 
 
 
-        //XData 
+        //XData
+        // 기록/사용기한 판정은 JArchXData.arx 가 담당한다(JXdata.SetXdata 와 동일 경로).
         public static void XdataSet(this Entity ent, string regAppName, string value)
         {
-            DateTime currentDate = DateTime.Now;
-            DateTime targetDate = MyPlugin.LicenseDate;//new DateTime(2025, 10, 1);
-            bool isCurrentDateBeforeTarget = currentDate > targetDate;
-            if (isCurrentDateBeforeTarget) return;
-
-            using (ResultBuffer rb = new ResultBuffer(
-                new TypedValue(1001, regAppName),  // 1001은 애플리케이션 이름에 대한 DXF 코드입니다.
-                new TypedValue(1000, value)))      // 1000은 문자열 데이터에 대한 DXF 코드입니다.
-            {
-                ent.XData = rb;
-            }
+            if (ent == null) return;
+            JArch.Xdata.SetOpen(ent, regAppName, value);
         }
         public static string XdataGet(this Entity ent, string regAppName)
         {

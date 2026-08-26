@@ -135,6 +135,19 @@
 		<ProjectReference Include="..\DuctSizing.Core\DuctSizing.Core.csproj">
 		  <Private>True</Private>
 		</ProjectReference>
+		<ProjectReference Include="..\C++\JArchXDataNet\JArchXDataNet.csproj">
+		  <Private>True</Private>
+		</ProjectReference>
+	</ItemGroup>
+
+	<!-- JArchXData.arx 를 출력 폴더로 복사.
+	     JArch.Xdata.EnsureArxLoaded 가 JArchXDataNet.dll 과 같은 폴더에서 .arx 를 찾는다. -->
+	<ItemGroup>
+		<None Include="..\C++\JArchXData\x64\Release\JArchXData.arx"
+		      Condition="Exists('..\C++\JArchXData\x64\Release\JArchXData.arx')">
+			<Link>JArchXData.arx</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
   <PropertyGroup>

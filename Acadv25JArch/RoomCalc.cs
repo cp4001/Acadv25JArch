@@ -5,7 +5,6 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using CADExtension;
-using NetWorkTime;
 //using ProgramLicenseManager;
 using System;
 using System.Collections.Generic;
@@ -140,8 +139,7 @@ namespace Acadv25JArch
             doc.Editor.Regen();
 
             //
-            DateTime networkTime = NetworkTimeService.GetNetworkTime();
-            if( networkTime > MyPlugin.LicenseDate) // new DateTime(2026, 3, 2)
+            if (!MyPlugin.IsLicenseValid)
             {
                 ed.WriteMessage("\n프로그램 사용 기간이 만료되었습니다. 관리자에게 문의하세요.");
                 return;
@@ -445,8 +443,7 @@ namespace Acadv25JArch
             doc.Editor.Regen();
 
             //
-            DateTime networkTime = NetworkTimeService.GetNetworkTime();
-            if (networkTime >MyPlugin.LicenseDate)
+            if (!MyPlugin.IsLicenseValid)
             {
                 ed.WriteMessage("\n프로그램 사용 기간이 만료되었습니다. 관리자에게 문의하세요.");
                 return;

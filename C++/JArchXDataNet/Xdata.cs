@@ -21,6 +21,10 @@ namespace JArch
                    CharSet = CharSet.Unicode)]
         private static extern int JArchXDataSet(IntPtr objId, string regName, string value);
 
+        [DllImport(ArxModule, CallingConvention = CallingConvention.Cdecl,
+                   CharSet = CharSet.Unicode)]
+        private static extern int JArchXDataSetEnt(IntPtr pEnt, string regName, string value);
+
         [DllImport(ArxModule, CallingConvention = CallingConvention.Cdecl)]
         private static extern int JArchGetLicenseInfo(out SYSTEMTIME nowUtc,
                                                       out SYSTEMTIME endUtc,
@@ -100,6 +104,20 @@ namespace JArch
         public static void Set(ObjectId id, string regName, string value)
         {
             ErrorStatus es = (ErrorStatus)JArchXDataSet(id.OldIdPtr, regName, value);
+            if (es != ErrorStatus.OK)
+                throw new Autodesk.AutoCAD.Runtime.Exception(es);
+        }
+
+        /// <summary>
+        /// 이미 쓰기로 열려 있는 객체에 Xdata 를 기록한다. 기록 내용은 Set 과 동일
+        /// (regName 그룹 + JLicense 표식, 만료 시 조용히 무시).
+        /// Transaction 안에서 GetObject(ForWrite)/UpgradeOpen 으로 열어 둔 객체는
+        /// ObjectId 로 다시 열 수 없으므로(eWasOpenForWrite) 이쪽을 쓴다.
+        /// DB 에 아직 추가되지 않은 신규 엔티티에도 사용할 수 있다.
+        /// </summary>
+        public static void SetOpen(DBObject obj, string regName, string value)
+        {
+            ErrorStatus es = (ErrorStatus)JArchXDataSetEnt(obj.UnmanagedObject, regName, value);
             if (es != ErrorStatus.OK)
                 throw new Autodesk.AutoCAD.Runtime.Exception(es);
         }

@@ -83,23 +83,13 @@ namespace AcadFunction
             return res;
         }
         //Object에  XData xName으로  string 값 저장
+        // 기록/사용기한 판정은 JArchXData.arx 가 담당한다(인터넷 시각 + 롤백 방어).
+        // 만료 시 arx 가 아무것도 기록하지 않고 조용히 성공 반환하므로 여기선 분기하지 않는다.
+        // (xName)=sdata 와 함께 라이선스 표식 (JLicense)=JJH 가 항상 같이 기록된다.
         public static void SetXdata(DBObject obj, string xName, string sdata)
         {
             if (obj == null) return;
-            //if(obj.AcadObject != null) obj.UpgradeOpen();
-            DateTime currentDate = DateTime.Now;
-            DateTime targetDate = MyPlugin.LicenseDate;//new DateTime(2026, 3, 1);
-            bool isCurrentDateBeforeTarget = currentDate > targetDate;
-            if (isCurrentDateBeforeTarget) return;
-            //obj.UpgradeOpen();
-            //AddRegAppTableRecord(xName);
-            ResultBuffer rbt =
-                new ResultBuffer(
-                    new TypedValue((int)DxfCode.ExtendedDataRegAppName, xName),    //(int)DxfCode.ExtendedDataRegAppName 1001
-                    new TypedValue((int)DxfCode.ExtendedDataAsciiString, sdata)   //Down UpDown    // (int)DxfCode.ExtendedDataAsciiString 1000
-                );
-            obj.XData = rbt;
-            rbt.Dispose();
+            JArch.Xdata.SetOpen(obj, xName, sdata);
         }
 
         #region AddRegAppTable

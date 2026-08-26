@@ -13,18 +13,22 @@
 ; 배포본에는 절대 BinDir 의 DLL 을 넣지 말 것 - 그쪽은 Debug 산출물이다.
 #define BinDir      "C:\Jarch25"
 #define MainDir     BinDir + "\Release"
-#define LicenseDll  SourcePath + "..\JArchLicense\bin\x64\Release\JArchLicense.dll"
 #define PipeLoadDll BinDir + "\x64\Release\net8.0-windows\PipeLoad.dll"
 
 ; Release 빌드 누락 시 인스톨러 컴파일 자체를 실패시킨다
 #if !FileExists(MainDir + "\Acadv25JArch.dll")
   #error Acadv25JArch.dll (Release) 없음 - dotnet build Acadv25JArch.csproj -c Release 로 먼저 빌드할 것
 #endif
-#if !FileExists(LicenseDll)
-  #error JArchLicense.dll (Release|x64) 없음 - MSBuild JArchLicense.vcxproj /p:Configuration=Release /p:Platform=x64 로 먼저 빌드할 것
-#endif
 #if !FileExists(PipeLoadDll)
   #error PipeLoad.dll (Release|x64) 없음 - dotnet build PipeLoad.csproj -c Release -p:Platform=x64 로 먼저 빌드할 것
+#endif
+; Xdata 기록 모듈 - .arx 와 래퍼 DLL 은 반드시 같은 폴더에 배포한다
+; (JArch.Xdata.EnsureArxLoaded 가 자기 DLL 폴더에서 .arx 를 찾는다)
+#if !FileExists(MainDir + "\JArchXDataNet.dll")
+  #error JArchXDataNet.dll 없음 - C++\build.bat 실행 후 Acadv25JArch.csproj 를 -c Release 로 빌드할 것
+#endif
+#if !FileExists(MainDir + "\JArchXData.arx")
+  #error JArchXData.arx 없음 - C++\build.bat 로 ARX 를 먼저 빌드할 것
 #endif
 
 [Setup]
@@ -53,6 +57,13 @@ WizardImageStretch=no
 ; 항목이 하나면 설치 시작 시 언어 선택 다이얼로그가 생략된다
 Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 
+[InstallDelete]
+; 구버전 잔재 정리 - 파일 복사 전에 실행된다.
+; 언인스톨을 거치지 않고 덮어쓰기 재설치하면 [UninstallDelete] 가 돌지 않아
+; 더 이상 배포하지 않는 파일이 {app}\Contents 에 고아로 남는다.
+; JArchLicense.dll : 2026-08-26 라이선스 체계를 JArchXData.arx 로 전환하며 배포 중단.
+Type: files; Name: "{app}\Contents\JArchLicense.dll"
+
 [Files]
 ; Bundle 디스크립터
 Source: "PackageContents.xml"; DestDir: "{app}"; Flags: ignoreversion
@@ -62,9 +73,12 @@ Source: "{#MainDir}\Acadv25JArch.dll";    DestDir: "{app}\Contents"; Flags: igno
 Source: "{#MainDir}\EPPlus.dll";          DestDir: "{app}\Contents"; Flags: ignoreversion
 Source: "{#MainDir}\DuctSizing.Core.dll"; DestDir: "{app}\Contents"; Flags: ignoreversion
 
+; Xdata 기록 모듈 (래퍼 DLL + ARX). 둘은 반드시 같은 폴더에 있어야 한다.
+Source: "{#MainDir}\JArchXDataNet.dll";   DestDir: "{app}\Contents"; Flags: ignoreversion
+Source: "{#MainDir}\JArchXData.arx";      DestDir: "{app}\Contents"; Flags: ignoreversion
+
 ; 별도 출력 경로 프로젝트 (Release 고정)
 Source: "{#PipeLoadDll}"; DestDir: "{app}\Contents"; Flags: ignoreversion
-Source: "{#LicenseDll}";  DestDir: "{app}\Contents"; Flags: ignoreversion
 
 ; Excel 데이터 (빌드 산출물이 아니라 수동 관리 폴더이므로 BinDir 그대로)
 Source: "{#BinDir}\Excel\*"; DestDir: "{app}\Contents\Excel"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "desktop.ini"

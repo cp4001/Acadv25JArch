@@ -186,6 +186,60 @@ namespace {
         return CompareFileTime(&g_now, &exp) >= 0;   // now >= 기한 => 차단
     }
 
+    // -----------------------------------------------------------------------
+    // 이미 열려 있는(kForWrite) 엔티티에 Xdata 를 기록하는 공통 루틴.
+    // 여는 것도 닫는 것도 하지 않는다 - 소유권은 호출자에게 있다.
+    // -----------------------------------------------------------------------
+    Acad::ErrorStatus writeXData(AcDbEntity* pEnt,
+                                 const wchar_t* regName,
+                                 const wchar_t* value)
+    {
+        // 항상 함께 기록하는 라이선스 표식.
+        static const wchar_t* kLicReg = L"JLicense";
+        static const wchar_t* kLicVal = L"JJH";
+
+        // RegApp 테이블 등록: 없으면 등록하고 이미 있으면 그냥 넘어간다.
+        // 호출자가 넘긴 이름과 라이선스 이름을 모두 확인/등록한다.
+        acdbRegApp(regName);
+        acdbRegApp(kLicReg);
+
+        // 1) 호출자가 요청한 Xdata (1001 . regName) (1000 . value)
+        Acad::ErrorStatus es;
+        struct resbuf* pRb = acutBuildList(
+            (int)AcDb::kDxfRegAppName,    // 1001
+            regName,
+            (int)AcDb::kDxfXdAsciiString, // 1000
+            value,
+            RTNONE);
+
+        if (pRb != NULL) {
+            es = pEnt->setXData(pRb);     // regName 그룹만 교체
+            acutRelRb(pRb);
+        } else {
+            es = Acad::eOutOfMemory;
+        }
+
+        // 2) 라이선스 표식 (1001 . "JLicense") (1000 . "JJH") - 항상 기록.
+        //    setXData 는 JLicense 그룹만 교체하므로 위의 regName 그룹은 그대로 남는다.
+        if (es == Acad::eOk) {
+            struct resbuf* pLic = acutBuildList(
+                (int)AcDb::kDxfRegAppName,
+                kLicReg,
+                (int)AcDb::kDxfXdAsciiString,
+                kLicVal,
+                RTNONE);
+
+            if (pLic != NULL) {
+                es = pEnt->setXData(pLic);
+                acutRelRb(pLic);
+            } else {
+                es = Acad::eOutOfMemory;
+            }
+        }
+
+        return es;
+    }
+
 } // anonymous namespace
 
 // ---------------------------------------------------------------------------
@@ -202,15 +256,6 @@ JARCH_API int __cdecl JArchXDataSet(void* objIdPtr,
     if (isBlocked())
         return Acad::eOk;
 
-    // 항상 함께 기록하는 라이선스 표식.
-    static const wchar_t* kLicReg = L"JLicense";
-    static const wchar_t* kLicVal = L"JJH";
-
-    // RegApp 테이블 등록: 없으면 등록하고 이미 있으면 그냥 넘어간다.
-    // 호출자가 넘긴 이름과 라이선스 이름을 모두 확인/등록한다.
-    acdbRegApp(regName);
-    acdbRegApp(kLicReg);
-
     AcDbObjectId id((AcDbStub*)objIdPtr);
 
     AcDbEntity* pEnt = NULL;
@@ -218,42 +263,37 @@ JARCH_API int __cdecl JArchXDataSet(void* objIdPtr,
     if (es != Acad::eOk)
         return es;
 
-    // 1) 호출자가 요청한 Xdata (1001 . regName) (1000 . value)
-    struct resbuf* pRb = acutBuildList(
-        (int)AcDb::kDxfRegAppName,    // 1001
-        regName,
-        (int)AcDb::kDxfXdAsciiString, // 1000
-        value,
-        RTNONE);
-
-    if (pRb != NULL) {
-        es = pEnt->setXData(pRb);     // regName 그룹만 교체
-        acutRelRb(pRb);
-    } else {
-        es = Acad::eOutOfMemory;
-    }
-
-    // 2) 라이선스 표식 (1001 . "JLicense") (1000 . "JJH") - 항상 기록.
-    //    setXData 는 JLicense 그룹만 교체하므로 위의 regName 그룹은 그대로 남는다.
-    if (es == Acad::eOk) {
-        struct resbuf* pLic = acutBuildList(
-            (int)AcDb::kDxfRegAppName,
-            kLicReg,
-            (int)AcDb::kDxfXdAsciiString,
-            kLicVal,
-            RTNONE);
-
-        if (pLic != NULL) {
-            es = pEnt->setXData(pLic);
-            acutRelRb(pLic);
-        } else {
-            es = Acad::eOutOfMemory;
-        }
-    }
+    es = writeXData(pEnt, regName, value);
 
     pEnt->close();
 
     return es;
+}
+
+// ---------------------------------------------------------------------------
+// 이미 열려 있는 엔티티에 직접 기록하는 변형.
+//
+//   pEntPtr : C# 의 DBObject.UnmanagedObject (= AcDbEntity*)
+//
+// .NET Transaction 안에서 GetObject(ForWrite)/UpgradeOpen 으로 이미 열어 둔
+// 객체는 acdbOpenObject 로 다시 열 수 없다(eWasOpenForWrite). 그런 호출자를
+// 위해 열기/닫기 없이 setXData 만 수행한다. 열기 상태 보장은 호출자 책임.
+// DB 에 아직 추가되지 않은(ObjectId 가 Null 인) 신규 엔티티에도 쓸 수 있다.
+// ---------------------------------------------------------------------------
+JARCH_API int __cdecl JArchXDataSetEnt(void* pEntPtr,
+                                       const wchar_t* regName,
+                                       const wchar_t* value)
+{
+    if (pEntPtr == NULL)
+        return Acad::eNullObjectPointer;
+    if (regName == NULL || regName[0] == L'\0' || value == NULL)
+        return Acad::eInvalidInput;
+
+    // 사용기한 경과 시: 아무것도 기록하지 않고 성공처럼 조용히 반환.
+    if (isBlocked())
+        return Acad::eOk;
+
+    return writeXData((AcDbEntity*)pEntPtr, regName, value);
 }
 
 // ---------------------------------------------------------------------------

@@ -18,6 +18,16 @@
 
 **핵심 계약**: `regName`, `value` 둘 다 `string`. 호출 한 번에 지정한 `(regName=value)` **와 함께 라이선스 표식 `(JLicense=JJH)` 이 항상 같이 기록**된다.
 
+**진입점이 두 개다. 호출자 상황에 맞는 쪽을 골라야 한다.**
+
+| 상황 | 쓸 API |
+|---|---|
+| ObjectId 만 있고 객체가 **닫혀** 있다 | `Xdata.Set(ObjectId, ...)` |
+| Transaction 안에서 `GetObject(ForWrite)`/`UpgradeOpen` 으로 **이미 열어** 뒀다 | **`Xdata.SetOpen(DBObject, ...)`** |
+| DB 에 아직 추가 안 한 **신규 엔티티**(ObjectId 가 Null) | **`Xdata.SetOpen(DBObject, ...)`** |
+
+`Set` 은 내부에서 `acdbOpenObject(kForWrite)` 를 하므로, 이미 열린 객체에 쓰면 **`eWasOpenForWrite` 예외**가 난다. .NET Transaction 을 쓰는 코드는 거의 전부 `SetOpen` 쪽이다.
+
 ---
 
 ## 구성 파일
@@ -43,7 +53,13 @@ public static class Xdata
     // 사용기한이 지났으면 아무것도 안 쓰고 조용히 반환(예외 없음).
     // 실패 시 Autodesk.AutoCAD.Runtime.Exception 던짐.
     // ※ 문서 잠금 상태(CommandMethod 안 등)에서 호출할 것.
+    // ※ 네이티브가 kForWrite 로 직접 여므로, 이미 열린 객체엔 쓰면 안 된다.
     public static void Set(ObjectId id, string regName, string value);
+
+    // Set 과 기록 내용 동일. 열기/닫기를 하지 않고 setXData 만 수행한다.
+    // 이미 쓰기로 열린 객체 / DB 미등록 신규 엔티티용.
+    // 열림 상태 보장은 호출자 책임(안 열려 있으면 eNotOpenForWrite 예외).
+    public static void SetOpen(DBObject obj, string regName, string value);
 
     // 라이선스 정보 조회. 최초 호출 시 인터넷 시각을 1회 확정(이후 Set 은 재사용).
     public static LicenseInfo GetInfo();
@@ -112,10 +128,13 @@ public void SetFcd()
 | export | 시그니처 | 반환 |
 |---|---|---|
 | `JArchXDataSet` | `int __cdecl (void* objIdPtr, const wchar_t* regName, const wchar_t* value)` | `Acad::ErrorStatus` (0=eOk) |
+| `JArchXDataSetEnt` | `int __cdecl (void* pEntPtr, const wchar_t* regName, const wchar_t* value)` | `Acad::ErrorStatus` (0=eOk) |
 | `JArchGetLicenseInfo` | `int __cdecl (SYSTEMTIME* nowUtc, SYSTEMTIME* endUtc, int* fromInternet)` | 0=사용가능, 1=만료 |
 | `acrxEntryPoint` / `acrxGetApiVersion` | ARX 표준 | — |
 
-- `objIdPtr` = C#의 `ObjectId.OldIdPtr` (= `AcDbStub*`)
+- `objIdPtr` = C#의 `ObjectId.OldIdPtr` (= `AcDbStub*`) — 네이티브가 `acdbOpenObject(kForWrite)` 후 `close()`
+- `pEntPtr` = C#의 `DBObject.UnmanagedObject` (= `AcDbEntity*`) — **열지도 닫지도 않고** `setXData` 만 수행
+- 두 export 는 기록 본체 `writeXData()` 를 공유하므로 기록 내용·만료 동작이 항상 같다
 - 호출 규약 `__cdecl`, 문자열 `wchar_t*`(UTF-16). C#에서 `CallingConvention.Cdecl`, `CharSet.Unicode`.
 - **acad.exe 프로세스 내에서만 동작** (외부 콘솔 앱 P/Invoke 불가).
 
@@ -159,3 +178,56 @@ build.bat
 2. 방법 A — **wrapper를 직접 NETLOAD**: 로드 즉시 arx 자동 로드 + 만료 배너 출력. `JArch.Xdata.Set(...)` 호출.
 3. 방법 B — **메인 Addin이 `JArchXDataNet.dll` 을 참조**: 메인의 `Initialize()` 에서 `JArch.Xdata.EnsureArxLoaded(); JArch.Xdata.ShowBanner();` 를 부른 뒤, 필요한 곳에서 `JArch.Xdata.Set(id, regName, value)` 사용.
 4. Xdata 기록은 반드시 **문서 잠금**이 걸린 컨텍스트(`[CommandMethod]` 내부, 또는 `doc.LockDocument()`)에서 호출한다.
+
+---
+
+## 적용 사례 — Acadv25JArch (2026-08-26)
+
+`Acadv25JArch` 의 자체 Xdata 기록 함수 2개를 이 모듈로 전환했다. **방법 B(참조)** 를 사용한다.
+
+### 전환 방식 — 호출부는 건드리지 않았다
+
+호출부가 121곳(`JXdata.SetXdata` 117 + `.XdataSet()` 4)이라 전면 재작성 대신 **기존 함수 본체만 교체**했다.
+
+```csharp
+// Acadv25JArch/CadFunction.cs — 기존 시그니처 유지, 본체만 교체
+public static void SetXdata(DBObject obj, string xName, string sdata)
+{
+    if (obj == null) return;
+    JArch.Xdata.SetOpen(obj, xName, sdata);
+}
+
+// Acadv25JArch/jCadExtention.cs — 확장메서드도 동일
+public static void XdataSet(this Entity ent, string regAppName, string value)
+{
+    if (ent == null) return;
+    JArch.Xdata.SetOpen(ent, regAppName, value);
+}
+```
+
+기존 본체에 있던 `MyPlugin.LicenseDate` (로컬 시계) 비교는 삭제. 만료 판정은 arx 가 전담한다.
+
+### `SetOpen` 이 생긴 이유
+
+이 전환 때문에 `JArchXDataSetEnt` / `SetOpen` 을 신설했다. 기존 `Set(ObjectId)` 로는 전환이 **불가능**했다.
+
+| 충돌 | 내용 |
+|---|---|
+| 이미 열린 객체 | 호출부 대부분이 Transaction 안 `UpgradeOpen()` 상태 → `acdbOpenObject` 가 `eWasOpenForWrite` 반환 |
+| 신규 엔티티 | DB 추가 전이라 `ObjectId` 가 Null → `eNullObjectId` |
+
+### 남겨둔 것
+
+`MyPlugin.LicenseDate` 와 `JArchLicense.dll` 은 **제거하지 않았다**. Xdata 기록 경로에서만 빠졌을 뿐,
+시작 배너와 명령 차단(`RoomCalc.cs:144,449`)에는 계속 쓰인다. 두 라이선스 체계가 공존한다.
+
+### 배포
+
+- `Acadv25JArch.csproj` 가 `JArchXDataNet.csproj` 를 `ProjectReference` + `.arx` 를 `CopyToOutputDirectory` → `C:\Jarch25\` / `C:\Jarch25\Release\` 에 3개 파일이 함께 배치된다.
+- `JArchitecture_Setup.iss` 의 `[Files]` 에 두 파일 추가 + `#error` 가드 추가 → 빌드 누락 시 인스톨러 컴파일이 실패한다.
+- 빌드 순서: **`C++\build.bat` (arx+wrapper) → `dotnet build Acadv25JArch.csproj`** . 순서를 바꾸면 `.arx` 복사가 누락된다.
+
+### 실행 시 유의
+
+- **첫 Xdata 기록에서 최대 9초 멈춤** — arx 가 인터넷 시각을 확인(3 호스트 × 3초). 세션당 1회.
+- **모든 Xdata 에 `JLicense=JJH` 가 함께 붙는다** — 전환 이전 도면과 달라지는 지점.

@@ -6,7 +6,7 @@ AutoCAD 2025 .NET 플러그인 — 건축/배관 자동화 (급수배관 Tree �
 - LineTree 관련: `D:\Dropbox\Obsidian\Projects\LineTree\` (모두 `#AutoCAD` 태그, `LineTree.md` 와 `Cmd_*.excalidraw.md` 는 `#Revit`)
   - `LineTreeTechNote.md` — Tree 분석/관경 결정 기술 노트 (`PipeTreeCon`, `PipeTree`, Supply/Return 모드)
   - `FcuLineTreeTechNote.md` — FCU Tree 분석 (`FCUTREE`, H-W 공식, Leaf tp CrossingWindow, TreeType 스냅샷)
-  - `DuctTreeTechNote.md` — Duct Tree 분석 (`DUCTTREE`, CMH 누적, `Total_CMH` XData, Mode D 사이즈 산정 → `a`/`b`/`Disp`, **§8 DuctOutLine 일괄 적용** — 2026-05-14 신규, 2026-08-21 §8 추가)
+  - `DuctTreeTechNote.md` — Duct Tree 분석 (`DUCTTREE`, CMH 누적, `Total_CMH` XData, Mode D 사이즈 산정 → `a`/`b`/`Disp`, **§8 DuctOutLine 일괄 적용** — 2026-05-14 신규, 2026-08-21 §8 추가). **원본은 `Acadv25JArch\PipeDiaCalc\DuctTreeTechNote.md`** (2026-08-26 프로젝트 폴더로 이관 — 그전엔 Obsidian이 유일본이었음) — Obsidian은 복사본, 항상 원본 먼저 수정 후 복사
   - `DuctTreeOutLine.md` — **`DuctOutLine` 버튼 설계 사양** (DuctTree 분석 결과 → 접합부 위상 판정 → `Duct_C1`/`Duct_C2`/`Duct_E`/`Duct_EE` 일괄 적용, v0.3). **원본은 `C:\Users\junhoi\Desktop\Work\건축\Duct-OutLine\DuctTreeOutLine.md`** (사용자 유지) — Obsidian은 복사본. 코드(`DuctTreeOutlineCommand.cs`)는 이 문서를 single source of truth 로 재참조. 개별 패턴의 기하 공식은 재정의하지 않고 각 사양서를 참조만 함 (2026-08-21 동기화)
   - `Duct_OutLine_Design.md` — **DuctOutline3 설계 사양** (Duct 외곽선 생성 기하 알고리즘 Step 0~4, 측벽+Reducer). **원본은 `C:\Users\junhoi\Desktop\Work\공조덕트사이즈\Duct_OutLine_Design.md`** (사용자 유지) — Obsidian은 복사본. 코드(`DuctOutlineCommand.cs`)는 이 문서를 single source of truth 로 재참조 (2026-06-19 신규)
   - `Duct_OutLine_case2.md` — **Duct_Outline_Case2 설계 사양** (T형 양방향 분기 외곽선 11선 + 하부 캡, Step 1~7). **원본은 `C:\Users\junhoi\Desktop\Work\공조덕트사이즈\Duct_OutLine_case2.md`** (사용자 유지) — Obsidian은 복사본. 코드(`DuctOutlineCase2Command.cs`)는 이 문서를 single source of truth 로 재참조 (2026-06-20 신규)
@@ -29,6 +29,7 @@ AutoCAD 2025 .NET 플러그인 — 건축/배관 자동화 (급수배관 Tree �
   - `AinitCommand.md` — `Ainit` 명령 + `DwgDefaultLoader` (NOD `AINIT_DEFAULTS/DiaNoteHeight` ↔ `DiaNote.BaseLen` 어댑터)
   - `PaletteSample.md` — `SHOWPAL`/`HIDEPAL` 도구 팔레트 (`PaletteSample.cs`), lazy init + 버튼 Tag 기반 `SendStringToExecute`
   - `autocadInstall.md` — **배포 가이드** (Inno Setup 번들 설치 구조, `Assembly.Location` 기반 파일 접근, **빌드 구성(Debug/Release)·네이티브 DLL 의존성**). 원본은 `JArchitecture_Setup\autocadInstall.md`
+  - `XdataSet.md` — **Xdata 기록 모듈 사양** (네이티브 `JArchXData.arx` + C# 래퍼 `JArchXDataNet.dll`, 인터넷 시각 라이선스). 원본은 `C++\XdataSet.md`. **`JXdata.SetXdata`/`XdataSet()` 이 이 모듈로 위임**되므로 Xdata 기록을 손대기 전 필독 (2026-08-26 전환)
   - `Architecture.md` — 전체 명령 인덱스, `DiaTreeNote.md`
 
 **노트 태그 규칙**: 각 노트 frontmatter에 `tags: [AutoCAD]` 또는 `tags: [Revit]` 로 플랫폼 구분. 이 프로젝트 관련 노트는 기본 `AutoCAD`, JRevit 관련 노트(`LineTree.md` 등)는 `Revit`.
@@ -54,6 +55,7 @@ AutoCAD 2025 .NET 플러그인 — 건축/배관 자동화 (급수배관 Tree �
 - PaletteSample, PaletteHost, PaletteSet, SHOWPAL, HIDEPAL, MyToolsControl, SendStringToExecute, FlowLayoutPanel
 - 배포, 인스톨러, Inno Setup, ISCC, JArchitecture_Setup, .iss, ApplicationPlugins, bundle, PackageContents, JArchLicense, PipeLoad, DllImport, P/Invoke, Debug, Release, VCRUNTIME140, ucrtbase, dumpbin, CRT 의존성
 - WOW6432Node, 32비트 레지스트리 뷰, 고아 언인스톨 항목, unins000.exe, RunUninstaller, InitializeSetup, SetupLogging, Setup Log, ISPP, FileExists, RegDeleteKeyIncludingSubkeys, TaskDialogMsgBox, IsAppRunning, LoadOnAutoCADStartup, 연결 빌드, BuildBothConfigurations, ChainedBuild, BuildOtherConfiguration, OutputPath 분리, Assets, make_assets.ps1
+- XdataSet, JArchXData, JArchXDataNet, JArchXDataSet, JArchXDataSetEnt, JArch.Xdata, Xdata.Set, Xdata.SetOpen, SetOpen, writeXData, JLicense, JJH, UnmanagedObject, OldIdPtr, eWasOpenForWrite, acdbOpenObject, acdbRegApp, setXData, ObjectARX, .arx, EnsureArxLoaded, ShowBanner, GetLicenseInfo, 인터넷 시각, WinHTTP, Date 헤더, 롤백 방어, high-water, XOR 은닉, 사용기한, JXdata.SetXdata, XdataSet 확장메서드, MyPlugin.LicenseDate
 - CommandUtil, Util_Command, CSS, CSS_DuctPipe_SelectChain, 체인 선택, ss1, ss2, SS1_MultiLineSplit_v2, Base Line 분할, Target 스냅, 관통 제외, THROUGH_EXCLUDE_DIST, SplitBaseAt, To_Duct, ToDUct_SetXdataToDuct, To_Pipe, ToPipe_SetXdataToPipe, EnsureRegApp, ZZERO, ZeroZValue, FlattenEntityZ, zzero.lsp, SCL, SCL_SelectConLine, 진행방향 연속 선택, FindConnectedLines, FindColinearJump, collinear 점프, GAP_MAX, 거리 입력, XdataCopy, XData 복사, SetHighlightScl, 하이라이트 미리보기, 선택 취소 확인, T3, T3_TrimColinearToCross, IsColinearT3, MoveNearEndT3, EC, EC_EndPoint_ConnectToIntersection, MoveNearEndEc, L코너, 근접 끝점
 
 ## Build
@@ -64,6 +66,9 @@ AutoCAD 2025 .NET 플러그인 — 건축/배관 자동화 (급수배관 Tree �
 - AutoCAD 2025 로드: `NETLOAD` → `C:\Jarch25\Acadv25JArch.dll` (`DuctSizing.Core.dll` 도 같은 폴더에 자동 배포 — `CopyLocalLockFileAssemblies=true`)
 - 주요 패키지: EPPlus 8.3.1, OpenStudio.win-x64 3.10.0, Microsoft.VisualStudio.Services.Client 19.225.1
 - **ProjectReference**: `..\DuctSizing.Core\DuctSizing.Core.csproj` (net8.0, `DuctSizingCalculator.ModeD` 등 덕트 사이즈 산정 로직 공유) — 2026-05-19 추가
+- **ProjectReference**: `..\C++\JArchXDataNet\JArchXDataNet.csproj` (Xdata 기록 + 인터넷 시각 라이선스) — 2026-08-26 추가. `JArchXData.arx` 도 `None`+`CopyToOutputDirectory` 로 같이 복사된다(`EnsureArxLoaded` 가 **DLL 과 같은 폴더**에서 `.arx` 를 찾으므로 분리 금지).
+- **빌드 순서 주의**: 네이티브 arx 를 먼저 만들어야 한다. **`C++\build.bat` → `dotnet build Acadv25JArch.csproj`** . 반대로 하면 `.arx` 복사가 누락되고, 런타임에 Xdata 기록이 전부 실패한다. `build.bat` 는 인자 없이 실행하면 `pause` 하므로 스크립트에서는 `build.bat auto` 로 호출할 것.
+- **AutoCAD 실행 중 빌드 불가** — `C:\Jarch25\*.dll` 이 잠긴다(`MSB3027`/`MSB3021`). 반드시 닫고 빌드.
 
 ### 배포 (Inno Setup 번들) — 자세한 가이드: `JArchitecture_Setup\autocadInstall.md`
 - 인스톨러: `JArchitecture_Setup\JArchitecture_Setup.iss` → `C:\ProgramData\Autodesk\ApplicationPlugins\JArchitecture.bundle\Contents\` 에 설치 (AutoCAD 자동 로드, `PackageContents.xml`).
