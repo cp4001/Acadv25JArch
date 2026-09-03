@@ -9,14 +9,20 @@ namespace JArchLicenseAdmin;
 /// public.licenses 에 대한 PostgREST CRUD.
 ///
 /// service_role 키를 쓴다 — RLS 를 전면 우회하므로 테이블을 직접 읽고 쓸 수 있다.
-/// 이 프로그램은 관리자 PC 에서만 돌리고 배포하지 않는다는 전제다.
-/// 키를 소스에 박지 않고 환경변수에서 읽는 이유는 이 저장소가 커밋되기 때문이다.
+///
+/// ⚠️ 이 프로그램은 절대 배포하지 않는다. 키가 유출되면 DB 전체가 읽기·쓰기 가능해진다.
+///    아래 키가 소스에 박혀 있는 것은 저장소가 private 이고 이 exe 를 배포하지 않는다는
+///    전제 위에서만 성립한다. 저장소를 공개하거나 외부 협업자를 추가하는 순간
+///    (git 이력은 지워지지 않으므로) Supabase 에서 키를 회전시켜야 한다.
 /// </summary>
 public sealed class SupabaseLicenseClient : IDisposable
 {
     public const string ServiceKeyEnvVar = "JARCH_LICENSE_SERVICE_KEY";
 
     private const string BaseUrl = "https://bvgpukvuygluxternzig.supabase.co/rest/v1/licenses";
+
+    // service_role 키. 환경변수가 있으면 그쪽이 우선이라 재빌드 없이 교체할 수 있다.
+    private const string EmbeddedServiceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2Z3B1a3Z1eWdsdXh0ZXJuemlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODI1NDA0OCwiZXhwIjoyMTAzODMwMDQ4fQ.-6MquF4NFcX0GElHjogDx868Zh-DdoISKtmhpfTkiUg";
 
     private readonly HttpClient _http;
 
@@ -28,11 +34,17 @@ public sealed class SupabaseLicenseClient : IDisposable
         _http.DefaultRequestHeaders.Add("Prefer", "return=representation");
     }
 
-    /// <summary>환경변수에서 service_role 키를 읽는다. 없으면 null.</summary>
-    public static string? ReadServiceKeyFromEnvironment()
+    /// <summary>
+    /// 쓸 service_role 키를 정한다. 환경변수가 먼저이고, 없으면 소스에 박힌 키를 쓴다.
+    /// 둘 다 비어 있으면 null.
+    /// </summary>
+    public static string? ResolveServiceKey()
     {
         string? key = Environment.GetEnvironmentVariable(ServiceKeyEnvVar);
-        return string.IsNullOrWhiteSpace(key) ? null : key.Trim();
+        if (!string.IsNullOrWhiteSpace(key))
+            return key.Trim();
+
+        return string.IsNullOrWhiteSpace(EmbeddedServiceKey) ? null : EmbeddedServiceKey;
     }
 
     public async Task<List<License>> ListAsync()

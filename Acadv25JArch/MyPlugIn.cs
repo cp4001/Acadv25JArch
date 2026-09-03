@@ -33,8 +33,11 @@ namespace Acadv25JArch
             }
         }
 
-        public static bool IsLicenseValid => Lic is { Expired: false };
+        public static bool IsLicenseValid => Lic is { Usable: true };
         public static DateTime LicenseDate => Lic?.EndDate ?? DateTime.MinValue;
+
+        /// <summary>등록 후 다시 확인할 수 있게 캐시를 버린다(JARCLICENSE 가 부른다).</summary>
+        public static void ResetLicenseCache() => _lic = null;
 
         private static string _initError = "";
 
@@ -56,17 +59,35 @@ namespace Acadv25JArch
                        "\n  프로그램을 사용할 수 없습니다." +
                        "\n============================================\n";
 
-            if (lic.Expired)
-                return "\n============================================" +
-                       "\n  JArchitecture 라이선스가 만료되었습니다." +
-                       $"\n  만료일: {lic.EndDate:yyyy-MM-dd}" +
-                       "\n  프로그램을 사용할 수 없습니다." +
-                       "\n  라이선스 갱신은 관리자에게 문의하세요." +
-                       "\n============================================\n";
+            switch (lic.Status)
+            {
+                case JArch.Xdata.LicenseStatus.Expired:
+                    return "\n============================================" +
+                           "\n  JArchitecture 라이선스가 만료되었습니다." +
+                           $"\n  만료일: {lic.EndDate:yyyy-MM-dd}" +
+                           "\n  프로그램을 사용할 수 없습니다." +
+                           "\n  라이선스 갱신은 관리자에게 문의하세요." +
+                           "\n============================================\n";
+
+                case JArch.Xdata.LicenseStatus.NotRegistered:
+                    return "\n============================================" +
+                           "\n  등록된 사용자가 아닙니다." +
+                           $"\n  이 컴퓨터의 ID: {JArch.Xdata.GetMachineId() ?? "(확인 실패)"}" +
+                           "\n  프로그램을 사용할 수 없습니다." +
+                           "\n  JARCLICENSE 명령으로 등록하세요." +
+                           "\n============================================\n";
+
+                case JArch.Xdata.LicenseStatus.Unreachable:
+                    return "\n============================================" +
+                           "\n  라이선스 서버에 연결할 수 없습니다." +
+                           "\n  인터넷 연결을 확인한 뒤 AutoCAD 를 다시 시작하세요." +
+                           "\n  프로그램을 사용할 수 없습니다." +
+                           "\n============================================\n";
+            }
 
             return "\n=== JArchitecture 로드됨 ===" +
                    $"\n  라이선스 유효기간: {lic.EndDate:yyyy-MM-dd} 까지" +
-                   $"\n  (확인 {lic.NowUtc.ToLocalTime():yyyy-MM-dd}, {(lic.FromInternet ? "인터넷" : "로컬")})" +
+                   $"\n  (확인 {lic.NowUtc.ToLocalTime():yyyy-MM-dd})" +
                    "\n============================\n";
         }
 

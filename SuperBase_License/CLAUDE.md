@@ -137,34 +137,27 @@ $k = Invoke-RestMethod -Uri "https://api.supabase.com/v1/projects/$ref/api-keys?
 |---|---|---|
 | `SUPABASE_ACCESS_TOKEN` | Supabase PAT (`sbp_…`, 44자) | ✅ 등록됨. 계정 전체 권한 |
 | `NEON_API_KEY` | Neon API 키 (`napi_…`, 69자) | ✅ 등록됨. `Work\Supabase\CompanyMnt` 용 |
-| `JARCH_LICENSE_SERVICE_KEY` | service_role 키 (`eyJ…`) — C# 관리 프로그램용 | ❌ **미등록** (아래 참조) |
+| `JARCH_LICENSE_SERVICE_KEY` | service_role 키 (`eyJ…`) — C# 관리 프로그램용 | ⚪ **선택** — 2026-09-03 부터 소스에 키가 박혀 있어 없어도 된다. 설정하면 그쪽이 우선 |
 
 확인:
 ```powershell
 [Environment]::GetEnvironmentVariable('SUPABASE_ACCESS_TOKEN','User')
 ```
 
-### `JARCH_LICENSE_SERVICE_KEY` 는 아직 등록돼 있지 않다 (2026-09-01)
+### service_role 키는 소스에 박혀 있다 (2026-09-03 변경)
 
-C# 관리 프로그램을 검증·실행할 때는 **프로세스 환경에만** 키를 넣어 띄웠다
-(레지스트리 사용자 환경에 비밀키를 평문으로 남기는 변경이라 사용자 확인 없이 하지 않았다).
+`SupabaseLicenseClient.EmbeddedServiceKey` 에 들어 있다. **exe 를 더블클릭하면 그냥 뜬다.**
 
-그래서 **exe 를 그냥 더블클릭하면 "키 없음" 안내창이 뜨고 종료된다.**
-상시 사용하려면 사용자가 직접 등록해야 한다:
-
-```powershell
-setx JARCH_LICENSE_SERVICE_KEY "eyJ..."   # service_role 키
-```
-
-등록 없이 한 번만 띄우려면 (Claude Code 등에서 검증할 때 쓰는 방법):
+키 선택 순서는 `ResolveServiceKey()` 가 정한다 — **환경변수가 먼저**이고, 없으면 소스의 키를 쓴다.
+그래서 키를 회전시켰을 때 재빌드 없이 `setx` 로 임시 교체할 수 있다.
 
 ```powershell
-$t = [Environment]::GetEnvironmentVariable('SUPABASE_ACCESS_TOKEN','User')
-$k = Invoke-RestMethod -Uri 'https://api.supabase.com/v1/projects/bvgpukvuygluxternzig/api-keys?reveal=true' `
-       -Headers @{Authorization="Bearer $t"} -Method Get
-$env:JARCH_LICENSE_SERVICE_KEY = ($k | Where-Object name -eq 'service_role').api_key
-Start-Process '<csharp>\JArchLicenseAdmin\bin\Release\net8.0-windows\JArchLicenseAdmin.exe'
+setx JARCH_LICENSE_SERVICE_KEY "eyJ..."   # 필요할 때만. 없어도 동작한다
 ```
+
+**사용자가 판단해 선택한 트레이드오프다** — 관리 프로그램을 배포하지 않고 저장소가 private
+이라는 전제. 다만 **git 이력은 되돌릴 수 없으므로**, 저장소를 공개하거나 외부 협업자를
+추가하는 시점에는 Supabase 에서 키를 회전시켜야 한다.
 
 ---
 
@@ -175,7 +168,8 @@ Start-Process '<csharp>\JArchLicenseAdmin\bin\Release\net8.0-windows\JArchLicens
 2. 이 저장소의 `.gitignore`는 `.mcp.json`을 제외하지 않는다 → 커밋된다는 전제로 작성
 3. **`service_role` 키는 배포되는 프로그램에 절대 포함하지 않는다** (RLS 전면 우회)
    - 예외는 C# 관리 프로그램 하나뿐이며, **배포하지 않는다는 전제**로만 성립한다
-   - 그 프로그램도 소스에 박지 않고 환경변수에서 읽는다 (§2 때문)
+   - 2026-09-03 부터 그 프로그램의 소스에 키가 박혀 있다. **저장소가 private 이라는
+     전제**로 사용자가 선택한 것이다 — 공개 전환 시 키 회전 필요 (§2 와 상충하는 유일한 지점)
 4. `anon` 키는 노출 전제 키 → 반드시 RLS와 함께 사용
 5. 테이블 직접 조회는 차단하고 **RPC 함수 하나만** 노출 (comID 목록·회사명 유출 방지)
 6. 배포되는 클라이언트는 boolean만 수신
@@ -189,9 +183,51 @@ Start-Process '<csharp>\JArchLicenseAdmin\bin\Release\net8.0-windows\JArchLicens
 
 | 확인 항목 | 실측값 |
 |---|---|
-| `public.licenses` | 존재, `rowsecurity=true`, **정책 0건** (= anon 완전 차단) |
+| `public.licenses` | 존재, `rowsecurity=true`. **INSERT 정책 1건**(자가 등록용, 2026-09-02 추가). SELECT/UPDATE/DELETE 는 정책 0건 = 여전히 완전 차단 |
 | `public.check_license(text)` | `security definer`, `search_path=public`, owner `postgres` |
 | EXECUTE 권한 | `anon`, `authenticated`, `postgres`, `service_role` |
+
+### 마이그레이션 `license_status_and_self_registration` (2026-09-02)
+
+AutoCAD 플러그인이 쓰는 RPC 둘과 등록용 RLS 를 추가했다.
+
+| 객체 | 종류 | 반환/역할 |
+|---|---|---|
+| `jarch_trial_exp_date()` | sql stable | 체험 만료일 = 오늘+30. **체험 일수는 여기만 고친다** (등록 함수와 RLS 정책이 같이 본다) |
+| `check_license_status(text)` | **security definer** | `NONE` / `YYYY-MM-DD\|Y` / `YYYY-MM-DD\|N` — 등록여부·만료일·유효성을 한 번에 |
+| `register_license(text,text,text,text)` | **security invoker** | `OK\|YYYY-MM-DD` / `DUP` / `BAD` |
+| `licenses_anon_self_register` | RLS policy (INSERT, to anon) | com_id 형식 + `exp_date = 체험만료일` + `reg_date = 오늘` 을 강제 |
+
+**`register_license` 가 `security invoker` 인 것이 핵심이다.** `security definer` 로 두면
+소유자(postgres, BYPASSRLS) 권한으로 돌아 위 정책을 우회해 버린다. 호출자(anon) 권한으로
+실행돼야 정책이 실제로 적용된다.
+
+응답을 **스칼라 text 고정 포맷**으로 만든 이유는 C++ 클라이언트에 JSON 파서가 없기 때문이다
+(`prd.md` §5.2 의 "응답이 스칼라라 파서 불필요" 를 그대로 유지).
+
+#### anon 으로 실측한 경계 (2026-09-02)
+
+| 시도 | 결과 |
+|---|---|
+| `check_license_status` 4가지 상태 | 전부 사양대로 |
+| `register_license` 신규 / 재시도 / 잘못된 형식 | `OK\|2026-10-02` / `DUP` / `BAD` |
+| `GET /licenses?select=*` | `[]` — SELECT 정책 없음 |
+| `POST /licenses` 로 `exp_date=2099-12-31` | **HTTP 401** `new row violates row-level security policy` |
+| `POST /licenses` 로 정상 기한 | 201 — 정책이 허용하는 범위. 자가 등록 자체는 열려 있다 |
+| `PATCH` 로 남의 행 기한 연장 / `DELETE` | HTTP 204 지만 **실제로는 0건**. RLS 가 막았다 (표 아래 함정 참조) |
+
+⚠️ **PostgREST 는 0건이 처리돼도 UPDATE/DELETE 에 204 를 준다.** 위 PATCH/DELETE 가
+성공처럼 보였지만 테이블을 직접 조회해 `TEST-EXPIRED` 의 기한이 그대로이고 `TEST-VALID` 가
+살아 있음을 확인했다. **상태코드만 보고 "뚫렸다/막혔다" 를 판단하지 말 것.**
+
+#### 자가 등록을 열면서 받아들인 것
+
+- 누구든 **형식이 맞는 com_id 로 30일 체험을 만들 수 있다.** 서버는 그 ID 가 정말 그 PC 의
+  하드웨어에서 나왔는지 확인할 방법이 없다. 자가 등록을 택한 이상 피할 수 없는 비용이다
+- 막을 수 있는 것은 막았다 — 기한을 스스로 늘리는 것, 남의 행을 고치는 것, 목록을 읽는 것,
+  같은 PC 를 두 번 등록하는 것
+- 남은 노출은 **무의미한 행을 대량 생성하는 것** 하나다. 필요해지면 Rate limiting
+  (`prd.md` §7)이 이 지점에 걸린다
 
 > `$$` 대신 `$fn$` 태그를 썼다. Management API에 JSON으로 넘길 때 익명 달러 인용이
 > 다른 도구(psql 메타명령 등)와 섞이면 모호해질 수 있어 이름 있는 태그가 안전하다.
@@ -220,7 +256,7 @@ Start-Process '<csharp>\JArchLicenseAdmin\bin\Release\net8.0-windows\JArchLicens
 
 | 경고 | 판단 |
 |---|---|
-| `rls_enabled_no_policy` (INFO) | 정책 없음이 곧 차단 수단 — 설계 그대로 |
+| `rls_enabled_no_policy` (INFO) | 2026-09-02 이후 INSERT 정책 1건이 생겼다. SELECT 등에 정책이 없는 것은 여전히 의도된 차단 |
 | `anon_security_definer_function_executable` (WARN) | RPC 하나만 노출하는 것이 목적 |
 | `authenticated_security_definer_function_executable` (WARN) | 위와 동일. 클라이언트는 anon만 쓰므로 `authenticated` 회수도 가능하나 `prd.md` §6.1 대로 유지 |
 
@@ -237,7 +273,54 @@ Start-Process '<csharp>\JArchLicenseAdmin\bin\Release\net8.0-windows\JArchLicens
 ```c
 extern "C" __declspec(dllexport) int CheckLicenseOnline(const char* comID);
 // 1 = 사용 가능 / 0 = 미등록·기간초과·HTTP오류·네트워크오류
+
+extern "C" __declspec(dllexport) int GetMachineId(char* buf, int bufSize);
+// 이 PC 의 고유 ID 를 만든다. buf 는 JARCH_MACHINE_ID_BUFSIZE(32) 이상.
+// 1 = 성공 / 0 = 실패(buf 는 빈 문자열)
 ```
+
+### 컴퓨터 고유 ID — `GetMachineId` (2026-09-02 추가)
+
+```
+정상        XXXX-XXXX-XXXX-XXXX-XXXX      (24자)   예: 5D07-1088-5DF0-6EF3-A203
+UUID 불량   M-XXXX-XXXX-XXXX-XXXX-XXXX    (26자)   MachineGuid 단독 폴백
+```
+
+이 값을 그대로 `com_id` 로 써서 `CheckLicenseOnline` 에 넘긴다.
+
+**⚠ 아래 입력 규칙은 절대 바꾸지 않는다.** 한 글자만 달라져도 등록된 모든 PC 의
+ID 가 바뀌어 전부 재등록해야 한다:
+
+| 항목 | 확정값 |
+|---|---|
+| 소스 1 | `HKLM\SOFTWARE\Microsoft\Cryptography\MachineGuid` |
+| 소스 2 | SMBIOS Type 1 구조체의 UUID (offset 0x08, 16바이트) |
+| 대소문자 | 두 값 모두 **대문자** |
+| 구분자 | `\|` 한 글자 |
+| GUID 형식 | 하이픈 포함 원문 그대로 |
+| 해시 | SHA-256, 출력은 **대문자 hex** 64자 |
+| 자르기 | 앞 **20자** (= 80비트) |
+| 포맷 | 4자씩 끊어 `-` 로 연결 |
+
+**두 소스를 섞는 이유**는 약점이 서로 반대이기 때문이다. MachineGuid 는 OS 재설치로
+바뀌지만 하드웨어 교체에는 불변, SMBIOS UUID 는 메인보드 교체로 바뀌지만 OS 재설치에는
+불변이다. 대신 **어느 쪽이 바뀌어도 ID 가 달라져 재등록이 필요하다** — 의도된 트레이드오프다.
+
+- 80비트라 1만 대 등록 시 충돌 확률 약 4×10⁻¹⁷. 실질적으로 0
+- SMBIOS UUID 가 전부 `00` 또는 전부 `FF` 인 OEM 미설정 기종은 MachineGuid 단독으로
+  해시하고 접두어 `M-` 를 붙여 구분한다
+- MachineGuid 조차 못 읽으면 **0 을 반환한다.** 추측해서 ID 를 만들지 않는다
+- **관리자 권한 불필요.** TPM EK 가 더 강하지만 관리자 권한이 필요해 탈락시켰다
+- WMI(COM)를 쓰지 않는다 — `RegGetValueW` + `GetSystemFirmwareTable('RSMB')` 직접 호출.
+  AutoCAD 안에서 COM 초기화 상태가 꼬일 수 있어서다
+- `RRF_SUBKEY_WOW6464KEY` 를 명시했다. x64 에서는 기본값과 같지만 32비트로 잘못 빌드하면
+  `WOW6432Node` 를 보게 되어 "값 없음" 으로 오진한다
+- SMBIOS UUID 는 앞 세 필드를 리틀엔디언으로 읽어 표준 GUID 형식으로 만든다(SMBIOS 2.6 규정).
+  **`Win32_ComputerSystemProduct.UUID` 와 같은 값이 나오는 것을 실측 확인**했다 —
+  관리자가 PowerShell 로 대조할 수 있어야 디버깅이 된다
+
+의존성은 `bcrypt.dll` + `ADVAPI32.dll` 이 늘었다. 둘 다 Windows 내장이라
+배포물은 그대로다(OpenSSL 없음, `dumpbin /dependents` 확인).
 
 ### WinHTTP 를 쓴다 — cpp-httplib 아님
 
@@ -293,6 +376,7 @@ cmd /c "call `"$vc\VC\Auxiliary\Build\vcvars64.bat`" >nul 2>&1 && cd /d <cpp경�
 ```
 
 - `test_client.exe <comID>` — 단건 조회. 종료코드 **0=유효 / 1=차단**
+- `test_client.exe --id` — 이 PC 의 고유 ID 만 출력 (`JArchSbLicenseTest.exe --id` 도 동일)
 - **fail-closed 검증 완료**: 호스트를 `no-such-host-xyzq.invalid` 로 바꿔 빌드한 사본에서
   `false` + 0.52초 반환. 네트워크가 끊겨도 통과되지 않는다
 - ⚠️ 종료코드를 `cmd /c "... & echo %errorlevel%"` 로 읽으면 **파싱 시점에 확장되어 이전 값이 나온다.**
@@ -353,18 +437,20 @@ dotnet run --project JArchLicenseAdmin
 - 삭제는 확인 대화상자를 거치며 **기본 버튼이 «아니오»** 다
 - `com_id` 는 수정되지 않는다 — 바꾸려면 삭제 후 다시 추가
 
-### service_role 키 — 환경변수로 읽는다
-
-```
-JARCH_LICENSE_SERVICE_KEY = eyJ... (service_role 키)
-```
+### service_role 키 — 소스에 박혀 있다 (환경변수가 우선)
 
 관리자 PC 전용이고 배포하지 않으므로 **`service_role` 을 쓴다** — RLS 를 우회해
-테이블을 직접 읽고 쓴다. 정책을 새로 만들 필요가 없다(`licenses` 는 여전히 정책 0건이고,
-그래서 C++ 클라이언트 쪽 anon 차단도 그대로 유지된다).
+테이블을 직접 읽고 쓴다. anon 쪽 차단(SELECT 정책 0건)은 그대로 유지된다.
 
-**키를 소스에 박지 않은 이유는 이 저장소가 커밋되기 때문**이다. git 이력은 되돌릴 수 없다.
-없으면 프로그램이 뜨면서 `setx` 명령을 알려주고 종료한다.
+```csharp
+// SupabaseLicenseClient.cs
+private const string EmbeddedServiceKey = "eyJ...";
+
+public static string? ResolveServiceKey()   // 환경변수 > 소스 상수 > null
+```
+
+⚠️ **이 프로그램은 절대 배포하지 않는다.** exe 하나만 나가도 키가 그대로 나간다 —
+DB 전체가 읽기·쓰기 가능해진다 (`prd.md` §3.2 1번).
 
 ⚠️ **이 프로그램은 절대 배포하지 않는다.** `service_role` 키가 유출되면 DB 전체가
 읽기·쓰기 가능해진다 (`prd.md` §3.2 1번).
@@ -487,17 +573,47 @@ GUI 캡처는 DPI 때문에 좌표가 어긋난다. `SetProcessDPIAware()` 를 �
 
 ---
 
+## AutoCAD 플러그인 연결 (2026-09-02)
+
+**`JArchLicense.dll` 이 아니라 `JArchXData.arx` 에 붙였다.** 그 DLL 은 2026-08-26 에
+라이선스 체계가 arx 로 넘어가면서 배포 중단됐고, 설치 프로그램이 오히려 삭제한다
+(`JArchitecture_Setup.iss` `[InstallDelete]`). 고쳐도 아무 효과가 없다.
+
+| 파일 | 변경 |
+|---|---|
+| `C++/JArchXData/JArchXData.cpp` | 하드코딩 만료일(2027-04-01 XOR 은닉) **제거**. Supabase 조회로 대체 + 머신ID/등록 export 추가 |
+| `C++/JArchXDataNet/Xdata.cs` | `LicenseStatus` enum, `GetMachineId()`, `Register()` 추가 |
+| `Acadv25JArch/MyPlugIn.cs` | 배너에 미등록·조회실패 분기 추가. `IsLicenseValid` 를 `Usable` 기준으로 |
+| `Acadv25JArch/LicenseCommands.cs` | **신규** — `JARCHID` / `JARCLICENSE` + 등록 폼 |
+
+```
+JARCHID       이 컴퓨터의 ID 를 명령창에 출력(클립보드에도 복사)
+JARCLICENSE   등록창. 이미 등록된 PC 는 창을 띄우지 않는다
+```
+
+- 등록 폼은 **Designer 파일을 두지 않고 생성자에서 배치**했다. 이 저장소에서 VS Designer 가
+  코드로 추가한 설정을 지운 전례가 있어, 작은 입력창은 코드로만 만든다
+- 등록 성공 후 `MyPlugin.ResetLicenseCache()` 로 캐시를 버리지만, arx 쪽 확정값도 함께
+  풀리므로 **AutoCAD 재시작을 안내**한다
+
+### ⚠️ 머신ID 구현이 두 곳에 있다
+
+`SuperBase_License/cpp/JArchSbLicense.cpp` 와 `C++/JArchXData/JArchXData.cpp` 가
+같은 알고리즘을 각자 갖고 있다. **한쪽만 고치면 등록된 모든 PC 가 미등록이 된다.**
+현재 두 구현이 같은 값을 낸다는 것은 ARX 소스에서 함수를 그대로 추출·컴파일해
+실행 비교하는 방식으로 확인했다(둘 다 `5D07-1088-5DF0-6EF3-A203`).
+
+---
+
 ## 다음 작업 후보
 
-- **`JARCH_LICENSE_SERVICE_KEY` 등록** — 안 하면 C# 프로그램을 더블클릭으로 못 쓴다
-- `TEST-*` 3건 정리 — 이제 C# 관리 프로그램으로 지울 수 있다
+- `TEST-*` 3건 정리 — C# 관리 프로그램으로 지울 수 있다
   (SQL 로 하려면 `delete from public.licenses where com_id like 'TEST-%'`)
-- `prd.md` §7 나머지 미결 항목 — Rate limiting, 검증 결과 캐싱, 오프라인 유예 기간
-- C++ 클라이언트를 실제 AutoCAD 플러그인에 연결.
-  호출 방법은 `csharp/JArchSbLicenseTest/NativeLicense.cs` 를 그대로 쓰면 된다.
-  남은 결정은 **기존 `JArchLicense.dll`(날짜 하드코딩 오프라인 방식)과의 관계**
-  — 교체할지, 온라인 검증을 먼저 시도하고 실패 시 기존 방식으로 떨어뜨릴지.
-  ⚠️ 후자는 fail-closed 원칙(`prd.md` §5.1)과 충돌하므로 의도적으로 정해야 한다
+- `TEST-TODAY` 는 `exp_date` 가 고정이라 **하루 지나면 회귀 테스트가 실패한다.**
+  실행 시점에 갱신하도록 바꾸든지, 회귀 케이스에서 빼든지 정할 것
+- `prd.md` §7 나머지 — Rate limiting(자가 등록 스팸이 여기 걸린다), 검증 결과 캐싱
+- `JArchSbLicense.dll` 의 위치 정리 — 지금은 `check_license` 만 쓰는 별도 경로다.
+  arx 가 라이선스를 전담하므로 **이 DLL 이 계속 필요한지** 판단이 필요하다
 
 ---
 
@@ -512,6 +628,11 @@ GUI 캡처는 DPI 때문에 좌표가 어긋난다. `SetProcessDPIAware()` 를 �
 | C++ HTTP | **WinHTTP** (Windows 내장, 의존성 0) — 2026-09-01 변경 |
 | C++ JSON | **없음** (응답이 스칼라 boolean) |
 | 타임아웃 | 연결 5초 / 읽기 5초 |
+| 컴퓨터 고유 ID | `SHA256(대문자MachineGuid + "\|" + 대문자SMBIOS_UUID)` 앞 20자 hex, 4자씩 하이픈 — 2026-09-02 확정, **변경 불가** |
+| 라이선스 판정 위치 | `JArchXData.arx` (2026-09-02). `JArchLicense.dll` 은 배포 중단 상태 |
+| 자가 등록 만료일 | 체험 **30일**. 서버가 부여하며 클라이언트가 지정할 수 없다 (`jarch_trial_exp_date()`) |
+| 재등록 | 불가. 한 com_id 는 한 번만 (PK 충돌 → `DUP`) |
+| 미등록 PC | 라이선스 false + "등록된 사용자가 아닙니다" 안내 |
 
 ---
 

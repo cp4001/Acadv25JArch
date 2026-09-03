@@ -140,15 +140,42 @@ public void SetFcd()
 
 ---
 
-## 라이선스/보안 동작 (ARX 내부)
+## 라이선스/보안 동작 (ARX 내부) — 2026-09-02 Supabase 전환
 
-- **현재 시각**: 인터넷 HTTPS 응답 `Date` 헤더(WinHTTP, 호스트 microsoft→google→cloudflare, 각 3초). 실패 시 로컬 시계 폴백.
-- **만료일**: 2027-04-01 (UTC). 소스에서 XOR 은닉 → `strings` 로 안 보임.
-- **롤백 방어**: 관측한 최신 시각을 레지스트리 `HKCU\Software\Microsoft\Windows\CurrentVersion\Ext\Stat\h` 에 XOR 8바이트로 저장. 시계를 과거로 돌려도 이 값 밑으로 못 내려감.
-- **세션당 1회**: 최초 호출에서 시각을 확정·캐시. 이후 `Set` 은 네트워크를 다시 타지 않음.
-- **만료 시**: `Set` 은 아무것도 기록하지 않고 `eOk` 로 조용히 반환(에러/메시지 없음). → `JLicense` 표식이 없는 결과물 = 만료 상태 산출물.
+**만료일 하드코딩(2027-04-01, XOR 은닉)은 없어졌다.** 판정은 전부 서버가 한다.
 
-> 이 상수(만료일/레지스트리 경로)를 바꾸려면 **C++ 소스만** 수정하고 재빌드한다. C# 쪽엔 날짜가 없다(의도적 은닉).
+- **판정**: Supabase RPC `check_license_status(com_id)` 하나에 물어본다.
+  응답은 스칼라 text 라 JSON 파서가 필요없다 — `NONE` / `YYYY-MM-DD|Y` / `YYYY-MM-DD|N`
+- **상태값** (`JArchGetLicenseInfo` 반환값): `0` 사용가능 / `1` 만료 / `2` 미등록 / `3` 조회실패
+- **fail-closed**: 네트워크·서버·응답 이상은 **전부 차단**이다. 오프라인 유예 없음
+- **컴퓨터 ID**: MachineGuid + SMBIOS UUID → SHA-256 앞 20자.
+  `SuperBase_License/cpp/JArchSbLicense.cpp` 의 `GetMachineId` 와 **완전히 같은 값**이어야 한다.
+  두 구현이 갈리면 등록된 모든 PC 가 미등록이 된다 — 한쪽만 고치지 말 것
+- **현재 시각**: 같은 Supabase 응답의 `Date` 헤더에서 얻는다.
+  microsoft/google/cloudflare 를 따로 찌르던 코드는 제거됐다(왕복 3회 → 1회)
+- **롤백 방어**: 레지스트리 high-water(`HKCU\...\Ext\Stat\h`)는 그대로 두었으나,
+  판정이 서버에서 이뤄지므로 이제 표시용 시각에만 영향을 준다
+- **세션당 1회**: 최초 호출에서 확정·캐시. 이후 `Set` 은 네트워크를 다시 타지 않는다.
+  등록 성공 시에만 캐시가 무효화된다
+- **차단 시**: `Set` 은 아무것도 기록하지 않고 `eOk` 로 조용히 반환(기존과 동일)
+
+### 추가된 export
+
+```cpp
+int JArchGetMachineId(wchar_t* buf, int cch);              // cch >= 32
+int JArchRegisterLicense(const wchar_t* userName,
+                         const wchar_t* compName,
+                         const wchar_t* partName,
+                         wchar_t* outExp, int cch);
+// 0=등록됨 1=이미등록 2=ID형식오류 3=통신실패
+```
+
+- 자가 등록의 **만료일은 서버가 부여**한다(체험 30일). 클라이언트가 지정할 수 없다
+- 한 PC 는 한 번만 등록된다 — PK 충돌을 서버가 `DUP` 으로 돌려준다
+- anon 키가 소스에 평문으로 있다. **의도된 것**이며 RLS 로 보호된다.
+  이 키로 가능한 것은 두 RPC 호출뿐이고 테이블 조회는 SELECT 정책이 없어 항상 빈 배열이다
+
+> 서버 스키마·RLS·체험 일수는 `SuperBase_License/CLAUDE.md` 를 볼 것.
 
 ---
 

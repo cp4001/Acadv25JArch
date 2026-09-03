@@ -21,5 +21,8 @@
       "Read(//d/Dropbox/Obsidian/Projects/Architecture/**)",
       "Read(//d/Dropbox/Obsidian/Projects/**)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }

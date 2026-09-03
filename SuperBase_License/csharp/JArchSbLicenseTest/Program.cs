@@ -7,6 +7,7 @@ namespace JArchSbLicenseTest;
 /// C++ DLL(JArchSbLicense.dll)을 C# 에서 P/Invoke 로 부르는 샘플 겸 회귀 검증.
 ///
 ///   JArchSbLicenseTest.exe            → TEST-* 회귀 검증
+///   JArchSbLicenseTest.exe --id       → 이 PC 의 고유 ID 만 출력
 ///   JArchSbLicenseTest.exe ABC-1234   → 단건 조회 (종료코드 0=유효, 1=차단)
 /// </summary>
 internal static class Program
@@ -38,8 +39,22 @@ internal static class Program
             return 2;
         }
 
+        string? machineId = NativeLicense.GetMachineId();
+
+        if (args.Length > 0 && args[0] == "--id")
+        {
+            if (machineId is null)
+            {
+                Console.Error.WriteLine("GetMachineId 실패");
+                return 2;
+            }
+            Console.WriteLine(machineId);
+            return 0;
+        }
+
         Console.WriteLine($"프로세스   : {(Environment.Is64BitProcess ? "x64" : "x86")}");
         Console.WriteLine($"네이티브   : {dllPath}");
+        Console.WriteLine($"고유 ID    : {machineId ?? "(실패)"}");
         Console.WriteLine();
 
         if (args.Length > 0)

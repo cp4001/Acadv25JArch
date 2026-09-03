@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "C:\\home\\jjh\\.npm-global\\node_modules\\@supabase\\mcp-server-supabase\\dist\\transports\\stdio.js",
+        "--project-ref=bvgpukvuygluxternzig"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
+      }
+    }
+  }
+}

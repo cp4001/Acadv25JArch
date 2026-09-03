@@ -22,9 +22,32 @@ public static class NativeLicense
     [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)]
     private static extern int CheckLicenseOnline([MarshalAs(UnmanagedType.LPUTF8Str)] string comID);
 
+    // JARCH_MACHINE_ID_BUFSIZE (JArchSbLicense.h) 와 같아야 한다.
+    private const int MachineIdBufSize = 32;
+
+    // 출력이 ASCII hex + 하이픈이라 byte[] 로 받아 직접 디코딩한다.
+    // LPUTF8Str 은 반환 방향(out) 마샬링을 지원하지 않는다.
+    [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int GetMachineId(byte[] buf, int bufSize);
+
     /// <summary>
     /// comID 의 사용 기한이 유효한지 서버에 묻는다.
     /// 미등록·기간초과·HTTP 오류·네트워크 오류는 전부 false (fail-closed).
     /// </summary>
     public static bool IsValid(string comID) => CheckLicenseOnline(comID) != 0;
+
+    /// <summary>
+    /// 이 PC 의 고유 ID (예 <c>5D07-1088-5DF0-6EF3-A203</c>).
+    /// 이 값을 그대로 comID 로 써서 <see cref="IsValid"/> 에 넘긴다.
+    /// 만들지 못하면 null — 그 경우 라이선스 검증을 진행하면 안 된다.
+    /// </summary>
+    public static string? GetMachineId()
+    {
+        byte[] buf = new byte[MachineIdBufSize];
+        if (GetMachineId(buf, buf.Length) == 0)
+            return null;
+
+        int len = Array.IndexOf(buf, (byte)0);      // NUL 종단
+        return len <= 0 ? null : System.Text.Encoding.ASCII.GetString(buf, 0, len);
+    }
 }

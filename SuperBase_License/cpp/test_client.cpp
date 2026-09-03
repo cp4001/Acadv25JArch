@@ -1,6 +1,7 @@
 // JArchSbLicense.dll 검증용 콘솔 프로그램.
 //
 //   test_client.exe            → 서버에 심어 둔 TEST-* 로 회귀 검증
+//   test_client.exe --id       → 이 PC 의 고유 ID 만 출력
 //   test_client.exe ABC-1234   → 임의 comID 조회 (종료코드 0=유효, 1=차단)
 
 #include "JArchSbLicense.h"
@@ -29,6 +30,20 @@ namespace
 
 int main(int argc, char** argv)
 {
+    char machineId[JARCH_MACHINE_ID_BUFSIZE];
+    int hasId = GetMachineId(machineId, sizeof(machineId));
+
+    if (argc > 1 && strcmp(argv[1], "--id") == 0)
+    {
+        if (!hasId)
+        {
+            printf("GetMachineId 실패\n");
+            return 2;
+        }
+        printf("%s\n", machineId);
+        return 0;
+    }
+
     if (argc > 1)
     {
         int r = CheckLicenseOnline(argv[1]);
@@ -37,6 +52,7 @@ int main(int argc, char** argv)
     }
 
     printf("JArchSbLicense 회귀 검증\n");
+    printf("이 PC 의 고유 ID : %s\n", hasId ? machineId : "(실패)");
     printf("------------------------------------------------------------\n");
 
     int failed = 0;

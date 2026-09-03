@@ -30,6 +30,21 @@ namespace JArch
                                                       out SYSTEMTIME endUtc,
                                                       out int fromInternet);
 
+        [DllImport(ArxModule, CallingConvention = CallingConvention.Cdecl,
+                   CharSet = CharSet.Unicode)]
+        private static extern int JArchGetMachineId(System.Text.StringBuilder buf, int cch);
+
+        [DllImport(ArxModule, CallingConvention = CallingConvention.Cdecl,
+                   CharSet = CharSet.Unicode)]
+        private static extern int JArchRegisterLicense(string userName,
+                                                       string compName,
+                                                       string partName,
+                                                       System.Text.StringBuilder outExp,
+                                                       int cch);
+
+        // 네이티브의 최소 버퍼 크기와 같아야 한다.
+        private const int MachineIdBufSize = 32;
+
         [StructLayout(LayoutKind.Sequential)]
         private struct SYSTEMTIME
         {
@@ -45,13 +60,32 @@ namespace JArch
             }
         }
 
+        /// <summary>라이선스 상태. 네이티브 JArchGetLicenseInfo 의 반환값과 같다.</summary>
+        public enum LicenseStatus
+        {
+            Valid         = 0,   // 사용 가능
+            Expired       = 1,   // 등록돼 있으나 사용 기한이 지남
+            NotRegistered = 2,   // 등록된 사용자가 아님
+            Unreachable   = 3,   // 서버 조회 실패 - 차단(fail-closed)
+        }
+
         /// <summary>로드 시 표시할 라이선스 정보.</summary>
         public sealed class LicenseInfo
         {
-            public DateTime NowUtc;       // 확정된 현재 시각(UTC)
-            public DateTime EndDateUtc;   // 만료일(UTC) - 네이티브에서 옴
-            public bool     FromInternet; // true = 인터넷 시각 확인됨
-            public bool     Expired;      // true = 사용기한 지남
+            public DateTime      NowUtc;       // 확정된 현재 시각(UTC)
+            public DateTime      EndDateUtc;   // 만료일(UTC) - 서버에서 옴
+            public bool          FromInternet; // true = 서버 응답을 받음
+            public LicenseStatus Status;
+
+            /// <summary>사용 가능한 상태인가.</summary>
+            public bool Usable => Status == LicenseStatus.Valid;
+
+            /// <summary>사용할 수 없는 상태인가(만료·미등록·조회실패 전부 포함).</summary>
+            public bool Expired => Status != LicenseStatus.Valid;
+
+            /// <summary>보여 줄 만료일이 있는가(미등록·조회실패면 없다).</summary>
+            public bool HasEndDate => Status == LicenseStatus.Valid ||
+                                      Status == LicenseStatus.Expired;
 
             /// <summary>프롬프트 표시용 만료일 (로컬 날짜).</summary>
             public DateTime EndDate => EndDateUtc.ToLocalTime().Date;
@@ -88,12 +122,27 @@ namespace JArch
                 return;
 
             Editor ed = doc.Editor;
-            ed.WriteMessage("\n[JArch] 사용기한: {0:yyyy-MM-dd}  (확인 {1:yyyy-MM-dd}, {2})",
-                            lic.EndDate,
-                            lic.NowUtc.ToLocalTime(),
-                            lic.FromInternet ? "인터넷" : "로컬");
-            if (lic.Expired)
-                ed.WriteMessage("\n[JArch] 사용기한이 지났습니다.");
+
+            switch (lic.Status)
+            {
+                case LicenseStatus.Valid:
+                    ed.WriteMessage("\n[JArch] 사용기한: {0:yyyy-MM-dd} 까지  (확인 {1:yyyy-MM-dd})",
+                                    lic.EndDate, lic.NowUtc.ToLocalTime());
+                    break;
+
+                case LicenseStatus.Expired:
+                    ed.WriteMessage("\n[JArch] 사용기한이 지났습니다. (만료일 {0:yyyy-MM-dd})",
+                                    lic.EndDate);
+                    break;
+
+                case LicenseStatus.NotRegistered:
+                    ed.WriteMessage("\n[JArch] 등록된 사용자가 아닙니다. JARCLICENSE 로 등록하세요.");
+                    break;
+
+                default:
+                    ed.WriteMessage("\n[JArch] 라이선스 서버에 연결할 수 없어 사용할 수 없습니다.");
+                    break;
+            }
         }
 
         /// <summary>
@@ -129,16 +178,57 @@ namespace JArch
         /// </summary>
         public static LicenseInfo GetInfo()
         {
-            int expired = JArchGetLicenseInfo(out SYSTEMTIME now,
-                                              out SYSTEMTIME end,
-                                              out int fromNet);
+            int status = JArchGetLicenseInfo(out SYSTEMTIME now,
+                                             out SYSTEMTIME end,
+                                             out int fromNet);
             return new LicenseInfo
             {
                 NowUtc       = now.ToUtc(),
                 EndDateUtc   = end.ToUtc(),
                 FromInternet = fromNet != 0,
-                Expired      = expired == 1,
+                // 모르는 값이 오면 차단 쪽으로 해석한다.
+                Status       = System.Enum.IsDefined(typeof(LicenseStatus), status)
+                                   ? (LicenseStatus)status
+                                   : LicenseStatus.Unreachable,
             };
+        }
+
+        /// <summary>
+        /// 이 PC 의 고유 ID (예 <c>5D07-1088-5DF0-6EF3-A203</c>).
+        /// 만들지 못하면 null.
+        /// </summary>
+        public static string GetMachineId()
+        {
+            var sb = new System.Text.StringBuilder(MachineIdBufSize);
+            if (JArchGetMachineId(sb, MachineIdBufSize) == 0)
+                return null;
+            string s = sb.ToString();
+            return s.Length == 0 ? null : s;
+        }
+
+        /// <summary>등록 결과.</summary>
+        public enum RegisterResult
+        {
+            Registered   = 0,   // 등록됨. ExpDate 에 체험 만료일이 온다
+            AlreadyExists = 1,  // 이미 등록된 PC - 추가 등록 불가
+            BadId         = 2,  // ID 형식 오류
+            Failed        = 3,  // 통신 실패
+        }
+
+        /// <summary>
+        /// 이 PC 를 자가 등록한다. com_id 와 만료일은 클라이언트가 정하지 않는다
+        /// (ID 는 하드웨어에서 계산되고, 체험 만료일은 서버가 부여한다).
+        /// </summary>
+        public static RegisterResult Register(string userName, string compName,
+                                              string partName, out string expDate)
+        {
+            var sb = new System.Text.StringBuilder(32);
+            int r = JArchRegisterLicense(userName ?? "", compName ?? "", partName ?? "",
+                                         sb, sb.Capacity);
+            expDate = sb.ToString();
+            return System.Enum.IsDefined(typeof(RegisterResult), r)
+                       ? (RegisterResult)r
+                       : RegisterResult.Failed;
         }
     }
 }
