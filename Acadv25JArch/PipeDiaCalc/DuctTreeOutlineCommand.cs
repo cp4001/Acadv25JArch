@@ -9,10 +9,10 @@ namespace PipeLoad2
 {
     /// <summary>
     /// DuctTree 분석(Apply 완료) 결과인 DuctNode 트리를 순회하며 각 접합 노드(자식 Line 1개 이상)의
-    /// 위상(자식 개수·상대 방향·Leaf 여부)을 판정해 Duct_C1/Duct_C2/Duct_C2E/Duct_E/Duct_EE 중
+    /// 위상(자식 개수·상대 방향·Leaf 여부)을 판정해 Duct_C1/Duct_C1E/Duct_C2/Duct_C2E/Duct_E/Duct_EE 중
     /// 적용할 패턴을 결정한다. 본 클래스는 판정만 수행하며 실제 외곽선 생성/Line 분할은 하지 않는다
     /// (실행은 각 명령의 TryApply 를 호출하는 별도 오케스트레이션 단계에서 수행).
-    /// 설계 기준: 건축\Duct-OutLine\DuctTreeOutLine.md §4/§5 (v0.3).
+    /// 설계 기준: 건축\Duct-OutLine\DuctTreeOutLine.md §4/§5 (v0.6).
     ///
     /// 주의: DuctNode.Line 은 DUCTTREE 분석 당시 커밋·종료된 옛 Transaction 에서 열린 참조이므로
     /// 그대로 재사용하면 eInvalidOpenState 오류가 난다(2026-07-07 실사용 중 확인).
@@ -24,7 +24,7 @@ namespace PipeLoad2
         private const double WidthEqualTol = 1e-3;   // 폭 동일 판정(직선 연속 케이스)
         private const double JunctionTol = 1.0;      // 접합점 일치 거리(mm) — DuctTreeBuilder.TOLERANCE 와 동일 값으로 통일
 
-        public enum OutlinePattern { None, Duct_C1, Duct_C2, Duct_C2E, Duct_E, Duct_EE, Unsupported }
+        public enum OutlinePattern { None, Duct_C1, Duct_C1E, Duct_C2, Duct_C2E, Duct_E, Duct_EE, Unsupported }
 
         /// <summary>노드 하나에 대한 위상 판정 결과. BranchA/BranchB 는 패턴별로 역할이 다르다
         /// (Duct_C2·Duct_C2E: BranchB=축소 자식(bb), BranchA=분기 자식(cc) / Duct_C1: BranchB/BranchA=좌우 자식(bb/cc, Handle 오름차순)
@@ -37,6 +37,11 @@ namespace PipeLoad2
             public Node? BranchA { get; set; }
             public Node? BranchB { get; set; }
             public string Reason { get; set; } = "";
+
+            /// <summary>Duct_C1E 전용 — 해당 분기 Tab 상단에 45° 사선을 둘지(= 그 분기가 Mid Duct 인지).
+            /// Leaf 분기는 사선 없이 90° 직선으로 마감한다(2026-09-09 확정). 판정 시점에 확정해 둔다.</summary>
+            public bool BranchASlant { get; set; }
+            public bool BranchBSlant { get; set; }
 
             public Line? NodeLine { get; set; }
             public Line? BranchALine { get; set; }
@@ -79,19 +84,20 @@ namespace PipeLoad2
             var results = new List<JunctionResult>(plans.Count);
 
             var c1 = new DuctC1Command();
+            var c1e = new DuctC1ECommand();
             var c2 = new DuctC2Command();
             var c2e = new DuctC2ECommand();
             var elbow = new DuctElbowCommand();
             var endElbow = new DuctEndElbowCommand();
 
             foreach (var plan in plans)
-                results.Add(ApplyPlan(tr, db, plan, c1, c2, c2e, elbow, endElbow));
+                results.Add(ApplyPlan(tr, db, plan, c1, c1e, c2, c2e, elbow, endElbow));
 
             return results;
         }
 
         private JunctionResult ApplyPlan(Transaction tr, Database db, JunctionPlan plan,
-            DuctC1Command c1, DuctC2Command c2, DuctC2ECommand c2e, DuctElbowCommand elbow, DuctEndElbowCommand endElbow)
+            DuctC1Command c1, DuctC1ECommand c1e, DuctC2Command c2, DuctC2ECommand c2e, DuctElbowCommand elbow, DuctEndElbowCommand endElbow)
         {
             var result = new JunctionResult { Plan = plan };
 
@@ -106,6 +112,12 @@ namespace PipeLoad2
                 case OutlinePattern.Duct_C1:
                     result.Applied = c1.TryApply(tr, db, plan.NodeLine!, plan.BranchBLine!, plan.BranchALine!, out string msgC1);
                     result.Message = msgC1;
+                    break;
+
+                case OutlinePattern.Duct_C1E:
+                    result.Applied = c1e.TryApply(tr, db, plan.NodeLine!, plan.BranchBLine!, plan.BranchALine!,
+                                                  plan.BranchBSlant, plan.BranchASlant, out string msgC1E);
+                    result.Message = msgC1E;
                     break;
 
                 case OutlinePattern.Duct_C2:
@@ -298,19 +310,24 @@ namespace PipeLoad2
                     bool c1IsMid = c1.Children.Where(cc => cc.Type != NodeType.Block).Any();
                     bool c2IsMid = c2.Children.Where(cc => cc.Type != NodeType.Block).Any();
 
-                    if (!c1IsMid || !c2IsMid)
+                    // bb/cc 는 기하적으로 대칭이라 Handle 오름차순으로 결정적 배정 (§7.3/§12 확정)
+                    bool c1First = System.StringComparer.Ordinal.Compare(c1.Handle, c2.Handle) <= 0;
+                    plan.BranchB = c1First ? c1 : c2; plan.BranchBLine = c1First ? c1Line : c2Line;
+                    plan.BranchA = c1First ? c2 : c1; plan.BranchALine = c1First ? c2Line : c1Line;
+                    plan.BranchBSlant = c1First ? c1IsMid : c2IsMid;
+                    plan.BranchASlant = c1First ? c2IsMid : c1IsMid;
+
+                    if (c1IsMid && c2IsMid)
                     {
-                        plan.Pattern = OutlinePattern.Unsupported;
-                        plan.Reason = "좌우 반대측 직각 분기 2개이나 한쪽 이상이 Leaf(말단) — Duct_C1 은 양쪽 모두 Mid Duct 여야 함.";
+                        plan.Pattern = OutlinePattern.Duct_C1;
+                        plan.Reason = "좌우 반대측 직각 분기 2개(모두 Mid) — Duct_C1 후보(양쪽 Tab 45° 사선, 폭 제약 없음).";
                     }
                     else
                     {
-                        // bb/cc 는 기하적으로 대칭이라 Handle 오름차순으로 결정적 배정 (§7.3/§12 확정)
-                        bool c1First = System.StringComparer.Ordinal.Compare(c1.Handle, c2.Handle) <= 0;
-                        plan.Pattern = OutlinePattern.Duct_C1;
-                        plan.BranchB = c1First ? c1 : c2; plan.BranchBLine = c1First ? c1Line : c2Line;
-                        plan.BranchA = c1First ? c2 : c1; plan.BranchALine = c1First ? c2Line : c1Line;
-                        plan.Reason = "좌우 반대측 직각 분기 2개(모두 Mid) — Duct_C1 후보(폭 제약 없음).";
+                        // 2026-09-09 확정: Tab 사선 여부는 분기별로 갈린다 — Leaf 는 90° 직선, Mid 는 45° 사선.
+                        // 한쪽만 Leaf 인 혼합 형상도 Duct_C1E 가 분기별 플래그로 처리한다(구: 전부 Unsupported).
+                        plan.Pattern = OutlinePattern.Duct_C1E;
+                        plan.Reason = $"좌우 반대측 직각 분기 2개(bb={(plan.BranchBSlant ? "Mid" : "Leaf")}, cc={(plan.BranchASlant ? "Mid" : "Leaf")}) — Duct_C1E 후보(Leaf 측 Tab 은 90° 직선).";
                     }
                 }
                 else if (dot > 1.0 - PerpTol)

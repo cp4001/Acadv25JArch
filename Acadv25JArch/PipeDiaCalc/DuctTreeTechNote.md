@@ -1,7 +1,7 @@
 # Duct Tree 기술 노트
 
 > 프로젝트: `Acadv25JArch` / 네임스페이스: `PipeLoad2` / 폴더: `PipeDiaCalc/`
-> 최종 업데이트: 2026-09-09 (`Duct_C2E` 추가 + `Duct_EE` 컬러 상류측 90° 전환)
+> 최종 업데이트: 2026-09-09 (`Duct_C1E`/`Duct_C2E` 추가 + `Duct_EE` 컬러 상류측 90° 전환)
 
 ---
 
@@ -175,9 +175,9 @@ Mode D 입력은 4개 중 2개만 코드 상수, 2개는 Form 입력:
 
 ## 8. DuctOutLine 일괄 적용 — `DuctTreeOutlineCommand`
 
-2026-07-07 추가. `DuctTreeForm` 의 **`DuctOutLine` 버튼**(`btnDuctOutline_Click`)이 분석된 `DuctNode` 트리를 순회하며 각 접합부의 위상을 판정해 [[DuctOutLine_Case_1|Duct_C1]] / [[Duct_C2]] / [[Duct_C2|Duct_C2E]] / [[Duct_Elbow|Duct_E]] / [[Duct_End_Elbow|Duct_EE]] 를 **대화형 선택 없이 일괄 실행**한다. 기존 5개 명령이 배치 오케스트레이터의 실행 엔진이 되는 구조.
+2026-07-07 추가. `DuctTreeForm` 의 **`DuctOutLine` 버튼**(`btnDuctOutline_Click`)이 분석된 `DuctNode` 트리를 순회하며 각 접합부의 위상을 판정해 [[DuctOutLine_Case_1|Duct_C1]] / [[DuctOutLine_Case_1|Duct_C1E]] / [[Duct_C2]] / [[Duct_C2|Duct_C2E]] / [[Duct_Elbow|Duct_E]] / [[Duct_End_Elbow|Duct_EE]] 를 **대화형 선택 없이 일괄 실행**한다. 기존 6개 명령이 배치 오케스트레이터의 실행 엔진이 되는 구조.
 
-설계 사양: [[DuctTreeOutLine]] (v0.4) — 원본은 `건축\Duct-OutLine\DuctTreeOutLine.md` (사용자 유지). 각 패턴의 기하 공식은 재정의하지 않고 개별 사양서를 참조만 한다.
+설계 사양: [[DuctTreeOutLine]] (v0.6) — 원본은 `건축\Duct-OutLine\DuctTreeOutLine.md` (사용자 유지). 각 패턴의 기하 공식은 재정의하지 않고 개별 사양서를 참조만 한다.
 
 **`[CommandMethod]` 없음** — AutoCAD 명령으로 등록되지 않고 Form 버튼으로만 호출된다.
 
@@ -194,7 +194,7 @@ Mode D 입력은 4개 중 2개만 코드 상수, 2개는 Form 입력:
 | 2 | 직선 1 + 직각 1, **직각 자식(cc)이 Mid** | **`Duct_C2`** — `BranchB`=직선(bb, 축소), `BranchA`=직각(cc, 분기). 컬러 좌측 45° 사선 |
 | 2 | 직선 1 + 직각 1, **직각 자식(cc)이 Leaf** | **`Duct_C2E`** — 인자 매핑 동일, 컬러 좌측 **90° 수직** (`SetC2Pattern`, 2026-09-09 확정) |
 | 2 | 직각 2개 **반대측** + **양쪽 다 Mid** | **`Duct_C1`** — bb/cc 는 기하 대칭이라 **Handle 오름차순**으로 결정적 배정 |
-| 2 | 직각 2개 반대측이나 한쪽이 Leaf | `Unsupported` — `Duct_C1` 은 양쪽 모두 Mid Duct 여야 함 |
+| 2 | 직각 2개 **반대측** + **하나라도 Leaf** | **`Duct_C1E`** — 배정은 동일 + `BranchBSlant`/`BranchASlant`(각 분기의 Mid 여부)를 판정 시점에 확정해 전달. **Leaf 측 Tab 만 90° 직선** (2026-09-09 확정, 구: `Unsupported`) |
 | 2 | 직각 2개 **같은측** | `Unsupported` — 4패턴에 없음 |
 | 3+ | 다중 분기 | `Unsupported` |
 
@@ -285,8 +285,8 @@ Mode D 입력은 4개 중 2개만 코드 상수, 2개는 Form 입력:
 - [[CMH]] — `CMH` 커맨드 (Block Text → XData `"CMH"`+`"Disp"` 자동 추출)
 - [[LPM]] — `LPM` 커맨드 (FCU 부하 추출, CMH 와 같은 패턴)
 - [[TreeOverrule]] — `TTG` 커맨드 (Line `"Tree"` 색상/Line `"Disp"` 라벨/Block `"Disp"` 텍스트)
-- [[DuctTreeOutLine]] — **`DuctOutLine` 버튼 설계 사양** (v0.4, 위상 판정 → 5패턴 매핑) — §8 의 근거 문서
-- [[DuctOutLine_Case_1]] / [[Duct_C2]] / [[Duct_Elbow]] / [[Duct_End_Elbow]] — 각 패턴의 기하 공식 (single source of truth). `Duct_C2E` 는 [[Duct_C2]] §8.2-E 에 변형으로 수록
+- [[DuctTreeOutLine]] — **`DuctOutLine` 버튼 설계 사양** (v0.6, 위상 판정 → 6패턴 매핑) — §8 의 근거 문서
+- [[DuctOutLine_Case_1]] / [[Duct_C2]] / [[Duct_Elbow]] / [[Duct_End_Elbow]] — 각 패턴의 기하 공식 (single source of truth). `Duct_C1E` 는 [[DuctOutLine_Case_1]] §7.2.3, `Duct_C2E` 는 [[Duct_C2]] §8.2-E 에 각각 변형으로 수록
 - `DuctSizing.Core/DuctSizingCalculator.cs` — `ModeD(q, type, α, bMin, bMax, aspectMax)` (DuctSizing 솔루션, 별도 프로젝트)
 - `DuctSizing1/CLAUDE.md` — Mode D 탭 기본값 출처 (200/500/α 재사용/aspect 1.5 고정)
 
@@ -294,6 +294,7 @@ Mode D 입력은 4개 중 2개만 코드 상수, 2개는 Form 입력:
 
 ## 14. 변경 이력
 
+- **2026-09-09** `Duct_C1E` 신규 (`DuctC1ECommand.cs`) — `Duct_C1` 의 Tab 상단 마감을 **분기별로** 고르는 변형. **Leaf 분기는 45° 사선 없이 90° 직선**, Mid 분기는 기존대로 45° 사선(사용자 확정). 정점 `PB`/`PK` 의 높이만 `H+Δ` ↔ `H` 로 갈리며 `[E07]` aa 길이 요건도 같이 완화. `TryApply(…, bbSlant, ccSlant, …)` 로 좌우 독립 지정 — 한쪽만 Leaf 인 혼합 형상도 처리한다. `DuctTreeOutlineCommand` 는 좌우 반대측 직각 분기 2개에서 **둘 다 Mid 면 `Duct_C1`, 하나라도 Leaf 면 `Duct_C1E`** 로 분기(구: 한쪽이라도 Leaf 면 `Unsupported` — 수동 처리로 빠지던 두 케이스가 자동 적용 대상이 됨). `JunctionPlan.BranchASlant`/`BranchBSlant` 는 판정 시점에 확정.
 - **2026-09-09** `Duct_EE` 컬러 상류측 마감을 45° 사선 → **90° 수직**으로 변경 (`DuctEndElbowCommand.cs`). b 가 트리에서 항상 Leaf 라 플레어가 불필요하다는 사용자 확정 — 정점 `S1` 을 `X−dirA·(H_b+L_col)+up·H_a` → `X−dirA·H_b+up·H_a` 로, `[E06]` a 길이 요건을 `H_b+L_col` → `H_b` 로 완화. 6선 구성/판정 로직은 불변. 사양서 `Duct_End_Elbow.md` v1.2.
 - **2026-09-09** `Duct_C2E` 신규 (`DuctC2ECommand.cs`) — `Duct_C2` 의 컬러 좌측 45° 사선을 90° 수직으로 대체한 변형(정점 `S1` 한 점만 상이, `[E09]` aa 길이 요건 `H_cc+L_collar`→`H_cc` 완화). `DuctTreeOutlineCommand` 에 `OutlinePattern.Duct_C2E` + `SetC2Pattern` 추가 — 직선 축소(bb)+직각 분기(cc) 위상에서 **cc 가 Leaf 면 `Duct_C2E`, Mid 면 `Duct_C2`**.
 - **2026-08-21** `DuctTreeOutlineCommand` / `DuctOutLine` 버튼 문서화 (§8 신규, 이하 섹션 번호 +1). 코드는 2026-07-07-07-16 작성분이나 노트에 누락돼 있었음.
