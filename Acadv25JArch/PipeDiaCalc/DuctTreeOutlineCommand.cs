@@ -9,7 +9,7 @@ namespace PipeLoad2
 {
     /// <summary>
     /// DuctTree 분석(Apply 완료) 결과인 DuctNode 트리를 순회하며 각 접합 노드(자식 Line 1개 이상)의
-    /// 위상(자식 개수·상대 방향·Leaf 여부)을 판정해 Duct_C1/Duct_C2/Duct_E/Duct_EE 중
+    /// 위상(자식 개수·상대 방향·Leaf 여부)을 판정해 Duct_C1/Duct_C2/Duct_C2E/Duct_E/Duct_EE 중
     /// 적용할 패턴을 결정한다. 본 클래스는 판정만 수행하며 실제 외곽선 생성/Line 분할은 하지 않는다
     /// (실행은 각 명령의 TryApply 를 호출하는 별도 오케스트레이션 단계에서 수행).
     /// 설계 기준: 건축\Duct-OutLine\DuctTreeOutLine.md §4/§5 (v0.3).
@@ -24,10 +24,10 @@ namespace PipeLoad2
         private const double WidthEqualTol = 1e-3;   // 폭 동일 판정(직선 연속 케이스)
         private const double JunctionTol = 1.0;      // 접합점 일치 거리(mm) — DuctTreeBuilder.TOLERANCE 와 동일 값으로 통일
 
-        public enum OutlinePattern { None, Duct_C1, Duct_C2, Duct_E, Duct_EE, Unsupported }
+        public enum OutlinePattern { None, Duct_C1, Duct_C2, Duct_C2E, Duct_E, Duct_EE, Unsupported }
 
         /// <summary>노드 하나에 대한 위상 판정 결과. BranchA/BranchB 는 패턴별로 역할이 다르다
-        /// (Duct_C2: BranchB=축소 자식(bb), BranchA=분기 자식(cc) / Duct_C1: BranchB/BranchA=좌우 자식(bb/cc, Handle 오름차순)
+        /// (Duct_C2·Duct_C2E: BranchB=축소 자식(bb), BranchA=분기 자식(cc) / Duct_C1: BranchB/BranchA=좌우 자식(bb/cc, Handle 오름차순)
         /// / Duct_E·Duct_EE: BranchA=자식 1개). *Line 필드들은 판정 시점에 재획득한 Line 을 그대로 담아
         /// ApplyTree 가 재조회 없이 바로 사용할 수 있게 한다(동일 Transaction 안이라 유효).</summary>
         public class JunctionPlan
@@ -80,17 +80,18 @@ namespace PipeLoad2
 
             var c1 = new DuctC1Command();
             var c2 = new DuctC2Command();
+            var c2e = new DuctC2ECommand();
             var elbow = new DuctElbowCommand();
             var endElbow = new DuctEndElbowCommand();
 
             foreach (var plan in plans)
-                results.Add(ApplyPlan(tr, db, plan, c1, c2, elbow, endElbow));
+                results.Add(ApplyPlan(tr, db, plan, c1, c2, c2e, elbow, endElbow));
 
             return results;
         }
 
         private JunctionResult ApplyPlan(Transaction tr, Database db, JunctionPlan plan,
-            DuctC1Command c1, DuctC2Command c2, DuctElbowCommand elbow, DuctEndElbowCommand endElbow)
+            DuctC1Command c1, DuctC2Command c2, DuctC2ECommand c2e, DuctElbowCommand elbow, DuctEndElbowCommand endElbow)
         {
             var result = new JunctionResult { Plan = plan };
 
@@ -110,6 +111,11 @@ namespace PipeLoad2
                 case OutlinePattern.Duct_C2:
                     result.Applied = c2.TryApply(tr, db, plan.NodeLine!, plan.BranchBLine!, plan.BranchALine!, out string msgC2);
                     result.Message = msgC2;
+                    break;
+
+                case OutlinePattern.Duct_C2E:
+                    result.Applied = c2e.TryApply(tr, db, plan.NodeLine!, plan.BranchBLine!, plan.BranchALine!, out string msgC2E);
+                    result.Message = msgC2E;
                     break;
 
                 case OutlinePattern.Duct_E:
@@ -266,18 +272,16 @@ namespace PipeLoad2
 
             if (rel1 == Relation.CollinearOpposite && rel2 == Relation.Perpendicular)
             {
-                plan.Pattern = OutlinePattern.Duct_C2;
                 plan.BranchB = c1; plan.BranchBLine = c1Line; // bb = 축소(직선) 자식
                 plan.BranchA = c2; plan.BranchALine = c2Line; // cc = 분기(직각) 자식
-                plan.Reason = "직선 축소(bb) + 직각 분기(cc) — Duct_C2 후보(W_node>W_bb 아니면 TryApply 가 [E04] 로 스킵).";
+                SetC2Pattern(c2, plan);
                 return;
             }
             if (rel1 == Relation.Perpendicular && rel2 == Relation.CollinearOpposite)
             {
-                plan.Pattern = OutlinePattern.Duct_C2;
                 plan.BranchB = c2; plan.BranchBLine = c2Line;
                 plan.BranchA = c1; plan.BranchALine = c1Line;
-                plan.Reason = "직선 축소(bb) + 직각 분기(cc) — Duct_C2 후보(W_node>W_bb 아니면 TryApply 가 [E04] 로 스킵).";
+                SetC2Pattern(c1, plan);
                 return;
             }
 
@@ -324,6 +328,18 @@ namespace PipeLoad2
 
             plan.Pattern = OutlinePattern.Unsupported;
             plan.Reason = "지원하지 않는 위상 조합(collinear-collinear 등 비정상 위상).";
+        }
+
+        /// <summary>직선 축소(bb) + 직각 분기(cc) 위상에서 cc 의 Leaf 여부로 C2 계열 패턴을 확정한다.
+        /// cc 가 Leaf(말단)면 컬러 상류측을 90° 수직으로 마감하는 Duct_C2E, 더 이어지는 Mid Duct 면
+        /// 45° 사선으로 마감하는 Duct_C2 (2026-09-09 사용자 확정).</summary>
+        private void SetC2Pattern(Node cc, JunctionPlan plan)
+        {
+            bool ccIsLeaf = !cc.Children.Any(g => g.Type != NodeType.Block);
+            plan.Pattern = ccIsLeaf ? OutlinePattern.Duct_C2E : OutlinePattern.Duct_C2;
+            plan.Reason = ccIsLeaf
+                ? "직선 축소(bb) + 직각 분기(cc, Leaf) — Duct_C2E 후보(W_node>W_bb 아니면 TryApply 가 [E04] 로 스킵)."
+                : "직선 축소(bb) + 직각 분기(cc, Mid) — Duct_C2 후보(W_node>W_bb 아니면 TryApply 가 [E04] 로 스킵).";
         }
 
         /// <summary>node 자신의 방향(nodeDir) 대비 child 의 관계(직선 연장/직각/기타)를 판정한다.</summary>
