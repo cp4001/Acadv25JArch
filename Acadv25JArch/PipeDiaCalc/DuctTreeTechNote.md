@@ -1,7 +1,7 @@
 # Duct Tree 기술 노트
 
 > 프로젝트: `Acadv25JArch` / 네임스페이스: `PipeLoad2` / 폴더: `PipeDiaCalc/`
-> 최종 업데이트: 2026-09-09 (`Duct_C2E` 추가 — cc Leaf 분기 시 컬러 좌측 90°)
+> 최종 업데이트: 2026-09-09 (`Duct_C2E` 추가 + `Duct_EE` 컬러 상류측 90° 전환)
 
 ---
 
@@ -294,6 +294,7 @@ Mode D 입력은 4개 중 2개만 코드 상수, 2개는 Form 입력:
 
 ## 14. 변경 이력
 
+- **2026-09-09** `Duct_EE` 컬러 상류측 마감을 45° 사선 → **90° 수직**으로 변경 (`DuctEndElbowCommand.cs`). b 가 트리에서 항상 Leaf 라 플레어가 불필요하다는 사용자 확정 — 정점 `S1` 을 `X−dirA·(H_b+L_col)+up·H_a` → `X−dirA·H_b+up·H_a` 로, `[E06]` a 길이 요건을 `H_b+L_col` → `H_b` 로 완화. 6선 구성/판정 로직은 불변. 사양서 `Duct_End_Elbow.md` v1.2.
 - **2026-09-09** `Duct_C2E` 신규 (`DuctC2ECommand.cs`) — `Duct_C2` 의 컬러 좌측 45° 사선을 90° 수직으로 대체한 변형(정점 `S1` 한 점만 상이, `[E09]` aa 길이 요건 `H_cc+L_collar`→`H_cc` 완화). `DuctTreeOutlineCommand` 에 `OutlinePattern.Duct_C2E` + `SetC2Pattern` 추가 — 직선 축소(bb)+직각 분기(cc) 위상에서 **cc 가 Leaf 면 `Duct_C2E`, Mid 면 `Duct_C2`**.
 - **2026-08-21** `DuctTreeOutlineCommand` / `DuctOutLine` 버튼 문서화 (§8 신규, 이하 섹션 번호 +1). 코드는 2026-07-07-07-16 작성분이나 노트에 누락돼 있었음.
 - **2026-07-07~07-16** `DuctTreeOutlineCommand.cs` 추가 — `ClassifyTree`/`ApplyTree` 위상 판정 + `Duct_C1`/`C2`/`E`/`EE` 일괄 적용, `DuctTreeForm` 에 `btnDuctOutline` 추가. stale `DuctNode.Line` → Handle 재획득 방어(`eInvalidOpenState`), `nodeDir` 부호 오류 수정.

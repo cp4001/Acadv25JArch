@@ -18,8 +18,9 @@ namespace PipeLoad2
     /// 6선(본체 상·하 연속 2 + 말단 마감 1 + 컬러 3)을 생성하고,
     /// a는 원본 유지 + X–a1(길이 = W_b) 연장 1선 신규(a 승계),
     /// b는 X–b1, b1–b2 신규 + 원본 b2부터로 수정(3분할, b 승계).
-    /// 컬러 45° 사선은 흐름 상류측 1개, b1–b2 = W_b/4.
-    /// 설계 기준: 건축\Duct-OutLine\Duct_End_Elbow.md (v1.1).
+    /// 컬러 상류측 마감은 90° 수직(b 가 항상 Leaf 이므로 45° 사선 불필요 — 2026-09-09 변경),
+    /// b1–b2 = W_b/4.
+    /// 설계 기준: 건축\Duct-OutLine\Duct_End_Elbow.md (v1.2).
     /// 모든 계산은 월드축이 아니라 선택 선의 방향벡터(dirA/dirB) 기준으로 수행.
     /// </summary>
     public class DuctEndElbowCommand
@@ -121,9 +122,9 @@ namespace PipeLoad2
             Point3d b2 = b1 + dirB * Lcol;       // 컬러 상단 높이
 
             // [9장 3번] 길이 충분성 검증
-            if (aFar.DistanceTo(X) < Hb + Lcol + JunctionTol)
+            if (aFar.DistanceTo(X) < Hb + JunctionTol)
             {
-                message = "[E06] a 길이가 부족합니다 (컬러 사선 시작점보다 길어야 합니다).";
+                message = "[E06] a 길이가 부족합니다 (컬러 상류측 수직선보다 길어야 합니다).";
                 return false;
             }
             if (bFar.DistanceTo(X) < b2.DistanceTo(X) + JunctionTol)
@@ -138,8 +139,8 @@ namespace PipeLoad2
             Point3d T2 = a1 + up * Ha;                          // 본체 상단 끝 (a1)
             Point3d U1 = aFar - up * Ha;                        // 본체 하단 시작
             Point3d U2 = a1 - up * Ha;                          // 본체 하단 끝
-            Point3d S1 = X - dirA * (Hb + Lcol) + up * Ha;      // 컬러 45° 사선 시작 (흐름 상류측)
-            Point3d S2 = X - dirA * Hb + up * (Ha + Lcol);      // 컬러 45° 사선 끝 = 상단 좌측
+            Point3d S1 = X - dirA * Hb + up * Ha;               // 컬러 상류측 수직 하단 (90°)
+            Point3d S2 = X - dirA * Hb + up * (Ha + Lcol);      // 컬러 상단 상류측
             Point3d S3 = X + dirA * Hb + up * (Ha + Lcol);      // 컬러 상단 우측
             Point3d S4 = X + dirA * Hb + up * Ha;               // 컬러 우측 수직 하단
 
@@ -168,7 +169,7 @@ namespace PipeLoad2
             created += AddOutlineLine(tr, btr, db, T1, T2); // 1. 본체 상단 (연속, 끊김 없음)
             created += AddOutlineLine(tr, btr, db, U1, U2); // 2. 본체 하단 (연속, 끊김 없음)
             created += AddOutlineLine(tr, btr, db, T2, U2); // 3. 말단 마감 수직 (a1 위치)
-            created += AddOutlineLine(tr, btr, db, S1, S2); // 4. 컬러 45° 사선 (흐름 상류측 1개)
+            created += AddOutlineLine(tr, btr, db, S1, S2); // 4. 컬러 상류측 수직 (90°)
             created += AddOutlineLine(tr, btr, db, S2, S3); // 5. 컬러 상단 수평
             created += AddOutlineLine(tr, btr, db, S3, S4); // 6. 컬러 우측 수직
 
