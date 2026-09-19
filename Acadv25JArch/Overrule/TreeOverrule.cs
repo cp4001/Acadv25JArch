@@ -1,4 +1,4 @@
-using AcadFunction;
+﻿using AcadFunction;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
@@ -8,6 +8,7 @@ using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.Runtime;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Line = Autodesk.AutoCAD.DatabaseServices.Line;
+using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 using AcadColor = Autodesk.AutoCAD.Colors.Color;
 
 namespace PipeLoad2
@@ -15,42 +16,51 @@ namespace PipeLoad2
     /// <summary>
     /// Line: XData "Tree" (Root/Mid/Leaf) → 색상/LineWeight + 라벨 오버레이.
     /// BlockReference: XData "Disp" → 블록 Geo 센터에 짧은변/2 크기 Red 텍스트.
-    /// 두 인스턴스(Line용, Block용)를 각자 SetXDataFilter 와 함께 등록.
+    /// Polyline: XData "CFM" → 폴리 Geo 센터에 풍량 텍스트.
+    /// 세 인스턴스(Line용, Block용, Poly용)를 각자 SetXDataFilter 와 함께 등록.
     /// </summary>
     public class TreeDrawOverrule : DrawableOverrule
     {
         private static TreeDrawOverrule? _lineInstance;
         private static TreeDrawOverrule? _blockInstance;
+        private static TreeDrawOverrule? _polyInstance;
 
         private const string XDATA_TREE_NAME = "Tree";
         private const string XDATA_DISP_NAME = "Disp";
+        private const string XDATA_CFM_NAME  = "CFM";
 
         // AutoCAD ACI
         private const short COLOR_ROOT = 1;  // Red
         private const short COLOR_MID  = 3;  // Green
         private const short COLOR_LEAF = 2;  // Yellow
         private const short COLOR_DISP = 1;  // Red
+        private const short COLOR_CFM  = 4;  // Cyan
 
         private const double LABEL_TEXT_HEIGHT = 30.0;
         private const short  LABEL_COLOR_ACI   = 7;  // White
 
-        public static bool IsRegistered => _lineInstance != null || _blockInstance != null;
+        public static bool IsRegistered => _lineInstance != null || _blockInstance != null || _polyInstance != null;
 
-        private readonly bool _isBlockMode;
+        private enum Mode { Line, Block, Poly }
+        private readonly Mode _mode;
 
-        private TreeDrawOverrule(bool isBlockMode) { _isBlockMode = isBlockMode; }
+        private TreeDrawOverrule(Mode mode) { _mode = mode; }
 
         public static void Register()
         {
             if (IsRegistered) return;
 
-            _lineInstance = new TreeDrawOverrule(false);
+            _lineInstance = new TreeDrawOverrule(Mode.Line);
             Overrule.AddOverrule(RXObject.GetClass(typeof(Line)), _lineInstance, false);
             _lineInstance.SetXDataFilter(XDATA_TREE_NAME);
 
-            _blockInstance = new TreeDrawOverrule(true);
+            _blockInstance = new TreeDrawOverrule(Mode.Block);
             Overrule.AddOverrule(RXObject.GetClass(typeof(BlockReference)), _blockInstance, false);
             _blockInstance.SetXDataFilter(XDATA_DISP_NAME);
+
+            _polyInstance = new TreeDrawOverrule(Mode.Poly);
+            Overrule.AddOverrule(RXObject.GetClass(typeof(Polyline)), _polyInstance, false);
+            _polyInstance.SetXDataFilter(XDATA_CFM_NAME);
 
             Overrule.Overruling = true;
 
@@ -61,6 +71,7 @@ namespace PipeLoad2
                 doc.Editor.WriteMessage("\n[TreeOverrule] 등록 완료");
                 doc.Editor.WriteMessage($"\n✓ Line   (XData \"{XDATA_TREE_NAME}\") → Root/Mid/Leaf 색상 + 라벨");
                 doc.Editor.WriteMessage($"\n✓ Block  (XData \"{XDATA_DISP_NAME}\") → Geo 센터 Red 텍스트(짧은변/2)");
+                doc.Editor.WriteMessage($"\n✓ Poly   (XData \"{XDATA_CFM_NAME}\") → Geo 센터 Cyan 풍량 텍스트");
                 doc.Editor.WriteMessage("\n========================================");
             }
         }
@@ -79,6 +90,12 @@ namespace PipeLoad2
                 _blockInstance.SetXDataFilter(null);
                 _blockInstance = null;
             }
+            if (_polyInstance != null)
+            {
+                Overrule.RemoveOverrule(RXObject.GetClass(typeof(Polyline)), _polyInstance);
+                _polyInstance.SetXDataFilter(null);
+                _polyInstance = null;
+            }
 
             var doc = Application.DocumentManager.MdiActiveDocument;
             doc?.Editor.WriteMessage("\n[TreeOverrule] 제거됨");
@@ -90,7 +107,12 @@ namespace PipeLoad2
             if (entity == null) return false;
             if (entity.ObjectId.IsNull || entity.ObjectId.IsErased) return false;
 
-            string appName = _isBlockMode ? XDATA_DISP_NAME : XDATA_TREE_NAME;
+            string appName = _mode switch
+            {
+                Mode.Block => XDATA_DISP_NAME,
+                Mode.Poly  => XDATA_CFM_NAME,
+                _          => XDATA_TREE_NAME
+            };
             try
             {
                 using ResultBuffer? rb = entity.GetXDataForApplication(appName);
@@ -101,10 +123,12 @@ namespace PipeLoad2
 
         public override bool WorldDraw(Drawable drawable, WorldDraw wd)
         {
-            if (_isBlockMode)
-                return DrawBlockDisp(drawable, wd);
-
-            return DrawLineTree(drawable, wd);
+            return _mode switch
+            {
+                Mode.Block => DrawBlockDisp(drawable, wd),
+                Mode.Poly  => DrawPolyCfm(drawable, wd),
+                _          => DrawLineTree(drawable, wd)
+            };
         }
 
         private bool DrawLineTree(Drawable drawable, WorldDraw wd)
@@ -235,6 +259,47 @@ namespace PipeLoad2
             return result;
         }
 
+        private bool DrawPolyCfm(Drawable drawable, WorldDraw wd)
+        {
+            // Poly 본체는 정상 렌더 → 그 위에 CFM 텍스트 추가
+            bool result = base.WorldDraw(drawable, wd);
+
+            if (drawable is not Polyline pl) return result;
+
+            try
+            {
+                string? cfm = JXdata.GetXdata(pl, XDATA_CFM_NAME);
+                if (string.IsNullOrEmpty(cfm)) return result;
+
+                Extents3d ext;
+                try { ext = pl.GeometricExtents; }
+                catch { return result; }
+
+                double width  = ext.MaxPoint.X - ext.MinPoint.X;
+                double height = ext.MaxPoint.Y - ext.MinPoint.Y;
+                double shortSide = System.Math.Min(width, height);
+                if (shortSide < 1e-6) return result;
+
+                Point3d center = new Point3d(
+                    (ext.MinPoint.X + ext.MaxPoint.X) * 0.5,
+                    (ext.MinPoint.Y + ext.MaxPoint.Y) * 0.5,
+                    (ext.MinPoint.Z + ext.MaxPoint.Z) * 0.5);
+
+                using var mtext = new MText();
+                mtext.SetDatabaseDefaults();
+                mtext.Location   = center;
+                mtext.TextHeight = shortSide * 0.1;
+                mtext.Contents   = $"{cfm} CFM";
+                mtext.Rotation   = 0;
+                mtext.Attachment = AttachmentPoint.MiddleCenter;
+                mtext.Color      = AcadColor.FromColorIndex(ColorMethod.ByAci, COLOR_CFM);
+                mtext.WorldDraw(wd);
+            }
+            catch { }
+
+            return result;
+        }
+
         private static string ComposeLabel(string? dia, string? totalLpm)
         {
             bool hasDia = !string.IsNullOrEmpty(dia);
@@ -301,6 +366,7 @@ namespace PipeLoad2
                 {
                     RegisterRegApp(doc.Database, "Tree");
                     RegisterRegApp(doc.Database, "Disp");
+                    RegisterRegApp(doc.Database, "CFM");
                     TreeDrawOverrule.Register();
                 }
                 ed.Regen();
