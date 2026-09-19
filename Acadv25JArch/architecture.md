@@ -376,7 +376,7 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | `LPM` | PipeDiaCalc/LineTreeBuilder.cs | Block LPM XData 기록 (FCU 부하, `"LPM"`+`"Disp"` 동시 기록) |
 | `CMH` | PipeDiaCalc/LineTreeBuilder.cs | Block CMH XData 기록 (디퓨져 풍량, BBox 내 Text 추출) |
 | `CMHT` | PipeDiaCalc/LineTreeBuilder.cs | Block CMH 키보드 입력 (`"CMH"`+`"Disp"` 기록) |
-| `Insert_Diffuser` | PipeDiaCalc/DiffuserInsertCommand.cs | 룸 풍량/Type(RPD·SPD·RAD·SAD)/개수 → 선정표에서 표준풍량 ≥ 한 대당 풍량인 최소 행 선정 → 시작점부터 +X 로 ND×2 순간격 배치, XData `Type`/`Size`/`ND`/`CMH`/`Disp` 기록 (2026-09-19 신규, [[InsertDiffuser]]) |
+| `Insert_Diffuser` | PipeDiaCalc/DiffuserInsertCommand.cs | 룸 풍량/Type(RPD·SPD·RAD·SAD)/개수 → 선정표에서 표준풍량 ≥ 한 대당 풍량인 최소 행 선정 → 시작점부터 +X 로 ND×2 순간격 배치, XData `Diffuser`(=Type)/`Type`/`Size`/`ND`/`CMH`/`Disp` 기록 (2026-09-19 신규, [[InsertDiffuser]]) |
 
 `LineExtend2Block` (1번 섹션)도 Tree 분석 준비 단계에서 사용 — Line을 Block BBox까지 연장해 Leaf 매핑 보장.
 

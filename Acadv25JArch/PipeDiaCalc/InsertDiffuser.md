@@ -7,7 +7,7 @@ tags:
 
 > 파일: `PipeDiaCalc/DiffuserInsertCommand.cs`
 > 클래스: `PipeLoad2.DiffuserInsertCommand.Cmd_InsertDiffuser`
-> 최종 업데이트: 2026-09-19 (신규)
+> 최종 업데이트: 2026-09-19 (신규 · 같은 날 `Diffuser` XData 추가)
 
 ---
 
@@ -99,13 +99,14 @@ tags:
 
 | RegApp | 값 | 용도 |
 |---|---|---|
+| `Diffuser` | `"RPD"` 등 (= Type) | 디퓨저 블럭 식별용 RegApp — `Type` 과 같은 값 |
 | `Type` | `"RPD"` 등 | 선정 Type |
 | `Size` | `"550A"` / `"300x300"` 등 | 선정 사이즈 (문자열 그대로) |
 | `ND` | `"300"` | 목 지름 |
 | `CMH` | `"1250"` (한 대당, `"0.##"`) | `DUCTTREE` Leaf 부하 — [[CMH]] 명령과 동일 패턴 |
 | `Disp` | `CMH` 와 동일 문자열 | `TTG` Block 텍스트 표시용 |
 
-`tr.ChecRegNames(db, "Type,Size,ND,CMH,Disp")` 로 RegAppTable 선등록. 모든 값은 `JXdata.SetXdata`(→ `JArchXData.arx`, 라이선스 만료 시 기록 생략) 로 기록하므로 엔티티를 **DB 에 추가한 뒤** 호출한다.
+`tr.ChecRegNames(db, "Diffuser,Type,Size,ND,CMH,Disp")` 로 RegAppTable 선등록. 모든 값은 `JXdata.SetXdata`(→ `JArchXData.arx`, 라이선스 만료 시 기록 생략) 로 기록하므로 엔티티를 **DB 에 추가한 뒤** 호출한다.
 
 ---
 

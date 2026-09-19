@@ -14,7 +14,7 @@ namespace PipeLoad2
     /// Insert_Diffuser — 룸 풍량 / 디퓨저 Type / 개수를 입력받아
     /// 한 대당 풍량(룸 풍량 ÷ 개수) 이상인 최소 표준풍량 행을 디퓨저 선정표에서 고르고,
     /// 선택 지점부터 수평(+X)으로 블럭을 개수만큼 배치한다 (블럭 간 순간격 = ND × 2).
-    /// 각 블럭에 XData "Type" / "Size" / "ND" + "CMH" / "Disp"(한 대당 풍량, CMH 명령과 동일 패턴) 를 문자열로 기록.
+    /// 각 블럭에 XData "Diffuser"(=Type) / "Type" / "Size" / "ND" + "CMH" / "Disp"(한 대당 풍량, CMH 명령과 동일 패턴) 를 문자열로 기록.
     /// 도면에 Type 과 같은 이름의 블럭(RPD/SPD/RAD/SAD)이 정의되어 있어야 한다.
     /// </summary>
     public class DiffuserInsertCommand
@@ -126,7 +126,7 @@ namespace PipeLoad2
                 ObjectId btrId = bt[type];
                 var space = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
 
-                tr.ChecRegNames(db, "Type,Size,ND,CMH,Disp");
+                tr.ChecRegNames(db, "Diffuser,Type,Size,ND,CMH,Disp");
 
                 double spacing = spec.ND * 2.0;   // 블럭 간 순간격(외곽선 사이 거리)
                 string cmhStr = perUnit.ToString("0.##");
@@ -143,6 +143,7 @@ namespace PipeLoad2
                         pitch = (ext.MaxPoint.X - ext.MinPoint.X) + spacing;
                     }
 
+                    JXdata.SetXdata(br, "Diffuser", spec.Type);
                     JXdata.SetXdata(br, "Type", spec.Type);
                     JXdata.SetXdata(br, "Size", spec.Size);
                     JXdata.SetXdata(br, "ND", spec.ND.ToString());
