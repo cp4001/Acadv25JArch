@@ -262,6 +262,63 @@ namespace Acadv25JArch
 
         #endregion
 
+        #region Poly To CFM
+        // 선택 Poly 풍량(CFM) 지정
+        [CommandMethod("To_RoomCFM", CommandFlags.UsePickSet)]
+        public void Cmd_Poly_Set_CFM()
+        {
+            // Get the current database and start a transaction
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            //UCS Elevation to World
+            doc.Editor.CurrentUserCoordinateSystem = Matrix3d.Identity;
+            doc.Editor.Regen();
+
+            // 풍량 입력 받기
+            PromptDoubleOptions pio = new PromptDoubleOptions("\n풍량(CFM)을 입력하세요: ");
+            pio.AllowNegative = false;
+            pio.AllowZero = true;
+            pio.AllowNone = false;
+            pio.DefaultValue = 0;
+            pio.UseDefaultValue = true;
+
+            PromptDoubleResult pir = ed.GetDouble(pio);
+            if (pir.Status != PromptStatus.OK)
+            {
+                ed.WriteMessage("\n입력이 취소되었습니다.");
+                return;
+            }
+            double userValue = pir.Value;
+            ed.WriteMessage($"\n입력된 값: {userValue}");
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                List<Polyline> targets = JEntityFunc.GetEntityByTpye<Polyline>("CFM 대상  poly를  선택 하세요?", JSelFilter.MakeFilterTypes("LWPOLYLINE"));
+                if (targets == null) return;
+                //사용할 XData 미리 Check
+                tr.ChecRegNames(db, "CFM");
+
+                foreach (Entity acEnt in targets)
+                {
+                    LayerTableRecord layer = tr.GetObject(acEnt.LayerId, OpenMode.ForRead) as LayerTableRecord;
+                    if (!layer.IsLocked)
+                    {
+                        var pl = (Polyline)acEnt;
+                        if (pl.Closed != true) continue;// Open poly는 무시한다.
+                        acEnt.UpgradeOpen();
+                        JXdata.SetXdata(pl, "CFM", $"{userValue.ToString()}");
+                    }
+                }
+
+                // Save the new object to the database
+                tr.Commit();
+            }
+        }
+
+        #endregion
+
         #region Poly To Floor Height
         // 선택 Line Poly 천정고 지정
         [CommandMethod("To_FloorHeight", CommandFlags.UsePickSet)] //ToRoom
