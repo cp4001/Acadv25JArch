@@ -7,22 +7,23 @@ tags:
 
 > 파일: `PipeDiaCalc/DamperInsertCommand.cs`
 > 클래스: `PipeLoad2.DamperInsertCommand.Cmd_InsertDamper`
-> 최종 업데이트: 2026-09-21 (신규)
+> 최종 업데이트: 2026-09-21 (신규 · 같은 날 블럭 참조 도면 도입 + 블럭명 JArch_Damper 로 변경)
 
 ---
 
 ## 1. 개요
 
-덕트 Line 을 선택하면 **클릭 위치에 가까운 끝점에서 Line 방향으로 225 떨어진 지점**에 동적 블럭 `JDamper_Dynamic` 을 삽입한다. 블럭 크기는 Line XData `"a"`(덕트 폭)의 **1/2** 을 `Dis1`/`Dis2` 동적 속성에 넣어 맞추고, 회전은 선택 Line 의 각도를 적용한다.
+덕트 Line 을 선택하면 **클릭 위치에 가까운 끝점에서 Line 방향으로 225 떨어진 지점**에 동적 블럭 `JArch_Damper` 를 삽입한다. 블럭 정의는 매 실행마다 참조 도면에서 가져와 덮어쓴다([[JArchBlockLibrary]]). 블럭 크기는 Line XData `"a"`(덕트 폭)의 **1/2** 을 `Dis1`/`Dis2` 동적 속성에 넣어 맞추고, 회전은 선택 Line 의 각도를 적용한다.
 
 | 단계 | 동작 |
 |---|---|
 | ① | `댐퍼를 삽입할 Line 을 선택하세요:` — `PromptEntityOptions` + `AddAllowedClass(typeof(Line), true)` |
+| ①' | (블럭 정의 가져오기) `JArchBlockLibrary.Import(db, ed, "JArch_Damper")` — Transaction 밖, 실패 시 종료 ([[JArchBlockLibrary]]) |
 | ② | Line XData `"a"` → `double.TryParse` → `Dis1`/`Dis2` = `a / 2` |
 | ③ | `per.PickedPoint` 에 가까운 끝점(`nearPt`) → 먼 끝점 방향으로 `Offset = 225` 이동 → 삽입점 |
-| ④ | `JDamper_Dynamic` 삽입, 회전 = `Atan2(dir.Y, dir.X)` |
+| ④ | `JArch_Damper` 삽입, 회전 = `Atan2(dir.Y, dir.X)` |
 | ⑤ | `DynamicBlockReferencePropertyCollection` 에서 `Dis1`/`Dis2` 에 값 대입 |
-| ⑥ | `JDamper_Dynamic 삽입 완료 — a=600, Dis1/Dis2=300, 회전=90°` 출력 |
+| ⑥ | `JArch_Damper 삽입 완료 — a=600, Dis1/Dis2=300, 회전=90°` 출력 |
 
 ---
 
@@ -46,7 +47,7 @@ dir    = (farPt - nearPt).GetNormal()
 
 | 항목 | 값 |
 |---|---|
-| 블럭 이름 | `JDamper_Dynamic` (상수 `BlockName`) — 도면에 정의돼 있어야 함. 없으면 `[오류] 도면에 'JDamper_Dynamic' 블럭이 없습니다.` 후 종료 |
+| 블럭 이름 | `JArch_Damper` (상수 `BlockName`) — 매 실행마다 참조 도면에서 가져오므로 도면에 없어도 된다([[JArchBlockLibrary]]) |
 | 동적 속성 | `Dis1`, `Dis2` (거리 파라미터) — 둘 다 `a / 2` |
 | 속성 탐색 | `PropertyName` 을 `OrdinalIgnoreCase` 로 비교, 개별 `try-catch`. 2개 미만 설정되면 경고 출력(중단하지 않음) |
 | 삽입 공간 | `db.CurrentSpaceId` |
@@ -64,8 +65,14 @@ dir    = (farPt - nearPt).GetNormal()
 
 ---
 
-## 5. 관련 명령 / 문서
+## 5. 블럭 참조 도면
+
+블럭 정의는 매 실행마다 `<DLL 폴더>\Blocks\JArch_Blocks.dwg` 에서 가져와 덮어쓴다(`JArchBlockLibrary.Import`). 상세는 [[JArchBlockLibrary]].
+
+---
+
+## 6. 관련 명령 / 문서
 
 - `SetDuctWidth` — `"a"` XData 의 기록 시점 ([[DuctTreeTechNote]])
-- [[InsertDiffuser]] — 같은 패턴의 블럭 삽입 명령 (선정표 기반, XData 다수 기록)
+- [[InsertDiffuser]] — 같은 패턴의 블럭 삽입 명령. `JArchBlockLibrary` 를 공유한다
 - [[architecture]] §4 — 명령 인덱스

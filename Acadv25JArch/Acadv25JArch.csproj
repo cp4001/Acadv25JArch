@@ -150,6 +150,13 @@
 		</None>
 	</ItemGroup>
 
+	<!-- 블럭 참조 도면. JArchBlockLibrary 가 DLL 폴더의 Blocks\ 에서 찾는다. -->
+	<ItemGroup>
+		<None Include="Blocks\JArch_Blocks.dwg" Condition="Exists('Blocks\JArch_Blocks.dwg')">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
   <PropertyGroup>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>

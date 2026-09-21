@@ -7,7 +7,7 @@ tags:
 
 > 파일: `PipeDiaCalc/DiffuserInsertCommand.cs`
 > 클래스: `PipeLoad2.DiffuserInsertCommand.Cmd_InsertDiffuser`
-> 최종 업데이트: 2026-09-19 (신규 · 같은 날 `Diffuser` XData 추가)
+> 최종 업데이트: 2026-09-21 (블럭 참조 도면 도입 + 블럭명 `JArch_` 접두)
 
 ---
 
@@ -22,6 +22,7 @@ tags:
 | ③ | `디퓨저 개수를 입력하세요:` | `PromptIntegerOptions`, 1 이상, 기본 1 |
 | ④ | (선정 결과 출력) | `선정: RPD 550A ND300 (표준 1300 CMH, 한 대당 1250 CMH × 2개)` |
 | ⑤ | `배치 시작점을 지정하세요:` | `ed.GetPoint` |
+| ⑥ | (블럭 정의 가져오기) | `JArchBlockLibrary.Import(db, ed, "JArch_" + type)` — Transaction 밖, 실패 시 종료 ([[JArchBlockLibrary]]) |
 
 ---
 
@@ -85,7 +86,7 @@ tags:
 
 | 항목 | 값 |
 |---|---|
-| 블럭 이름 | Type 문자열과 동일 (`RPD` / `SPD` / `RAD` / `SAD`) — 도면에 정의돼 있어야 함. 없으면 `[오류] 도면에 'RPD' 블럭이 없습니다.` 후 종료 |
+| 블럭 이름 | **`"JArch_" + Type`** (`JArch_RPD` / `JArch_SPD` / `JArch_RAD` / `JArch_SAD`) — `BlockPrefix` 상수. 접두를 붙이는 이유는 `RPD` 같은 흔한 이름이 사용자 도면의 기존 블럭과 충돌하기 때문. 매 실행마다 참조 도면에서 가져오므로 도면에 없어도 된다([[JArchBlockLibrary]]) |
 | 방향 | 시작점에서 **월드 +X** 로 순차 배치 (회전 0, 축척 1, 현재 레이어) |
 | 간격 | **순간격 = ND × 2** (블럭 외곽선 사이 거리). 피치 = 첫 블럭 `GeometricExtents` 폭 + 순간격 |
 | 삽입 공간 | `db.CurrentSpaceId` |
@@ -99,7 +100,7 @@ tags:
 
 | RegApp | 값 | 용도 |
 |---|---|---|
-| `Diffuser` | `"RPD"` 등 (= Type) | 디퓨저 블럭 식별용 RegApp — `Type` 과 같은 값 |
+| `Diffuser` | `"RPD"` 등 (= Type) | 디퓨저 블럭 식별용 RegApp — `Type` 과 같은 값. **블럭명(`JArch_RPD`)이 아니라 Type(`RPD`) 을 넣는다** — 선정표·사양서 용어를 유지 |
 | `Type` | `"RPD"` 등 | 선정 Type |
 | `Size` | `"550A"` / `"300x300"` 등 | 선정 사이즈 (문자열 그대로) |
 | `ND` | `"300"` | 목 지름 |
@@ -110,9 +111,16 @@ tags:
 
 ---
 
-## 6. 관련 명령 / 문서
+## 6. 블럭 참조 도면
+
+블럭 정의는 매 실행마다 `<DLL 폴더>\Blocks\JArch_Blocks.dwg` 에서 가져와 덮어쓴다(`JArchBlockLibrary.Import`). 상세는 [[JArchBlockLibrary]].
+
+---
+
+## 7. 관련 명령 / 문서
 
 - [[CMH]] — 기존 블럭에 `CMH`/`Disp` 를 붙이는 명령. `Insert_Diffuser` 는 삽입과 동시에 같은 XData 를 기록
 - [[DuctTreeTechNote]] — `"CMH"` XData 를 Leaf 부하로 소비
 - [[TreeOverrule]] — Block `"Disp"` Red 텍스트 표시
+- [[InsertDamper]] — 같은 패턴의 블럭 삽입 명령. `JArchBlockLibrary` 를 공유한다
 - [[architecture]] §4 — 명령 인덱스

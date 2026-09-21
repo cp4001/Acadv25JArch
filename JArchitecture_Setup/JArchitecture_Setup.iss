@@ -1,4 +1,4 @@
-; JArchitecture Inno Setup Script
+﻿; JArchitecture Inno Setup Script
 ; AutoCAD 2025 Plugin Installer
 ;
 ; 빌드: & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "JArchitecture_Setup.iss"
@@ -26,6 +26,9 @@
 ; (JArch.Xdata.EnsureArxLoaded 가 자기 DLL 폴더에서 .arx 를 찾는다)
 #if !FileExists(MainDir + "\JArchXDataNet.dll")
   #error JArchXDataNet.dll 없음 - C++\build.bat 실행 후 Acadv25JArch.csproj 를 -c Release 로 빌드할 것
+#endif
+#if !FileExists(MainDir + "\Blocks\JArch_Blocks.dwg")
+  #error Blocks\JArch_Blocks.dwg 없음 - Acadv25JArch\Blocks\JArch_Blocks.dwg 를 두고 다시 빌드할 것
 #endif
 #if !FileExists(MainDir + "\JArchXData.arx")
   #error JArchXData.arx 없음 - C++\build.bat 로 ARX 를 먼저 빌드할 것
@@ -79,6 +82,10 @@ Source: "{#MainDir}\JArchXData.arx";      DestDir: "{app}\Contents"; Flags: igno
 
 ; 별도 출력 경로 프로젝트 (Release 고정)
 Source: "{#PipeLoadDll}"; DestDir: "{app}\Contents"; Flags: ignoreversion
+
+; 블럭 참조 도면 (Insert_Damper / Insert_Diffuser 가 WblockCloneObjects 로 읽는다)
+; JArchBlockLibrary 가 DLL 과 같은 폴더의 Blocks\ 에서 찾으므로 Contents\Blocks 로 분리 배포
+Source: "{#MainDir}\Blocks\JArch_Blocks.dwg"; DestDir: "{app}\Contents\Blocks"; Flags: ignoreversion
 
 ; Excel 데이터 (빌드 산출물이 아니라 수동 관리 폴더이므로 BinDir 그대로)
 Source: "{#BinDir}\Excel\*"; DestDir: "{app}\Contents\Excel"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "desktop.ini"

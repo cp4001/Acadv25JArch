@@ -15,7 +15,8 @@ namespace PipeLoad2
     /// 한 대당 풍량(룸 풍량 ÷ 개수) 이상인 최소 표준풍량 행을 디퓨저 선정표에서 고르고,
     /// 선택 지점부터 수평(+X)으로 블럭을 개수만큼 배치한다 (블럭 간 순간격 = ND × 2).
     /// 각 블럭에 XData "Diffuser"(=Type) / "Type" / "Size" / "ND" + "CMH" / "Disp"(한 대당 풍량, CMH 명령과 동일 패턴) 를 문자열로 기록.
-    /// 도면에 Type 과 같은 이름의 블럭(RPD/SPD/RAD/SAD)이 정의되어 있어야 한다.
+    /// 블럭 이름은 "JArch_" + Type (JArch_RPD 등)이고, 정의는 매 실행마다
+    /// 참조 도면(Blocks\JArch_Blocks.dwg)에서 가져와 덮어쓴다. XData 값은 Type("RPD") 그대로 사용.
     /// </summary>
     public class DiffuserInsertCommand
     {
@@ -64,6 +65,8 @@ namespace PipeLoad2
         };
 
         private static readonly string[] Types = { "RPD", "SPD", "RAD", "SAD" };
+
+        private const string BlockPrefix = "JArch_";
 
         [CommandMethod("Insert_Diffuser")]
         public void Cmd_InsertDiffuser()
@@ -115,15 +118,14 @@ namespace PipeLoad2
             if (ppr.Status != PromptStatus.OK) return;
             Point3d basePt = ppr.Value;
 
+            // 6. 참조 도면에서 블럭 정의를 가져온다(기존 정의는 덮어씀). Transaction 밖에서 수행.
+            string blockName = BlockPrefix + type;
+            if (!JArchBlockLibrary.Import(db, ed, blockName)) return;
+
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
-                if (!bt.Has(type))
-                {
-                    ed.WriteMessage($"\n[오류] 도면에 '{type}' 블럭이 없습니다.");
-                    return;
-                }
-                ObjectId btrId = bt[type];
+                ObjectId btrId = bt[blockName];
                 var space = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
 
                 tr.ChecRegNames(db, "Diffuser,Type,Size,ND,CMH,Disp");
@@ -154,7 +156,7 @@ namespace PipeLoad2
                 tr.Commit();
             }
 
-            ed.WriteMessage($"\n{type} 블럭 {count}개 배치 완료.");
+            ed.WriteMessage($"\n{blockName} 블럭 {count}개 배치 완료.");
         }
     }
 }

@@ -11,13 +11,14 @@ namespace PipeLoad2
 {
     /// <summary>
     /// Insert_Damper — Line 을 선택하면 클릭 위치에 가까운 끝점에서 Line 방향으로
-    /// 225 떨어진 지점에 동적 블럭 "JDamper_Dynamic" 을 삽입한다.
+    /// 225 떨어진 지점에 동적 블럭 "JArch_Damper" 을 삽입한다.
+    /// 블럭 정의는 매 실행마다 참조 도면(Blocks\JArch_Blocks.dwg)에서 가져와 덮어쓴다.
     /// 블럭 크기는 Line XData "a"(덕트 폭) 의 1/2 을 Dis1/Dis2 동적 속성에 넣어 조정하고,
     /// 회전은 선택 Line 의 각도(가까운 끝점 → 먼 끝점 방향)를 적용한다.
     /// </summary>
     public class DamperInsertCommand
     {
-        private const string BlockName = "JDamper_Dynamic";
+        private const string BlockName = "JArch_Damper";
         private const double Offset = 225.0;   // 가까운 끝점에서 블럭 삽입점까지 거리
 
         [CommandMethod("Insert_Damper")]
@@ -32,6 +33,9 @@ namespace PipeLoad2
             peo.AddAllowedClass(typeof(Line), true);
             PromptEntityResult per = ed.GetEntity(peo);
             if (per.Status != PromptStatus.OK) return;
+
+            // 참조 도면에서 블럭 정의를 가져온다(기존 정의는 덮어씀). Transaction 밖에서 수행.
+            if (!JArchBlockLibrary.Import(db, ed, BlockName)) return;
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -65,11 +69,6 @@ namespace PipeLoad2
 
                 // 3. 블럭 삽입
                 var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
-                if (!bt.Has(BlockName))
-                {
-                    ed.WriteMessage($"\n[오류] 도면에 '{BlockName}' 블럭이 없습니다.");
-                    return;
-                }
                 var space = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
 
                 var br = new BlockReference(insPt, bt[BlockName]);
