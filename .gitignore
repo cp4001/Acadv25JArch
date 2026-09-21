@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# AutoCAD 임시/잠금 파일 (블럭 참조 도면 편집 시 생성)
+*.dwl
+*.dwl2
+*.bak
+*.sv$
