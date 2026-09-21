@@ -7,7 +7,7 @@ tags:
 
 > 파일: `PipeDiaCalc/DiffuserInsertCommand.cs`
 > 클래스: `PipeLoad2.DiffuserInsertCommand.Cmd_InsertDiffuser`
-> 최종 업데이트: 2026-09-21 (블럭 참조 도면 도입 + 블럭명 `JArch_` 접두)
+> 최종 업데이트: 2026-09-22 (`SystemType` SA/RA/EA/OA 입력 추가)
 
 ---
 
@@ -18,11 +18,12 @@ tags:
 | 단계 | 프롬프트 | 비고 |
 |---|---|---|
 | ① | `룸 필요 풍량(CMH)을 입력하세요:` | `PromptDoubleOptions`, 양수만 |
-| ② | `디퓨저 Type 을 선택하세요 [RPD/SPD/RAD/SAD]` | `PromptKeywordOptions`, Enter = `RPD` |
-| ③ | `디퓨저 개수를 입력하세요:` | `PromptIntegerOptions`, 1 이상, 기본 1 |
-| ④ | (선정 결과 출력) | `선정: RPD 550A ND300 (표준 1300 CMH, 한 대당 1250 CMH × 2개)` |
-| ⑤ | `배치 시작점을 지정하세요:` | `ed.GetPoint` |
-| ⑥ | (블럭 정의 가져오기) | `JArchBlockLibrary.Import(db, ed, "JArch_" + type)` — Transaction 밖, 실패 시 종료 ([[JArchBlockLibrary]]) |
+| ② | `계통(SystemType)을 선택하세요 [SA/RA/EA/OA]` | `PromptKeywordOptions`, Enter = `SA`. 급기/환기/배기/외기 |
+| ③ | `디퓨저 Type 을 선택하세요 [RPD/SPD/RAD/SAD]` | `PromptKeywordOptions`, Enter = `RPD` |
+| ④ | `디퓨저 개수를 입력하세요:` | `PromptIntegerOptions`, 1 이상, 기본 1 |
+| ⑤ | (선정 결과 출력) | `선정: SA RPD 550A ND300 (표준 1300 CMH, 한 대당 1250 CMH × 2개)` |
+| ⑥ | `배치 시작점을 지정하세요:` | `ed.GetPoint` |
+| ⑦ | (블럭 정의 가져오기) | `JArchBlockLibrary.Import(db, ed, "JArch_" + type)` — Transaction 밖, 실패 시 종료 ([[JArchBlockLibrary]]) |
 
 ---
 
@@ -101,13 +102,14 @@ tags:
 | RegApp | 값 | 용도 |
 |---|---|---|
 | `Diffuser` | `"RPD"` 등 (= Type) | 디퓨저 블럭 식별용 RegApp — `Type` 과 같은 값. **블럭명(`JArch_RPD`)이 아니라 Type(`RPD`) 을 넣는다** — 선정표·사양서 용어를 유지 |
+| `SystemType` | `"SA"` / `"RA"` / `"EA"` / `"OA"` | 계통 — 급기/환기/배기/외기. **기록만 하고 선정 로직에는 쓰지 않는다** (계통별로 표·블럭을 달리 골라야 하면 여기서 분기) |
 | `Type` | `"RPD"` 등 | 선정 Type |
 | `Size` | `"550A"` / `"300x300"` 등 | 선정 사이즈 (문자열 그대로) |
 | `ND` | `"300"` | 목 지름 |
 | `CMH` | `"1250"` (한 대당, `"0.##"`) | `DUCTTREE` Leaf 부하 — [[CMH]] 명령과 동일 패턴 |
 | `Disp` | `CMH` 와 동일 문자열 | `TTG` Block 텍스트 표시용 |
 
-`tr.ChecRegNames(db, "Diffuser,Type,Size,ND,CMH,Disp")` 로 RegAppTable 선등록. 모든 값은 `JXdata.SetXdata`(→ `JArchXData.arx`, 라이선스 만료 시 기록 생략) 로 기록하므로 엔티티를 **DB 에 추가한 뒤** 호출한다.
+`tr.ChecRegNames(db, "Diffuser,SystemType,Type,Size,ND,CMH,Disp")` 로 RegAppTable 선등록. 모든 값은 `JXdata.SetXdata`(→ `JArchXData.arx`, 라이선스 만료 시 기록 생략) 로 기록하므로 엔티티를 **DB 에 추가한 뒤** 호출한다.
 
 ---
 
