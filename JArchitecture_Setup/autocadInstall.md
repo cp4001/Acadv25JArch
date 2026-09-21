@@ -40,7 +40,10 @@ JArchitecture.bundle\
 └── Contents\
     ├── Acadv25JArch.dll         ← 메인 DLL
     ├── EPPlus.dll               ← Excel 처리 라이브러리
-    ├── JArchLicense.dll         ← 라이선스 DLL
+    ├── JArchXDataNet.dll        ← Xdata 래퍼 (.arx 와 같은 폴더 필수)
+    ├── JArchXData.arx           ← Xdata 기록 모듈
+    ├── Blocks\
+    │   └── JArch_Blocks.dwg     ← 블럭 참조 도면 (Insert_Damper / Insert_Diffuser)
     └── Excel\
         ├── load_eng.xlsm        ← Excel 데이터 파일
         └── (기타 Excel 파일들)
@@ -53,6 +56,7 @@ JArchitecture.bundle\
 | `{app}` | `C:\ProgramData\Autodesk\ApplicationPlugins\JArchitecture.bundle` |
 | `{app}\Contents` | `...\JArchitecture.bundle\Contents\` |
 | `{app}\Contents\Excel` | `...\JArchitecture.bundle\Contents\Excel\` |
+| `{app}\Contents\Blocks` | `...\JArchitecture.bundle\Contents\Blocks\` |
 
 ---
 
@@ -83,6 +87,20 @@ string dllFolder = System.IO.Path.GetDirectoryName(dllPath);
 // Contents\Excel\ 하위의 파일 접근
 string filePath = System.IO.Path.Combine(dllFolder, "Excel", "load_eng.xlsm");
 ```
+
+### 블럭 참조 도면 (Contents\Blocks\)
+
+`JArchBlockLibrary.LibraryPath` 가 같은 방식으로 경로를 만든다 — `Insert_Damper` / `Insert_Diffuser` 가 블럭 정의를 여기서 가져온다.
+
+```csharp
+string dllFolder = System.IO.Path.GetDirectoryName(
+    System.Reflection.Assembly.GetExecutingAssembly().Location);
+string dwg = System.IO.Path.Combine(dllFolder, "Blocks", "JArch_Blocks.dwg");
+```
+
+저장소 원본은 `Acadv25JArch\Blocks\JArch_Blocks.dwg`(사용자가 직접 유지) → csproj `None`+`CopyToOutputDirectory=PreserveNewest` 로 출력 폴더의 `Blocks\` 에 복사 → `.iss` 가 `{app}\Contents\Blocks` 로 배포. `.iss` 에 `#error` 가드가 있어 누락 시 **인스톨러 컴파일이 실패**한다.
+
+⚠️ **도면을 수정했으면 `dotnet build -c Release` 를 먼저 다시 돌릴 것** — `.iss` 는 저장소 원본이 아니라 **Release 출력 폴더의 사본**(`C:\Jarch25\Release\Blocks\`)을 참조한다. 빌드를 건너뛰면 가드는 통과하지만 **옛 도면이 패키징된다**(2026-09-22 실제 발생).
 
 ### 절대 경로 방식 (기존 - 비권장)
 
