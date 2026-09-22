@@ -5,6 +5,9 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using CADExtension;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
@@ -171,6 +174,114 @@ namespace PipeLoad2
             }
 
             ed.WriteMessage($"\n{blockName} 블럭 {count}개 배치 완료 ({systemType}).");
+        }
+
+        /// <summary>
+        /// Diffuser_Spec — "2400,RPD,RA,3" 형식의 Text 를 선택하면 형식을 검증한 뒤
+        /// XData RegApp "Diffuser" 에 Type(RPD/SPD/RAD/SAD)을 기록한다.
+        /// 필드 순서: CFM(숫자) , Type , SystemType(SA/RA/EA/OA) , 개수(양의 정수).
+        /// 형식이 맞지 않는 Text 는 이유를 출력하고 건너뛴다(나머지는 계속 처리).
+        /// </summary>
+        [CommandMethod("Diffuser_Spec", CommandFlags.UsePickSet)]
+        public void Cmd_DiffuserSpec()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                List<DBText> targets = JEntityFunc.GetEntityByTpye<DBText>(
+                    "디퓨저 Spec Text 를 선택하세요 (예: 2400,RPD,RA,3)",
+                    JSelFilter.MakeFilterTypes("TEXT"));
+                if (targets == null || targets.Count == 0) return;
+
+                tr.ChecRegNames(db, "Diffuser");
+
+                int okCount = 0;
+                int errCount = 0;
+                foreach (DBText txt in targets)
+                {
+                    if (!TryParseSpec(txt.TextString, out string type, out string reason))
+                    {
+                        ed.WriteMessage($"\n[건너뜀] \"{txt.TextString}\" — {reason}");
+                        errCount++;
+                        continue;
+                    }
+
+                    var layer = (LayerTableRecord)tr.GetObject(txt.LayerId, OpenMode.ForRead);
+                    if (layer.IsLocked)
+                    {
+                        ed.WriteMessage($"\n[건너뜀] \"{txt.TextString}\" — 레이어 '{layer.Name}' 가 잠겨 있습니다.");
+                        errCount++;
+                        continue;
+                    }
+
+                    txt.UpgradeOpen();
+                    JXdata.SetXdata(txt, "Diffuser", type);
+                    okCount++;
+                }
+
+                tr.Commit();
+
+                ed.WriteMessage($"\n{okCount}건 기록 완료" + (errCount > 0 ? $", {errCount}건 건너뜀." : "."));
+            }
+        }
+
+        /// <summary>
+        /// "2400,RPD,RA,3" 을 검증하고 Type 을 돌려준다.
+        /// Type / SystemType 은 대소문자를 구분하지 않고 표준 표기(대문자)로 정규화한다.
+        /// </summary>
+        private static bool TryParseSpec(string text, out string type, out string reason)
+        {
+            type = "";
+            reason = "";
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                reason = "빈 Text";
+                return false;
+            }
+
+            string[] f = text.Split(',');
+            if (f.Length != 4)
+            {
+                reason = $"필드가 {f.Length}개 (CFM,Type,SystemType,개수 = 4개 필요)";
+                return false;
+            }
+
+            string cfmStr = f[0].Trim();
+            string typeStr = f[1].Trim();
+            string sysStr = f[2].Trim();
+            string cntStr = f[3].Trim();
+
+            if (!double.TryParse(cfmStr, NumberStyles.Any, CultureInfo.InvariantCulture, out double cfm) || cfm <= 0)
+            {
+                reason = $"CFM '{cfmStr}' 은 양수가 아닙니다";
+                return false;
+            }
+
+            string? matchedType = Types.FirstOrDefault(t => t.Equals(typeStr, StringComparison.OrdinalIgnoreCase));
+            if (matchedType == null)
+            {
+                reason = $"Type '{typeStr}' 는 [{string.Join("/", Types)}] 중 하나여야 합니다";
+                return false;
+            }
+
+            if (!SystemTypes.Any(t => t.Equals(sysStr, StringComparison.OrdinalIgnoreCase)))
+            {
+                reason = $"SystemType '{sysStr}' 는 [{string.Join("/", SystemTypes)}] 중 하나여야 합니다";
+                return false;
+            }
+
+            if (!int.TryParse(cntStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int cnt) || cnt < 1)
+            {
+                reason = $"개수 '{cntStr}' 는 1 이상의 정수여야 합니다";
+                return false;
+            }
+
+            type = matchedType;
+            return true;
         }
     }
 }

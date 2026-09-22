@@ -3,11 +3,11 @@ tags:
   - AutoCAD
 ---
 
-# Insert_Diffuser 명령어
+# Insert_Diffuser / Diffuser_Spec 명령어
 
 > 파일: `PipeDiaCalc/DiffuserInsertCommand.cs`
 > 클래스: `PipeLoad2.DiffuserInsertCommand.Cmd_InsertDiffuser`
-> 최종 업데이트: 2026-09-22 (`SystemType` SA/RA/EA/OA 입력 추가)
+> 최종 업데이트: 2026-09-22 (`SystemType` 입력 추가 · `Diffuser_Spec` 명령 추가)
 
 ---
 
@@ -119,10 +119,54 @@ tags:
 
 ---
 
-## 7. 관련 명령 / 문서
+## 7. Diffuser_Spec 명령 (같은 파일)
+
+> `[CommandMethod("Diffuser_Spec", CommandFlags.UsePickSet)]` — `Cmd_DiffuserSpec` (2026-09-22 신규)
+
+도면에 이미 적혀 있는 **`"2400,RPD,RA,3"` 형식의 Text** 를 검증하고, 통과한 것에만 XData RegApp **`Diffuser` = Type** 을 기록해 "디퓨저 Spec Text" 로 표시한다. 블럭을 만들지는 않는다.
+
+### 필드 형식
+
+```
+2400 , RPD , RA , 3
+ │      │     │    └ 개수
+ │      │     └ SystemType
+ │      └ 디퓨저 Type
+ └ CFM
+```
+
+| 필드 | 규칙 | 실패 시 메시지 |
+|---|---|---|
+| 필드 수 | 쉼표로 나눠 **정확히 4개** | `필드가 3개 (CFM,Type,SystemType,개수 = 4개 필요)` |
+| CFM | 숫자 + **양수** (`double.TryParse`, InvariantCulture) | `CFM '24O0' 은 양수가 아닙니다` |
+| Type | `RPD` / `SPD` / `RAD` / `SAD` | `Type 'RPX' 는 [RPD/SPD/RAD/SAD] 중 하나여야 합니다` |
+| SystemType | `SA` / `RA` / `EA` / `OA` | `SystemType 'XA' 는 [SA/RA/EA/OA] 중 하나여야 합니다` |
+| 개수 | **1 이상 정수** | `개수 '0' 는 1 이상의 정수여야 합니다` |
+
+- 검증 목록은 `Insert_Diffuser` 의 `Types` / `SystemTypes` 상수를 **그대로 공유**한다 (한쪽만 바뀔 일이 없다).
+- Type / SystemType 은 **대소문자를 구분하지 않고** 받아 표준 표기(대문자)로 정규화해 기록한다.
+- 각 필드는 `Trim()` 하므로 `2400, RPD , RA, 3` 도 통과한다.
+
+### 동작
+
+1. `디퓨저 Spec Text 를 선택하세요 (예: 2400,RPD,RA,3)` — `JEntityFunc.GetEntityByTpye<DBText>` + `MakeFilterTypes("TEXT")`, **여러 개 동시 선택 가능**
+2. `tr.ChecRegNames(db, "Diffuser")`
+3. Text 별로 `TryParseSpec` → 실패하면 `[건너뜀] "원문" — 이유` 출력 후 **다음 Text 계속**
+4. 잠긴 레이어의 Text 도 같은 방식으로 건너뜀
+5. 통과분만 `txt.UpgradeOpen()` → `JXdata.SetXdata(txt, "Diffuser", type)`
+6. 요약: `3건 기록 완료, 1건 건너뜀.`
+
+단일 transaction. **CFM / SystemType / 개수는 검증만 하고 XData 로는 남기지 않는다** — Text 자체가 데이터를 갖고 있기 때문. 이 값들도 XData 로 필요해지면 `CMH` / `SystemType` / `Count` 로 추가할 것.
+
+⚠️ **MTEXT 는 대상이 아니다** — 필터가 `TEXT`(DBText) 뿐이다.
+
+---
+
+## 8. 관련 명령 / 문서
 
 - [[CMH]] — 기존 블럭에 `CMH`/`Disp` 를 붙이는 명령. `Insert_Diffuser` 는 삽입과 동시에 같은 XData 를 기록
 - [[DuctTreeTechNote]] — `"CMH"` XData 를 Leaf 부하로 소비
 - [[TreeOverrule]] — Block `"Disp"` Red 텍스트 표시
 - [[InsertDamper]] — 같은 패턴의 블럭 삽입 명령. `JArchBlockLibrary` 를 공유한다
+- `To_RoomText` (`RoomCalc.cs`) — Text 에 XData 만 표시하는 같은 성격의 명령
 - [[architecture]] §4 — 명령 인덱스
