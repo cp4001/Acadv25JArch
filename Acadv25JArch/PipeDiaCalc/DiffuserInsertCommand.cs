@@ -95,16 +95,7 @@ namespace PipeLoad2
             if (pdr.Status != PromptStatus.OK) return;
             double roomCmh = pdr.Value;
 
-            // 2. SystemType (SA/RA/EA/OA)
-            var psko = new PromptKeywordOptions("\n계통(SystemType)을 선택하세요");
-            foreach (var t in SystemTypes) psko.Keywords.Add(t);
-            psko.Keywords.Default = SystemTypes[0];
-            psko.AllowNone = true;
-            PromptResult pskr = ed.GetKeywords(psko);
-            if (pskr.Status != PromptStatus.OK) return;
-            string systemType = pskr.StringResult;
-
-            // 3. Type
+            // 2. Type
             var pko = new PromptKeywordOptions("\n디퓨저 Type 을 선택하세요");
             foreach (var t in Types) pko.Keywords.Add(t);
             pko.Keywords.Default = Types[0];
@@ -112,6 +103,15 @@ namespace PipeLoad2
             PromptResult pkr = ed.GetKeywords(pko);
             if (pkr.Status != PromptStatus.OK) return;
             string type = pkr.StringResult;
+
+            // 3. SystemType (SA/RA/EA/OA)
+            var psko = new PromptKeywordOptions("\n계통(SystemType)을 선택하세요");
+            foreach (var t in SystemTypes) psko.Keywords.Add(t);
+            psko.Keywords.Default = SystemTypes[0];
+            psko.AllowNone = true;
+            PromptResult pskr = ed.GetKeywords(psko);
+            if (pskr.Status != PromptStatus.OK) return;
+            string systemType = pskr.StringResult;
 
             // 4. 개수
             var pio = new PromptIntegerOptions("\n디퓨저 개수를 입력하세요: ");
