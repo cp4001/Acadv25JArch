@@ -59,7 +59,7 @@ AutoCAD 2025 .NET 플러그인 — 건축/배관 자동화 (급수배관 Tree �
 - DiaNote, DiaTree, DiaNoteVer, DiaNoteVer1, DiaNoteHor, DiaNoteHor1, SetDiaNoteBase, BaseLen, SusPipe, susDia
 - SupplyDiaCalc, ReturnDiaCalc, CalcMode, 관경결정, 관균등표법, 급수배관, 환탕, 순환탕수, 누적체적, H-W 공식, Hazen-Williams
 - 동시사용율, 동시사용계수, 공조위생 기술데이터북, 한미, 세진사, ToiletRates, GeneralRates, LookupRate, FromTotal, 단조 보정, monotone clamp, 관경 역전, 위생배관관경결정6.5.xls, 급수관경결정.xlsm, 균등값, 대변기 세정밸브, 동관 L-TYPE
-- JXdata, XData, Dia, Tree XData, 15A, Total15A, TotalLPM, LPM, DD command, TotalEquiv
+- JXdata, XData, Dia, Tree XData, 15A, Total15A, TotalLPM, LPM, DD command, TotalEquiv, XD_DelALL, Cmd_Entity_To_DeleteXdata, JXdata.DeleteAll, GXD, 선택 필터, MakeFilterTypes
 - ArchOverrule, EntityArchc, LayerPalette
 - Ribbon, CollabRibbon, JArch tab, RibbonPanel, RibbonRowPanel, RibbonRowBreak, RibbonLabel, SetRibbonTabVisible, RefreshDiaNoteHeight, AINIT_DEFAULTS, Ainit, DwgDefaultLoader, KEY_DiaNoteHeight
 - PaletteSample, PaletteHost, PaletteSet, SHOWPAL, HIDEPAL, MyToolsControl, SendStringToExecute, FlowLayoutPanel
@@ -100,6 +100,7 @@ AutoCAD 2025 .NET 플러그인 — 건축/배관 자동화 (급수배관 Tree �
 - **건축 요소 XData RegName은 `"Arch"` 단일화** — `Arch=Room/RoomText/Wall/Door/Window/Column` (`RoomCalc.cs`·`JPolyLine.cs`·`LineGrouping.cs`, `ArchOverrule.cs` 의 `XDATA_REGAPP_NAME`). `To_RoomText` 만 `"Archi"` 오타로 오버룰/필터에서 누락되던 것을 2026-09-19 수정(값도 `Room`→`RoomText` 로 자동 생성 룸 텍스트와 통일). 새 `Arch*` 이름 만들지 말 것.
 - **`To_RoomCFM` 명령** (2026-09-19 신규, `RoomCalc.cs` `Cmd_Poly_Set_CFM`, `#region Poly To CFM`) — `To_CeilingHeight` 패턴: `PromptDoubleOptions`(기본 0, 음수 불허) → LWPOLYLINE 선택(`UsePickSet`) → `tr.ChecRegNames(db, "CFM")` → **닫힌 폴리만** `JXdata.SetXdata(pl, "CFM", value.ToString())`. 레이어는 바꾸지 않음(`To_CeilingHeight` 와 달리 `Room` 레이어 이동 없음). `TTG` 의 Poly 인스턴스가 이 값을 읽어 표시.
 - `JXdata.GetXdata`는 string/double 모두 지원 (2026-04 업데이트)
+- **`XD_DelALL` 선택 필터에 대상 타입이 빠지면 조용히 실패한다** — 삭제 로직(`JXdata.DeleteAll`)은 `Entity` 기반이라 타입 제약이 없는데, `CadFunction.cs` 의 `JSelFilter.MakeFilterTypes(...)` 목록에 없는 타입은 **선택 자체가 안 돼** 아무 일도 일어나지 않는다. 2026-09-22 `TEXT,MTEXT` 추가(`Diffuser_Spec`/`To_RoomText` 가 Text 에 XData 를 기록하므로). 현재 목록: `LINE,POLYLINE,LWPOLYLINE,INSERT,TEXT,MTEXT` — **`ARC`/`CIRCLE` 은 여전히 빠져 있다**(`CSS` 가 Arc 체인을 다루므로 Arc 에 XData 가 붙어 있을 수 있음). Text 에 XData 를 쓰는 명령을 새로 만들면 이 필터도 같이 확인할 것.
 - WinForms → AutoCAD DB 쓰기 시 반드시 `doc.LockDocument()` (eLockViolation 방지)
 - Transaction Commit 후 `node.Line` 사용 금지 → `db.GetObjectId(false, handle, 0)` 재획득
 - `JXdata.SetXdata`는 라이선스 만료 시 저장 불가 (`MyPlugin.LicenseDate` 체크)

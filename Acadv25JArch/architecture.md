@@ -287,7 +287,7 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | `ADDARCHXDATABATCH` | Overrule/ArchOverrule.cs | 건축 XData 일괄 추가 |
 | `REMOVEARCHXDATA` | Overrule/ArchOverrule.cs | 건축 XData 제거 |
 | `TESTXDATAFILTER` | Overrule/ArchOverrule.cs | XData 필터 테스트 |
-| `XD_DelALL` | CadFunction.cs | 선택 객체 XData 전체 삭제 |
+| `XD_DelALL` | CadFunction.cs | 선택 객체 XData 전체 삭제. 필터 `LINE,POLYLINE,LWPOLYLINE,INSERT,TEXT,MTEXT` (2026-09-22 TEXT/MTEXT 추가 — 그전엔 Text 를 선택조차 못 했다). 잠긴 레이어는 건너뜀 |
 | `GXD` | CadFunction.cs | XData 목록 조회 |
 | `BP1` | CadFunction.cs | 블럭 포인트 리셋 |
 | `ChangeXdataName` | ChangeXdataNameCommand.cs | 선택 객체 XData RegName 변경 |

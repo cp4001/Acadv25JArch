@@ -381,7 +381,7 @@ namespace AcadFunction
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                List<Entity> targets = JEntityFunc.GetEntityByTpye<Entity>("Xdata Del 대상을 선택 하세요?", JSelFilter.MakeFilterTypes("LINE,POLYLINE,LWPOLYLINE,INSERT"));//, JSelFilter.MakeFilterTypes("LINE,POLYLINE,LWPOYLINE"));   //DBText-> Text  Mtext-> Mtext  
+                List<Entity> targets = JEntityFunc.GetEntityByTpye<Entity>("Xdata Del 대상을 선택 하세요?", JSelFilter.MakeFilterTypes("LINE,POLYLINE,LWPOLYLINE,INSERT,TEXT,MTEXT"));//, JSelFilter.MakeFilterTypes("LINE,POLYLINE,LWPOYLINE"));   //DBText-> Text  Mtext-> Mtext
                 if (targets == null) return;
 
                 //var btr = tr.GetModelSpaceBlockTableRecord(db);
