@@ -21,11 +21,11 @@ tags:
 | ② | `디퓨저 Type 을 선택하세요 [RPD/SPD/RAD/SAD]` | `PromptKeywordOptions`, Enter = `RPD` |
 | ③ | `계통(SystemType)을 선택하세요 [SA/RA/EA/OA]` | `PromptKeywordOptions`, Enter = `SA`. 급기/환기/배기/외기 |
 | ④ | `디퓨저 개수를 입력하세요:` | `PromptIntegerOptions`, 1 이상, 기본 1 |
-
-입력 순서는 `Diffuser_Spec` 의 Text 필드 순서(`2400,RPD,RA,3` = CFM, Type, SystemType, 개수)와 **같게 맞춰 두었다** (2026-09-22). 두 명령을 번갈아 쓸 때 순서를 다시 생각하지 않도록.
 | ⑤ | (선정 결과 출력) | `선정: SA RPD 550A ND300 (표준 1300 CMH, 한 대당 1250 CMH × 2개)` |
 | ⑥ | `배치 시작점을 지정하세요:` | `ed.GetPoint` |
 | ⑦ | (블럭 정의 가져오기) | `JArchBlockLibrary.Import(db, ed, "JArch_" + type)` — Transaction 밖, 실패 시 종료 ([[JArchBlockLibrary]]) |
+
+입력 순서는 `Diffuser_Spec` 의 Text 필드 순서(`2400,RPD,RA,3` = CFM, Type, SystemType, 개수)와 **같게 맞춰 두었다** (2026-09-22). 두 명령을 번갈아 쓸 때 순서를 다시 생각하지 않도록.
 
 ---
 
