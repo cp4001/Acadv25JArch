@@ -7,7 +7,7 @@ tags:
 
 > 파일: `PipeDiaCalc/DiffuserInsertCommand.cs`
 > 클래스: `PipeLoad2.DiffuserInsertCommand.Cmd_InsertDiffuser`
-> 최종 업데이트: 2026-09-22 (`SystemType` 입력 추가 · `Diffuser_Spec` 명령 추가)
+> 최종 업데이트: 2026-09-22 (`SystemType` 입력 추가 · `Diffuser_Spec` 명령 추가 · 지정 Text 표시 스타일)
 
 ---
 
@@ -125,6 +125,8 @@ tags:
 
 도면에 이미 적혀 있는 **`"2400,RPD,RA,3"` 형식의 Text** 를 검증하고, 통과한 것에만 XData RegApp **`Diffuser` = Type** 을 기록해 "디퓨저 Spec Text" 로 표시한다. 블럭을 만들지는 않는다.
 
+지정에 성공한 Text 는 **색상 ACI 41 / 기울기 5°** 로 바꾼다 — 지정된 것과 안 된 것을 화면에서 바로 구분하기 위한 표식이다. 건너뛴 Text 는 색상·기울기 모두 원본 그대로 남는다.
+
 ### 필드 형식
 
 ```
@@ -153,8 +155,17 @@ tags:
 2. `tr.ChecRegNames(db, "Diffuser")`
 3. Text 별로 `TryParseSpec` → 실패하면 `[건너뜀] "원문" — 이유` 출력 후 **다음 Text 계속**
 4. 잠긴 레이어의 Text 도 같은 방식으로 건너뜀
-5. 통과분만 `txt.UpgradeOpen()` → `JXdata.SetXdata(txt, "Diffuser", type)`
+5. 통과분만 `txt.UpgradeOpen()` → `JXdata.SetXdata(txt, "Diffuser", type)` → **표시 스타일 적용**
 6. 요약: `3건 기록 완료, 1건 건너뜀.`
+
+### 지정 성공 Text 표시 스타일
+
+| 항목 | 상수 | 값 | 코드 |
+|---|---|---|---|
+| 색상 | `SpecColorIndex` | ACI **41** | `txt.ColorIndex = 41` |
+| 기울기 | `SpecObliqueDeg` | **5°** | `txt.Oblique = 5 * Math.PI / 180.0` (라디안) |
+
+`DBText.Oblique` 는 **라디안** 이므로 도 단위 상수를 변환해 넣는다. AutoCAD 문자 속성의 *기울기 각도* 이며 *회전(Rotation)* 과는 다르다. 허용 범위는 ±85° 이내.
 
 단일 transaction. **CFM / SystemType / 개수는 검증만 하고 XData 로는 남기지 않는다** — Text 자체가 데이터를 갖고 있기 때문. 이 값들도 XData 로 필요해지면 `CMH` / `SystemType` / `Count` 로 추가할 것.
 

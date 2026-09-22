@@ -75,6 +75,10 @@ namespace PipeLoad2
 
         private const string BlockPrefix = "JArch_";
 
+        // Diffuser_Spec 지정 성공 시 Text 에 적용하는 표시 스타일
+        private const short SpecColorIndex = 41;      // ACI
+        private const double SpecObliqueDeg = 5.0;    // 기울기(도)
+
         [CommandMethod("Insert_Diffuser")]
         public void Cmd_InsertDiffuser()
         {
@@ -180,6 +184,7 @@ namespace PipeLoad2
         /// Diffuser_Spec — "2400,RPD,RA,3" 형식의 Text 를 선택하면 형식을 검증한 뒤
         /// XData RegApp "Diffuser" 에 Type(RPD/SPD/RAD/SAD)을 기록한다.
         /// 필드 순서: CFM(숫자) , Type , SystemType(SA/RA/EA/OA) , 개수(양의 정수).
+        /// 지정 성공한 Text 는 색상 41 / 기울기 5° 로 바꿔 지정 여부를 눈으로 구분한다.
         /// 형식이 맞지 않는 Text 는 이유를 출력하고 건너뛴다(나머지는 계속 처리).
         /// </summary>
         [CommandMethod("Diffuser_Spec", CommandFlags.UsePickSet)]
@@ -219,6 +224,8 @@ namespace PipeLoad2
 
                     txt.UpgradeOpen();
                     JXdata.SetXdata(txt, "Diffuser", type);
+                    txt.ColorIndex = SpecColorIndex;
+                    txt.Oblique = SpecObliqueDeg * Math.PI / 180.0;
                     okCount++;
                 }
 
