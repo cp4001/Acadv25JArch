@@ -28,6 +28,8 @@ namespace PipeLoad2
         private record DiffuserSpec(string Type, string Size, int ND, int MinCmh, int StdCmh, int MaxCmh);
 
         // 디퓨저 선정표 (TYPE / SIZE / ND / 최소풍량 / 표준풍량 / 최대풍량, CMH)
+        // 2026-09-23 갱신: RPD 650A/375 삭제, RAD 650A/350 삭제,
+        //                  SAD 250x250/125 값 변경(150/225/450 → 140/200/380). 36행 → 32행.
         private static readonly DiffuserSpec[] Table =
         {
             new("RPD", "270A", 125,  140,  200,  380),
@@ -36,7 +38,6 @@ namespace PipeLoad2
             new("RPD", "480A", 250,  555,  850, 1480),
             new("RPD", "550A", 300,  850, 1300, 2160),
             new("RPD", "600A", 350, 1100, 1800, 2930),
-            new("RPD", "650A", 375, 1200, 2100, 3450),
             new("RPD", "650A", 400, 1410, 2200, 3765),
 
             new("SPD", "300x300", 125,  140,  200,  380),
@@ -54,13 +55,12 @@ namespace PipeLoad2
             new("RAD", "420A", 200,  400,  600, 1200),
             new("RAD", "480A", 250,  600,  900, 1800),
             new("RAD", "550A", 300,  800, 1200, 2400),
-            new("RAD", "650A", 350, 1000, 1500, 3000),
             new("RAD", "650A", 400, 1200, 1800, 3600),
             new("RAD", "820A", 450, 1350, 2000, 4000),
             new("RAD", "820A", 500, 1500, 2500, 5000),
 
             new("SAD", "250x250", 100,  100,  150,  300),
-            new("SAD", "250x250", 125,  150,  225,  450),
+            new("SAD", "250x250", 125,  140,  200,  380),
             new("SAD", "300x300", 150,  200,  300,  600),
             new("SAD", "300x300", 200,  400,  600, 1200),
             new("SAD", "410x410", 250,  600,  900, 1800),
