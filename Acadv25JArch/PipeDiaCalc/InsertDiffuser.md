@@ -7,7 +7,7 @@ tags:
 
 > 파일: `PipeDiaCalc/DiffuserInsertCommand.cs`
 > 클래스: `PipeLoad2.DiffuserInsertCommand.Cmd_InsertDiffuser`
-> 최종 업데이트: 2026-09-23 (`_ST` 블럭 + `SystemType` 속성 · 선정표 32행 · `Insert_Diffuser_Bypoly` 추가 · Bypoly 배치 좌표 조정)
+> 최종 업데이트: 2026-09-23 (`_ST` 블럭 + `SystemType` 속성 · 선정표 32행 · `Insert_Diffuser_Bypoly` 추가 · Bypoly 배치 원점을 Poly 좌측 기준으로)
 > 이전: 2026-09-22 (`SystemType` 입력 · `Diffuser_Spec` 명령 · 지정 Text 표시 스타일 · 입력 순서 CFM→Type→SystemType→개수)
 
 ---
@@ -230,14 +230,22 @@ XData `Room` 을 가진 Poly 를 선택하면 **그 안의 Spec Text**(§7 `Diff
 
 | 항목 | 값 |
 |---|---|
-| Poly 센터 | `GeometricExtents` 중심 (`PolyCenter`) |
+| 기준 도형 | Poly 의 `GeometricExtents` (좌측 끝 `MinPoint.X`, 센터 Y) |
 | 내부 판정 | XY 평면 **ray casting** (`IsInsidePoly`) |
 | Text 순서 | **Y 내림차순 → 같은 높이면 X 오름차순** (위→아래, 왼→오른쪽) |
-| 줄 시작점 | **k 번째 항목의 원점 = 센터 − (`RowStartLeft`=600, `RowGap`=800 × k, 0)** — 센터에서 **왼쪽으로 600**, 항목마다 **아래로 800** (2026-09-23 조정: 구 400, 좌측 오프셋 없음) |
+| 줄 시작점 | **k 번째 항목의 원점 = ( `MinPoint.X` + `RowStartFromLeft`(800) , 센터 Y − `RowGap`(800) × k )** |
 | 한 줄 | 원점부터 +X, 순간격 = ND × 2 — `Insert_Diffuser` 와 동일 (`PlaceRow` 공용) |
 | 중복 주의 | Poly 가 겹치거나 중첩되면 같은 Text 가 양쪽에 잡혀 **두 번 배치**된다 |
 | 선정 | `CFM ÷ 개수` → 표준풍량 ≥ 한 대당 인 최소 행 (`SelectSpec` 공용) |
 | 기록 | 블럭 속성 `SystemType` + XData 7건 — §5 와 동일 |
+
+**X 는 Poly 센터가 아니라 좌측 끝 기준이다** (2026-09-23 변경). 센터 기준(구: 센터 − 600)으로 하면 룸이 넓어질수록 블럭 그룹이 오른쪽으로 밀려나 룸마다 위치가 달라진다. 좌측 벽 기준이면 룸 크기와 무관하게 항상 같은 자리에서 시작한다. Y 만 센터를 쓴다.
+
+| 변경 이력 | X 원점 | 줄 간격 |
+|---|---|---|
+| 최초 | 센터 | 400 |
+| 2026-09-23 ① | 센터 − 600 | 800 |
+| 2026-09-23 ② (현재) | **좌측 끝 + 800** | 800 |
 
 Poly 안에 유효한 Text 가 없으면 `[알림] Poly(핸들 …) 안에 유효한 Spec Text 가 없습니다.` 를 출력하고 다음 Poly 로 넘어간다. 형식이 틀린 Text 는 `[건너뜀] "원문" — 이유` 출력 후 계속.
 

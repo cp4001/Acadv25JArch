@@ -78,7 +78,7 @@ namespace PipeLoad2
         private const string BlockSuffix = "_ST";      // SystemType 속성을 가진 블럭
         private const string SystemTypeTag = "SystemType";
         private const double RowGap = 800.0;          // Bypoly: Spec Text 항목 간 세로 간격
-        private const double RowStartLeft = 600.0;    // Bypoly: Poly 센터에서 왼쪽(-X)으로 이 거리부터 배치 시작
+        private const double RowStartFromLeft = 800.0; // Bypoly: Poly 좌측 끝에서 이 거리부터 배치 시작
 
         /// <summary>Spec Text "2400,RPD,RA,3" 을 파싱한 결과.</summary>
         private record SpecText(double Cfm, string Type, string SystemType, int Count);
@@ -349,15 +349,6 @@ namespace PipeLoad2
             }
         }
 
-        /// <summary>Poly 의 GeometricExtents 중심.</summary>
-        private static Point3d PolyCenter(Polyline pl)
-        {
-            Extents3d ext = pl.GeometricExtents;
-            return new Point3d((ext.MinPoint.X + ext.MaxPoint.X) * 0.5,
-                               (ext.MinPoint.Y + ext.MaxPoint.Y) * 0.5,
-                               (ext.MinPoint.Z + ext.MaxPoint.Z) * 0.5);
-        }
-
         /// <summary>
         /// 점이 Poly 내부인지 판정 (XY 평면 ray casting).
         /// ⚠️ bulge(원호) 구간은 정점 사이 직선(현)으로 근사한다.
@@ -385,7 +376,7 @@ namespace PipeLoad2
         /// Spec Text(XData "Diffuser", Diffuser_Spec 으로 지정한 것)를 찾아
         /// "CFM,Type,SystemType,개수" 를 읽고 Poly 센터부터 배치한다.
         /// Text 가 여러 개면 항목마다 800 아래로 내려가며 한 줄씩 배치한다.
-        /// 각 줄의 시작점은 Poly 센터에서 왼쪽으로 600 떨어진 지점.
+        /// 각 줄의 시작점은 X = Poly 좌측 끝 + 800, Y = Poly 센터.
         /// Poly 는 여러 개를 한 번에 선택할 수 있다(GetSelection → Poly 별로 반복).
         /// </summary>
         [CommandMethod("Insert_Diffuser_Bypoly", CommandFlags.UsePickSet)]
@@ -415,7 +406,12 @@ namespace PipeLoad2
 
                 foreach (Polyline pl in polys)
                 {
-                    Point3d center = PolyCenter(pl);
+                    // 배치 원점: X 는 Poly 좌측 끝 + RowStartFromLeft, Y 는 Poly 센터(항목마다 아래로 RowGap)
+                    Extents3d pext = pl.GeometricExtents;
+                    double startX = pext.MinPoint.X + RowStartFromLeft;
+                    double centerY = (pext.MinPoint.Y + pext.MaxPoint.Y) * 0.5;
+                    double centerZ = (pext.MinPoint.Z + pext.MaxPoint.Z) * 0.5;
+
                     var found = new List<(Point3d Pos, SpecText Spec)>();
 
                     foreach (ObjectId id in textIds)
@@ -441,10 +437,7 @@ namespace PipeLoad2
                     var ordered = found.OrderByDescending(t => t.Pos.Y).ThenBy(t => t.Pos.X).ToList();
                     for (int k = 0; k < ordered.Count; k++)
                     {
-                        // 센터에서 왼쪽으로 RowStartLeft, 항목마다 아래로 RowGap
-                        Point3d origin = center
-                                       - Vector3d.XAxis * RowStartLeft
-                                       - Vector3d.YAxis * (RowGap * k);
+                        Point3d origin = new Point3d(startX, centerY - RowGap * k, centerZ);
                         plans.Add((origin, ordered[k].Spec));
                     }
                 }
