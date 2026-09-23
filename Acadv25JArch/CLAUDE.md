@@ -33,6 +33,7 @@ AutoCAD 2025 .NET 플러그인 — 건축/배관 자동화 (급수배관 Tree �
   - `PaletteSample.md` — `SHOWPAL`/`HIDEPAL` 도구 팔레트 (`PaletteSample.cs`), lazy init + 버튼 Tag 기반 `SendStringToExecute`
   - `autocadInstall.md` — **배포 가이드** (Inno Setup 번들 설치 구조, `Assembly.Location` 기반 파일 접근, **빌드 구성(Debug/Release)·네이티브 DLL 의존성**). 원본은 `JArchitecture_Setup\autocadInstall.md`
   - `XdataSet.md` — **Xdata 기록 모듈 사양** (네이티브 `JArchXData.arx` + C# 래퍼 `JArchXDataNet.dll`, 인터넷 시각 라이선스). 원본은 `C++\XdataSet.md`. **`JXdata.SetXdata`/`XdataSet()` 이 이 모듈로 위임**되므로 Xdata 기록을 손대기 전 필독 (2026-08-26 전환)
+  - `PolyViewManager.md` — **`POLYVIEW` / `PLVM` 설계 사양** (닫힌 Poly 를 이름 있는 영역 북마크로 등록 → 도킹 팔레트 TreeView 에서 그룹 분류·클릭 확대. 이름/내용은 Poly XData `PolyView`/`PolyViewMemo`, 그룹 트리는 NOD `JARCH_POLYVIEW/TreeJson`). **원본은 `Acadv25JArch\PolyView\PolyViewManager.md`** — Obsidian은 복사본, 항상 원본 먼저 수정 후 복사 (2026-09-23 신규)
   - `architecture.md` — 전체 명령 인덱스 (§2 실/면적: `To_RoomPoly`/`To_RoomText`/`To_RoomCFM`/`To_CeilingHeight`…, §8 Overrule, §14 Tree 분석). **원본은 `Acadv25JArch\architecture.md`** (2026-09-19 프로젝트 폴더로 이관 — 그전엔 Obsidian이 유일본) — Obsidian은 복사본, 항상 원본 먼저 수정 후 복사. `DiaTreeNote.md`
 
 **노트 태그 규칙**: 각 노트 frontmatter에 `tags: [AutoCAD]` 또는 `tags: [Revit]` 로 플랫폼 구분. 이 프로젝트 관련 노트는 기본 `AutoCAD`, JRevit 관련 노트(`LineTree.md` 등)는 `Revit`.
@@ -64,6 +65,7 @@ AutoCAD 2025 .NET 플러그인 — 건축/배관 자동화 (급수배관 Tree �
 - ArchOverrule, EntityArchc, LayerPalette
 - Ribbon, CollabRibbon, JArch tab, RibbonPanel, RibbonRowPanel, RibbonRowBreak, RibbonLabel, SetRibbonTabVisible, RefreshDiaNoteHeight, AINIT_DEFAULTS, Ainit, DwgDefaultLoader, KEY_DiaNoteHeight
 - PaletteSample, PaletteHost, PaletteSet, SHOWPAL, HIDEPAL, MyToolsControl, SendStringToExecute, FlowLayoutPanel
+- PolyView, POLYVIEW, PLVM, PolyViewManager, PolyViewStore, PolyViewControl, PolyViewPalette, PolyViewEditForm, PolyViewItem, PolyViewGroup, 영역 북마크, 뷰 관리, TreeView 팔레트, JARCH_POLYVIEW, TreeJson, PolyViewMemo, 그룹 트리, 누락 항목, 미편입, Handle, Xrecord 청크, ZoomToEntities, LockDocument, DocumentActivated, 드래그앤드롭, 라벨 편집
 - 배포, 인스톨러, Inno Setup, ISCC, JArchitecture_Setup, .iss, ApplicationPlugins, bundle, PackageContents, JArchLicense, PipeLoad, DllImport, P/Invoke, Debug, Release, VCRUNTIME140, ucrtbase, dumpbin, CRT 의존성
 - WOW6432Node, 32비트 레지스트리 뷰, 고아 언인스톨 항목, unins000.exe, RunUninstaller, InitializeSetup, SetupLogging, Setup Log, ISPP, FileExists, RegDeleteKeyIncludingSubkeys, TaskDialogMsgBox, IsAppRunning, LoadOnAutoCADStartup, 연결 빌드, BuildBothConfigurations, ChainedBuild, BuildOtherConfiguration, OutputPath 분리, Assets, make_assets.ps1
 - XdataSet, JArchXData, JArchXDataNet, JArchXDataSet, JArchXDataSetEnt, JArch.Xdata, Xdata.Set, Xdata.SetOpen, SetOpen, writeXData, JLicense, JJH, UnmanagedObject, OldIdPtr, eWasOpenForWrite, acdbOpenObject, acdbRegApp, setXData, ObjectARX, .arx, EnsureArxLoaded, ShowBanner, GetLicenseInfo, 인터넷 시각, WinHTTP, Date 헤더, 롤백 방어, high-water, XOR 은닉, 사용기한, JXdata.SetXdata, XdataSet 확장메서드, MyPlugin.LicenseDate

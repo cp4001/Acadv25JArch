@@ -456,6 +456,28 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 
 ---
 
+## 18. PolyView 영역 북마크 (PolyView / PLVM)
+
+| 명령어 | 파일 | 설명 |
+|--------|------|------|
+| `POLYVIEW` | PolyView/PolyViewCommand.cs | 닫힌 Poly 하나를 이름·내용과 함께 PolyView 로 등록/수정 |
+| `PLVM` | PolyView/PolyViewCommand.cs | PolyView 관리 팔레트(TreeView) 표시 |
+
+도면 위 닫힌 Polyline 을 **이름 있는 영역 북마크**로 만들고, 도킹 팔레트의 TreeView 에서 그룹으로 분류·탐색한다. 노드를 클릭하면 해당 Poly 영역으로 즉시 확대된다.
+
+| 항목 | 저장 위치 |
+|---|---|
+| 이름 / 내용 | Poly XData `PolyView` / `PolyViewMemo` (Poly 를 복사하면 따라감) |
+| 그룹 트리 구조 | NOD `JARCH_POLYVIEW` 사전의 Xrecord `TreeJson` (JSON 을 200자 청크로 분할 저장) |
+
+- 도면에서 Poly 가 사라진 항목은 **회색 `(누락)`** 으로 남기고 `누락 정리` 로만 제거 (Undo 복구 대응)
+- XData 만 있고 트리에 자리가 없는 항목은 새로고침 시 **Root 직속으로 자동 편입**
+- 줌은 기존 `ZoomToEntities(ids, 1.1)` 재사용. 페이퍼 공간에서는 거부
+
+상세: [[PolyViewManager]] — 저장 스키마, 명령 흐름, 팔레트 조작·컨텍스트 메뉴, 검증 항목 12개
+
+---
+
 ## 핵심 워크플로우
 
 ```
