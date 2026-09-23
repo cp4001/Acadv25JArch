@@ -7,7 +7,7 @@ tags:
 
 > 파일: `PipeDiaCalc/DiffuserInsertCommand.cs`
 > 클래스: `PipeLoad2.DiffuserInsertCommand.Cmd_InsertDiffuser`
-> 최종 업데이트: 2026-09-23 (`_ST` 블럭 + `SystemType` 속성 · 선정표 32행 · `Insert_Diffuser_Bypoly` 추가)
+> 최종 업데이트: 2026-09-23 (`_ST` 블럭 + `SystemType` 속성 · 선정표 32행 · `Insert_Diffuser_Bypoly` 추가 · Bypoly 배치 좌표 조정)
 > 이전: 2026-09-22 (`SystemType` 입력 · `Diffuser_Spec` 명령 · 지정 Text 표시 스타일 · 입력 순서 CFM→Type→SystemType→개수)
 
 ---
@@ -211,7 +211,9 @@ tr.AddNewlyCreatedDBObject(ar, true);
 
 > `[CommandMethod("Insert_Diffuser_Bypoly", CommandFlags.UsePickSet)]` — `Cmd_InsertDiffuserByPoly` (2026-09-23 신규)
 
-XData `Room` 을 가진 Poly 를 선택하면 **그 안의 Spec Text**(§7 `Diffuser_Spec` 으로 지정한 것)를 찾아 `CFM,Type,SystemType,개수` 를 읽고 **Poly 센터부터** 배치한다. 사용자 입력(풍량·Type·계통·개수·기준점)이 전혀 없다 — 전부 Text 에서 읽는다.
+XData `Room` 을 가진 Poly 를 선택하면 **그 안의 Spec Text**(§7 `Diffuser_Spec` 으로 지정한 것)를 찾아 `CFM,Type,SystemType,개수` 를 읽고 **Poly 센터 기준으로** 배치한다. 사용자 입력(풍량·Type·계통·개수·기준점)이 전혀 없다 — 전부 Text 에서 읽는다.
+
+**Poly 는 여러 개를 한 번에 선택할 수 있다.** 선택 헬퍼가 `ed.GetSelection` 기반이라 다중 선택이 기본이고, Poly 마다 센터·내부 Text 를 따로 처리한다. 다만 선택 필터가 `LWPOLYLINE` + XData `Room` 이라 **XData `Room` 이 없는 폴리와 구형 `POLYLINE`(2D/3D) 은 조용히 빠진다** — 일부만 처리된 것처럼 보이면 멀티 선택이 아니라 이쪽을 의심할 것.
 
 ### 실행 순서 (4단계 — Editor 호출과 Transaction 을 분리)
 
@@ -231,8 +233,9 @@ XData `Room` 을 가진 Poly 를 선택하면 **그 안의 Spec Text**(§7 `Diff
 | Poly 센터 | `GeometricExtents` 중심 (`PolyCenter`) |
 | 내부 판정 | XY 평면 **ray casting** (`IsInsidePoly`) |
 | Text 순서 | **Y 내림차순 → 같은 높이면 X 오름차순** (위→아래, 왼→오른쪽) |
-| 줄 간격 | k 번째 항목의 원점 = 센터에서 **아래로 `RowGap(400) × k`** |
+| 줄 시작점 | **k 번째 항목의 원점 = 센터 − (`RowStartLeft`=600, `RowGap`=800 × k, 0)** — 센터에서 **왼쪽으로 600**, 항목마다 **아래로 800** (2026-09-23 조정: 구 400, 좌측 오프셋 없음) |
 | 한 줄 | 원점부터 +X, 순간격 = ND × 2 — `Insert_Diffuser` 와 동일 (`PlaceRow` 공용) |
+| 중복 주의 | Poly 가 겹치거나 중첩되면 같은 Text 가 양쪽에 잡혀 **두 번 배치**된다 |
 | 선정 | `CFM ÷ 개수` → 표준풍량 ≥ 한 대당 인 최소 행 (`SelectSpec` 공용) |
 | 기록 | 블럭 속성 `SystemType` + XData 7건 — §5 와 동일 |
 

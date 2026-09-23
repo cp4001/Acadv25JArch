@@ -77,7 +77,8 @@ namespace PipeLoad2
         private const string BlockPrefix = "JArch_";
         private const string BlockSuffix = "_ST";      // SystemType 속성을 가진 블럭
         private const string SystemTypeTag = "SystemType";
-        private const double RowGap = 400.0;          // Bypoly: Spec Text 항목 간 세로 간격
+        private const double RowGap = 800.0;          // Bypoly: Spec Text 항목 간 세로 간격
+        private const double RowStartLeft = 600.0;    // Bypoly: Poly 센터에서 왼쪽(-X)으로 이 거리부터 배치 시작
 
         /// <summary>Spec Text "2400,RPD,RA,3" 을 파싱한 결과.</summary>
         private record SpecText(double Cfm, string Type, string SystemType, int Count);
@@ -383,7 +384,9 @@ namespace PipeLoad2
         /// Insert_Diffuser_Bypoly — XData "Room" 을 가진 Poly 를 선택하면 그 안의
         /// Spec Text(XData "Diffuser", Diffuser_Spec 으로 지정한 것)를 찾아
         /// "CFM,Type,SystemType,개수" 를 읽고 Poly 센터부터 배치한다.
-        /// Text 가 여러 개면 항목마다 400 아래로 내려가며 한 줄씩 배치한다.
+        /// Text 가 여러 개면 항목마다 800 아래로 내려가며 한 줄씩 배치한다.
+        /// 각 줄의 시작점은 Poly 센터에서 왼쪽으로 600 떨어진 지점.
+        /// Poly 는 여러 개를 한 번에 선택할 수 있다(GetSelection → Poly 별로 반복).
         /// </summary>
         [CommandMethod("Insert_Diffuser_Bypoly", CommandFlags.UsePickSet)]
         public void Cmd_InsertDiffuserByPoly()
@@ -437,7 +440,13 @@ namespace PipeLoad2
                     // 위 → 아래, 같은 높이면 왼쪽 → 오른쪽 순서로 줄을 배정
                     var ordered = found.OrderByDescending(t => t.Pos.Y).ThenBy(t => t.Pos.X).ToList();
                     for (int k = 0; k < ordered.Count; k++)
-                        plans.Add((center - Vector3d.YAxis * (RowGap * k), ordered[k].Spec));
+                    {
+                        // 센터에서 왼쪽으로 RowStartLeft, 항목마다 아래로 RowGap
+                        Point3d origin = center
+                                       - Vector3d.XAxis * RowStartLeft
+                                       - Vector3d.YAxis * (RowGap * k);
+                        plans.Add((origin, ordered[k].Spec));
+                    }
                 }
 
                 tr.Commit();
