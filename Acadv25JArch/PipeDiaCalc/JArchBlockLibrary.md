@@ -7,7 +7,7 @@ tags:
 
 > 파일: `PipeDiaCalc/JArchBlockLibrary.cs`
 > 클래스: `PipeLoad2.JArchBlockLibrary` (static)
-> 최종 업데이트: 2026-09-21 (신규)
+> 최종 업데이트: 2026-09-23 (`_ST` 블럭으로 전환)
 
 ---
 
@@ -21,7 +21,7 @@ tags:
 | 저장소 원본 | `Acadv25JArch\Blocks\JArch_Blocks.dwg` (사용자가 직접 작성/유지, git 추적) |
 | 개발 시 | csproj `None` + `CopyToOutputDirectory=PreserveNewest` 로 `C:\Jarch25[\Release]\Blocks\` 에 복사 (`JArchXData.arx` 와 같은 방식) |
 | 배포 시 | `.iss` 가 `{app}\Contents\Blocks\JArch_Blocks.dwg` 로 설치. `#if !FileExists(...)` `#error` 가드로 누락 시 인스톨러 컴파일 실패 |
-| 포함 블럭 | `JArch_Damper`(동적, Dis1/Dis2), `JArch_RPD`, `JArch_SPD`, `JArch_RAD`, `JArch_SAD` — 필요에 따라 추가 |
+| 포함 블럭 | `JArch_Damper`(동적, Dis1/Dis2), `JArch_RPD_ST` / `JArch_SPD_ST` / `JArch_RAD_ST` / `JArch_SAD_ST`(속성 `SystemType`, 기본값 SA) — 필요에 따라 추가 |
 
 **API**: `JArchBlockLibrary.Import(Database db, Editor ed, string blockName)` → `bool`
 
@@ -41,7 +41,7 @@ tags:
 ## 2. 사용처
 
 - [[InsertDamper]] — `JArch_Damper` (동적 블럭)
-- [[InsertDiffuser]] — `JArch_RPD` / `JArch_SPD` / `JArch_RAD` / `JArch_SAD`
+- [[InsertDiffuser]] — `JArch_RPD_ST` / `JArch_SPD_ST` / `JArch_RAD_ST` / `JArch_SAD_ST` (2026-09-23 `_ST` 로 전환)
 
 블럭을 추가할 때는 참조 도면에 그려 넣고, 쓰는 쪽에서 이름만 넘기면 된다 — `JArchBlockLibrary` 는 수정할 필요가 없다.
 

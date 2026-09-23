@@ -19,8 +19,9 @@ namespace PipeLoad2
     /// 선택 지점부터 수평(+X)으로 블럭을 개수만큼 배치한다 (블럭 간 순간격 = ND × 2).
     /// 각 블럭에 XData "Diffuser"(=Type) / "SystemType"(SA/RA/EA/OA) / "Type" / "Size" / "ND"
     /// + "CMH" / "Disp"(한 대당 풍량, CMH 명령과 동일 패턴) 를 문자열로 기록.
-    /// 블럭 이름은 "JArch_" + Type (JArch_RPD 등)이고, 정의는 매 실행마다
+    /// 블럭 이름은 "JArch_" + Type + "_ST" (JArch_RPD_ST 등)이고, 정의는 매 실행마다
     /// 참조 도면(Blocks\JArch_Blocks.dwg)에서 가져와 덮어쓴다. XData 값은 Type("RPD") 그대로 사용.
+    /// 블럭 속성(Attribute) "SystemType" 에도 선택한 계통을 기록한다.
     /// </summary>
     public class DiffuserInsertCommand
     {
@@ -74,6 +75,8 @@ namespace PipeLoad2
         private static readonly string[] SystemTypes = { "SA", "RA", "EA", "OA" };
 
         private const string BlockPrefix = "JArch_";
+        private const string BlockSuffix = "_ST";      // SystemType 속성을 가진 블럭
+        private const string SystemTypeTag = "SystemType";
 
         // Diffuser_Spec 지정 성공 시 Text 에 적용하는 표시 스타일
         private const short SpecColorIndex = 41;      // ACI
@@ -139,7 +142,7 @@ namespace PipeLoad2
             Point3d basePt = ppr.Value;
 
             // 7. 참조 도면에서 블럭 정의를 가져온다(기존 정의는 덮어씀). Transaction 밖에서 수행.
-            string blockName = BlockPrefix + type;
+            string blockName = BlockPrefix + type + BlockSuffix;
             if (!JArchBlockLibrary.Import(db, ed, blockName)) return;
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -161,9 +164,15 @@ namespace PipeLoad2
 
                     if (i == 0)
                     {
+                        // 속성을 붙이기 전에 계산 — 속성 텍스트가 폭에 끼지 않도록
                         Extents3d ext = br.GeometricExtents;
                         pitch = (ext.MaxPoint.X - ext.MinPoint.X) + spacing;
                     }
+
+                    // 블럭 속성 생성 + SystemType 기록
+                    int stSet = AppendAttributes(tr, br, btrId, systemType);
+                    if (i == 0 && stSet == 0)
+                        ed.WriteMessage($"\n[경고] '{blockName}' 에 '{SystemTypeTag}' 속성이 없어 계통을 기록하지 못했습니다.");
 
                     JXdata.SetXdata(br, "Diffuser", spec.Type);
                     JXdata.SetXdata(br, "SystemType", systemType);
@@ -178,6 +187,33 @@ namespace PipeLoad2
             }
 
             ed.WriteMessage($"\n{blockName} 블럭 {count}개 배치 완료 ({systemType}).");
+        }
+
+        /// <summary>
+        /// 블럭 정의의 AttributeDefinition 들로 AttributeReference 를 만들어 br 에 붙이고,
+        /// Tag 가 "SystemType" 인 속성에는 선택한 계통을 넣는다. 기록한 SystemType 속성 개수를 반환.
+        /// 프로그램으로 BlockReference 를 만들면 속성이 자동 생성되지 않으므로 직접 붙여야 한다.
+        /// </summary>
+        private static int AppendAttributes(Transaction tr, BlockReference br, ObjectId btrId, string systemType)
+        {
+            int stCount = 0;
+            var btr = (BlockTableRecord)tr.GetObject(btrId, OpenMode.ForRead);
+            foreach (ObjectId id in btr)
+            {
+                if (tr.GetObject(id, OpenMode.ForRead) is not AttributeDefinition ad) continue;
+                if (ad.Constant) continue;   // 상수 속성은 정의에 포함되어 참조를 만들지 않는다
+
+                var ar = new AttributeReference();
+                ar.SetAttributeFromBlock(ad, br.BlockTransform);
+                if (ad.Tag.Equals(SystemTypeTag, StringComparison.OrdinalIgnoreCase))
+                {
+                    ar.TextString = systemType;
+                    stCount++;
+                }
+                br.AttributeCollection.AppendAttribute(ar);
+                tr.AddNewlyCreatedDBObject(ar, true);
+            }
+            return stCount;
         }
 
         /// <summary>

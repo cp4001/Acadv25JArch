@@ -7,7 +7,8 @@ tags:
 
 > 파일: `PipeDiaCalc/DiffuserInsertCommand.cs`
 > 클래스: `PipeLoad2.DiffuserInsertCommand.Cmd_InsertDiffuser`
-> 최종 업데이트: 2026-09-22 (`SystemType` 입력 추가 · `Diffuser_Spec` 명령 추가 · 지정 Text 표시 스타일 · 입력 순서 CFM→Type→SystemType→개수)
+> 최종 업데이트: 2026-09-23 (`_ST` 블럭 + `SystemType` 속성 기록)
+> 이전: 2026-09-22 (`SystemType` 입력 · `Diffuser_Spec` 명령 · 지정 Text 표시 스타일 · 입력 순서 CFM→Type→SystemType→개수)
 
 ---
 
@@ -23,7 +24,7 @@ tags:
 | ④ | `디퓨저 개수를 입력하세요:` | `PromptIntegerOptions`, 1 이상, 기본 1 |
 | ⑤ | (선정 결과 출력) | `선정: SA RPD 550A ND300 (표준 1300 CMH, 한 대당 1250 CMH × 2개)` |
 | ⑥ | `배치 시작점을 지정하세요:` | `ed.GetPoint` |
-| ⑦ | (블럭 정의 가져오기) | `JArchBlockLibrary.Import(db, ed, "JArch_" + type)` — Transaction 밖, 실패 시 종료 ([[JArchBlockLibrary]]) |
+| ⑦ | (블럭 정의 가져오기) | `JArchBlockLibrary.Import(db, ed, "JArch_" + type + "_ST")` — Transaction 밖, 실패 시 종료 ([[JArchBlockLibrary]]) |
 
 입력 순서는 `Diffuser_Spec` 의 Text 필드 순서(`2400,RPD,RA,3` = CFM, Type, SystemType, 개수)와 **같게 맞춰 두었다** (2026-09-22). 두 명령을 번갈아 쓸 때 순서를 다시 생각하지 않도록.
 
@@ -89,13 +90,36 @@ tags:
 
 | 항목 | 값 |
 |---|---|
-| 블럭 이름 | **`"JArch_" + Type`** (`JArch_RPD` / `JArch_SPD` / `JArch_RAD` / `JArch_SAD`) — `BlockPrefix` 상수. 접두를 붙이는 이유는 `RPD` 같은 흔한 이름이 사용자 도면의 기존 블럭과 충돌하기 때문. 매 실행마다 참조 도면에서 가져오므로 도면에 없어도 된다([[JArchBlockLibrary]]) |
+| 블럭 이름 | **`"JArch_" + Type + "_ST"`** (`JArch_RPD_ST` / `JArch_SPD_ST` / `JArch_RAD_ST` / `JArch_SAD_ST`) — `BlockPrefix` + `BlockSuffix` 상수. 접두는 `RPD` 같은 흔한 이름이 사용자 도면의 기존 블럭과 충돌하는 것을 피하기 위함이고, `_ST` 접미는 **`SystemType` 속성을 가진 블럭**이라는 표시다(2026-09-23 전환 — 그전엔 속성 없는 `JArch_RPD` 를 썼다). 매 실행마다 참조 도면에서 가져오므로 도면에 없어도 된다([[JArchBlockLibrary]]) |
+| 블럭 속성 | 삽입 후 `AppendAttributes` 가 정의의 `AttributeDefinition` 들로 `AttributeReference` 를 만들어 붙이고, Tag `SystemType` 에 선택한 계통을 기록. 나머지 속성은 정의의 기본값 유지 |
 | 방향 | 시작점에서 **월드 +X** 로 순차 배치 (회전 0, 축척 1, 현재 레이어) |
-| 간격 | **순간격 = ND × 2** (블럭 외곽선 사이 거리). 피치 = 첫 블럭 `GeometricExtents` 폭 + 순간격 |
+| 간격 | **순간격 = ND × 2** (블럭 외곽선 사이 거리). 피치 = 첫 블럭 `GeometricExtents` 폭 + 순간격. **속성을 붙이기 전에 계산**한다 — 속성 텍스트가 extents 에 끼면 간격이 의도보다 벌어진다 |
 | 삽입 공간 | `db.CurrentSpaceId` |
 | Transaction | 단일 transaction 안에서 `AppendEntity` → `AddNewlyCreatedDBObject` → XData 기록 |
 
 예: RPD 550A ND300, 2개 → 순간격 600. 블럭 폭이 550 이면 두 번째 블럭은 시작점 +1150.
+
+### 블럭 속성 (`AppendAttributes`)
+
+⚠️ **프로그램으로 `BlockReference` 를 만들면 속성이 자동 생성되지 않는다.** 정의의 `AttributeDefinition` 을 순회해 `AttributeReference` 를 직접 만들어 붙여야 하며, 빼먹으면 도면에 속성이 아예 보이지 않는다(기본값조차).
+
+```csharp
+var ar = new AttributeReference();
+ar.SetAttributeFromBlock(ad, br.BlockTransform);
+if (ad.Tag.Equals("SystemType", StringComparison.OrdinalIgnoreCase))
+    ar.TextString = systemType;
+br.AttributeCollection.AppendAttribute(ar);
+tr.AddNewlyCreatedDBObject(ar, true);
+```
+
+| 항목 | 처리 |
+|---|---|
+| Tag `SystemType` | 선택한 계통(SA/RA/EA/OA) 기록. Tag 비교는 `OrdinalIgnoreCase` |
+| 그 외 Tag | 정의의 기본값(`ad.TextString`) 유지 |
+| 상수 속성(`ad.Constant`) | 정의에 포함되므로 참조를 만들지 않고 건너뜀 |
+| 속성이 없을 때 | 첫 블럭에서 `[경고] 'JArch_RPD_ST' 에 'SystemType' 속성이 없어 계통을 기록하지 못했습니다.` 출력(중단하지 않음) |
+
+계통은 **속성과 XData 양쪽에 기록**된다 — 속성은 도면에서 보이는 값, XData 는 조회·필터용.
 
 ---
 
