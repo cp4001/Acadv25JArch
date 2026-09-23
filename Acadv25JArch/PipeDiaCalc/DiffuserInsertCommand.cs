@@ -77,6 +77,10 @@ namespace PipeLoad2
         private const string BlockPrefix = "JArch_";
         private const string BlockSuffix = "_ST";      // SystemType 속성을 가진 블럭
         private const string SystemTypeTag = "SystemType";
+        private const double RowGap = 400.0;          // Bypoly: Spec Text 항목 간 세로 간격
+
+        /// <summary>Spec Text "2400,RPD,RA,3" 을 파싱한 결과.</summary>
+        private record SpecText(double Cfm, string Type, string SystemType, int Count);
 
         // Diffuser_Spec 지정 성공 시 Text 에 적용하는 표시 스타일
         private const short SpecColorIndex = 41;      // ACI
@@ -127,13 +131,9 @@ namespace PipeLoad2
 
             // 5. 선정 — 한 대당 풍량 이상인 최소 표준풍량 행
             double perUnit = roomCmh / count;
-            var candidates = Table.Where(s => s.Type == type).OrderBy(s => s.StdCmh).ToList();
-            DiffuserSpec? spec = candidates.FirstOrDefault(s => s.StdCmh >= perUnit);
-            if (spec == null)
-            {
-                spec = candidates.Last();
+            DiffuserSpec spec = SelectSpec(type, perUnit, out bool exceeded);
+            if (exceeded)
                 ed.WriteMessage($"\n[경고] 한 대당 {perUnit:0.#} CMH 는 {type} 최대 표준풍량({spec.StdCmh})을 초과합니다. 최대 사이즈로 배치합니다.");
-            }
             ed.WriteMessage($"\n선정: {systemType} {spec.Type} {spec.Size} ND{spec.ND} (표준 {spec.StdCmh} CMH, 한 대당 {perUnit:0.#} CMH × {count}개)");
 
             // 6. 배치 기준점
@@ -153,35 +153,8 @@ namespace PipeLoad2
 
                 tr.ChecRegNames(db, "Diffuser,SystemType,Type,Size,ND,CMH,Disp");
 
-                double spacing = spec.ND * 2.0;   // 블럭 간 순간격(외곽선 사이 거리)
-                string cmhStr = perUnit.ToString("0.##");
-                double pitch = 0;   // 첫 블럭 폭 + spacing (첫 블럭 삽입 후 결정)
-                for (int i = 0; i < count; i++)
-                {
-                    var br = new BlockReference(basePt + Vector3d.XAxis * (pitch * i), btrId);
-                    space.AppendEntity(br);
-                    tr.AddNewlyCreatedDBObject(br, true);
-
-                    if (i == 0)
-                    {
-                        // 속성을 붙이기 전에 계산 — 속성 텍스트가 폭에 끼지 않도록
-                        Extents3d ext = br.GeometricExtents;
-                        pitch = (ext.MaxPoint.X - ext.MinPoint.X) + spacing;
-                    }
-
-                    // 블럭 속성 생성 + SystemType 기록
-                    int stSet = AppendAttributes(tr, br, btrId, systemType);
-                    if (i == 0 && stSet == 0)
-                        ed.WriteMessage($"\n[경고] '{blockName}' 에 '{SystemTypeTag}' 속성이 없어 계통을 기록하지 못했습니다.");
-
-                    JXdata.SetXdata(br, "Diffuser", spec.Type);
-                    JXdata.SetXdata(br, "SystemType", systemType);
-                    JXdata.SetXdata(br, "Type", spec.Type);
-                    JXdata.SetXdata(br, "Size", spec.Size);
-                    JXdata.SetXdata(br, "ND", spec.ND.ToString());
-                    JXdata.SetXdata(br, "CMH", cmhStr);
-                    JXdata.SetXdata(br, "Disp", cmhStr);
-                }
+                PlaceRow(tr, space, btrId, basePt, spec, systemType, count,
+                         perUnit.ToString("0.##"), blockName, ed);
 
                 tr.Commit();
             }
@@ -243,7 +216,7 @@ namespace PipeLoad2
                 int errCount = 0;
                 foreach (DBText txt in targets)
                 {
-                    if (!TryParseSpec(txt.TextString, out string type, out string reason))
+                    if (!TryParseSpec(txt.TextString, out SpecText? sp, out string reason))
                     {
                         ed.WriteMessage($"\n[건너뜀] \"{txt.TextString}\" — {reason}");
                         errCount++;
@@ -259,7 +232,7 @@ namespace PipeLoad2
                     }
 
                     txt.UpgradeOpen();
-                    JXdata.SetXdata(txt, "Diffuser", type);
+                    JXdata.SetXdata(txt, "Diffuser", sp!.Type);
                     txt.ColorIndex = SpecColorIndex;
                     txt.Oblique = SpecObliqueDeg * Math.PI / 180.0;
                     okCount++;
@@ -272,12 +245,12 @@ namespace PipeLoad2
         }
 
         /// <summary>
-        /// "2400,RPD,RA,3" 을 검증하고 Type 을 돌려준다.
+        /// "2400,RPD,RA,3" 을 검증해 CFM / Type / SystemType / 개수를 돌려준다.
         /// Type / SystemType 은 대소문자를 구분하지 않고 표준 표기(대문자)로 정규화한다.
         /// </summary>
-        private static bool TryParseSpec(string text, out string type, out string reason)
+        private static bool TryParseSpec(string text, out SpecText? spec, out string reason)
         {
-            type = "";
+            spec = null;
             reason = "";
 
             if (string.IsNullOrWhiteSpace(text))
@@ -323,8 +296,184 @@ namespace PipeLoad2
                 return false;
             }
 
-            type = matchedType;
+            string? matchedSys = SystemTypes.First(t => t.Equals(sysStr, StringComparison.OrdinalIgnoreCase));
+            spec = new SpecText(cfm, matchedType, matchedSys, cnt);
             return true;
+        }
+
+        /// <summary>한 대당 풍량 이상인 최소 표준풍량 행. 최대치를 넘으면 최대 행 + exceeded=true.</summary>
+        private static DiffuserSpec SelectSpec(string type, double perUnit, out bool exceeded)
+        {
+            var candidates = Table.Where(s => s.Type == type).OrderBy(s => s.StdCmh).ToList();
+            DiffuserSpec? hit = candidates.FirstOrDefault(s => s.StdCmh >= perUnit);
+            exceeded = hit == null;
+            return hit ?? candidates.Last();
+        }
+
+        /// <summary>
+        /// basePt 부터 +X 방향으로 count 개를 배치한다(순간격 = ND × 2).
+        /// 블럭 속성 + XData 7건 기록까지 한 곳에서 처리 — Insert_Diffuser / Insert_Diffuser_Bypoly 공용.
+        /// </summary>
+        private static void PlaceRow(Transaction tr, BlockTableRecord space, ObjectId btrId,
+                                     Point3d basePt, DiffuserSpec spec, string systemType,
+                                     int count, string cmhStr, string blockName, Editor ed)
+        {
+            double spacing = spec.ND * 2.0;   // 블럭 간 순간격(외곽선 사이 거리)
+            double pitch = 0;                 // 첫 블럭 폭 + spacing (첫 블럭 삽입 후 결정)
+            for (int i = 0; i < count; i++)
+            {
+                var br = new BlockReference(basePt + Vector3d.XAxis * (pitch * i), btrId);
+                space.AppendEntity(br);
+                tr.AddNewlyCreatedDBObject(br, true);
+
+                if (i == 0)
+                {
+                    // 속성을 붙이기 전에 계산 — 속성 텍스트가 폭에 끼지 않도록
+                    Extents3d ext = br.GeometricExtents;
+                    pitch = (ext.MaxPoint.X - ext.MinPoint.X) + spacing;
+                }
+
+                // 블럭 속성 생성 + SystemType 기록
+                int stSet = AppendAttributes(tr, br, btrId, systemType);
+                if (i == 0 && stSet == 0)
+                    ed.WriteMessage($"\n[경고] \'{blockName}\' 에 \'{SystemTypeTag}\' 속성이 없어 계통을 기록하지 못했습니다.");
+
+                JXdata.SetXdata(br, "Diffuser", spec.Type);
+                JXdata.SetXdata(br, "SystemType", systemType);
+                JXdata.SetXdata(br, "Type", spec.Type);
+                JXdata.SetXdata(br, "Size", spec.Size);
+                JXdata.SetXdata(br, "ND", spec.ND.ToString());
+                JXdata.SetXdata(br, "CMH", cmhStr);
+                JXdata.SetXdata(br, "Disp", cmhStr);
+            }
+        }
+
+        /// <summary>Poly 의 GeometricExtents 중심.</summary>
+        private static Point3d PolyCenter(Polyline pl)
+        {
+            Extents3d ext = pl.GeometricExtents;
+            return new Point3d((ext.MinPoint.X + ext.MaxPoint.X) * 0.5,
+                               (ext.MinPoint.Y + ext.MaxPoint.Y) * 0.5,
+                               (ext.MinPoint.Z + ext.MaxPoint.Z) * 0.5);
+        }
+
+        /// <summary>
+        /// 점이 Poly 내부인지 판정 (XY 평면 ray casting).
+        /// ⚠️ bulge(원호) 구간은 정점 사이 직선(현)으로 근사한다.
+        /// jCadExtention 의 Polyline.Contains 확장은 bbox 검사일 뿐이라 L 자형 룸에서 오판하므로 쓰지 않는다.
+        /// </summary>
+        private static bool IsInsidePoly(Polyline pl, Point3d p)
+        {
+            int n = pl.NumberOfVertices;
+            if (n < 3) return false;
+
+            bool inside = false;
+            for (int i = 0, j = n - 1; i < n; j = i++)
+            {
+                Point2d a = pl.GetPoint2dAt(i);
+                Point2d b = pl.GetPoint2dAt(j);
+                if ((a.Y > p.Y) != (b.Y > p.Y) &&
+                    p.X < (b.X - a.X) * (p.Y - a.Y) / (b.Y - a.Y) + a.X)
+                    inside = !inside;
+            }
+            return inside;
+        }
+
+        /// <summary>
+        /// Insert_Diffuser_Bypoly — XData "Room" 을 가진 Poly 를 선택하면 그 안의
+        /// Spec Text(XData "Diffuser", Diffuser_Spec 으로 지정한 것)를 찾아
+        /// "CFM,Type,SystemType,개수" 를 읽고 Poly 센터부터 배치한다.
+        /// Text 가 여러 개면 항목마다 400 아래로 내려가며 한 줄씩 배치한다.
+        /// </summary>
+        [CommandMethod("Insert_Diffuser_Bypoly", CommandFlags.UsePickSet)]
+        public void Cmd_InsertDiffuserByPoly()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            // 1. Diffuser XData 를 가진 TEXT 를 도면 전체에서 수집 (Editor 호출 → Transaction 밖)
+            PromptSelectionResult tsr = ed.SelectAll(JSelFilter.MakeFilterTypesRegs("TEXT", "Diffuser"));
+            if (tsr.Status != PromptStatus.OK || tsr.Value.Count == 0)
+            {
+                ed.WriteMessage("\n[오류] XData \"Diffuser\" 를 가진 Text 가 도면에 없습니다. Diffuser_Spec 으로 먼저 지정하세요.");
+                return;
+            }
+            ObjectId[] textIds = tsr.Value.GetObjectIds();
+
+            // 2. 계획 수집 — Poly 별로 내부 Spec Text 를 찾아 (배치 원점, Spec) 목록을 만든다
+            var plans = new List<(Point3d Origin, SpecText Spec)>();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                List<Polyline> polys = JEntityFunc.GetEntityByTpye<Polyline>(
+                    "Room Poly 를 선택하세요",
+                    JSelFilter.MakeFilterTypesRegs("LWPOLYLINE", "Room"));
+                if (polys == null || polys.Count == 0) return;
+
+                foreach (Polyline pl in polys)
+                {
+                    Point3d center = PolyCenter(pl);
+                    var found = new List<(Point3d Pos, SpecText Spec)>();
+
+                    foreach (ObjectId id in textIds)
+                    {
+                        if (tr.GetObject(id, OpenMode.ForRead) is not DBText txt) continue;
+                        if (!IsInsidePoly(pl, txt.Position)) continue;
+
+                        if (!TryParseSpec(txt.TextString, out SpecText? sp, out string reason))
+                        {
+                            ed.WriteMessage($"\n[건너뜀] \"{txt.TextString}\" — {reason}");
+                            continue;
+                        }
+                        found.Add((txt.Position, sp!));
+                    }
+
+                    if (found.Count == 0)
+                    {
+                        ed.WriteMessage($"\n[알림] Poly(핸들 {pl.Handle}) 안에 유효한 Spec Text 가 없습니다.");
+                        continue;
+                    }
+
+                    // 위 → 아래, 같은 높이면 왼쪽 → 오른쪽 순서로 줄을 배정
+                    var ordered = found.OrderByDescending(t => t.Pos.Y).ThenBy(t => t.Pos.X).ToList();
+                    for (int k = 0; k < ordered.Count; k++)
+                        plans.Add((center - Vector3d.YAxis * (RowGap * k), ordered[k].Spec));
+                }
+
+                tr.Commit();
+            }
+
+            if (plans.Count == 0) return;
+
+            // 3. 필요한 블럭 정의를 참조 도면에서 가져온다 (Transaction 밖, Type 별 1회)
+            foreach (string name in plans.Select(p => BlockPrefix + p.Spec.Type + BlockSuffix).Distinct())
+                if (!JArchBlockLibrary.Import(db, ed, name)) return;
+
+            // 4. 배치
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                var space = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+                tr.ChecRegNames(db, "Diffuser,SystemType,Type,Size,ND,CMH,Disp");
+
+                foreach (var (origin, sp) in plans)
+                {
+                    double perUnit = sp.Cfm / sp.Count;
+                    DiffuserSpec spec = SelectSpec(sp.Type, perUnit, out bool exceeded);
+                    string blockName = BlockPrefix + sp.Type + BlockSuffix;
+
+                    if (exceeded)
+                        ed.WriteMessage($"\n[경고] 한 대당 {perUnit:0.#} CMH 는 {sp.Type} 최대 표준풍량({spec.StdCmh})을 초과합니다. 최대 사이즈로 배치합니다.");
+                    ed.WriteMessage($"\n선정: {sp.SystemType} {spec.Type} {spec.Size} ND{spec.ND} (표준 {spec.StdCmh} CMH, 한 대당 {perUnit:0.#} CMH × {sp.Count}개)");
+
+                    PlaceRow(tr, space, bt[blockName], origin, spec, sp.SystemType, sp.Count,
+                             perUnit.ToString("0.##"), blockName, ed);
+                }
+
+                tr.Commit();
+            }
+
+            ed.WriteMessage($"\n{plans.Count}개 항목 배치 완료.");
         }
     }
 }

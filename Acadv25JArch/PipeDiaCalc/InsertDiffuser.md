@@ -3,11 +3,11 @@ tags:
   - AutoCAD
 ---
 
-# Insert_Diffuser / Diffuser_Spec 명령어
+# Insert_Diffuser / Diffuser_Spec / Insert_Diffuser_Bypoly 명령어
 
 > 파일: `PipeDiaCalc/DiffuserInsertCommand.cs`
 > 클래스: `PipeLoad2.DiffuserInsertCommand.Cmd_InsertDiffuser`
-> 최종 업데이트: 2026-09-23 (`_ST` 블럭 + `SystemType` 속성 기록 · 선정표 32행으로 갱신)
+> 최종 업데이트: 2026-09-23 (`_ST` 블럭 + `SystemType` 속성 · 선정표 32행 · `Insert_Diffuser_Bypoly` 추가)
 > 이전: 2026-09-22 (`SystemType` 입력 · `Diffuser_Spec` 명령 · 지정 Text 표시 스타일 · 입력 순서 CFM→Type→SystemType→개수)
 
 ---
@@ -207,7 +207,57 @@ tr.AddNewlyCreatedDBObject(ar, true);
 
 ---
 
-## 8. 관련 명령 / 문서
+## 8. Insert_Diffuser_Bypoly 명령 (같은 파일)
+
+> `[CommandMethod("Insert_Diffuser_Bypoly", CommandFlags.UsePickSet)]` — `Cmd_InsertDiffuserByPoly` (2026-09-23 신규)
+
+XData `Room` 을 가진 Poly 를 선택하면 **그 안의 Spec Text**(§7 `Diffuser_Spec` 으로 지정한 것)를 찾아 `CFM,Type,SystemType,개수` 를 읽고 **Poly 센터부터** 배치한다. 사용자 입력(풍량·Type·계통·개수·기준점)이 전혀 없다 — 전부 Text 에서 읽는다.
+
+### 실행 순서 (4단계 — Editor 호출과 Transaction 을 분리)
+
+| 단계 | 내용 |
+|---|---|
+| ① | `ed.SelectAll(MakeFilterTypesRegs("TEXT", "Diffuser"))` — 도면 전체의 Spec Text 수집. **Transaction 밖**. 하나도 없으면 오류 후 종료 |
+| ② | Transaction A(읽기) — `MakeFilterTypesRegs("LWPOLYLINE", "Room")` 로 Poly 선택 → Poly 별 센터·내부 Text 파싱 → **배치 계획 목록**(원점, Spec) 작성 |
+| ③ | `JArchBlockLibrary.Import` — 계획에 나온 **Type 별 1회**. **Transaction 밖**([[JArchBlockLibrary]] 요구사항) |
+| ④ | Transaction B(쓰기) — 계획대로 `PlaceRow` 호출 |
+
+`ed.SelectAll` 은 뷰포트와 무관하므로 `SelectCrossingWindow` 처럼 Zoom fit 이 필요 없다. 계획 단계에서 **좌표·값만 복사**해 두므로 Transaction A 를 닫은 뒤에도 stale 참조 문제가 없다(`DuctNode.Line` 전례 참고).
+
+### 배치 규칙
+
+| 항목 | 값 |
+|---|---|
+| Poly 센터 | `GeometricExtents` 중심 (`PolyCenter`) |
+| 내부 판정 | XY 평면 **ray casting** (`IsInsidePoly`) |
+| Text 순서 | **Y 내림차순 → 같은 높이면 X 오름차순** (위→아래, 왼→오른쪽) |
+| 줄 간격 | k 번째 항목의 원점 = 센터에서 **아래로 `RowGap(400) × k`** |
+| 한 줄 | 원점부터 +X, 순간격 = ND × 2 — `Insert_Diffuser` 와 동일 (`PlaceRow` 공용) |
+| 선정 | `CFM ÷ 개수` → 표준풍량 ≥ 한 대당 인 최소 행 (`SelectSpec` 공용) |
+| 기록 | 블럭 속성 `SystemType` + XData 7건 — §5 와 동일 |
+
+Poly 안에 유효한 Text 가 없으면 `[알림] Poly(핸들 …) 안에 유효한 Spec Text 가 없습니다.` 를 출력하고 다음 Poly 로 넘어간다. 형식이 틀린 Text 는 `[건너뜀] "원문" — 이유` 출력 후 계속.
+
+### 공용 헬퍼 (Insert_Diffuser 와 공유)
+
+새 명령이 삽입 로직을 복사하지 않도록 2026-09-23 에 뽑아낸 것들이다. **한쪽만 고치면 두 명령이 어긋나므로 여기만 고칠 것.**
+
+| 헬퍼 | 역할 |
+|---|---|
+| `TryParseSpec(text, out SpecText?, out reason)` | Spec Text 파싱·검증. `record SpecText(Cfm, Type, SystemType, Count)` 반환 (구: `out string type` 만) |
+| `SelectSpec(type, perUnit, out exceeded)` | 선정표 조회 |
+| `PlaceRow(tr, space, btrId, basePt, spec, systemType, count, cmhStr, blockName, ed)` | 한 줄 배치 + 속성 + XData 7건 |
+| `AppendAttributes(tr, br, btrId, systemType)` | 블럭 속성 생성 (§4 참고) |
+
+### 한계 / 주의
+
+- ⚠️ **원호(bulge) 구간은 정점 사이 현으로 근사**한다. 곡선 경계 룸은 경계 근처 Text 를 오판할 수 있다.
+- ⚠️ **센터가 Poly 밖일 수 있다** — extents 중심이라 L 자형 룸에서는 배치 원점이 룸 바깥으로 나간다. 무게중심이 필요하면 `PolyCenter` 를 바꿀 것.
+- ⚠️ `jCadExtention.cs` 의 `Polyline.Contains(Point3d)` 확장은 **bbox + 5.0 여유 검사일 뿐**이라 이 명령에서는 쓰지 않는다(L 자형에서 밖의 Text 를 안이라고 판정). 기존 확장은 그대로 두고 private `IsInsidePoly` 를 따로 두었다.
+
+---
+
+## 9. 관련 명령 / 문서
 
 - [[CMH]] — 기존 블럭에 `CMH`/`Disp` 를 붙이는 명령. `Insert_Diffuser` 는 삽입과 동시에 같은 XData 를 기록
 - [[DuctTreeTechNote]] — `"CMH"` XData 를 Leaf 부하로 소비
