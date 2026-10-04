@@ -3,12 +3,13 @@ tags:
   - AutoCAD
 ---
 
-# Insert_Diffuser / Diffuser_Spec / Insert_Diffuser_Bypoly 명령어
+# Insert_Diffuser / Diffuser_Spec / Insert_Diffuser_Bypoly / Diffuser_Summary 명령어
 
-> 파일: `PipeDiaCalc/DiffuserInsertCommand.cs`
+> 파일: `PipeDiaCalc/DiffuserInsertCommand.cs` (+ `PipeDiaCalc/DiffuserSummaryCommand.cs` — §9)
 > 클래스: `PipeLoad2.DiffuserInsertCommand.Cmd_InsertDiffuser`
-> 최종 업데이트: 2026-09-23 (`_ST` 블럭 + `SystemType` 속성 · 선정표 32행 · `Insert_Diffuser_Bypoly` 추가 · Bypoly 배치 원점을 Poly 좌측 기준으로)
-> 이전: 2026-09-22 (`SystemType` 입력 · `Diffuser_Spec` 명령 · 지정 Text 표시 스타일 · 입력 순서 CFM→Type→SystemType→개수)
+> 최종 업데이트: 2026-10-04 (`Diffuser_Summary` 덕트기구일람표 명령 추가)
+> 이전: 2026-09-23 (`_ST` 블럭 + `SystemType` 속성 · 선정표 32행 · `Insert_Diffuser_Bypoly` 추가 · Bypoly 배치 원점을 Poly 좌측 기준으로)
+> 그 전: 2026-09-22 (`SystemType` 입력 · `Diffuser_Spec` 명령 · 지정 Text 표시 스타일 · 입력 순서 CFM→Type→SystemType→개수)
 
 ---
 
@@ -264,11 +265,88 @@ Poly 안에 유효한 Text 가 없으면 `[알림] Poly(핸들 …) 안에 유�
 
 - ⚠️ **원호(bulge) 구간은 정점 사이 현으로 근사**한다. 곡선 경계 룸은 경계 근처 Text 를 오판할 수 있다.
 - ⚠️ **센터가 Poly 밖일 수 있다** — extents 중심이라 L 자형 룸에서는 배치 원점이 룸 바깥으로 나간다. 무게중심이 필요하면 `PolyCenter` 를 바꿀 것.
-- ⚠️ `jCadExtention.cs` 의 `Polyline.Contains(Point3d)` 확장은 **bbox + 5.0 여유 검사일 뿐**이라 이 명령에서는 쓰지 않는다(L 자형에서 밖의 Text 를 안이라고 판정). 기존 확장은 그대로 두고 private `IsInsidePoly` 를 따로 두었다.
+- ⚠️ `jCadExtention.cs` 의 `Polyline.Contains(Point3d)` 확장은 **bbox + 5.0 여유 검사일 뿐**이라 이 명령에서는 쓰지 않는다(L 자형에서 밖의 Text 를 안이라고 판정). 기존 확장은 그대로 두고 `IsInsidePoly` 를 따로 두었다(2026-10-04 `Diffuser_Summary` 공유를 위해 `internal`).
 
 ---
 
-## 9. 관련 명령 / 문서
+## 9. Diffuser_Summary 명령 (덕트기구일람표)
+
+> `[CommandMethod("Diffuser_Summary", CommandFlags.UsePickSet)]` — `PipeDiaCalc/DiffuserSummaryCommand.cs` 의 `Cmd_DiffuserSummary` (2026-10-04 신규, 별도 클래스 `DiffuserSummaryCommand`)
+
+Room Poly 를 **다중 선택**하면 각 Poly 안의 디퓨저 블럭(§5 XData)을 **실 × 계통 × 사이즈** 별로 집계해 "덕트기구일람표" 를 **Line + DBText** 로 그린다(AutoCAD Table 객체 아님).
+
+### 실행 순서
+
+| 단계 | 내용 |
+|---|---|
+| ① | `ed.SelectAll` 로 디퓨저 블럭(`INSERT` + XData `Diffuser`)과 RoomText(`TEXT` + XData `RoomText`) 수집 — **Transaction 밖**. 블럭이 없으면 오류 종료 |
+| ② | Transaction A(읽기) — `LWPOLYLINE` + XData `Room` Poly 다중 선택 → Poly 별 집계(값만 복사) |
+| ③ | `공조기 명칭 (예: AHU-MP-01, Enter=생략):` — 제목 `덕 트 기 구 일 람 표 (AHU-MP-01)` |
+| ④ | `일람표 좌상단 점을 지정하세요:` |
+| ⑤ | Transaction B(쓰기) — 현재 공간·현재 레이어·현재 문자 스타일로 표 작성 |
+
+### 집계 규칙
+
+| 항목 | 출처 / 규칙 |
+|---|---|
+| 내부 판정 | 블럭 **삽입점**·RoomText 위치를 `DiffuserInsertCommand.IsInsidePoly`(ray casting)로 판정 |
+| 실명 | Poly 안 RoomText 중 **가장 위(Y 최대)** 의 문자열. 없으면 `Room(핸들)` + 알림 |
+| 실 풍량(부제) | Poly XData `CFM`(`To_RoomCFM`) 이 양수일 때만 `22,000 CMH` 형태로 실명 아래 Cyan 소문자 |
+| 행 묶음 키 | `SystemType` · `Diffuser`(Type) · `Size` · `ND` · `CMH` 문자열이 모두 같은 블럭 |
+| 행 순서 | 계통 SA→RA→EA→OA(`SystemTypes` 공유) → Type → 한 대당 CMH 내림차순 |
+| 실 순서 | 실명 **Ordinal** 정렬 (`RETAIL-10` 이 `RETAIL-2` 보다 앞) |
+| 제외 | 디퓨저 없는 Poly 는 표에서 빼고 알림. `CMH` 파싱 실패 블럭은 `[건너뜀]` |
+
+### 열 구성
+
+| 열 | 값 |
+|---|---|
+| 실 명 | 실명(실 단위 병합 — 행 구분선 없음) |
+| 구 분 | `SystemType` |
+| 풍 량 | 한 대당 `CMH` (`#,##0`) |
+| 수 량 | 블럭 개수 |
+| 전체풍량 | `CMH` 합계 (`#,##0`) |
+| N.D(φ) | `ND` |
+| 형 식 / 비 고 | `TypeInfo` 매핑 (아래) |
+| 규 격 | `600A` → `%%c600`(φ600), 각형 `300x300` 은 그대로 |
+
+| Type | 형식 | 비고 |
+|---|---|---|
+| RPD | 원형디퓨져 | PAN TYPE |
+| SPD | 각형디퓨져 | PAN TYPE |
+| RAD | 원형디퓨져 | ANEMO TYPE |
+| SAD | 각형디퓨져 | ANEMO TYPE |
+
+⚠️ RPD 외 매핑은 참조 그림에 예시가 없어 **추정값**이다 — 다르면 `TypeInfo` 만 고칠 것.
+
+### 표 치수 / 색상
+
+| 상수 | 값 |
+|---|---|
+| `TextH` / `TitleH` | 250 / 350 |
+| `RowH` / `HeadH` | 500 / 600 |
+| `ColW` | 2700, 1050, 1100, 900, 1450, 1200, 1800, 1600, 2200 |
+
+| 요소 | ACI |
+|---|---|
+| 제목 / 헤더 아래선 | 2 (Yellow) |
+| 제목 밑줄 / 상·하 외곽선 | 3 (Green) |
+| 내부 격자(세로선·행/실 구분선) | 1 (Red) |
+| 본문·헤더 문자 | 7 |
+| 실 풍량 부제 | 4 (Cyan) |
+
+좌·우 바깥 세로선은 그리지 않는다(참조 양식). 제목 밑줄 길이는 제목 Text 의 `GeometricExtents` 폭에 맞춘다.
+
+### 한계 / 주의
+
+- ⚠️ Poly 가 겹치면 같은 블럭이 **두 실에 중복 집계**된다(Bypoly 의 중복 배치와 같은 원인).
+- ⚠️ 치수 상수는 고정값 — 도면 축척이 다르면 `TextH`/`RowH`/`ColW` 조정 필요.
+- ⚠️ 현재 문자 스타일이 한글 미지원(`txt.shx` 등)이면 한글이 깨진다.
+- 전체풍량은 블럭의 한 대당 `CMH`(`"0.##"` 반올림 저장) 합계라 Spec Text 의 CFM 과 소수점 단위로 다를 수 있다(표시는 정수 반올림).
+
+---
+
+## 10. 관련 명령 / 문서
 
 - [[CMH]] — 기존 블럭에 `CMH`/`Disp` 를 붙이는 명령. `Insert_Diffuser` 는 삽입과 동시에 같은 XData 를 기록
 - [[DuctTreeTechNote]] — `"CMH"` XData 를 Leaf 부하로 소비

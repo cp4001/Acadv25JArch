@@ -72,7 +72,7 @@ namespace PipeLoad2
         private static readonly string[] Types = { "RPD", "SPD", "RAD", "SAD" };
 
         // 급기(Supply) / 환기(Return) / 배기(Exhaust) / 외기(Outdoor Air)
-        private static readonly string[] SystemTypes = { "SA", "RA", "EA", "OA" };
+        internal static readonly string[] SystemTypes = { "SA", "RA", "EA", "OA" };
 
         private const string BlockPrefix = "JArch_";
         private const string BlockSuffix = "_ST";      // SystemType 속성을 가진 블럭
@@ -354,7 +354,7 @@ namespace PipeLoad2
         /// ⚠️ bulge(원호) 구간은 정점 사이 직선(현)으로 근사한다.
         /// jCadExtention 의 Polyline.Contains 확장은 bbox 검사일 뿐이라 L 자형 룸에서 오판하므로 쓰지 않는다.
         /// </summary>
-        private static bool IsInsidePoly(Polyline pl, Point3d p)
+        internal static bool IsInsidePoly(Polyline pl, Point3d p)
         {
             int n = pl.NumberOfVertices;
             if (n < 3) return false;
