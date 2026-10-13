@@ -14,6 +14,9 @@
 #define BinDir      "C:\Jarch25"
 #define MainDir     BinDir + "\Release"
 #define PipeLoadDll BinDir + "\x64\Release\net8.0-windows\PipeLoad.dll"
+; 블럭 참조 도면 - 사용자가 수시로 수정하는 저장소 원본을 직접 배포한다
+; (빌드 출력 사본은 마지막 빌드 시점 것이라 빌드 없이 원본만 고치면 구버전이 들어간다)
+#define BlocksDwg   SourcePath + "..\Acadv25JArch\Blocks\JArch_Blocks.dwg"
 
 ; Release 빌드 누락 시 인스톨러 컴파일 자체를 실패시킨다
 #if !FileExists(MainDir + "\Acadv25JArch.dll")
@@ -27,8 +30,8 @@
 #if !FileExists(MainDir + "\JArchXDataNet.dll")
   #error JArchXDataNet.dll 없음 - C++\build.bat 실행 후 Acadv25JArch.csproj 를 -c Release 로 빌드할 것
 #endif
-#if !FileExists(MainDir + "\Blocks\JArch_Blocks.dwg")
-  #error Blocks\JArch_Blocks.dwg 없음 - Acadv25JArch\Blocks\JArch_Blocks.dwg 를 두고 다시 빌드할 것
+#if !FileExists(BlocksDwg)
+  #error JArch_Blocks.dwg 원본 없음 - Acadv25JArch\Blocks\JArch_Blocks.dwg 를 확인할 것
 #endif
 #if !FileExists(MainDir + "\JArchXData.arx")
   #error JArchXData.arx 없음 - C++\build.bat 로 ARX 를 먼저 빌드할 것
@@ -85,7 +88,7 @@ Source: "{#PipeLoadDll}"; DestDir: "{app}\Contents"; Flags: ignoreversion
 
 ; 블럭 참조 도면 (Insert_Damper / Insert_Diffuser 가 WblockCloneObjects 로 읽는다)
 ; JArchBlockLibrary 가 DLL 과 같은 폴더의 Blocks\ 에서 찾으므로 Contents\Blocks 로 분리 배포
-Source: "{#MainDir}\Blocks\JArch_Blocks.dwg"; DestDir: "{app}\Contents\Blocks"; Flags: ignoreversion
+Source: "{#BlocksDwg}"; DestDir: "{app}\Contents\Blocks"; Flags: ignoreversion
 
 ; Excel 데이터 (빌드 산출물이 아니라 수동 관리 폴더이므로 BinDir 그대로)
 Source: "{#BinDir}\Excel\*"; DestDir: "{app}\Contents\Excel"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "desktop.ini"

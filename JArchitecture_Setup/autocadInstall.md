@@ -98,9 +98,11 @@ string dllFolder = System.IO.Path.GetDirectoryName(
 string dwg = System.IO.Path.Combine(dllFolder, "Blocks", "JArch_Blocks.dwg");
 ```
 
-저장소 원본은 `Acadv25JArch\Blocks\JArch_Blocks.dwg`(사용자가 직접 유지) → csproj `None`+`CopyToOutputDirectory=PreserveNewest` 로 출력 폴더의 `Blocks\` 에 복사 → `.iss` 가 `{app}\Contents\Blocks` 로 배포. `.iss` 에 `#error` 가드가 있어 누락 시 **인스톨러 컴파일이 실패**한다.
+저장소 원본은 `Acadv25JArch\Blocks\JArch_Blocks.dwg`(사용자가 직접 유지). csproj `None`+`CopyToOutputDirectory=PreserveNewest` 로 출력 폴더의 `Blocks\` 에도 복사되지만 이건 **개발 NETLOAD 용**이고, **`.iss` 는 저장소 원본을 직접** `{app}\Contents\Blocks` 로 배포한다(`#define BlocksDwg`, 2026-10-13 변경). 그래서 도면만 고친 경우 빌드 없이 인스톨러만 다시 만들면 된다. `.iss` 에 `#error` 가드가 있어 원본이 없으면 **인스톨러 컴파일이 실패**한다.
 
-⚠️ **도면을 수정했으면 `dotnet build -c Release` 를 먼저 다시 돌릴 것** — `.iss` 는 저장소 원본이 아니라 **Release 출력 폴더의 사본**(`C:\Jarch25\Release\Blocks\`)을 참조한다. 빌드를 건너뛰면 가드는 통과하지만 **옛 도면이 패키징된다**(2026-09-22 실제 발생).
+> 이전(~2026-10-12)에는 Release 출력 사본(`C:\Jarch25\Release\Blocks\`)을 참조해서, 빌드를 건너뛰면 옛 도면이 패키징됐다(2026-09-22 실제 발생).
+
+⚠️ **ISCC 실행 전에 AutoCAD 에서 `JArch_Blocks.dwg` 를 닫을 것** — 도면이 열려 있으면 AutoCAD 가 파일을 잠가 `다른 프로세스가 파일을 사용 중` 오류로 컴파일이 중단된다. 저장하지 않은 수정은 당연히 들어가지 않는다.
 
 ### 절대 경로 방식 (기존 - 비권장)
 

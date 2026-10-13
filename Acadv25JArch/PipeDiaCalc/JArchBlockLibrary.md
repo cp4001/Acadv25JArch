@@ -20,7 +20,7 @@ tags:
 | 참조 도면 | `<DLL 폴더>\Blocks\JArch_Blocks.dwg` — `JArchBlockLibrary.LibraryPath` (`Assembly.GetExecutingAssembly().Location` 기준) |
 | 저장소 원본 | `Acadv25JArch\Blocks\JArch_Blocks.dwg` (사용자가 직접 작성/유지, git 추적) |
 | 개발 시 | csproj `None` + `CopyToOutputDirectory=PreserveNewest` 로 `C:\Jarch25[\Release]\Blocks\` 에 복사 (`JArchXData.arx` 와 같은 방식) |
-| 배포 시 | `.iss` 가 `{app}\Contents\Blocks\JArch_Blocks.dwg` 로 설치. `#if !FileExists(...)` `#error` 가드로 누락 시 인스톨러 컴파일 실패 |
+| 배포 시 | `.iss` 가 **저장소 원본 `Acadv25JArch\Blocks\JArch_Blocks.dwg` 를 직접** `{app}\Contents\Blocks\JArch_Blocks.dwg` 로 설치(빌드 출력 사본 아님, 2026-10-13). ISCC 전에 AutoCAD 에서 도면을 닫을 것(잠금). `#if !FileExists(...)` `#error` 가드로 누락 시 인스톨러 컴파일 실패 |
 | 포함 블럭 | `JArch_Damper`(동적, Dis1/Dis2), `JArch_RPD_ST` / `JArch_SPD_ST` / `JArch_RAD_ST` / `JArch_SAD_ST`(속성 `SystemType`, 기본값 SA) — 필요에 따라 추가 |
 
 **API**: `JArchBlockLibrary.Import(Database db, Editor ed, string blockName)` → `bool`
