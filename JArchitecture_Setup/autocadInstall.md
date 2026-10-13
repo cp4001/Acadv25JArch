@@ -169,9 +169,12 @@ dir "%ProgramData%\Autodesk\ApplicationPlugins" /s
 
 | DLL | 프로젝트 종류 | 배포 빌드 | `.iss` 소스 경로 |
 |---|---|---|---|
-| `JArchLicense.dll` | **네이티브 C++** (`.vcxproj`) | **Release\|x64 필수** | `..\JArchLicense\bin\x64\Release\JArchLicense.dll` (ISPP `{#LicenseDll}`) |
+| `JArchXData.arx` | **네이티브 C++ / ObjectARX** (`C++\JArchXData\JArchXData.vcxproj`) | **Release\|x64 필수** (`C++\build.bat`) | `C:\Jarch25\Release\JArchXData.arx` (ISPP `{#MainDir}`) — `Acadv25JArch.csproj` 가 `C++\JArchXData\x64\Release\` 에서 복사 |
+| `JArchXDataNet.dll` | 관리 .NET (arx 래퍼) | Release (`C++\build.bat`) | `C:\Jarch25\Release\` (ISPP `{#MainDir}`) — **arx 와 같은 폴더 필수** |
 | `PipeLoad.dll` | 관리 .NET (`.csproj`, net8.0) | Release\|x64 | `C:\Jarch25\x64\Release\net8.0-windows\PipeLoad.dll` (ISPP `{#PipeLoadDll}`) |
 | `Acadv25JArch.dll`·`EPPlus.dll`·`DuctSizing.Core.dll` | 관리 .NET | Release | `C:\Jarch25\Release\` (ISPP `{#MainDir}`) |
+
+> `JArchLicense.dll` 은 **배포 중단**(2026-08-26 라이선스가 `JArchXData.arx` 로 전환). `.iss` `[InstallDelete]` 가 재설치 시 `{app}\Contents\JArchLicense.dll` 을 지운다 — 덮어쓰기 설치에서 고아 파일로 남지 않게.
 
 ### 출력 경로 분리 (2026-07-28)
 
@@ -217,13 +220,14 @@ Release 구성은 `Optimize=True` / `DebugType=portable` 로 교정. 실제로 �
 - 전체 재빌드 기준 약 2배(측정값 7.6초). 반복 빌드가 부담되면 `dotnet build -p:BuildBothConfigurations=false`.
 - Release 빌드가 실패하면 Debug 빌드도 실패로 보고된다 — Release 전용 오류를 조기에 잡는 이점과, 개발 중 빌드가 막히는 단점이 함께 있다.
 
-`.iss` 는 네 소스(`{#MainDir}`·`{#LicenseDll}`·`{#PipeLoadDll}` + Excel) 모두에 대해 컴파일 시점 `FileExists` 검사를 하므로, **Release 빌드를 빠뜨리면 인스톨러 컴파일이 실패**한다.
+`.iss` 는 `Acadv25JArch.dll`·`PipeLoad.dll`·`JArchXDataNet.dll`·`JArchXData.arx`·`Blocks\JArch_Blocks.dwg` 에 대해 컴파일 시점 `FileExists` 검사를 하므로, **Release 빌드를 빠뜨리면 인스톨러 컴파일이 실패**한다.
 
-### 왜 네이티브 DLL은 Release 필수인가
+### 왜 네이티브 모듈(arx)은 Release 필수인가
 
-- 네이티브 C++ DLL의 **Debug 빌드는 Debug CRT**(`VCRUNTIME140D.dll`, `ucrtbased.dll`)에 링크된다.
+- 네이티브 C++ 모듈(`.arx` 도 DLL 이다)의 **Debug 빌드는 Debug CRT**(`VCRUNTIME140D.dll`, `ucrtbased.dll`)에 링크된다.
 - **Debug CRT는 Microsoft가 재배포를 금지** — VC++ 재배포 패키지에도 없고, **Visual Studio 설치 PC에만** 존재한다.
-- 따라서 고객 PC(AutoCAD 2025만 설치)에서는 의존성 부재로 `JArchLicense.dll` 로드 실패 → `MyPlugin.Initialize()`의 `CheckLicense()` P/Invoke 예외 → **"라이선스 확인 오류"** 표시 + 플러그인 비활성화.
+- 따라서 고객 PC(AutoCAD 2025만 설치)에서는 의존성 부재로 `JArchXData.arx` 로드 실패 → 라이선스 조회가 안 돼 배너에 **"JArchXData.arx 를 로드하지 못했습니다"** 표시 + 라이선스 필요 명령·Xdata 기록 차단.
+  (2026-08 이전에는 `JArchLicense.dll` 이 같은 이유로 "라이선스 확인 오류" 를 냈다 — 이 절이 생긴 계기)
 - **Release CRT**(`VCRUNTIME140.dll` + `api-ms-win-crt-*` → `ucrtbase.dll`)는 AutoCAD 2025(VC++ 재배포)·Windows 10/11 OS가 이미 제공 → 추가 설치 없이 로드된다.
 - 관리 .NET DLL은 CRT에 링크되지 않으므로 Debug여도 로드는 되지만, 배포는 Release로 통일한다.
 
@@ -231,7 +235,7 @@ Release 구성은 `Optimize=True` / `DebugType=portable` 로 교정. 실제로 �
 
 ```powershell
 # dumpbin은 VS와 함께 설치됨 (예: ...\VC\bin\dumpbin.exe)
-dumpbin /dependents "C:\Jarch25\JArchLicense.dll"
+dumpbin /dependents "C:\Jarch25\Release\JArchXData.arx"
 ```
 
 - 출력에 **`...140D.dll` / `ucrtbased.dll` 같은 `D` 접미사가 있으면 Debug 빌드** → 재빌드 필요.
@@ -240,9 +244,9 @@ dumpbin /dependents "C:\Jarch25\JArchLicense.dll"
 ### 빌드 & 인스톨러 재빌드 절차
 
 ```powershell
-# 1) JArchLicense (네이티브) Release|x64  — .iss 가 이 경로를 직접 참조하므로 복사 불필요
-$msbuild = (& "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -find MSBuild\**\Bin\MSBuild.exe)
-& $msbuild "JArchLicense\JArchLicense.vcxproj" /p:Configuration=Release /p:Platform=x64 /t:Rebuild
+# 1) JArchXData.arx (네이티브, Release|x64) + JArchXDataNet.dll (래퍼, Release)
+#    반드시 3) 보다 먼저 — 메인 csproj 가 빌드 시 arx 를 C:\Jarch25\Release\ 로 복사한다
+& "C++\build.bat" auto
 
 # 2) PipeLoad (관리) Release|x64  (BaseOutputPath = C:\Jarch25)
 dotnet build "PipeLoad\PipeLoad.csproj" -c Release -p:Platform=x64
@@ -258,7 +262,7 @@ dotnet build "Acadv25JArch\Acadv25JArch.csproj" -c Release
 
 ### `.iss` 작성 주의
 
-- **소스 경로는 항상 `...\Release\...`를 가리키도록 고정** — Debug 산출물이 배포본에 섞이는 사고 방지. 별도 출력 경로를 갖는 프로젝트(`JArchLicense`·`PipeLoad`)는 ISPP `#define` 으로 Release 경로를 박아두고, `#if !FileExists(...)` + `#error` 로 **빌드 누락 시 컴파일이 실패**하게 해 뒀다.
+- **소스 경로는 항상 `...\Release\...`를 가리키도록 고정** — Debug 산출물이 배포본에 섞이는 사고 방지. 별도 출력 경로를 갖는 프로젝트(`PipeLoad`)는 ISPP `#define` 으로 Release 경로를 박아두고, `#if !FileExists(...)` + `#error` 로 **빌드 누락 시 컴파일이 실패**하게 해 뒀다.
 - 같은 파일을 중복 `Source:` 등록하지 말 것 (덮어쓰기라 무해하지만 혼란 유발).
 - 산출물 파일명은 `OutputBaseFilename={#AppName}_Setup_{#BuildStamp}` 로 `GetDateTimeString('mm/dd','_','')` 날짜가 자동으로 붙는다 — 손으로 rename 하지 말 것. (단 `AppVersion` 은 여전히 수동이라, 기능 변경 시 `#define AppVer` 를 같이 올려야 설치 후 버전 구분이 된다.)
 
@@ -359,7 +363,8 @@ AutoCAD 가 켜져 있으면 번들의 DLL 이 잠겨 교체되지 않고, **설
 
 ### 참고: .NET 8의 DllImport 네이티브 DLL 탐색
 
-- 번들 자동 로드 구조라 `JArchLicense.dll`이 `Acadv25JArch.dll`과 **같은 `Contents\` 폴더**에 놓인다.
+- 번들 자동 로드 구조라 `JArchXData.arx`·`JArchXDataNet.dll`이 `Acadv25JArch.dll`과 **같은 `Contents\` 폴더**에 놓인다.
+- arx 는 `MyPlugin.Initialize()` 의 `JArch.Xdata.EnsureArxLoaded()` 가 **래퍼 DLL 폴더에서 찾아 `DynamicLinker.LoadModule` 로 먼저 올린다**. 이후 래퍼의 `DllImport("JArchXData.arx")` 는 아래 규칙으로 같은 파일에 연결된다.
 - .NET Core/8은 `DllImport` 해석 시 **P/Invoke를 선언한 관리 어셈블리의 디렉터리를 탐색**(`Assembly.Location` 기준)하므로, 같은 폴더 co-location만으로 로드된다 — `SetDllDirectory`/`SetDllImportResolver` 불필요.
 - (주의: .NET **Framework**는 어셈블리 디렉터리를 탐색하지 않았다. 이 프로젝트는 net8.0이라 해당 없음.)
-- 단, `JArchLicense.dll` **자신의** 네이티브 의존성(VC++ 런타임 등)은 어셈블리 디렉터리가 아니라 OS 로더(acad.exe·시스템·PATH) 기준으로 찾으므로, 위 Release CRT 조건이 필요하다.
+- 단, `JArchXData.arx` **자신의** 네이티브 의존성(VC++ 런타임 등)은 어셈블리 디렉터리가 아니라 OS 로더(acad.exe·시스템·PATH) 기준으로 찾으므로, 위 Release CRT 조건이 필요하다.

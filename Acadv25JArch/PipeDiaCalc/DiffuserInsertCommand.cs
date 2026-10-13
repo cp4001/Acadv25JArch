@@ -374,7 +374,7 @@ namespace PipeLoad2
         /// <summary>
         /// Insert_Diffuser_Bypoly — XData "Room" 을 가진 Poly 를 선택하면 그 안의
         /// Spec Text(XData "Diffuser", Diffuser_Spec 으로 지정한 것)를 찾아
-        /// "CFM,Type,SystemType,개수" 를 읽고 Poly 센터부터 배치한다.
+        /// "CFM,Type,SystemType,개수" 를 읽고 Poly 좌측 끝부터 배치한다.
         /// Text 가 여러 개면 항목마다 800 아래로 내려가며 한 줄씩 배치한다.
         /// 각 줄의 시작점은 X = Poly 좌측 끝 + 800, Y = Poly 센터.
         /// Poly 는 여러 개를 한 번에 선택할 수 있다(GetSelection → Poly 별로 반복).

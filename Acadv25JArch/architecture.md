@@ -2,7 +2,7 @@
 
 ## Overview
 AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
-라이선스: `JArchLicense.dll` 기반 만료일 체크
+라이선스: `JArchXData.arx` + Supabase 서버 판정 (`JARCHID` / `JARCLICENSE`)
 
 ---
 
@@ -450,7 +450,8 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | 핵심 | 내용 |
 |---|---|
 | 배포 빌드 | DLL은 **Release 산출물만** (`.iss` `Source:` 경로 `...\Release\...` 고정) |
-| `JArchLicense.dll` | **네이티브 C++ → Release\|x64 필수**. Debug는 재배포 금지된 Debug CRT(`...140D.dll`) 링크 → 고객 PC 로드 실패 |
+| `JArchXData.arx` | **네이티브 C++ → Release\|x64 필수** (`C++\build.bat` 이 Release x64 로 빌드). Debug는 재배포 금지된 Debug CRT(`...140D.dll`) 링크 → 고객 PC 로드 실패 |
+| `JArchLicense.dll` | **배포 중단** (2026-08-26 라이선스가 `JArchXData.arx` 로 전환). 설치 시 `[InstallDelete]` 로 기존 파일 삭제 |
 | 점검 | 배포 전 `dumpbin /dependents` 로 `D` 접미사 의존성 없음 확인 |
 
 상세: [[autocadInstall]] — 번들 설치 구조, `Assembly.Location` 파일 접근, 빌드 구성(Debug/Release)·네이티브 DLL 의존성·인스톨러 재빌드 절차

@@ -212,7 +212,7 @@ tr.AddNewlyCreatedDBObject(ar, true);
 
 > `[CommandMethod("Insert_Diffuser_Bypoly", CommandFlags.UsePickSet)]` — `Cmd_InsertDiffuserByPoly` (2026-09-23 신규)
 
-XData `Room` 을 가진 Poly 를 선택하면 **그 안의 Spec Text**(§7 `Diffuser_Spec` 으로 지정한 것)를 찾아 `CFM,Type,SystemType,개수` 를 읽고 **Poly 센터 기준으로** 배치한다. 사용자 입력(풍량·Type·계통·개수·기준점)이 전혀 없다 — 전부 Text 에서 읽는다.
+XData `Room` 을 가진 Poly 를 선택하면 **그 안의 Spec Text**(§7 `Diffuser_Spec` 으로 지정한 것)를 찾아 `CFM,Type,SystemType,개수` 를 읽고 **Poly 좌측 끝 기준으로**(X = 좌측 끝 + 800, Y = 센터) 배치한다. 사용자 입력(풍량·Type·계통·개수·기준점)이 전혀 없다 — 전부 Text 에서 읽는다.
 
 **Poly 는 여러 개를 한 번에 선택할 수 있다.** 선택 헬퍼가 `ed.GetSelection` 기반이라 다중 선택이 기본이고, Poly 마다 센터·내부 Text 를 따로 처리한다. 다만 선택 필터가 `LWPOLYLINE` + XData `Room` 이라 **XData `Room` 이 없는 폴리와 구형 `POLYLINE`(2D/3D) 은 조용히 빠진다** — 일부만 처리된 것처럼 보이면 멀티 선택이 아니라 이쪽을 의심할 것.
 
