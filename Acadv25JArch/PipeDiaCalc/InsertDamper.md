@@ -7,7 +7,7 @@ tags:
 
 > 파일: `PipeDiaCalc/DamperInsertCommand.cs`
 > 클래스: `PipeLoad2.DamperInsertCommand.Cmd_InsertDamper`
-> 최종 업데이트: 2026-09-21 (신규 · 같은 날 블럭 참조 도면 도입 + 블럭명 JArch_Damper 로 변경)
+> 최종 업데이트: 2026-10-13 (블럭 속성 `Type` 등 AttributeReference 자동 부착 — ATTSYNC 불필요)
 
 ---
 
@@ -22,8 +22,9 @@ tags:
 | ② | Line XData `"a"` → `double.TryParse` → `Dis1`/`Dis2` = `a / 2` |
 | ③ | `per.PickedPoint` 에 가까운 끝점(`nearPt`) → 먼 끝점 방향으로 `Offset = 225` 이동 → 삽입점 |
 | ④ | `JArch_Damper` 삽입, 회전 = `Atan2(dir.Y, dir.X)` |
-| ⑤ | `DynamicBlockReferencePropertyCollection` 에서 `Dis1`/`Dis2` 에 값 대입 |
-| ⑥ | `JArch_Damper 삽입 완료 — a=600, Dis1/Dis2=300, 회전=90°` 출력 |
+| ⑤ | 블럭 정의의 `AttributeDefinition`(상수 제외)마다 기본값으로 `AttributeReference` 부착 (§3.1) |
+| ⑥ | `DynamicBlockReferencePropertyCollection` 에서 `Dis1`/`Dis2` 에 값 대입 |
+| ⑦ | `JArch_Damper 삽입 완료 — a=600, Dis1/Dis2=300, 회전=90°, 속성 1개` 출력 |
 
 ---
 
@@ -51,7 +52,15 @@ dir    = (farPt - nearPt).GetNormal()
 | 동적 속성 | `Dis1`, `Dis2` (거리 파라미터) — 둘 다 `a / 2` |
 | 속성 탐색 | `PropertyName` 을 `OrdinalIgnoreCase` 로 비교, 개별 `try-catch`. 2개 미만 설정되면 경고 출력(중단하지 않음) |
 | 삽입 공간 | `db.CurrentSpaceId` |
-| 삽입 순서 | `AppendEntity` → `AddNewlyCreatedDBObject` **이후** 동적 속성 대입 |
+| 삽입 순서 | `AppendEntity` → `AddNewlyCreatedDBObject` → 블럭 속성 부착 → 동적 속성 대입 |
+
+### 3.1 블럭 속성 (`Type` 등) — 2026-10-13
+
+코드로 `new BlockReference(...)` 를 만들면 정의에 속성이 있어도 **AttributeReference 가 자동 생성되지 않는다** → 삽입 직후 `Type` 이 안 보이고 `ATTSYNC` 를 해야만 나타났다. 그래서 정의(`br.BlockTableRecord`)를 순회해 `AttributeDefinition` 마다 `SetAttributeFromBlock(ad, br.BlockTransform)` → `AppendAttribute` → `AddNewlyCreatedDBObject` 로 붙인다(`ad.Constant` 는 건너뜀). 값은 정의의 **기본값 그대로**. `Insert_Diffuser` 의 `AppendAttributes` 와 같은 방식([[InsertDiffuser]]).
+
+- **동적 속성(`Dis1`/`Dis2`)보다 먼저** 붙인다 — 폭 변경 시 속성 위치가 블럭과 함께 갱신되도록.
+- 완료 메시지의 `속성 N개` 로 부착 개수를 확인한다. `0개` 면 참조 도면의 정의에 비상수 속성이 없는 것.
+- 이 수정 이전에 삽입된 댐퍼에는 속성이 없으므로 `ATTSYNC` 1회 필요.
 
 ---
 

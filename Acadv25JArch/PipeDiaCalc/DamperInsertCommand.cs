@@ -76,7 +76,23 @@ namespace PipeLoad2
                 space.AppendEntity(br);
                 tr.AddNewlyCreatedDBObject(br, true);
 
-                // 4. 동적 속성 Dis1 / Dis2
+                // 4. 블럭 속성(Type 등) — 코드로 만든 BlockReference 에는 속성이 자동 생성되지 않으므로
+                //    정의의 AttributeDefinition 마다 기본값으로 AttributeReference 를 붙인다(ATTSYNC 불필요).
+                var btr = (BlockTableRecord)tr.GetObject(br.BlockTableRecord, OpenMode.ForRead);
+                int attCount = 0;
+                foreach (ObjectId id in btr)
+                {
+                    if (tr.GetObject(id, OpenMode.ForRead) is not AttributeDefinition ad) continue;
+                    if (ad.Constant) continue;   // 상수 속성은 정의에 포함되어 참조를 만들지 않는다
+
+                    var ar = new AttributeReference();
+                    ar.SetAttributeFromBlock(ad, br.BlockTransform);
+                    br.AttributeCollection.AppendAttribute(ar);
+                    tr.AddNewlyCreatedDBObject(ar, true);
+                    attCount++;
+                }
+
+                // 5. 동적 속성 Dis1 / Dis2 (속성을 붙인 뒤 설정해야 속성 위치도 함께 갱신된다)
                 int setCount = 0;
                 foreach (DynamicBlockReferenceProperty prop in br.DynamicBlockReferencePropertyCollection)
                 {
@@ -98,7 +114,7 @@ namespace PipeLoad2
 
                 tr.Commit();
 
-                ed.WriteMessage($"\n{BlockName} 삽입 완료 — a={width}, Dis1/Dis2={dis}, 회전={br.Rotation * 180.0 / System.Math.PI:0.##}°");
+                ed.WriteMessage($"\n{BlockName} 삽입 완료 — a={width}, Dis1/Dis2={dis}, 회전={br.Rotation * 180.0 / System.Math.PI:0.##}°, 속성 {attCount}개");
             }
         }
     }
