@@ -54,7 +54,7 @@
 | 사전 이름 | `JARCH_POLYVIEW` (NamedObjectsDictionary 직속) |
 | 키 | `TreeJson` (Xrecord 1개) |
 
-`TreeJson` 은 아래 JSON 을 **250자 단위로 분할**해 여러 개의
+`TreeJson` 은 아래 JSON 을 **200자 단위로 분할**(`PolyViewStore.ChunkLen`, 한글 3바이트 기준 여유)해 여러 개의
 `TypedValue((int)DxfCode.Text, chunk)` 로 저장한다(Xrecord 문자열 길이 제한 회피).
 읽을 때는 모든 Text 값을 순서대로 이어붙인 뒤 파싱한다.
 
