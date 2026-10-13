@@ -52,7 +52,7 @@ AutoCAD 2025 .NET 플러그인 — 건축/배관 자동화 (급수배관 Tree �
 - Duct_Etv, Cmd_DuctEtv, Duct_Elbow_tv, 마이터 엘보, 각진 엘보, 터닝베인, turning vane, 역변환, unfillet, Arc 삭제, 마이터 대각선, 이음선 재배치, 중복 이음선, TryUnfillet, TryPickTangentLine, CollectSeam, MoveEndTo, TangentTol, IntersectWith, ExtendBoth, Matrix3d.Displacement
 - Duct_EE, DuctEndElbowCommand, Duct_End_Elbow, End Elbow, 말단 상향 분기, 흐름 방향, a1, b1, b2, 컬러 상류측 90도, dirA 부호 반대, S1 수직
 - TreeOverrule, TreeDrawOverrule, TTG, DrawableOverrule, SetXDataFilter, Disp, BlockReference Disp, Polyline CFM, DrawPolyCfm, Mode.Poly, COLOR_CFM
-- JArchBlockLibrary, JArch_Blocks.dwg, 블럭 참조 도면, 블럭 라이브러리, WblockCloneObjects, DuplicateRecordCloning.Replace, ReadDwgFile, side database, IdMapping, 동적 블럭 보존, extension dictionary, JArch_Damper, JArch_RPD, JArch_SPD, JArch_RAD, JArch_SAD, Contents\Blocks
+- JArchBlockLibrary, JArch_Blocks.dwg, 블럭 참조 도면, 블럭 라이브러리, WblockCloneObjects, DuplicateRecordCloning.Replace, ReadDwgFile, side database, IdMapping, 동적 블럭 보존, extension dictionary, JArch_Damper, JArch_RPD, JArch_SPD, JArch_RAD, JArch_SAD, Contents\Blocks, BlocksDwg, SourcePath, 저장소 원본 패키징, 파일 잠금, 다른 프로세스가 파일을 사용 중
 - Insert_Damper, DamperInsertCommand, Cmd_InsertDamper, JArch_Damper, Dis1, Dis2, 동적 블럭 속성, DynamicBlockReferenceProperty, 댐퍼 삽입, PickedPoint
 - Insert_Diffuser, DiffuserInsertCommand, DiffuserSpec, 디퓨저 선정표, 표준풍량, RPD, SPD, RAD, SAD, ND, 한 대당 풍량, Cmd_InsertDiffuser, SystemType, SA, RA, EA, OA, 계통, 급기, 환기, 배기, 외기
 - Insert_Diffuser_Bypoly, Cmd_InsertDiffuserByPoly, PlaceRow, SelectSpec, SpecText, PolyCenter, IsInsidePoly, ray casting, 내부 판정, RowGap, RowStartFromLeft, 좌측 끝 기준, Room Poly, SelectAll, 배치 계획, Poly 센터, 다중 선택

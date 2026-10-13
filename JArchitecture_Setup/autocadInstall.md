@@ -222,7 +222,7 @@ Release 구성은 `Optimize=True` / `DebugType=portable` 로 교정. 실제로 �
 - 전체 재빌드 기준 약 2배(측정값 7.6초). 반복 빌드가 부담되면 `dotnet build -p:BuildBothConfigurations=false`.
 - Release 빌드가 실패하면 Debug 빌드도 실패로 보고된다 — Release 전용 오류를 조기에 잡는 이점과, 개발 중 빌드가 막히는 단점이 함께 있다.
 
-`.iss` 는 `Acadv25JArch.dll`·`PipeLoad.dll`·`JArchXDataNet.dll`·`JArchXData.arx`·`Blocks\JArch_Blocks.dwg` 에 대해 컴파일 시점 `FileExists` 검사를 하므로, **Release 빌드를 빠뜨리면 인스톨러 컴파일이 실패**한다.
+`.iss` 는 `Acadv25JArch.dll`·`PipeLoad.dll`·`JArchXDataNet.dll`·`JArchXData.arx` (Release 출력)와 `JArch_Blocks.dwg` (저장소 원본)에 대해 컴파일 시점 `FileExists` 검사를 하므로, **Release 빌드를 빠뜨리면 인스톨러 컴파일이 실패**한다.
 
 ### 왜 네이티브 모듈(arx)은 Release 필수인가
 

@@ -7,7 +7,7 @@ tags:
 
 > 파일: `PipeDiaCalc/JArchBlockLibrary.cs`
 > 클래스: `PipeLoad2.JArchBlockLibrary` (static)
-> 최종 업데이트: 2026-09-23 (`_ST` 블럭으로 전환)
+> 최종 업데이트: 2026-10-13 (인스톨러가 저장소 원본 dwg 를 직접 패키징)
 
 ---
 
