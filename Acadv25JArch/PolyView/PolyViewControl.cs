@@ -89,8 +89,7 @@ namespace Acadv25JArch.PolyView
 
                 var rootNode = new TreeNode(System.IO.Path.GetFileName(doc.Name))
                 {
-                    Tag = new NodeTag { Group = _root, IsRoot = true },
-                    ToolTipText = doc.Name
+                    Tag = new NodeTag { Group = _root, IsRoot = true }
                 };
                 treeView.Nodes.Add(rootNode);
                 FillGroup(rootNode, _root);
@@ -126,10 +125,9 @@ namespace Acadv25JArch.PolyView
                 TreeNode node;
                 if (item != null)
                 {
-                    node = new TreeNode(item.Name)
+                    node = new TreeNode(DisplayText(item))
                     {
-                        Tag = new NodeTag { Item = item, Handle = h },
-                        ToolTipText = string.IsNullOrWhiteSpace(item.Memo) ? item.Name : item.Memo
+                        Tag = new NodeTag { Item = item, Handle = h }
                     };
                 }
                 else
@@ -137,12 +135,19 @@ namespace Acadv25JArch.PolyView
                     node = new TreeNode($"(누락)  {h}")
                     {
                         Tag = new NodeTag { Handle = h },
-                        ToolTipText = "도면에서 Poly 를 찾을 수 없습니다",
                         ForeColor = System.Drawing.SystemColors.GrayText
                     };
                 }
                 parentNode.Nodes.Add(node);
             }
+        }
+
+        /// 노드 표시 텍스트: "이름 - 내용" (내용이 없으면 이름만). 줄바꿈은 공백으로 눕힌다.
+        private static string DisplayText(PolyViewItem item)
+        {
+            if (string.IsNullOrWhiteSpace(item.Memo)) return item.Name;
+            string memo = item.Memo.Replace("\r\n", " ").Replace("\n", " ").Trim();
+            return $"{item.Name} - {memo}";
         }
 
         private HashSet<string> CollectExpandedPaths()
@@ -302,6 +307,8 @@ namespace Acadv25JArch.PolyView
                 menu.Items.Add("속성 편집", null, (s, e) => EditProperties(tag.Item));
                 menu.Items.Add("도면에서 선택", null, (s, e) => SelectInDrawing(tag.Item));
                 menu.Items.Add("확대", null, (s, e) => ZoomTo(tag.Item));
+                menu.Items.Add(new ToolStripSeparator());
+                menu.Items.Add("PolyView 삭제", null, (s, e) => DeleteItem(tag.Item));
             }
             else if (tag.Handle != null)
             {
@@ -434,6 +441,37 @@ namespace Acadv25JArch.PolyView
             }
         }
 
+        /// PolyView 등록 해제: Poly 의 XData 를 지우고 트리에서 뺀다. Poly 자체는 도면에 남는다.
+        /// XData 를 먼저 지워야 한다 — 남아 있으면 다음 새로고침에서 미편입으로 Root 에 다시 붙는다.
+        private void DeleteItem(PolyViewItem item)
+        {
+            Document? doc = Application.DocumentManager.MdiActiveDocument;
+            if (doc == null) return;
+
+            var r = MessageBox.Show(
+                $"'{item.Name}' PolyView 를 삭제합니다.\n" +
+                "도면의 Poly 는 남고 PolyView 등록(이름/내용)만 해제됩니다. 계속할까요?",
+                "PolyView 삭제", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            if (r != DialogResult.OK) return;
+
+            try
+            {
+                using (doc.LockDocument())
+                {
+                    PolyViewStore.RemoveXData(doc.Database, item.Id);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show("삭제에 실패했습니다: " + ex.Message, "PolyView",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            PolyViewStore.RemoveHandle(_root, item.Handle);
+            if (SaveTree()) RefreshTree();
+        }
+
         private void DeleteMissing(string handle)
         {
             PolyViewStore.RemoveHandle(_root, handle);
@@ -477,7 +515,16 @@ namespace Acadv25JArch.PolyView
             // Root 와 누락 항목은 이름을 바꿀 수 없다
             if (tag.IsRoot || tag.IsMissing) { e.CancelEdit = true; return; }
 
-            // 표시 텍스트에 개수/장식이 붙어 있으므로 편집은 원래 이름으로 시작
+            // PolyView 는 이름/내용을 함께 고쳐야 하므로 인라인 대신 속성 대화상자로 보낸다
+            if (tag.Item != null)
+            {
+                e.CancelEdit = true;
+                PolyViewItem item = tag.Item;
+                BeginInvoke(() => EditProperties(item));
+                return;
+            }
+
+            // 그룹은 표시 텍스트에 개수가 붙어 있으므로 편집은 원래 이름으로 시작
             if (tag.Group != null) e.Node.Text = tag.Group.Name;
         }
 
@@ -505,32 +552,8 @@ namespace Acadv25JArch.PolyView
                 tag.Group.Name = label;
                 SaveTree();
                 BeginInvoke(RefreshTree);
-                return;
             }
-
-            if (tag.Item != null)
-            {
-                Document? doc = Application.DocumentManager.MdiActiveDocument;
-                if (doc == null) { BeginInvoke(RefreshTree); return; }
-
-                if (label.Length > PolyViewStore.MaxNameLen)
-                {
-                    MessageBox.Show($"이름은 {PolyViewStore.MaxNameLen}자 이내여야 합니다.", "PolyView",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    BeginInvoke(RefreshTree);
-                    return;
-                }
-                if (PolyViewStore.NameExists(_items, label, tag.Item.Handle))
-                {
-                    MessageBox.Show($"'{label}' 은(는) 이미 사용 중인 이름입니다.", "PolyView",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    BeginInvoke(RefreshTree);
-                    return;
-                }
-
-                WriteXData(doc, tag.Item.Id, label, tag.Item.Memo);
-                BeginInvoke(RefreshTree);
-            }
+            // PolyView 는 BeforeLabelEdit 에서 대화상자로 보내므로 여기 오지 않는다.
         }
 
         #endregion

@@ -24,6 +24,9 @@ namespace Acadv25JArch.PolyView
         public const int MaxNameLen = 60;
         public const int MaxMemoLen = 100;
 
+        /// PolyView 로 지정된 Poly 에 강제하는 색상(ACI).
+        public const int ColorIndex = 61;
+
         /// Xrecord 문자열 1개당 담을 문자 수. 한글 3바이트 기준으로도 여유가 있는 값.
         private const int ChunkLen = 200;
 
@@ -76,8 +79,9 @@ namespace Acadv25JArch.PolyView
         }
 
         /// <summary>
-        /// Poly 에 PolyView 이름/내용을 기록한다. RegApp 선등록 포함.
-        /// 기록 후 되읽어 검증하며, 값이 비면 false (라이선스 만료 시 arx 가 조용히 생략).
+        /// Poly 에 PolyView 이름/내용을 기록하고 색상을 ColorIndex(61) 로 맞춘다.
+        /// RegApp 선등록 포함. 기록 후 되읽어 검증하며, 값이 비면 false
+        /// (라이선스 만료 시 arx 가 조용히 생략).
         /// </summary>
         public static bool WriteXData(Database db, ObjectId id, string name, string memo)
         {
@@ -89,6 +93,7 @@ namespace Acadv25JArch.PolyView
                 tr.ChecRegNames(db, RegAppName + "," + RegAppMemo);
 
                 Entity ent = (Entity)tr.GetObject(id, OpenMode.ForWrite);
+                ent.ColorIndex = ColorIndex;
                 JXdata.SetXdata(ent, RegAppName, name);
                 JXdata.SetXdata(ent, RegAppMemo, Escape(memo ?? ""));
 
@@ -98,6 +103,24 @@ namespace Acadv25JArch.PolyView
                 tr.Commit();
             }
             return ok;
+        }
+
+        /// <summary>
+        /// Poly 에서 PolyView 이름/내용 XData 를 제거한다(Poly 자체와 색상은 그대로).
+        /// 호출 측이 문서 잠금을 보유해야 한다.
+        /// </summary>
+        public static void RemoveXData(Database db, ObjectId id)
+        {
+            if (db == null || id.IsNull) return;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                Entity ent = (Entity)tr.GetObject(id, OpenMode.ForWrite);
+                // RegApp 이름만 담은 ResultBuffer 를 대입하면 그 앱의 XData 만 지워진다
+                ent.XData = new ResultBuffer(new TypedValue((int)DxfCode.ExtendedDataRegAppName, RegAppName));
+                ent.XData = new ResultBuffer(new TypedValue((int)DxfCode.ExtendedDataRegAppName, RegAppMemo));
+                tr.Commit();
+            }
         }
 
         /// <summary>도면 전체에서 같은 이름이 이미 쓰이는지 검사 (대소문자 무시).</summary>

@@ -472,8 +472,10 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | 이름 / 내용 | Poly XData `PolyView` / `PolyViewMemo` (Poly 를 복사하면 따라감) |
 | 그룹 트리 구조 | NOD `JARCH_POLYVIEW` 사전의 Xrecord `TreeJson` (JSON 을 200자 청크로 분할 저장) |
 
+- 지정된 Poly 는 **색상이 61 로 바뀐다** (도면에서 PolyView 영역 구분용 표식)
 - 도면에서 Poly 가 사라진 항목은 **회색 `(누락)`** 으로 남기고 `누락 정리` 로만 제거 (Undo 복구 대응)
 - XData 만 있고 트리에 자리가 없는 항목은 새로고침 시 **Root 직속으로 자동 편입**
+- 우클릭 `PolyView 삭제` 는 **등록만 해제** (XData 제거 + 트리에서 제거). Poly 엔티티와 색상 61 은 그대로 남는다
 - 줌은 기존 `ZoomToEntities(ids, 1.1)` 재사용. 페이퍼 공간에서는 거부
 
 상세: [[PolyViewManager]] — 저장 스키마, 명령 흐름, 팔레트 조작·컨텍스트 메뉴, 검증 항목 12개

@@ -84,7 +84,7 @@ namespace Acadv25JArch.PolyView
             this.treeView.LabelEdit = true;
             this.treeView.Location = new System.Drawing.Point(0, 25);
             this.treeView.Name = "treeView";
-            this.treeView.ShowNodeToolTips = true;
+            this.treeView.ShowNodeToolTips = false;
             this.treeView.Size = new System.Drawing.Size(300, 475);
             this.treeView.TabIndex = 1;
 

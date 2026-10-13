@@ -32,6 +32,11 @@
 | `PolyView` | PolyView 이름 | 이 XData 의 존재 여부가 "PolyView 인가"의 판정 기준 |
 | `PolyViewMemo` | 내용(설명) | 없을 수 있음(빈 문자열 허용) |
 
+**색상** — PolyView 로 지정된 Poly 는 `ColorIndex = 61` 로 바꾼다. 도면에서 PolyView 영역을
+한눈에 구분하기 위한 표식이다. XData 를 쓰는 지점이 `WriteXData` 한 곳뿐이라 거기서 같이 처리하며,
+따라서 **속성 편집으로 이름·내용을 고칠 때도 색상이 61 로 다시 맞춰진다**
+(개별 PolyView 만 다른 색으로 두고 싶으면 이 동작을 등록 시점으로 한정해야 한다).
+
 - 기록은 기존 경로 그대로: `tr.ChecRegNames(db, "PolyView,PolyViewMemo")` 로 RegApp 선등록 후
   `JXdata.SetXdata(obj, "PolyView", name)` (→ `JArch.Xdata.SetOpen` → `JArchXData.arx`)
 - 읽기는 `JXdata.GetXdata(obj, "PolyView")`
@@ -94,7 +99,7 @@
 | 4 | 이름 입력 (`PromptStringOptions`, `AllowSpaces = true`) | 빈 문자열 → 재입력 |
 | 5 | 이름 중복 검사 (§3.2) | 중복 → 경고 후 재입력 |
 | 6 | 내용 입력 (빈 값 허용) | — |
-| 7 | RegApp 등록 → XData 기록 → 되읽어 검증 | 값 없음 → 라이선스 경고 |
+| 7 | RegApp 등록 → **색상 61 적용** → XData 기록 → 되읽어 검증 | 값 없음 → 라이선스 경고 |
 | 8 | 신규면 NOD 트리 Root 의 `i` 배열 끝에 Handle 추가 | — |
 | 9 | 팔레트가 열려 있으면 갱신 | — |
 
@@ -144,12 +149,16 @@ PaletteSet "PolyView Manager"   (Singleton, 고정 GUID)
 
 ### 4.2 노드 표시
 
-| 노드 | 표시 | 툴팁 |
-|---|---|---|
-| Root | 도면 파일명 (확장자 포함) | 도면 전체 경로 |
-| Group | 그룹 이름 + ` (n)` — n = 하위 PolyView 총 개수 | 없음 |
-| PolyView (정상) | **이름만** | 내용. 내용이 없으면 이름 |
-| PolyView (누락) | `이름  (누락)` — 회색 `SystemColors.GrayText` | `도면에서 Poly 를 찾을 수 없습니다` |
+| 노드 | 표시 |
+|---|---|
+| Root | 도면 파일명 (확장자 포함) |
+| Group | 그룹 이름 + ` (n)` — n = 하위 PolyView 총 개수 |
+| PolyView (정상) | **`이름 - 내용`**. 내용이 없으면 이름만 |
+| PolyView (누락) | `(누락)  <Handle>` — 회색 `SystemColors.GrayText` |
+
+- **툴팁(마우스 오버)은 쓰지 않는다.** `ShowNodeToolTips = false`.
+  내용을 노드에 직접 붙여 보이므로 툴팁이 중복이다
+- 내용에 줄바꿈이 있으면 표시할 때만 공백으로 눕힌다 (저장값은 그대로)
 
 ### 4.3 트리 구성 순서 (새로고침 시 매번)
 
@@ -170,25 +179,33 @@ PaletteSet "PolyView Manager"   (Singleton, 고정 GUID)
 | PolyView 노드 더블클릭 | 좌클릭과 동일 (중복 줌 방지) |
 | Group 노드 좌클릭 | 펼침/접힘만. 줌 없음 |
 | **드래그앤드롭** | PolyView·Group 노드를 다른 Group 또는 Root 안으로 이동. 그룹은 자기 자손 안으로 이동 불가 |
-| **F2 / 느린 더블클릭** | 노드 이름 인라인 편집 (Group = 그룹명, PolyView = PolyView 이름 → XData 갱신) |
+| **F2 / 느린 더블클릭 — Group** | 그룹 이름 인라인 편집 |
+| **F2 / 느린 더블클릭 — PolyView** | 인라인 편집을 취소하고 **속성 대화상자**를 연다 (이름·내용을 함께 고쳐야 하므로) |
 
 ### 4.5 우클릭 메뉴
 
 | 대상 | 메뉴 |
 |---|---|
 | Root / Group | `새 그룹`, `그룹 이름 변경`, `그룹 삭제`, `모두 펼치기`, `모두 접기` (Root 는 이름변경·삭제 없음) |
-| PolyView | `속성 편집`, `도면에서 선택`, `확대`, `이 항목 삭제(누락 항목만)` |
+| PolyView | `속성 편집`, `도면에서 선택`, `확대`, `PolyView 삭제` |
+| 누락 항목 | `이 항목 삭제 (누락)` |
 | 빈 영역 | `새로고침`, `새 그룹`, `누락 정리` |
 
 - **`새 그룹`** — 별도 입력 대화상자 없이 `새 그룹` (중복이면 `새 그룹 (2)`) 으로 만들고
   **곧바로 인라인 이름 편집 상태**로 둔다. 입력창을 하나 줄이려는 의도
-- **`속성 편집`** — 작은 모달 폼에서 이름·내용 수정 → 확인 시 즉시 Poly XData 에 기록
+- **`속성 편집`** — 작은 모달 폼에서 이름·내용을 **함께** 수정 → 확인 시 즉시 Poly XData 에 기록.
+  PolyView 의 이름·내용을 고치는 경로는 이 대화상자 하나뿐이다(인라인 편집은 쓰지 않는다).
+  표시 텍스트가 `이름 - 내용` 이라 구분자 파싱이 필요해지는데, 이름이나 내용에 `-` 가 들어가면
+  경계가 모호해지기 때문이다
 - **`도면에서 선택`** — 줌 없이 해당 Poly 를 선택 상태(`ed.SetImpliedSelection`)로 만든다
 - **`그룹 삭제`** — 확인 후 그룹만 제거하고, **하위 PolyView·하위 그룹은 Root 직속으로 올린다**
   (데이터 손실 없음. 하위가 비어 있으면 확인 없이 삭제)
 - **`누락 정리`** — 누락 항목 개수를 보여주고 확인받은 뒤 트리에서 일괄 제거
-- **PolyView 노드는 개별 삭제할 수 없다.** 누락 상태인 항목만 예외적으로 제거 가능
-  (실제 PolyView 를 없애려면 도면에서 Poly 를 지우거나 XData 를 제거해야 함)
+- **`PolyView 삭제`** (2026-09-23 추가) — 확인 후 **등록만 해제**한다. Poly 의 XData
+  `PolyView`/`PolyViewMemo` 를 지우고(`PolyViewStore.RemoveXData`) 트리에서 Handle 을 뺀 뒤 저장.
+  **Poly 엔티티는 도면에 남고 색상(ACI 61)도 원복하지 않는다.**
+  XData 를 먼저 지워야 한다 — 남아 있으면 다음 새로고침에서 미편입으로 Root 에 다시 붙는다
+- **`이 항목 삭제 (누락)`** — 누락 항목을 트리에서만 제거
 
 ### 4.6 도면 전환
 
@@ -256,7 +273,7 @@ PaletteSet "PolyView Manager"   (Singleton, 고정 GUID)
 |---|---|---|
 | 1 | `PolyViewStore` 읽기/쓰기 | 그룹 3단계 + PolyView 5개 트리를 저장 → 도면 저장/재열기 → 동일 구조 복원 확인 |
 | 2 | JSON 청크 분할 | 그룹명이 긴 트리(JSON 2,000자 초과)를 저장/복원해 값이 잘리지 않음 확인 |
-| 3 | `POLYVIEW` 등록 | 닫힌 Poly 등록 → `GXD` 로 `PolyView`/`PolyViewMemo` XData 확인 |
+| 3 | `POLYVIEW` 등록 | 닫힌 Poly 등록 → `GXD` 로 `PolyView`/`PolyViewMemo` XData 확인 + **색상이 61 로 바뀌었는지** 확인 |
 | 4 | 형상 거부 | 열린 Polyline, Line, 페이퍼 공간 Poly 선택 시 각각 거부 메시지 확인 |
 | 5 | 이름 중복 | 같은 이름 재등록 시 거부 후 재입력 확인 |
 | 6 | 누락 표시 | 등록 후 Poly 삭제 → 새로고침 → 회색 `(누락)` 표시 → Undo → 새로고침 → 정상 복구 |
@@ -299,3 +316,5 @@ PaletteSet "PolyView Manager"   (Singleton, 고정 GUID)
 | 2026-09-23 | v0.1 초안 작성. 저장 방식(XData+NOD), Poly 확보(기존 선택만), 누락 처리(회색+수동 정리), 줌(단일 클릭), 그룹 삭제(하위 Root 로), 편집(팔레트 직접), 형상(닫힌 Polyline), 도면 전환(자동 갱신) 확정 |
 | 2026-09-23 | UI 확정 — 도킹 가능 `PaletteSet` + TreeView 단일 구성(2단 속성 그리드 미채택). 내용 길이 **100자 확정**(XData 유지, NOD 분리 안 함) |
 | 2026-09-23 | **구현 완료** (§7 6개 파일, 빌드 정상). 문서 대비 변경 3건 — 줌은 기존 `ZoomToEntities` 재사용, 도면 이벤트 후킹 위치는 팔레트 생성 시점, 새 그룹은 대화상자 없이 인라인 편집. **AutoCAD 실동작 검증(§8)은 미실시** |
+| 2026-09-23 | 표시/편집 변경 — 노드에 **`이름 - 내용`** 을 함께 표시, **툴팁 제거**(`ShowNodeToolTips = false`), PolyView 의 이름·내용 편집은 **속성 대화상자로 일원화**(F2 도 대화상자를 연다). 그룹 이름만 인라인 편집 유지 |
+| 2026-09-23 | PolyView 로 지정된 Poly 의 **색상을 61 로 강제**(`WriteXData` 에서 처리 → 등록·수정 모두 적용) |
