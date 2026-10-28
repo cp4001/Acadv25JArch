@@ -19,6 +19,7 @@ namespace PipeLoad2
     public class UpDnInsertCommand
     {
         private const string BlockName = "UpDn";
+        private const double EndTol = 2.0;   // 끝점 판정 허용오차 (= DuctTreeBuilder.TOLERANCE, Tree 연결 판정과 같은 값)
 
         [CommandMethod("Insert_UpDn")]
         public void Cmd_InsertUpDn()
@@ -82,49 +83,10 @@ namespace PipeLoad2
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                // 3. 블럭 삽입
                 var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
                 var space = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
 
-                var br = new BlockReference(insPt, bt[BlockName]);
-                br.Rotation = rotation;
-                space.AppendEntity(br);
-                tr.AddNewlyCreatedDBObject(br, true);
-
-                // 4. 블럭 속성 — 코드로 만든 BlockReference 에는 속성이 자동 생성되지 않으므로
-                //    정의의 AttributeDefinition 마다 기본값으로 AttributeReference 를 붙인다.
-                var btr = (BlockTableRecord)tr.GetObject(br.BlockTableRecord, OpenMode.ForRead);
-                foreach (ObjectId id in btr)
-                {
-                    if (tr.GetObject(id, OpenMode.ForRead) is not AttributeDefinition ad) continue;
-                    if (ad.Constant) continue;
-
-                    var ar = new AttributeReference();
-                    ar.SetAttributeFromBlock(ad, br.BlockTransform);
-                    br.AttributeCollection.AppendAttribute(ar);
-                    tr.AddNewlyCreatedDBObject(ar, true);
-                }
-
-                // 5. 동적 속성 DS(작은 a) / DL(큰 a)
-                int setCount = 0;
-                foreach (DynamicBlockReferenceProperty prop in br.DynamicBlockReferencePropertyCollection)
-                {
-                    double? value =
-                        prop.PropertyName.Equals("DS", System.StringComparison.OrdinalIgnoreCase) ? aSmall :
-                        prop.PropertyName.Equals("DL", System.StringComparison.OrdinalIgnoreCase) ? aLarge :
-                        null;
-                    if (value == null) continue;
-
-                    try
-                    {
-                        prop.Value = value.Value;
-                        setCount++;
-                    }
-                    catch (System.Exception ex)
-                    {
-                        ed.WriteMessage($"\n[경고] {prop.PropertyName} 설정 실패: {ex.Message}");
-                    }
-                }
+                int setCount = PlaceUpDn(tr, space, bt[BlockName], insPt, aSmall, aLarge, rotation, ed);
                 if (setCount < 2)
                     ed.WriteMessage($"\n[경고] DS/DL 동적 속성 {setCount}개만 설정되었습니다.");
 
@@ -133,6 +95,148 @@ namespace PipeLoad2
                 ed.WriteMessage($"\n{BlockName} 삽입 완료 — DS={aSmall}, DL={aLarge}, 회전={rotation * 180.0 / System.Math.PI:0.##}°");
             }
         }
+
+        /// <summary>
+        /// Insert_UpDn_All — XData "Tree" Line 을 여러 개 선택하면 그중 서로 교차하는 모든 2 Line 쌍의
+        /// 교차점(선 안쪽)에 UpDn 을 배치한다. 한 Line 에 교차가 여러 개면 교차점마다 1개.
+        /// 교차점이 어느 한쪽 Line 의 끝점이면(Tree 분기·연결점) 제외한다.
+        /// </summary>
+        [CommandMethod("Insert_UpDn_All")]
+        public void Cmd_InsertUpDnAll()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            var pso = new PromptSelectionOptions
+            {
+                MessageForAdding = "\n교차를 찾을 덕트 Line 들을 선택하세요: "
+            };
+            SelectionFilter filter = JSelFilter.MakeFilterTypesRegs("LINE", "Tree");
+            ObjectId[] ids;
+            while (true)
+            {
+                PromptSelectionResult psr = ed.GetSelection(pso, filter);
+                if (psr.Status != PromptStatus.OK) return;
+
+                ids = psr.Value.GetObjectIds();
+                if (ids.Length >= 2) break;
+                ed.WriteMessage("\n[다시 선택] Tree Line 을 2개 이상 선택하세요.");
+            }
+
+            // 1. 검증(XData a) + 교차 탐색 — 블럭 정의를 덮어쓰기 전에 끝낸다.
+            var plans = new List<(Point3d Pt, double ASmall, double ALarge, double Rotation)>();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                var lines = new Line[ids.Length];
+                var widths = new double[ids.Length];
+                for (int i = 0; i < ids.Length; i++)
+                {
+                    lines[i] = (Line)tr.GetObject(ids[i], OpenMode.ForRead);
+                    if (!TryReadDuct(lines[i], ed, out widths[i])) return;
+                }
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    for (int j = i + 1; j < lines.Length; j++)
+                    {
+                        var pts = new Point3dCollection();
+                        lines[i].IntersectWith(lines[j], Intersect.OnBothOperands, pts, System.IntPtr.Zero, System.IntPtr.Zero);
+                        foreach (Point3d pt in pts)
+                        {
+                            if (IsEndPoint(lines[i], pt) || IsEndPoint(lines[j], pt)) continue;
+
+                            Line small = widths[i] <= widths[j] ? lines[i] : lines[j];
+                            plans.Add((pt,
+                                       System.Math.Min(widths[i], widths[j]),
+                                       System.Math.Max(widths[i], widths[j]),
+                                       small.Angle));
+                        }
+                    }
+                }
+
+                tr.Commit();
+            }
+
+            if (plans.Count == 0)
+            {
+                ed.WriteMessage($"\n선택한 Line {ids.Length}개 중 안쪽에서 교차하는 쌍이 없습니다.");
+                return;
+            }
+
+            // 2. 참조 도면에서 블럭 정의를 가져온다(기존 정의는 덮어씀). Transaction 밖에서 수행.
+            if (!JArchBlockLibrary.Import(db, ed, BlockName)) return;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                var space = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+                ObjectId btrId = bt[BlockName];
+
+                int partial = 0;
+                foreach (var p in plans)
+                    if (PlaceUpDn(tr, space, btrId, p.Pt, p.ASmall, p.ALarge, p.Rotation, ed) < 2) partial++;
+
+                tr.Commit();
+
+                ed.WriteMessage($"\n{BlockName} {plans.Count}개 삽입 완료 (선택 Line {ids.Length}개).");
+                if (partial > 0)
+                    ed.WriteMessage($"\n[경고] {partial}개 블럭에서 DS/DL 동적 속성이 2개 모두 설정되지 않았습니다.");
+            }
+        }
+
+        /// <summary>
+        /// UpDn 1개 삽입 — 비상수 Attribute 기본값 부착 후 동적 속성 DS(작은 a)/DL(큰 a) 설정.
+        /// 설정된 DS/DL 개수를 반환한다.
+        /// </summary>
+        private static int PlaceUpDn(Transaction tr, BlockTableRecord space, ObjectId btrId,
+                                     Point3d pt, double aSmall, double aLarge, double rotation, Editor ed)
+        {
+            var br = new BlockReference(pt, btrId);
+            br.Rotation = rotation;
+            space.AppendEntity(br);
+            tr.AddNewlyCreatedDBObject(br, true);
+
+            // 블럭 속성 — 코드로 만든 BlockReference 에는 속성이 자동 생성되지 않으므로
+            // 정의의 AttributeDefinition 마다 기본값으로 AttributeReference 를 붙인다.
+            var btr = (BlockTableRecord)tr.GetObject(btrId, OpenMode.ForRead);
+            foreach (ObjectId id in btr)
+            {
+                if (tr.GetObject(id, OpenMode.ForRead) is not AttributeDefinition ad) continue;
+                if (ad.Constant) continue;
+
+                var ar = new AttributeReference();
+                ar.SetAttributeFromBlock(ad, br.BlockTransform);
+                br.AttributeCollection.AppendAttribute(ar);
+                tr.AddNewlyCreatedDBObject(ar, true);
+            }
+
+            // 동적 속성 DS(작은 a) / DL(큰 a)
+            int setCount = 0;
+            foreach (DynamicBlockReferenceProperty prop in br.DynamicBlockReferencePropertyCollection)
+            {
+                double? value =
+                    prop.PropertyName.Equals("DS", System.StringComparison.OrdinalIgnoreCase) ? aSmall :
+                    prop.PropertyName.Equals("DL", System.StringComparison.OrdinalIgnoreCase) ? aLarge :
+                    null;
+                if (value == null) continue;
+
+                try
+                {
+                    prop.Value = value.Value;
+                    setCount++;
+                }
+                catch (System.Exception ex)
+                {
+                    ed.WriteMessage($"\n[경고] {prop.PropertyName} 설정 실패: {ex.Message}");
+                }
+            }
+            return setCount;
+        }
+
+        /// <summary>pt 가 line 의 끝점(허용오차 EndTol) 인지 — Tree 연결점 제외용.</summary>
+        private static bool IsEndPoint(Line line, Point3d pt) =>
+            line.StartPoint.DistanceTo(pt) <= EndTol || line.EndPoint.DistanceTo(pt) <= EndTol;
 
         /// <summary>XData "a"(덕트 폭) 양수 숫자 확인. "Tree" 는 선택 필터가 보장한다.</summary>
         private static bool TryReadDuct(Line line, Editor ed, out double width)

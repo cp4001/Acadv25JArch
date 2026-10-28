@@ -19,3 +19,4 @@
 | 2026-10-28 | `SuperBase_License\` 를 이 저장소에서 삭제 확정 | `AutoCADFunction_22_6_28\SuperBase_License\` 로 이전됨(같은 파일 존재 확인), 라이선스는 `JArchXData.arx` 로 전환 | backlog #1 |
 | 2026-10-28 | 설치파일 `JArchitecture_Setup\Output\` 은 git 에서 제외(`.gitignore` + 기존 7개 `rm --cached`), 로컬에만 보관 | 회당 ~6MB 바이너리로 저장소 비대. ISCC 로 언제든 재생성 | backlog #2, 사용자 선택 |
 | 2026-10-28 | `급수관로결정1\` 은 `.gitignore`, `.claude\settings.json`(omnisharp-lsp 플러그인) 은 커밋 | 전자는 자체 `.git` 을 가진 별도 저장소 — 커밋하면 gitlink 로 깨짐 | backlog #3 |
+| 2026-10-28 | `Insert_UpDn`/`_All` 교차 판정은 3D 그대로 둔다(XY 투영 안 함). Z 가 어긋난 Line 은 `ZZERO` 로 평탄화 후 실행 | 높이가 안 맞는 도면은 다른 작업에도 문제 → 도면을 고친다. 필요해지면 추후 개발(backlog) | F-003 테스트 중 발생 |

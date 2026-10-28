@@ -13,6 +13,7 @@ AutoCAD 2025 .NET 플러그인 — 건축 실·면적 집계, 급수/FCU 배관 
 | [F-000](features/F-000-기준선.md) | devlog 이관 기준선 | — | 2026-10-15 | 2026-10-15 | 기준선 |
 | [F-001](features/F-001-Insert_UpDn.md) | Insert_UpDn — 덕트 교차점 UpDn 블럭 배치 | S | 2026-10-28 | 2026-10-28 | 완료 |
 | [F-002](features/F-002-Insert_Damper-검증순서.md) | Insert_Damper — 검증 후 블럭 Import, Line 길이 검사 | S | 2026-10-28 | 2026-10-28 | 완료 |
+| [F-003](features/F-003-Insert_UpDn_All.md) | Insert_UpDn_All — 선택 Line 그룹 교차점 UpDn 일괄 배치 | S | 2026-10-28 | 2026-10-28 | 완료 |
 
 ## 이관 전 이력
 
