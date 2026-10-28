@@ -1,4 +1,0 @@
-LIBRARY JArchSbLicense
-EXPORTS
-    CheckLicenseOnline
-    GetMachineId

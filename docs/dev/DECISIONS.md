@@ -15,3 +15,7 @@
 | 2026-08-26 | 라이선스·XData 기록을 `JArchXData.arx` + Supabase 서버 판정으로 전환, `JArchLicense.dll` 배포 중단 | 네이티브 모듈 일원화 | architecture.md §17 |
 | 이관 전 | 코드 수정 테스트는 설치파일 재설치로 (NETLOAD 무효) | 번들 DLL 이 먼저 로드, 언로드 불가 | 프로젝트 메모리 |
 | 2026-10-15 | 개발 기록을 저장소 루트 devlog(`docs/dev/`)로 전환. 기능별 사양 md·architecture.md 는 레퍼런스로 유지 | 기능별 이력·세션 재개 | [F-000](features/F-000-기준선.md) |
+| 2026-10-28 | XData `a` 가 `"600x400"` 처럼 숫자가 아니면 `Insert_Damper`/`Insert_UpDn` 은 오류 메시지 후 명령 중단 (첫 숫자 추출 안 함) | 사용자 확정 — 덕트 폭이 애매한 Line 은 사람이 확인 | F-001 후속, backlog #5 종료 |
+| 2026-10-28 | `SuperBase_License\` 를 이 저장소에서 삭제 확정 | `AutoCADFunction_22_6_28\SuperBase_License\` 로 이전됨(같은 파일 존재 확인), 라이선스는 `JArchXData.arx` 로 전환 | backlog #1 |
+| 2026-10-28 | 설치파일 `JArchitecture_Setup\Output\` 은 git 에서 제외(`.gitignore` + 기존 7개 `rm --cached`), 로컬에만 보관 | 회당 ~6MB 바이너리로 저장소 비대. ISCC 로 언제든 재생성 | backlog #2, 사용자 선택 |
+| 2026-10-28 | `급수관로결정1\` 은 `.gitignore`, `.claude\settings.json`(omnisharp-lsp 플러그인) 은 커밋 | 전자는 자체 `.git` 을 가진 별도 저장소 — 커밋하면 gitlink 로 깨짐 | backlog #3 |

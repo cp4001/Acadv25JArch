@@ -366,3 +366,9 @@ FodyWeavers.xsd
 *.dwl2
 *.bak
 *.sv$
+
+# 설치파일 산출물 (ISCC) — 로컬에만 보관
+JArchitecture_Setup/Output/
+
+# 별도 git 저장소 (급수관경 WinForm 도구)
+/급수관로결정1/

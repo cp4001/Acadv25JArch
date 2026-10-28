@@ -1,0 +1,5 @@
+{
+  "enabledPlugins": {
+    "omnisharp-lsp@csharp-omnisharp": true
+  }
+}
