@@ -7,7 +7,7 @@ tags:
 
 > 파일: `PipeDiaCalc/DamperInsertCommand.cs`
 > 클래스: `PipeLoad2.DamperInsertCommand.Cmd_InsertDamper`
-> 최종 업데이트: 2026-10-13 (블럭 속성 `Type` 등 AttributeReference 자동 부착 — ATTSYNC 불필요)
+> 최종 업데이트: 2026-10-28 (F-002 — 검증 후 블럭 Import, Line 길이 < 225 오류)
 
 ---
 
@@ -18,9 +18,9 @@ tags:
 | 단계 | 동작 |
 |---|---|
 | ① | `댐퍼를 삽입할 Line 을 선택하세요:` — `PromptEntityOptions` + `AddAllowedClass(typeof(Line), true)` |
-| ①' | (블럭 정의 가져오기) `JArchBlockLibrary.Import(db, ed, "JArch_Damper")` — Transaction 밖, 실패 시 종료 ([[JArchBlockLibrary]]) |
-| ② | Line XData `"a"` → `double.TryParse` → `Dis1`/`Dis2` = `a / 2` |
-| ③ | `per.PickedPoint` 에 가까운 끝점(`nearPt`) → 먼 끝점 방향으로 `Offset = 225` 이동 → 삽입점 |
+| ② | (검증 Transaction) Line XData `"a"` → `double.TryParse` → `Dis1`/`Dis2` = `a / 2` |
+| ③ | `per.PickedPoint` 에 가까운 끝점(`nearPt`) → 먼 끝점 방향으로 `Offset = 225` 이동 → 삽입점. Line 길이 < 225 면 오류 후 종료 |
+| ③' | (블럭 정의 가져오기) `JArchBlockLibrary.Import(db, ed, "JArch_Damper")` — **②③ 검증 통과 후**, Transaction 밖, 실패 시 종료 ([[JArchBlockLibrary]]). 2026-10-28 전에는 ① 직후였음 → 오류로 끝나도 정의가 덮어써졌다 |
 | ④ | `JArch_Damper` 삽입, 회전 = `Atan2(dir.Y, dir.X)` |
 | ⑤ | 블럭 정의의 `AttributeDefinition`(상수 제외)마다 기본값으로 `AttributeReference` 부착 (§3.1) |
 | ⑥ | `DynamicBlockReferencePropertyCollection` 에서 `Dis1`/`Dis2` 에 값 대입 |
@@ -40,7 +40,7 @@ dir    = (farPt - nearPt).GetNormal()
 
 - **방향은 항상 선 안쪽**(가까운 끝점 → 먼 끝점). 선 밖으로 나가면 댐퍼가 덕트를 벗어나므로.
 - 회전에 `line.Angle`(항상 Start→End)을 쓰지 않는 이유: 선의 반대쪽을 클릭하면 댐퍼가 180° 뒤집혀 보인다. `nearPt → farPt` 기준이라 클릭한 쪽에서 본 방향과 항상 일치한다.
-- Line 길이가 `1e-6` 미만이면 오류 후 종료.
+- Line 길이가 `Offset`(225) 미만이면 `[오류] Line 길이(…)가 댐퍼 위치 225 보다 짧습니다.` 후 종료 — 삽입점이 선 밖으로 나가는 것을 막는다 (2026-10-28, 이전엔 길이 0 만 검사).
 
 ---
 
@@ -70,7 +70,7 @@ dir    = (farPt - nearPt).GetNormal()
 
 - `JXdata.GetXdata(line, "a")` → `double.TryParse(NumberStyles.Any, InvariantCulture)`
 - 값이 없거나 **숫자가 아니거나** 0 이하면 `[오류] 선택한 Line 에 유효한 XData "a"(덕트 폭)가 없습니다. (값: "...")` 후 종료
-- ⚠️ `SetDuctWidth` 는 Text 를 **숫자 파싱 없이 그대로** 기록하므로 `"600x400"` 같은 값이 들어 있을 수 있다 → 이 명령은 그런 Line 을 처리하지 못한다. 필요해지면 `"a"` 에서 첫 숫자만 추출하는 분기를 추가할 것.
+- ⚠️ `SetDuctWidth` 는 Text 를 **숫자 파싱 없이 그대로** 기록하므로 `"600x400"` 같은 값이 들어 있을 수 있다 → 이 명령은 그런 Line 에서 **오류 메시지 후 중단**한다. 첫 숫자 추출은 하지 않기로 확정(2026-10-28, 사용자 — 폭이 애매한 Line 은 사람이 확인).
 
 ---
 

@@ -34,9 +34,10 @@ namespace PipeLoad2
             PromptEntityResult per = ed.GetEntity(peo);
             if (per.Status != PromptStatus.OK) return;
 
-            // 참조 도면에서 블럭 정의를 가져온다(기존 정의는 덮어씀). Transaction 밖에서 수행.
-            if (!JArchBlockLibrary.Import(db, ed, BlockName)) return;
-
+            // 1~2. 검증(XData a, Line 길이) — 블럭 정의를 덮어쓰기 전에 끝낸다.
+            double width, dis;
+            Vector3d dir;
+            Point3d insPt;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 var line = (Line)tr.GetObject(per.ObjectId, OpenMode.ForRead);
@@ -44,13 +45,13 @@ namespace PipeLoad2
                 // 1. XData "a" (덕트 폭) → Dis1/Dis2 = a/2
                 string? aStr = JXdata.GetXdata(line, "a");
                 if (string.IsNullOrEmpty(aStr) ||
-                    !double.TryParse(aStr, NumberStyles.Any, CultureInfo.InvariantCulture, out double width) ||
+                    !double.TryParse(aStr, NumberStyles.Any, CultureInfo.InvariantCulture, out width) ||
                     width <= 0)
                 {
                     ed.WriteMessage($"\n[오류] 선택한 Line 에 유효한 XData \"a\"(덕트 폭)가 없습니다. (값: \"{aStr}\")");
                     return;
                 }
-                double dis = width / 2.0;
+                dis = width / 2.0;
 
                 // 2. 클릭 위치에 가까운 끝점 → 먼 끝점 방향으로 Offset 만큼 이동한 지점
                 Point3d pick = per.PickedPoint;
@@ -58,15 +59,23 @@ namespace PipeLoad2
                 Point3d nearPt = startIsNear ? line.StartPoint : line.EndPoint;
                 Point3d farPt = startIsNear ? line.EndPoint : line.StartPoint;
 
-                Vector3d dir = farPt - nearPt;
-                if (dir.Length < 1e-6)
+                dir = farPt - nearPt;
+                if (dir.Length < Offset)
                 {
-                    ed.WriteMessage("\n[오류] Line 길이가 0 입니다.");
+                    ed.WriteMessage($"\n[오류] Line 길이({dir.Length:0.##})가 댐퍼 위치 {Offset} 보다 짧습니다.");
                     return;
                 }
                 dir = dir.GetNormal();
-                Point3d insPt = nearPt + dir * Offset;
+                insPt = nearPt + dir * Offset;
 
+                tr.Commit();
+            }
+
+            // 참조 도면에서 블럭 정의를 가져온다(기존 정의는 덮어씀). Transaction 밖에서 수행.
+            if (!JArchBlockLibrary.Import(db, ed, BlockName)) return;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
                 // 3. 블럭 삽입
                 var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
                 var space = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);

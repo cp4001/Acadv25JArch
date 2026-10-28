@@ -380,7 +380,7 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | `Insert_Diffuser_Bypoly` | PipeDiaCalc/DiffuserInsertCommand.cs | XData `Room` Poly 선택 → 내부 Spec Text(XData `Diffuser`) 를 읽어 자동 배치 — X 는 Poly 좌측 끝 + 800, Y 는 Poly 센터. Text 가 여러 개면 항목마다 800 아래로 한 줄씩. Poly 다중 선택 가능 (2026-09-23 신규, [[InsertDiffuser]] §8) |
 | `Diffuser_Spec` | PipeDiaCalc/DiffuserInsertCommand.cs | `"2400,RPD,RA,3"`(CFM,Type,SystemType,개수) 형식 Text 를 검증한 뒤 XData `Diffuser`=Type 기록 + 색상 41·기울기 5° 적용. 형식 오류는 이유 출력 후 건너뜀 (2026-09-22 신규, [[InsertDiffuser]] §7) |
 | `Diffuser_Summary` | PipeDiaCalc/DiffuserSummaryCommand.cs | Room Poly 다중 선택 → 내부 디퓨저 블럭을 실(RoomText)×계통×사이즈별로 집계해 "덕트기구일람표"(실명/구분/풍량/수량/전체풍량/N.D/형식/규격/비고)를 Line+Text 로 작성. 실 풍량은 Poly `CFM` XData 가 있을 때만 부제 표시 (2026-10-04 신규, [[InsertDiffuser]] §9) |
-| `Insert_Damper` | PipeDiaCalc/DamperInsertCommand.cs | Line 선택 → 클릭점에 가까운 끝점에서 선 안쪽 225 지점에 동적 블럭 `JArch_Damper` 삽입(참조 도면에서 가져옴). Line XData `a` 의 1/2 을 `Dis1`/`Dis2` 에 대입, 회전은 가까운→먼 끝점 방향 (2026-09-21 신규, [[InsertDamper]]) |
+| `Insert_Damper` | PipeDiaCalc/DamperInsertCommand.cs | Line 선택 → 클릭점에 가까운 끝점에서 선 안쪽 225 지점에 동적 블럭 `JArch_Damper` 삽입(참조 도면에서 가져옴). Line XData `a` 의 1/2 을 `Dis1`/`Dis2` 에 대입, 회전은 가까운→먼 끝점 방향. `a` 가 숫자가 아니거나 Line 길이 < 225 면 오류 후 중단(블럭 정의도 건드리지 않음, 2026-10-28) (2026-09-21 신규, [[InsertDamper]]) |
 | `Insert_UpDn` | PipeDiaCalc/UpDnInsertCommand.cs | XData `Tree` Line 2개 일괄 선택(필터, 2개 아니면 재선택) → 선 안쪽 교차점에 동적 블럭 `UpDn` 삽입(참조 도면에서 가져옴). 동적 속성 `DS`=작은 `a` / `DL`=큰 `a`, 회전 = 작은 `a` Line 의 `line.Angle` (2026-10-28 신규, [[InsertUpDn]]) |
 
 `LineExtend2Block` (1번 섹션)도 Tree 분석 준비 단계에서 사용 — Line을 Block BBox까지 연장해 Leaf 매핑 보장.
