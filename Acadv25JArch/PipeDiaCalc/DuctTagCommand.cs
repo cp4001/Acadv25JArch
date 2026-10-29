@@ -14,13 +14,15 @@ namespace PipeLoad2
     /// "{a}x{b}" Text 를 배치한다. Esc 까지 반복.
     /// 수평 Line : 점 → 클릭 높이까지 수직선 → 오른쪽으로 짧은 수평선 → 글자
     /// 수직 Line : 점 → 클릭 위치까지 수평 직선 → 글자 (클릭한 쪽으로)
-    /// 글자 높이 = a, 지시선·점 ACI 1(Red), 글자 ByLayer. 현재 레이어·문자 스타일.
+    /// 글자 높이 = a × 0.8, 수평 꺾은선 길이 = a / 2, 지시선·점 ACI 1(Red), 글자 ByLayer. 현재 레이어·문자 스타일.
     /// </summary>
     public class DuctTagCommand
     {
         private const short LeaderColor = 1;      // Red
         private const double DotRatio = 0.3;      // 점 지름 = 글자 높이 × 0.3
         private const double GapRatio = 0.2;      // 지시선 끝 ~ 글자 간격 = 글자 높이 × 0.2
+        private const double TextRatio = 0.8;     // 글자 높이 = a × 0.8
+        private const double TailRatio = 0.5;     // 수평 Line 꺾은선 길이 = a / 2
 
         [CommandMethod("Duct_tag")]
         public void Cmd_DuctTag()
@@ -72,7 +74,7 @@ namespace PipeLoad2
                 Point3d foot = seg.GetClosestPointTo(pick).Point;
                 Vector3d dir = ep - sp;
                 bool horizontal = System.Math.Abs(dir.X) >= System.Math.Abs(dir.Y);
-                double h = a;
+                double h = a * TextRatio;
 
                 var pts = new List<Point3d> { foot };
                 Point3d textPt;
@@ -80,7 +82,7 @@ namespace PipeLoad2
                 if (horizontal)
                 {
                     var corner = new Point3d(foot.X, pick.Y, foot.Z);
-                    var tail = corner + Vector3d.XAxis * h;
+                    var tail = corner + Vector3d.XAxis * (a * TailRatio);
                     pts.Add(corner);
                     pts.Add(tail);
                     textRight = true;
@@ -116,7 +118,7 @@ namespace PipeLoad2
 
                     var txt = new DBText
                     {
-                        TextString = $"{aStr}x{bStr}",
+                        TextString = (horizontal ? " " : "") + $"{aStr}x{bStr}",   // 수평: 꺾은선과 띄우려고 앞에 공백 1칸
                         Height = h,
                         Position = textPt,
                         TextStyleId = db.Textstyle,
