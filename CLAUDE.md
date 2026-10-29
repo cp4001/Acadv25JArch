@@ -9,7 +9,7 @@
 - 원본 md 를 고치면 사본 갱신 여부 확인. 전체 목차: `~/.claude/docs/confluence_index.md`
 
 ## QMD 키워드
-- 상세 목록은 `Acadv25JArch\CLAUDE.md` 「QMD 키워드」 — Insert_UpDn, Insert_Damper, JArchBlockLibrary, DuctTree, devlog, F-001
+- 상세 목록은 `Acadv25JArch\CLAUDE.md` 「QMD 키워드」 — Insert_UpDn, Insert_Duct_Size, Insert_Damper, JArchBlockLibrary, DuctTree, devlog, F-001
 
 ## Devlog
 - 개발 기록: `docs/dev/` (README 이력 표 · STATE 현재 위치 · features/F-NNN)
