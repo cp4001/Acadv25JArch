@@ -3,7 +3,7 @@
 | 항목 | 내용 |
 |---|---|
 | 진행 중 | 없음 |
-| 마지막 한 일 | [F-004](features/F-004-Insert_Duct_Size.md) `Insert_Duct_Size` 완료 (Tree Line 중점 `axb` Text, a≥300·길이>4a 조건, Text XData `DuctSize`) |
+| 마지막 한 일 | [F-005](features/F-005-Duct_tag.md) `Duct_tag` 완료 (Line 위 점 → 지시선 → `axb` Text, 높이 a, 수평은 꺾임·수직은 직선) |
 | 다음 할 일 | 새 요청 대기. 다음 후보: [backlog.md](backlog.md) — `Insert_Duct_Size` 중복 Text 처리, (필요 시) UpDn 교차 XY 투영 |
 | 막힌 점 | 없음 |
 
