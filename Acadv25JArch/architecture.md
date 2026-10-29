@@ -393,7 +393,7 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 |--------|------|------|
 | `TTG` | Overrule/TreeOverrule.cs | Tree XData 시각화 토글 — Line/Block/Poly 세 인스턴스 (8번 섹션 참조) |
 
-상세: [[LineTreeTechNote]], [[FcuLineTreeTechNote]], [[DuctTreeTechNote]], [[TreeOverrule]], [[LPM]], [[CMH]], [[InsertDiffuser]], [[InsertDamper]]
+상세: [[LineTreeTechNote]], [[FcuLineTreeTechNote]], [[DuctTreeTechNote]], [[TreeOverrule]], [[LPM]], [[CMH]], [[InsertDiffuser]], [[InsertDamper]], [[InsertUpDn]], [[InsertDuctSize]]
 
 ### DiaNote / DiaTree
 
