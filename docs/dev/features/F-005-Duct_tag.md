@@ -44,7 +44,7 @@
 | `Acadv25JArch/PipeDiaCalc/DuctTagCommand.cs` | 신규 — `Duct_tag` |
 | `Acadv25JArch/architecture.md` | 명령 인덱스 행 추가 |
 | `Acadv25JArch/CLAUDE.md` | 컨벤션 항목·QMD 키워드 |
-| `Acadv25JArch/PipeDiaCalc/DuctTag.md` | 명령 문서 신규 |
+| `Acadv25JArch/PipeDiaCalc/DuctTag.md` | 명령 문서 신규 (Confluence `6881281` 사본) |
 
 ## 검증 결과
 
