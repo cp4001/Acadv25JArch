@@ -57,6 +57,7 @@
 | `Acadv25JArch/PipeDiaCalc/DuctSizeTextCommand.cs` | 신규 — `Insert_Duct_Size` |
 | `Acadv25JArch/architecture.md` | 명령 인덱스 행 추가 |
 | `Acadv25JArch/CLAUDE.md` | 컨벤션 항목·QMD 키워드 |
+| `Acadv25JArch/PipeDiaCalc/InsertDuctSize.md` | 명령 문서 신규 (Confluence `6684674` 사본) |
 | `DuctSizeTextCommand.cs` | 1차 확인 후 추가 요청: 길이 ≤ a×3 제외 (`MinLenRatio`), 생략 개수 출력 → 이후 4 로 변경. Text 에 XData `DuctSize` 기록 |
 
 ## 검증 결과

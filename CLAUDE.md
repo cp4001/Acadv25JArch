@@ -5,7 +5,7 @@
 
 ## Confluence (사본)
 - 상위 페이지 `131081` "JArchitecture - AutoCAD 플러그인 명령어 정리" (원본 `Acadv25JArch\architecture.md`)
-- 하위: PolyViewManager `66058` · InsertDiffuser `66025` · InsertDamper `98516` · InsertUpDn `6193153` · JArchBlockLibrary `66042` · DuctTreeTechNote `98499` · TreeOverrule `327705` · autocadInstall `98533`
+- 하위: PolyViewManager `66058` · InsertDiffuser `66025` · InsertDamper `98516` · InsertUpDn `6193153` · InsertDuctSize `6684674` · JArchBlockLibrary `66042` · DuctTreeTechNote `98499` · TreeOverrule `327705` · autocadInstall `98533`
 - 원본 md 를 고치면 사본 갱신 여부 확인. 전체 목차: `~/.claude/docs/confluence_index.md`
 
 ## QMD 키워드
