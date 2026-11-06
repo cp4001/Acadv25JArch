@@ -5,7 +5,7 @@
 | 상태 | 진행중 |
 | 규모 | M |
 | 요청일 / 완료일 | 2026-11-06 / |
-| 커밋 | |
+| 커밋 | `e7fd96a` · JRevit `c98857d` (240716New) |
 | 문서 | `Acadv25JArch\PipeDiaCalc\DuctToRevit.md` · Confluence `10387458` |
 
 ## 요청 (원문 그대로)
