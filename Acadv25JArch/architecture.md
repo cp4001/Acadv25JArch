@@ -385,6 +385,7 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | `Insert_UpDn_All` | PipeDiaCalc/UpDnInsertCommand.cs | XData `Tree` Line 여러 개 선택 → 그룹 안에서 선 안쪽으로 교차하는 모든 쌍의 교차점마다 `UpDn` 배치(끝점 연결은 제외). DS/DL/회전 규칙은 `Insert_UpDn` 과 같음 (2026-10-28 신규, [[InsertUpDn]] §4) |
 | `Insert_Duct_Size` | PipeDiaCalc/DuctSizeTextCommand.cs | XData `Tree` Line 여러 개 선택 → 각 Line 중점에 `"{a}x{b}"` DBText (MiddleCenter, 높이 a/2, 회전은 Line 방향·뒤집힘 방지). `a < 300` 또는 Line 길이 ≤ 4a 는 생략. Text 에 XData `DuctSize` = 글자 (2026-10-29 신규, [[InsertDuctSize]]) |
 | `Duct_tag` | PipeDiaCalc/DuctTagCommand.cs | XData `Tree` Line 선택 + 위치 클릭 → Line 위 빨간 점에서 지시선 후 `"{a}x{b}"` Text (높이 0.8a). 수평 Line 은 수직선 → 수평선(a/2) → 글자, 수직 Line 은 수평 직선 → 글자. Esc 까지 반복 (2026-10-29 신규, [[DuctTag]]) |
+| `Duct_ToRevit` | PipeDiaCalc/DuctToRevitCommand.cs | XData `Tree` Line(폭 `a`, 높이 `b`)과 엘보 Arc 를 골라 열린 Revit 프로젝트에 사각 덕트·엘보 생성. 시스템·타입·레벨은 Revit 에서 읽어 XData `Group` 별로 선택. JRevit 수신기(localhost:47891) 필요. 실제 연동 미확인 (2026-11-06 신규, [[DuctToRevit]]) |
 
 `LineExtend2Block` (1번 섹션)도 Tree 분석 준비 단계에서 사용 — Line을 Block BBox까지 연장해 Leaf 매핑 보장.
 
@@ -394,7 +395,7 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 |--------|------|------|
 | `TTG` | Overrule/TreeOverrule.cs | Tree XData 시각화 토글 — Line/Block/Poly 세 인스턴스 (8번 섹션 참조) |
 
-상세: [[LineTreeTechNote]], [[FcuLineTreeTechNote]], [[DuctTreeTechNote]], [[TreeOverrule]], [[LPM]], [[CMH]], [[InsertDiffuser]], [[InsertDamper]], [[InsertUpDn]], [[InsertDuctSize]], [[DuctTag]]
+상세: [[LineTreeTechNote]], [[FcuLineTreeTechNote]], [[DuctTreeTechNote]], [[TreeOverrule]], [[LPM]], [[CMH]], [[InsertDiffuser]], [[InsertDamper]], [[InsertUpDn]], [[InsertDuctSize]], [[DuctTag]], [[DuctToRevit]]
 
 ### DiaNote / DiaTree
 

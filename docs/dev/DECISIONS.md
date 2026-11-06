@@ -20,3 +20,4 @@
 | 2026-10-28 | 설치파일 `JArchitecture_Setup\Output\` 은 git 에서 제외(`.gitignore` + 기존 7개 `rm --cached`), 로컬에만 보관 | 회당 ~6MB 바이너리로 저장소 비대. ISCC 로 언제든 재생성 | backlog #2, 사용자 선택 |
 | 2026-10-28 | `급수관로결정1\` 은 `.gitignore`, `.claude\settings.json`(omnisharp-lsp 플러그인) 은 커밋 | 전자는 자체 `.git` 을 가진 별도 저장소 — 커밋하면 gitlink 로 깨짐 | backlog #3 |
 | 2026-10-28 | `Insert_UpDn`/`_All` 교차 판정은 3D 그대로 둔다(XY 투영 안 함). Z 가 어긋난 Line 은 `ZZERO` 로 평탄화 후 실행 | 높이가 안 맞는 도면은 다른 작업에도 문제 → 도면을 고친다. 필요해지면 추후 개발(backlog) | F-003 테스트 중 발생 |
+| 2026-11-06 | AutoCAD → Revit 덕트는 mcp-servers-for-revit 가 아니라 JRevit 수신기(localhost:47891)로 보낸다 | 크기·엘보 로직과 라이선스·설치본이 JRevit 에 이미 있다 (F-007) |
