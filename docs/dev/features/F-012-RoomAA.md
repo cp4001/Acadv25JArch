@@ -5,7 +5,7 @@
 | 상태 | 완료 |
 | 규모 | M |
 | 요청일 / 완료일 | 2026-11-07 / 2026-11-07 |
-| 커밋 | |
+| 커밋 | `d4f44f2` |
 
 ## 요청 (원문 그대로)
 
@@ -49,6 +49,7 @@
 | `Acadv25JArch/RoomEquip/RoomEquipForm.cs` / `.Designer.cs` | 신규 — TabControl(실/장비) + 상단 `pnlRoomTop`/`btnSave` + `dgvRoom` 6열(4열 편집). 저장: `LockDocument` + Handle 재획득 → XData 기록 → 되읽기 검증(arx 라이선스 차단 시 조용히 미기록되므로) |
 | `Acadv25JArch/architecture.md` | §2 `RoomAA` 행 |
 | `Acadv25JArch/CLAUDE.md` | QMD 키워드 |
+| Confluence `131081` | §2 `RoomAA` 행 추가 (v19, 원본과 대조 완료) |
 
 ## 검증 결과
 
