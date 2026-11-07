@@ -291,6 +291,7 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | `GXD` | CadFunction.cs | XData 목록 조회 |
 | `BP1` | CadFunction.cs | 블럭 포인트 리셋 |
 | `ChangeXdataName` | ChangeXdataNameCommand.cs | 선택 객체 XData RegName 변경 |
+| `To_Group` | Util_Command.cs | 선택 Line/Poly(`LWPOLYLINE`) 에 입력 문자열을 XData `"Group"` 으로 기록. 미리 선택이 있으면 그중 Line/Poly 만 대상, 없으면 선택 요청 (2026-11-07 Poly·미리 선택 추가, F-009) |
 | `TTG` | Overrule/TreeOverrule.cs | Tree XData 시각화 토글 (Line 색상/라벨 + Block `"Disp"` 텍스트 + Poly `"CFM"` 텍스트 — 2026-09-19 Poly 추가) |
 
 ---
@@ -383,8 +384,8 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | `Insert_Damper` | PipeDiaCalc/DamperInsertCommand.cs | Line 선택 → 클릭점에 가까운 끝점에서 선 안쪽 225 지점에 동적 블럭 `JArch_Damper` 삽입(참조 도면에서 가져옴). Line XData `a` 의 1/2 을 `Dis1`/`Dis2` 에 대입, 회전은 가까운→먼 끝점 방향. `a` 가 숫자가 아니거나 Line 길이 < 225 면 오류 후 중단(블럭 정의도 건드리지 않음, 2026-10-28) (2026-09-21 신규, [[InsertDamper]]) |
 | `Insert_UpDn` | PipeDiaCalc/UpDnInsertCommand.cs | XData `Tree` Line 2개 일괄 선택(필터, 2개 아니면 재선택) → 선 안쪽 교차점에 동적 블럭 `UpDn` 삽입(참조 도면에서 가져옴). 동적 속성 `DS`=작은 `a` / `DL`=큰 `a`, 회전 = 작은 `a` Line 의 `line.Angle` (2026-10-28 신규, [[InsertUpDn]]) |
 | `Insert_UpDn_All` | PipeDiaCalc/UpDnInsertCommand.cs | XData `Tree` Line 여러 개 선택 → 그룹 안에서 선 안쪽으로 교차하는 모든 쌍의 교차점마다 `UpDn` 배치(끝점 연결은 제외). DS/DL/회전 규칙은 `Insert_UpDn` 과 같음 (2026-10-28 신규, [[InsertUpDn]] §4) |
-| `Insert_Duct_Size` | PipeDiaCalc/DuctSizeTextCommand.cs | XData `Tree` Line 여러 개 선택 → 각 Line 중점에 `"{a}x{b}"` DBText (MiddleCenter, 높이 a/2, 회전은 Line 방향·뒤집힘 방지). `a < 300` 또는 Line 길이 ≤ 4a 는 생략. Text 에 XData `DuctSize` = 글자 (2026-10-29 신규, [[InsertDuctSize]]) |
-| `Duct_tag` | PipeDiaCalc/DuctTagCommand.cs | XData `Tree` Line 선택 + 위치 클릭 → Line 위 빨간 점에서 지시선 후 `"{a}x{b}"` Text (높이 0.8a). 수평 Line 은 수직선 → 수평선(a/2) → 글자, 수직 Line 은 수평 직선 → 글자. Esc 까지 반복 (2026-10-29 신규, [[DuctTag]]) |
+| `Insert_Duct_Size` | PipeDiaCalc/DuctSizeTextCommand.cs | XData `Tree` Line 여러 개 선택 → 각 Line 중점에 `"{a}x{b}"` DBText (MiddleCenter, 높이 a/2, 회전은 Line 방향·뒤집힘 방지). Line 에 XData `Group` 이 있으면 `"{Group}:{a}x{b}"`. `a < 300` 또는 Line 길이 ≤ 4a 는 생략. Text 에 XData `DuctSize` = 글자 (2026-10-29 신규, 2026-11-07 Group 표시, [[InsertDuctSize]]) |
+| `Duct_tag` | PipeDiaCalc/DuctTagCommand.cs | XData `Tree` Line 선택 + 위치 클릭 → Line 위 빨간 점에서 지시선 후 `"{a}x{b}"` Text (높이 0.8a, XData `Group` 이 있으면 `"{Group}:{a}x{b}"`). 수평 Line 은 수직선 → 수평선(a/2) → 글자, 수직 Line 은 수평 직선 → 글자. Esc 까지 반복 (2026-10-29 신규, 2026-11-07 Group 표시, [[DuctTag]]) |
 
 `LineExtend2Block` (1번 섹션)도 Tree 분석 준비 단계에서 사용 — Line을 Block BBox까지 연장해 Leaf 매핑 보장.
 

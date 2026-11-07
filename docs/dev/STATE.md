@@ -16,5 +16,7 @@
 | 사용자 승인 대기 | Poly Fence 10mm 연장은 요청 없이 넣은 변경 — 불필요하면 제거 (`DuctTreeBuilder.ExtendFreeEnd`) |
 | 브랜치 주의 | F-008 설치본에는 F-007 `Duct_ToRevit` 이 없음. `master` 미병합 |
 | F-009 | `To_Group` 완료 (`0cff034`). 같은 F-008 브랜치 커밋이라 다음 설치파일에 포함됨. 현재 `JArchitecture_Setup_11_07.exe` 에는 없음 → 재설치 전 재생성 필요 |
+| F-010 | `Insert_Duct_Size`·`Duct_tag` Group 표시 완료. F-008 브랜치 커밋, AddinManager 확인만 함 — 설치본은 F-009 와 같이 재생성 필요 |
+| AddinManager | XData 쓰는 명령은 실행 전 `(arxload "C:/Jarch25/JArchXData.arx")` 필요 (임시 폴더에 arx 없음) |
 
 **재개 프롬프트:** "/devlog resume"

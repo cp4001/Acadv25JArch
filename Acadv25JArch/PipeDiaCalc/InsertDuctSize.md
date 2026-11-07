@@ -7,7 +7,7 @@ tags:
 
 > 파일: `PipeDiaCalc/DuctSizeTextCommand.cs`
 > 클래스: `PipeLoad2.DuctSizeTextCommand.Cmd_InsertDuctSize`
-> 최종 업데이트: 2026-10-29 (신규, F-004)
+> 최종 업데이트: 2026-11-07 (Group 표시, F-010) · 2026-10-29 (신규, F-004)
 
 ---
 
@@ -31,7 +31,7 @@ XData `Tree` 가 있는 덕트 Line 을 여러 개 선택하면 **각 Line 중�
 
 | 항목 | 값 | 코드 |
 |---|---|---|
-| 글자 | `"{a}x{b}"` (XData 문자열 그대로, 숫자 변환 없음) | `TextString` |
+| 글자 | `"{a}x{b}"` (XData 문자열 그대로, 숫자 변환 없음). Line 에 XData `Group` 이 있으면 `"{Group}:{a}x{b}"` (예 `SA:300x200`, F-010) | `SizeText` |
 | 높이 | `a / 2` | `Height` |
 | 위치 | Line 중점, 글자 중앙이 중점 | `TextCenter` + `TextVerticalMid` + `AlignmentPoint` |
 | 회전 | `line.Angle` 을 (-90°, 90°] 로 정규화 — 글자가 뒤집히지 않음 | `rot -= π` (90° 초과 ~ 270° 이하) |
@@ -44,6 +44,7 @@ XData `Tree` 가 있는 덕트 Line 을 여러 개 선택하면 **각 Line 중�
 ## 3. 주의
 
 - ⚠️ **중복 검사 없음** — 같은 Line 들로 다시 실행하면 같은 자리에 Text 가 또 생긴다. 기존 Text 는 XData `DuctSize` 로 식별할 수 있다(backlog).
+- 길이 조건(`a × 4`)은 Group 글자 길이를 계산에 넣지 않는다 — Group 이 길면 글자가 Line 구간을 넘을 수 있다.
 - `a`/`b` 무효 Line 이 섞여 있어도 명령을 중단하지 않는다 — Line 마다 독립된 Text 라서 (`Insert_UpDn` 은 하나만 무효여도 중단하는 것과 다름).
 - 생성 Text 의 `DuctSize` XData 는 `XD_DelALL` 로 지울 수 있다(필터에 `TEXT` 포함).
 - `TTG` 의 Line `Disp` 라벨(`350x250[1200]`)은 화면 표시용 오버룰이고, 이 명령은 **도면에 실제 Text 객체**를 만든다.
