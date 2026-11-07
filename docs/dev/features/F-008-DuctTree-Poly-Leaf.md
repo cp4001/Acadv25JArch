@@ -89,3 +89,6 @@
 - 곡선 Poly 의 `TTG` 렌더는 도면에서 확인 필요 (base.WorldDraw + trait 변경 방식)
 - 이 브랜치로 만든 설치본에는 F-007 `Duct_ToRevit` 이 없음
 - 꺾인 Poly 6개는 도면에서 Root 레이어로 옮겨야 분석됨
+- Poly Fence 자유단 10mm 연장은 사용자 요청 없이 추가 — 불필요하다고 하면 `ExtendFreeEnd` 제거
+- `Overrule/TreeOverrule.md` §1 개요는 아직 "세 인스턴스" — 실제 네 개, 마감 때 원본·Confluence 같이 수정
+- 마감 시: `master` 병합, 완료 문서 Confluence 등록 여부 확인
