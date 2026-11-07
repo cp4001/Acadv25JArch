@@ -21,6 +21,7 @@ namespace PipeLoad2
     {
         private const double TOLERANCE = 2.0;  // mm
         private const int ArcFenceSteps = 8;   // Poly 곡선 구간 Fence 분할 수
+        private const double PolyFenceExtend = 10.0;  // mm — Poly 끝이 Block 외곽에 딱 닿은 경우 대비
 
         public enum DuctNodeType { Root, Mid, Leaf, Block }
 
@@ -62,6 +63,20 @@ namespace PipeLoad2
             }
             path.Add(pl.EndPoint);
             return path;
+        }
+
+        /// <summary>Fence 경로의 자유단을 진행 방향으로 PolyFenceExtend 만큼 연장한 사본을 반환.</summary>
+        private static Point3dCollection ExtendFreeEnd(Point3dCollection path, bool atStart)
+        {
+            var extended = new Point3dCollection();
+            foreach (Point3d p in path) extended.Add(p);
+
+            int end  = atStart ? 0 : extended.Count - 1;
+            int prev = atStart ? 1 : extended.Count - 2;
+            Vector3d dir = extended[end] - extended[prev];
+            if (dir.Length > 1e-6)
+                extended[end] = extended[end] + dir.GetNormal() * PolyFenceExtend;
+            return extended;
         }
 
         public Dictionary<string, List<string>> BuildLineConnections(List<Curve> lines)
@@ -169,7 +184,7 @@ namespace PipeLoad2
                     if (sConn && eConn)
                         ed.WriteMessage($"\n  [MapLeaf] ⚠ Poly h={leafHandle} 양 끝이 모두 연결됨 — Poly 는 Mid 불가, Leaf 로 처리");
                     ed.WriteMessage($"\n  [MapLeaf] Leaf#{leafIdx} h={leafHandle} Poly fence={polyPath.Count}점");
-                    fence = polyPath;
+                    fence = sConn != eConn ? ExtendFreeEnd(polyPath, atStart: eConn) : polyPath;
                 }
                 else
                 {

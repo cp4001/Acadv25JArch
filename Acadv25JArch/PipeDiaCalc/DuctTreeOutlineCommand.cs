@@ -1,6 +1,7 @@
 using AcadFunction;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using CADExtension;
 using System.Globalization;
 using Node = PipeLoad2.DuctTreeBuilder.DuctNode;
 using NodeType = PipeLoad2.DuctTreeBuilder.DuctNodeType;
@@ -23,6 +24,7 @@ namespace PipeLoad2
         private const double PerpTol = 0.02;         // 직각/반대방향 판정 공용 (약 ±1.15°, 기존 Duct_C1/C2/E/EE 와 동일)
         private const double WidthEqualTol = 1e-3;   // 폭 동일 판정(직선 연속 케이스)
         private const double JunctionTol = 1.0;      // 접합점 일치 거리(mm) — DuctTreeBuilder.TOLERANCE 와 동일 값으로 통일
+        private const double VirtualBranchLength = 100000.0; // Poly 가상 분기 길이 — TryApply 길이 검증 통과용, 도면에 남지 않음
 
         public enum OutlinePattern { None, Duct_C1, Duct_C1E, Duct_C2, Duct_C2E, Duct_E, Duct_EE, Unsupported }
 
@@ -44,8 +46,12 @@ namespace PipeLoad2
             public bool BranchBSlant { get; set; }
 
             public Line? NodeLine { get; set; }
-            public Line? BranchALine { get; set; }
+            public Line? BranchALine { get; set; }          // Poly 분기는 null — ApplyPlan 이 임시 Line 생성
             public Line? BranchBLine { get; set; }
+
+            /// <summary>Poly 분기용 가상 Line 의 시작점(접합점 X)과 분기별 끝점.</summary>
+            public Point3d Junction { get; set; }
+            public Dictionary<Node, Point3d> VirtualEnds { get; } = new();
         }
 
         private enum Relation { CollinearOpposite, Perpendicular, Other }
@@ -101,6 +107,13 @@ namespace PipeLoad2
         {
             var result = new JunctionResult { Plan = plan };
 
+            // Poly 분기는 접합점에서 덕트와 수직인 임시 Line 으로 대체해 TryApply 를 그대로 쓰고,
+            // 분할 없이 외곽선만 만든 뒤 지운다 — Poly 자체는 변경하지 않는다.
+            bool polyA = plan.BranchA?.IsPoly == true;
+            bool polyB = plan.BranchB?.IsPoly == true;
+            Line? branchA = polyA ? CreateVirtualBranch(tr, db, plan, plan.BranchA!) : plan.BranchALine;
+            Line? branchB = polyB ? CreateVirtualBranch(tr, db, plan, plan.BranchB!) : plan.BranchBLine;
+
             switch (plan.Pattern)
             {
                 case OutlinePattern.None:
@@ -115,8 +128,9 @@ namespace PipeLoad2
                     break;
 
                 case OutlinePattern.Duct_C1E:
-                    result.Applied = c1e.TryApply(tr, db, plan.NodeLine!, plan.BranchBLine!, plan.BranchALine!,
-                                                  plan.BranchBSlant, plan.BranchASlant, out string msgC1E);
+                    result.Applied = c1e.TryApply(tr, db, plan.NodeLine!, branchB!, branchA!,
+                                                  plan.BranchBSlant, plan.BranchASlant, out string msgC1E,
+                                                  splitBb: !polyB, splitCc: !polyA);
                     result.Message = msgC1E;
                     break;
 
@@ -126,7 +140,7 @@ namespace PipeLoad2
                     break;
 
                 case OutlinePattern.Duct_C2E:
-                    result.Applied = c2e.TryApply(tr, db, plan.NodeLine!, plan.BranchBLine!, plan.BranchALine!, out string msgC2E);
+                    result.Applied = c2e.TryApply(tr, db, plan.NodeLine!, branchB!, branchA!, out string msgC2E, splitBranch: !polyA);
                     result.Message = msgC2E;
                     break;
 
@@ -136,12 +150,29 @@ namespace PipeLoad2
                     break;
 
                 case OutlinePattern.Duct_EE:
-                    result.Applied = endElbow.TryApply(tr, db, plan.NodeLine!, plan.BranchALine!, out string msgEE);
+                    result.Applied = endElbow.TryApply(tr, db, plan.NodeLine!, branchA!, out string msgEE, splitBranch: !polyA);
                     result.Message = msgEE;
                     break;
             }
 
+            if (polyA) branchA!.Erase();
+            if (polyB) branchB!.Erase();
+            if (result.Applied && (polyA || polyB)) result.Message += " (Poly 분기는 분할하지 않음)";
+
             return result;
+        }
+
+        /// <summary>접합점 → 수직 끝점의 임시 Line 을 현재 공간에 만들고 Poly 의 XData("a" 등)를 복사한다.
+        /// 호출자가 TryApply 후 Erase 한다.</summary>
+        private Line CreateVirtualBranch(Transaction tr, Database db, JunctionPlan plan, Node polyNode)
+        {
+            var btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+            var ln = new Line(plan.Junction, plan.VirtualEnds[polyNode]);
+            ln.SetDatabaseDefaults(db);
+            btr.AppendEntity(ln);
+            tr.AddNewlyCreatedDBObject(ln, true);
+            GetCurve(tr, db, polyNode, OpenMode.ForRead)!.XdataCopy(ln);
+            return ln;
         }
 
         private void CollectPlans(Transaction tr, Database db, Node node, List<JunctionPlan> plans)
@@ -155,14 +186,18 @@ namespace PipeLoad2
 
         /// <summary>node.Handle 로 db.GetObjectId → tr.GetObject 재획득(DuctTreeBuilder.ApplyRecursive 와 동일 패턴).
         /// 옛 Transaction 에서 열린 DuctNode.Line 을 그대로 쓰면 eInvalidOpenState 가 나므로 반드시 이 경로를 거친다.</summary>
-        private Line? GetLine(Transaction tr, Database db, Node node, OpenMode mode)
+        private Line? GetLine(Transaction tr, Database db, Node node, OpenMode mode) =>
+            GetCurve(tr, db, node, mode) as Line;
+
+        /// <summary>Line 또는 Poly Leaf 를 Handle 로 재획득한다.</summary>
+        private Curve? GetCurve(Transaction tr, Database db, Node node, OpenMode mode)
         {
             try
             {
                 var handle = new Handle(System.Convert.ToInt64(node.Handle, 16));
                 var id = db.GetObjectId(false, handle, 0);
                 if (id == ObjectId.Null) return null;
-                return tr.GetObject(id, mode) as Line;
+                return tr.GetObject(id, mode) as Curve;
             }
             catch
             {
@@ -175,15 +210,6 @@ namespace PipeLoad2
         {
             var plan = new JunctionPlan { Node = node };
 
-            // 외곽선 명령은 Line 전용이고 분기를 분할하므로 Poly Leaf 가 달린 접합부는 대상에서 제외한다.
-            var polyChild = lineChildren.FirstOrDefault(c => c.IsPoly);
-            if (polyChild != null)
-            {
-                plan.Pattern = OutlinePattern.Unsupported;
-                plan.Reason = $"Poly Leaf[{polyChild.Handle}] 가 달린 접합부 — 외곽선 미지원, 수동 처리.";
-                return plan;
-            }
-
             Line? nodeLine = GetLine(tr, db, node, OpenMode.ForRead);
             if (nodeLine == null)
             {
@@ -193,10 +219,10 @@ namespace PipeLoad2
             }
             plan.NodeLine = nodeLine;
 
-            var childLines = new Dictionary<Node, Line>();
+            var childLines = new Dictionary<Node, Curve>();
             foreach (var c in lineChildren)
             {
-                var cl = GetLine(tr, db, c, OpenMode.ForRead);
+                var cl = GetCurve(tr, db, c, OpenMode.ForRead);
                 if (cl == null)
                 {
                     plan.Pattern = OutlinePattern.Unsupported;
@@ -220,16 +246,38 @@ namespace PipeLoad2
             // dot=-1 이어야 할 것이 dot=+1 로 뒤집혀 Duct_C2 후보가 전부 Unsupported 로 빠졌었다).
             Vector3d nodeDir = (nodeOther - x).GetNormal();
 
+            // 자식 방향 기준점 — Line 은 먼 끝, Poly 는 X 에서 디퓨져 쪽으로 덕트와 수직인 가상 끝점
+            plan.Junction = x;
+            var childFar = new Dictionary<Node, Point3d>();
+            foreach (var c in lineChildren)
+            {
+                Point3d far = FarEnd(childLines[c], x);
+                if (c.IsPoly)
+                {
+                    Vector3d perp = nodeDir.CrossProduct(Vector3d.ZAxis).GetNormal();
+                    double side = (far - x).DotProduct(perp);
+                    if (System.Math.Abs(side) < JunctionTol)
+                    {
+                        plan.Pattern = OutlinePattern.Unsupported;
+                        plan.Reason = $"Poly Leaf[{c.Handle}] 끝이 덕트 중심선 위에 있어 디퓨져 방향을 정할 수 없습니다.";
+                        return plan;
+                    }
+                    far = x + perp * (side > 0 ? VirtualBranchLength : -VirtualBranchLength);
+                    plan.VirtualEnds[c] = far;
+                }
+                childFar[c] = far;
+            }
+
             if (lineChildren.Count == 1)
             {
                 var child = lineChildren[0];
-                ClassifySingleChild(nodeLine, nodeDir, x, child, childLines[child], plan);
+                ClassifySingleChild(nodeLine, nodeDir, x, child, childLines[child] as Line, childFar[child], plan);
             }
             else if (lineChildren.Count == 2)
             {
                 var c1 = lineChildren[0];
                 var c2 = lineChildren[1];
-                ClassifyTwoChildren(nodeDir, x, c1, childLines[c1], c2, childLines[c2], plan);
+                ClassifyTwoChildren(nodeDir, x, c1, childLines[c1] as Line, childFar[c1], c2, childLines[c2] as Line, childFar[c2], plan);
             }
             else
             {
@@ -241,13 +289,14 @@ namespace PipeLoad2
         }
 
         /// <summary>lineChildren 1개 케이스 — §4 표: 직선 연속 / Duct_EE / Duct_E / 미지원.</summary>
-        private void ClassifySingleChild(Line nodeLine, Vector3d nodeDir, Point3d x, Node child, Line childLine, JunctionPlan plan)
+        private void ClassifySingleChild(Line nodeLine, Vector3d nodeDir, Point3d x, Node child, Line? childLine, Point3d childFar, JunctionPlan plan)
         {
-            var rel = Classify(nodeDir, x, childLine);
+            var rel = Classify(nodeDir, x, childFar);
 
             if (rel == Relation.CollinearOpposite)
             {
-                if (TryReadWidth(nodeLine, out double wNode) && TryReadWidth(childLine, out double wChild)
+                // Poly 는 항상 수직 가상 분기이므로 여기서 childLine 은 실제 Line 이다.
+                if (TryReadWidth(nodeLine, out double wNode) && TryReadWidth(childLine!, out double wChild)
                     && System.Math.Abs(wNode - wChild) < WidthEqualTol)
                 {
                     plan.Pattern = OutlinePattern.None;
@@ -286,10 +335,10 @@ namespace PipeLoad2
         }
 
         /// <summary>lineChildren 2개 케이스 — §4 표: Duct_C2 / Duct_C1 / 미지원.</summary>
-        private void ClassifyTwoChildren(Vector3d nodeDir, Point3d x, Node c1, Line c1Line, Node c2, Line c2Line, JunctionPlan plan)
+        private void ClassifyTwoChildren(Vector3d nodeDir, Point3d x, Node c1, Line? c1Line, Point3d c1Far, Node c2, Line? c2Line, Point3d c2Far, JunctionPlan plan)
         {
-            var rel1 = Classify(nodeDir, x, c1Line);
-            var rel2 = Classify(nodeDir, x, c2Line);
+            var rel1 = Classify(nodeDir, x, c1Far);
+            var rel2 = Classify(nodeDir, x, c2Far);
 
             if (rel1 == Relation.CollinearOpposite && rel2 == Relation.Perpendicular)
             {
@@ -308,8 +357,8 @@ namespace PipeLoad2
 
             if (rel1 == Relation.Perpendicular && rel2 == Relation.Perpendicular)
             {
-                Vector3d dirC1 = (FarEnd(c1Line, x) - x).GetNormal();
-                Vector3d dirC2 = (FarEnd(c2Line, x) - x).GetNormal();
+                Vector3d dirC1 = (c1Far - x).GetNormal();
+                Vector3d dirC2 = (c2Far - x).GetNormal();
                 double dot = dirC1.DotProduct(dirC2);
 
                 if (System.Math.Abs(dot + 1.0) < PerpTol)
@@ -369,9 +418,9 @@ namespace PipeLoad2
         }
 
         /// <summary>node 자신의 방향(nodeDir) 대비 child 의 관계(직선 연장/직각/기타)를 판정한다.</summary>
-        private Relation Classify(Vector3d nodeDir, Point3d x, Line childLine)
+        private Relation Classify(Vector3d nodeDir, Point3d x, Point3d childFar)
         {
-            Vector3d dirChild = (FarEnd(childLine, x) - x).GetNormal();
+            Vector3d dirChild = (childFar - x).GetNormal();
             double dot = nodeDir.DotProduct(dirChild);
             if (System.Math.Abs(dot + 1.0) < PerpTol) return Relation.CollinearOpposite;
             if (System.Math.Abs(dot) < PerpTol) return Relation.Perpendicular;
@@ -380,7 +429,7 @@ namespace PipeLoad2
 
         /// <summary>nodeLine 의 두 끝점 중 lineChildren 전부의 근단이 모이는 쪽을 접합점 X 로 반환.
         /// 다른 한쪽 끝점은 (부모 쪽/Root 는 임의 기준) other 로 반환한다.</summary>
-        private bool TryFindJunction(Line nodeLine, List<Node> lineChildren, Dictionary<Node, Line> childLines, out Point3d x, out Point3d other)
+        private bool TryFindJunction(Line nodeLine, List<Node> lineChildren, Dictionary<Node, Curve> childLines, out Point3d x, out Point3d other)
         {
             x = default;
             other = default;
@@ -401,10 +450,10 @@ namespace PipeLoad2
             return false;
         }
 
-        private Point3d FarEnd(Line ln, Point3d refPt) =>
+        private Point3d FarEnd(Curve ln, Point3d refPt) =>
             ln.StartPoint.DistanceTo(refPt) <= ln.EndPoint.DistanceTo(refPt) ? ln.EndPoint : ln.StartPoint;
 
-        private Point3d NearEnd(Line ln, Point3d refPt) =>
+        private Point3d NearEnd(Curve ln, Point3d refPt) =>
             ln.StartPoint.DistanceTo(refPt) <= ln.EndPoint.DistanceTo(refPt) ? ln.StartPoint : ln.EndPoint;
 
         /// <summary>XData "a" 문자열에서 폭(double) 추출. "600x400" 형태면 앞 숫자 사용.</summary>

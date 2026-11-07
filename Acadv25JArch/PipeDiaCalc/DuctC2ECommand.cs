@@ -65,7 +65,7 @@ namespace PipeLoad2
         /// 대화형 선택 없이 Line 객체를 직접 받아 검증~계산~생성까지 처리 — 트리 오케스트레이션에서 재사용.
         /// 검증 실패 시 false 반환(엔티티 생성 없음, Transaction 은 변경 없음), 성공 시 true + 결과 메시지.
         /// </summary>
-        public bool TryApply(Transaction tr, Database db, Line aa, Line bb, Line cc, out string message)
+        public bool TryApply(Transaction tr, Database db, Line aa, Line bb, Line cc, out string message, bool splitBranch = true)
         {
             message = "";
 
@@ -192,7 +192,7 @@ namespace PipeLoad2
             MoveEnd(bb, X, B2);
 
             // cc 3분할 (신규 X–c1, c1–c2 + 원본 X측 끝점 c2 이동)
-            SplitBranch(tr, btr, db, cc, X, c1, c2);
+            if (splitBranch) SplitBranch(tr, btr, db, cc, X, c1, c2);
 
             // aa 외곽선(Yellow) 10선
             int created = 0;
