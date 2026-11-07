@@ -7,7 +7,7 @@ tags:
 
 > 파일: `PipeDiaCalc/DuctTagCommand.cs`
 > 클래스: `PipeLoad2.DuctTagCommand.Cmd_DuctTag`
-> 최종 업데이트: 2026-10-29 (신규, F-005 · 글자 0.8a·꺾은선 a/2, F-006)
+> 최종 업데이트: 2026-11-07 (Group 표시, F-010) · 2026-10-29 (신규, F-005 · 글자 0.8a·꺾은선 a/2, F-006)
 
 ---
 
@@ -34,7 +34,7 @@ XData `Tree` 덕트 Line 을 고르고 태그 위치를 찍으면 **Line 위 빨
 
 | 항목 | 값 |
 |---|---|
-| 글자 | `"{a}x{b}"` (XData 문자열 그대로) |
+| 글자 | `"{a}x{b}"` (XData 문자열 그대로). Line 에 XData `Group` 이 있으면 `"{Group}:{a}x{b}"` (예 `SA:300x200`, F-010) |
 | 글자 높이 h | **`a × 0.8`** (F-006, 처음엔 a. [[InsertDuctSize]] 는 a/2) |
 | 수평 꺾은선 길이 | `a / 2` (F-006, 처음엔 h → a/4 → a/2) |
 | 글자 색 | ByLayer, 현재 문자 스타일 |

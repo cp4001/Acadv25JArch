@@ -11,7 +11,7 @@ namespace PipeLoad2
 {
     /// <summary>
     /// Duct_tag — XData "Tree" Line 을 고르고 태그 위치를 찍으면 Line 위 점(●)에서 지시선을 그어
-    /// "{a}x{b}" Text 를 배치한다. Esc 까지 반복.
+    /// "{a}x{b}" Text 를 배치한다 (XData "Group" 이 있으면 "{Group}:{a}x{b}"). Esc 까지 반복.
     /// 수평 Line : 점 → 클릭 높이까지 수직선 → 오른쪽으로 짧은 수평선 → 글자
     /// 수직 Line : 점 → 클릭 위치까지 수평 직선 → 글자 (클릭한 쪽으로)
     /// 글자 높이 = a × 0.8, 수평 꺾은선 길이 = a / 2, 지시선·점 ACI 1(Red), 글자 ByLayer. 현재 레이어·문자 스타일.
@@ -42,7 +42,7 @@ namespace PipeLoad2
 
                 // 1. Line 정보만 복사 — 점 입력(Editor)은 Transaction 밖에서
                 Point3d sp, ep;
-                string aStr, bStr;
+                string aStr, bStr, label;
                 double a;
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
@@ -60,6 +60,7 @@ namespace PipeLoad2
                         ed.WriteMessage($"\n[건너뜀] XData a/b 가 없거나 a 가 숫자가 아닙니다. (a=\"{aStr}\", b=\"{bStr}\")");
                         continue;
                     }
+                    label = DuctSizeTextCommand.SizeText(line, aStr, bStr);
                     sp = line.StartPoint;
                     ep = line.EndPoint;
                     tr.Commit();
@@ -118,7 +119,7 @@ namespace PipeLoad2
 
                     var txt = new DBText
                     {
-                        TextString = (horizontal ? " " : "") + $"{aStr}x{bStr}",   // 수평: 꺾은선과 띄우려고 앞에 공백 1칸
+                        TextString = (horizontal ? " " : "") + label,   // 수평: 꺾은선과 띄우려고 앞에 공백 1칸
                         Height = h,
                         Position = textPt,
                         TextStyleId = db.Textstyle,
@@ -131,7 +132,7 @@ namespace PipeLoad2
 
                     tr.Commit();
                 }
-                ed.WriteMessage($"\n태그: {aStr}x{bStr}");
+                ed.WriteMessage($"\n태그: {label}");
             }
         }
 

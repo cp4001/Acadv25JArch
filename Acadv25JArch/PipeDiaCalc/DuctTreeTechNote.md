@@ -1,7 +1,7 @@
 # Duct Tree 기술 노트
 
 > 프로젝트: `Acadv25JArch` / 네임스페이스: `PipeLoad2` / 폴더: `PipeDiaCalc/`
-> 최종 업데이트: 2026-09-09 (`Duct_C1E`/`Duct_C2E` 추가 + `Duct_EE` 컬러 상류측 90° 전환)
+> 최종 업데이트: 2026-11-07 (Leaf 단 Polyline 지원, F-008)
 
 ---
 
@@ -45,7 +45,8 @@
 ```csharp
 public class DuctNode
 {
-    public Line?           Line   { get; set; }
+    public Line?           Line   { get; set; }   // Poly Leaf 는 null
+    public bool            IsPoly { get; set; }   // 열린 LWPOLYLINE Leaf
     public BlockReference? Block  { get; set; }
     public string          Handle { get; set; }
     public DuctNode?       Parent { get; set; }
@@ -72,7 +73,7 @@ FCU 와 동일한 **Pre → Zoom → Map → Main + ShowModelessDialog** 4-Phase
 ### Phase 1: Pre-Transaction (ForRead)
 - Root Line 의 layer/handle 결정
 - 선택 엔티티 순회:
-  - `Line && Layer == rootLayer` → `lineEndpoints` 수집
+  - `Line` 또는 열린 LWPOLYLINE + `Layer == rootLayer` → `lineEndpoints` 수집, Poly 는 `polyPaths` 에 Fence 경로도 수집
   - `BlockReference && DuctTreeBuilder.HasCmh(br)` → `cmhBlockHandles` 수집
 - **XData `"CMH"` 없는 Block 은 이 단계에서 제외**
 
@@ -85,6 +86,13 @@ FCU 와 동일한 **Pre → Zoom → Map → Main + ShowModelessDialog** 4-Phase
 2. Root BFS → `childCount[h] == 0 && h != root` = Leaf
 3. Leaf 의 **중간점 → tp**(미연결 끝점) 선분으로 `ed.SelectFence(fence, INSERT filter)` (2026-08-26 변경, 구: tp ± margin(=10) 사각 `SelectCrossingWindow`)
 4. 결과 중 `cmhBlockHandles.Contains(h)` 인 Block만 `map[blockHandle] = leafHandle`
+
+> **Poly Leaf (F-008)** — 열린 LWPOLYLINE 은 Leaf 전용이다. Root/Mid 는 Line 만 가능.
+> - 연결은 Line 과 같이 **양 끝점**으로 판정하고, BFS 는 Poly 를 만나면 더 확장하지 않는다.
+> - Poly 도 Line 과 같이 **Root 와 같은 레이어**여야 한다. 레이어가 다르면 트리에서 제외된다.
+> - Fence 는 3번의 중간점→tp 대신 **Poly 전체 경로**를 쓴다 (`GetPolyPath`, 곡선 구간은 `ArcFenceSteps`=8 등분). 끝이 Block 외곽에 딱 닿아도 걸리도록 자유단을 `PolyFenceExtend`=10mm 연장한다.
+> - Poly 뒤에 이어진 선은 트리에서 빠지고 커맨드라인에 `[DuctTree] ⚠ 트리에 포함되지 않은 Line/Poly N개` 로 보고한다. 양 끝이 모두 연결된 Poly 는 `[MapLeaf] ⚠` 경고 후 Leaf 로 처리한다.
+> - 닫힌 Poly 와 구형 POLYLINE 은 대상이 아니다.
 
 > **왜 Fence 인가** — 중간점~끝점은 선분이라 `SelectCrossingWindow` 의 두 코너로 쓰면 수평/수직 덕트에서 **면적 0 사각형**이 된다(덕트 도면은 대부분 직교선이므로 이게 기본 케이스). `SelectFence` 는 `Point3dCollection` 을 받아 퇴화가 없다.
 > **주의** — Fence 는 선분이 블록 형상을 **실제로 가로질러야** 잡는다. 디퓨져가 Line 끝점 바깥에 떨어져 있으면 구 방식(±10 사각)은 잡던 것을 놓친다. 진단은 로그의 `hit=0`.
@@ -198,6 +206,8 @@ Mode D 입력은 4개 중 2개만 코드 상수, 2개는 Form 입력:
 | 2 | 직각 2개 **같은측** | `Unsupported` — 4패턴에 없음 |
 | 3+ | 다중 분기 | `Unsupported` |
 
+**Poly Leaf 자식 (F-008)** — 접합점 X 에서 **덕트(node)와 수직, 디퓨져 쪽(Poly 먼 끝이 있는 쪽)** 으로 가상 Line 이 있다고 보고 위 표대로 판정한다. Poly 는 항상 Leaf 라 결과는 `Duct_EE` / `Duct_C2E` / `Duct_C1E` 중 하나다. `ApplyPlan` 이 임시 Line 을 도면에 만들고 Poly XData 를 복사해 `TryApply(분할 끔)` 를 호출한 뒤 지운다. **Poly 는 변경·분할하지 않는다.** Poly 먼 끝이 덕트 중심선 위(수직 거리 < `JunctionTol`)면 방향을 정할 수 없어 `Unsupported`.
+
 판정 상수: `PerpTol = 0.02`(직각·반대방향 공용, 약 ±1.15° — 기존 4개 명령과 동일), `WidthEqualTol = 1e-3`, `JunctionTol = 1.0`mm(**주의**: `DuctTreeBuilder.TOLERANCE` 는 2026-08-25 에 2.0mm 로 올라가 더 이상 같은 값이 아니다).
 
 ### 8.2 실행 전략 (`ApplyTree`)
@@ -294,6 +304,7 @@ Mode D 입력은 4개 중 2개만 코드 상수, 2개는 Form 입력:
 
 ## 14. 변경 이력
 
+- **2026-11-07** Leaf 단 Polyline 지원 (F-008) — 열린 LWPOLYLINE 을 Leaf 로 인식, 전체 경로 Fence, Line 과 같은 XData 기록, `DuctOutLine` 은 수직 가상 Line 기준으로 외곽선 생성(Poly 미변경, `Duct_EE`/`C2E`/`C1E` 의 `TryApply` 에 분할 끄기 옵션 추가), `TTG` Leaf 색상·라벨 표시. Root/Mid 는 Line 전용. 미포함 Line/Poly 개수 경고 추가.
 - **2026-09-09** `Duct_C1E` 신규 (`DuctC1ECommand.cs`) — `Duct_C1` 의 Tab 상단 마감을 **분기별로** 고르는 변형. **Leaf 분기는 45° 사선 없이 90° 직선**, Mid 분기는 기존대로 45° 사선(사용자 확정). 정점 `PB`/`PK` 의 높이만 `H+Δ` ↔ `H` 로 갈리며 `[E07]` aa 길이 요건도 같이 완화. `TryApply(…, bbSlant, ccSlant, …)` 로 좌우 독립 지정 — 한쪽만 Leaf 인 혼합 형상도 처리한다. `DuctTreeOutlineCommand` 는 좌우 반대측 직각 분기 2개에서 **둘 다 Mid 면 `Duct_C1`, 하나라도 Leaf 면 `Duct_C1E`** 로 분기(구: 한쪽이라도 Leaf 면 `Unsupported` — 수동 처리로 빠지던 두 케이스가 자동 적용 대상이 됨). `JunctionPlan.BranchASlant`/`BranchBSlant` 는 판정 시점에 확정.
 - **2026-09-09** `Duct_EE` 컬러 상류측 마감을 45° 사선 → **90° 수직**으로 변경 (`DuctEndElbowCommand.cs`). b 가 트리에서 항상 Leaf 라 플레어가 불필요하다는 사용자 확정 — 정점 `S1` 을 `X−dirA·(H_b+L_col)+up·H_a` → `X−dirA·H_b+up·H_a` 로, `[E06]` a 길이 요건을 `H_b+L_col` → `H_b` 로 완화. 6선 구성/판정 로직은 불변. 사양서 `Duct_End_Elbow.md` v1.2.
 - **2026-09-09** `Duct_C2E` 신규 (`DuctC2ECommand.cs`) — `Duct_C2` 의 컬러 좌측 45° 사선을 90° 수직으로 대체한 변형(정점 `S1` 한 점만 상이, `[E09]` aa 길이 요건 `H_cc+L_collar`→`H_cc` 완화). `DuctTreeOutlineCommand` 에 `OutlinePattern.Duct_C2E` + `SetC2Pattern` 추가 — 직선 축소(bb)+직각 분기(cc) 위상에서 **cc 가 Leaf 면 `Duct_C2E`, Mid 면 `Duct_C2`**.

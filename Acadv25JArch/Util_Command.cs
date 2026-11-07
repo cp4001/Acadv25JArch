@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AcadFunction;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -470,8 +471,9 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         }
 
         // =====================================================================
-        // To_Group — 선택 Line 에 XData RegApp "Group" 지정 (To_Pipe 패턴)
+        // To_Group — 선택 Line/Poly 에 XData RegApp "Group" 지정 (To_Pipe 패턴)
         // 값: 사용자가 입력한 Group 문자열 (DxfCode 1000)
+        // 미리 선택이 있으면 그중 Line/Poly 만 대상, 없으면 선택 요청
         // =====================================================================
         [CommandMethod("To_Group", CommandFlags.UsePickSet)]
         public static void ToGroup_SetXdataToGroup()
@@ -482,13 +484,32 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
 
             try
             {
-                // 필터: LINE (지정 전이므로 XData 조건 없음)
-                TypedValue[] tvs = [new((int)DxfCode.Start, "LINE")];
-                var sf = new SelectionFilter(tvs);
-                var pso = new PromptSelectionOptions { MessageForAdding = "\nGroup 지정할 Line 선택: " };
+                ObjectId[] ids;
+                PromptSelectionResult psr = ed.SelectImplied();
+                if (psr.Status == PromptStatus.OK)
+                {
+                    // 미리 선택된 개체 중 XData Tree 가 있는 Line/Poly 만
+                    using var rtr = db.TransactionManager.StartTransaction();
+                    ids = psr.Value.GetObjectIds()
+                        .Where(id => id.ObjectClass.DxfName is "LINE" or "LWPOLYLINE"
+                                     && JXdata.GetXdata(rtr.GetObject(id, OpenMode.ForRead), "Tree") != null)
+                        .ToArray();
+                    if (ids.Length == 0)
+                    {
+                        ed.WriteMessage("\n미리 선택된 개체에 XData Tree 가 있는 Line/Poly 가 없습니다.");
+                        return;
+                    }
+                }
+                else
+                {
+                    // 필터: XData Tree 가 있는 LINE, LWPOLYLINE
+                    SelectionFilter sf = JSelFilter.MakeFilterTypesRegs("LINE,LWPOLYLINE", "Tree");
+                    var pso = new PromptSelectionOptions { MessageForAdding = "\nGroup 지정할 Tree Line/Poly 선택: " };
 
-                PromptSelectionResult psr = ed.GetSelection(pso, sf);
-                if (psr.Status != PromptStatus.OK) return;
+                    psr = ed.GetSelection(pso, sf);
+                    if (psr.Status != PromptStatus.OK) return;
+                    ids = psr.Value.GetObjectIds();
+                }
 
                 // Group 문자열 입력 (공백 허용, 빈 문자열 불가)
                 var pstro = new PromptStringOptions("\n기록할 Group 값 입력: ") { AllowSpaces = true };
@@ -509,9 +530,9 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                 // RegApp "Group" 등록 확인 — 미등록 상태로 XData 를 쓰면 예외 발생
                 EnsureRegApp(tr, db, "Group");
 
-                foreach (SelectedObject so in psr.Value)
+                foreach (ObjectId id in ids)
                 {
-                    if (tr.GetObject(so.ObjectId, OpenMode.ForWrite) is not Entity ent) continue;
+                    if (tr.GetObject(id, OpenMode.ForWrite) is not Entity ent) continue;
 
                     // XData 지정: 1001(RegAppName) + 1000(문자열 값)
                     // 해당 RegApp 항목만 교체되며 다른 RegApp 의 XData 는 보존됨
@@ -524,7 +545,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                 }
 
                 tr.Commit();
-                ed.WriteMessage($"\nXData 지정 완료: {count}개 Line → RegApp \"Group\", 값 \"{groupValue}\"");
+                ed.WriteMessage($"\nXData 지정 완료: {count}개 Line/Poly → RegApp \"Group\", 값 \"{groupValue}\"");
             }
             catch (System.Exception ex)
             {

@@ -20,3 +20,6 @@
 | 2026-10-28 | 설치파일 `JArchitecture_Setup\Output\` 은 git 에서 제외(`.gitignore` + 기존 7개 `rm --cached`), 로컬에만 보관 | 회당 ~6MB 바이너리로 저장소 비대. ISCC 로 언제든 재생성 | backlog #2, 사용자 선택 |
 | 2026-10-28 | `급수관로결정1\` 은 `.gitignore`, `.claude\settings.json`(omnisharp-lsp 플러그인) 은 커밋 | 전자는 자체 `.git` 을 가진 별도 저장소 — 커밋하면 gitlink 로 깨짐 | backlog #3 |
 | 2026-10-28 | `Insert_UpDn`/`_All` 교차 판정은 3D 그대로 둔다(XY 투영 안 함). Z 가 어긋난 Line 은 `ZZERO` 로 평탄화 후 실행 | 높이가 안 맞는 도면은 다른 작업에도 문제 → 도면을 고친다. 필요해지면 추후 개발(backlog) | F-003 테스트 중 발생 |
+| 2026-11-07 | DUCTTREE Poly 는 Leaf 전용(열린 LWPOLYLINE), BFS 가 Poly 뒤로 이어가지 않는다. Poly 접합부 외곽선은 스킵 | 사용자 확정 — Root/Mid 는 반드시 Line. 외곽선 6개 명령이 Line 전용이라 지원 시 규모 큼 | F-008 |
+| 2026-11-07 | Poly 접합부도 외곽선 생성: 접합점에서 덕트와 수직·디퓨져 쪽 가상 Line 기준. 임시 Line 으로 `TryApply` 재사용 후 삭제, Poly 는 변경·분할 안 함. 대체: 2026-11-07 Poly 접합부 스킵 | 사용자 실도면 확인 후 요청. 6개 명령 재작성 없이 분할 옵션만 추가 | F-008 |
+| 2026-11-07 | DUCTTREE 는 Poly 도 Root 와 같은 레이어만 추적한다. 레이어가 다른 Poly 는 도면에서 레이어를 맞춘다 | 사용자 확정 — 다른 레이어는 추적하지 않는 것이 맞음 | F-008 |

@@ -13,6 +13,7 @@ namespace PipeLoad2
     /// <summary>
     /// Insert_Duct_Size — XData "Tree" Line 을 여러 개 선택하면 각 Line 중점에
     /// "{a}x{b}"(XData a, b 문자열 그대로) DBText 를 MiddleCenter 로 배치한다.
+    /// Line 에 XData "Group" 이 있으면 "{Group}:{a}x{b}" 로 표시한다.
     /// 글자 높이 = a / 2, a &lt; MinA 이거나 Line 길이 ≤ a × MinLenRatio 인 Line 은 표시하지 않는다.
     /// 생성한 Text 에는 XData "DuctSize" = 글자 그대로 기록한다.
     /// 회전은 Line 방향을 따르되 글자가 뒤집히지 않도록 (-90°, 90°] 로 맞춘다.
@@ -21,6 +22,13 @@ namespace PipeLoad2
     {
         private const double MinA = 300.0;   // 이 값 이상만 표시
         private const double MinLenRatio = 4.0;   // Line 길이 <= a × 이 값이면 표시 안 함
+
+        /// <summary>표시 글자 — Group 이 있으면 "SA:300x200", 없으면 "300x200". Duct_tag 와 공유.</summary>
+        internal static string SizeText(DBObject line, string aStr, string bStr)
+        {
+            string? group = JXdata.GetXdata(line, "Group");
+            return string.IsNullOrEmpty(group) ? $"{aStr}x{bStr}" : $"{group}:{aStr}x{bStr}";
+        }
 
         [CommandMethod("Insert_Duct_Size")]
         public void Cmd_InsertDuctSize()
@@ -73,7 +81,7 @@ namespace PipeLoad2
                     Point3d mid = line.StartPoint + (line.EndPoint - line.StartPoint) * 0.5;
                     var txt = new DBText
                     {
-                        TextString = $"{aStr}x{bStr}",
+                        TextString = SizeText(line, aStr, bStr),
                         Height = a / 2.0,
                         Rotation = rot,
                         Position = mid,

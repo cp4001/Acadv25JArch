@@ -20,12 +20,15 @@ namespace PipeLoad2
     public class DuctTreeBuilder
     {
         private const double TOLERANCE = 2.0;  // mm
+        private const int ArcFenceSteps = 8;   // Poly 곡선 구간 Fence 분할 수
+        private const double PolyFenceExtend = 10.0;  // mm — Poly 끝이 Block 외곽에 딱 닿은 경우 대비
 
         public enum DuctNodeType { Root, Mid, Leaf, Block }
 
         public class DuctNode
         {
-            public Line? Line { get; set; }
+            public Line? Line { get; set; }             // Poly Leaf 는 null
+            public bool IsPoly { get; set; }            // 열린 LWPOLYLINE Leaf — Root/Mid 불가
             public BlockReference? Block { get; set; }
             public string Handle { get; set; } = "";
             public DuctNode? Parent { get; set; }
@@ -41,11 +44,42 @@ namespace PipeLoad2
         // ---- 연결 그래프 ----
         private static bool Near(Point3d a, Point3d b) => a.DistanceTo(b) < TOLERANCE;
 
-        private static bool LinesConnected(Line l1, Line l2) =>
+        private static bool LinesConnected(Curve l1, Curve l2) =>
             Near(l1.StartPoint, l2.StartPoint) || Near(l1.StartPoint, l2.EndPoint) ||
             Near(l1.EndPoint,   l2.StartPoint) || Near(l1.EndPoint,   l2.EndPoint);
 
-        public Dictionary<string, List<string>> BuildLineConnections(List<Line> lines)
+        /// <summary>트리 구성 대상 곡선인지 — Line 또는 열린 LWPOLYLINE(Leaf 전용).</summary>
+        public static bool IsDuctCurve(Curve c) => c is Line || c is Polyline { Closed: false };
+
+        /// <summary>Poly 전체 경로를 Fence 용 점열로 변환. 곡선(bulge) 구간은 ArcFenceSteps 등분.</summary>
+        public static Point3dCollection GetPolyPath(Polyline pl)
+        {
+            var path = new Point3dCollection();
+            for (int i = 0; i < pl.NumberOfVertices - 1; i++)
+            {
+                int steps = pl.GetBulgeAt(i) == 0.0 ? 1 : ArcFenceSteps;
+                for (int k = 0; k < steps; k++)
+                    path.Add(pl.GetPointAtParameter(i + (double)k / steps));
+            }
+            path.Add(pl.EndPoint);
+            return path;
+        }
+
+        /// <summary>Fence 경로의 자유단을 진행 방향으로 PolyFenceExtend 만큼 연장한 사본을 반환.</summary>
+        private static Point3dCollection ExtendFreeEnd(Point3dCollection path, bool atStart)
+        {
+            var extended = new Point3dCollection();
+            foreach (Point3d p in path) extended.Add(p);
+
+            int end  = atStart ? 0 : extended.Count - 1;
+            int prev = atStart ? 1 : extended.Count - 2;
+            Vector3d dir = extended[end] - extended[prev];
+            if (dir.Length > 1e-6)
+                extended[end] = extended[end] + dir.GetNormal() * PolyFenceExtend;
+            return extended;
+        }
+
+        public Dictionary<string, List<string>> BuildLineConnections(List<Curve> lines)
         {
             var graph = new Dictionary<string, List<string>>();
             foreach (var l in lines) graph[l.Handle.ToString()] = new List<string>();
@@ -75,12 +109,14 @@ namespace PipeLoad2
         /// <summary>
         /// Root 에서 BFS 로 Tree 분석 → Leaf Line 의 중간점 ~ tp(타 Line 과 연결 없는 끝점)
         /// 구간을 SelectFence 로 훑어 걸쳐진 CMH Block 만 매핑.
+        /// Poly(polyPaths 의 키)는 항상 Leaf 로 끝나며 전체 경로를 Fence 로 쓴다.
         /// Transaction 밖에서 호출.
         /// </summary>
         public static Dictionary<string, string> MapLeafTerminalsToCmhBlocks(
             Editor ed,
             string rootHandle,
             List<(string handle, Point3d s, Point3d e)> lineEndpoints,
+            Dictionary<string, Point3dCollection> polyPaths,
             HashSet<string> cmhBlockHandles)
         {
             var map   = new Dictionary<string, string>();
@@ -115,6 +151,7 @@ namespace PipeLoad2
             while (queue.Count > 0)
             {
                 var cur = queue.Dequeue();
+                if (polyPaths.ContainsKey(cur)) continue;   // Poly 는 Leaf 전용 — 뒤로 이어가지 않음
                 foreach (var n in adj[cur])
                 {
                     if (!visited.Add(n)) continue;
@@ -141,21 +178,33 @@ namespace PipeLoad2
                 bool sConn = IsConnectedToOther(s, leafHandle, lineEndpoints);
                 bool eConn = IsConnectedToOther(e, leafHandle, lineEndpoints);
 
-                Point3d tp;
-                if (!sConn && eConn)       tp = s;
-                else if (sConn && !eConn)  tp = e;
+                Point3dCollection fence;
+                if (polyPaths.TryGetValue(leafHandle, out var polyPath))
+                {
+                    if (sConn && eConn)
+                        ed.WriteMessage($"\n  [MapLeaf] ⚠ Poly h={leafHandle} 양 끝이 모두 연결됨 — Poly 는 Mid 불가, Leaf 로 처리");
+                    ed.WriteMessage($"\n  [MapLeaf] Leaf#{leafIdx} h={leafHandle} Poly fence={polyPath.Count}점");
+                    fence = sConn != eConn ? ExtendFreeEnd(polyPath, atStart: eConn) : polyPath;
+                }
                 else
                 {
-                    ed.WriteMessage($"\n  [MapLeaf] Leaf#{leafIdx} h={leafHandle} skip (sConn={sConn}, eConn={eConn})");
-                    continue;
+                    Point3d tp;
+                    if (!sConn && eConn)       tp = s;
+                    else if (sConn && !eConn)  tp = e;
+                    else
+                    {
+                        ed.WriteMessage($"\n  [MapLeaf] Leaf#{leafIdx} h={leafHandle} skip (sConn={sConn}, eConn={eConn})");
+                        continue;
+                    }
+
+                    // Leaf Line 중간점 → tp 구간을 Fence 경로로 사용
+                    var mid = new Point3d((s.X + e.X) / 2.0, (s.Y + e.Y) / 2.0, (s.Z + e.Z) / 2.0);
+
+                    ed.WriteMessage($"\n  [MapLeaf] Leaf#{leafIdx} h={leafHandle} mid=({mid.X:F1},{mid.Y:F1}) tp=({tp.X:F1},{tp.Y:F1})");
+
+                    fence = new Point3dCollection { mid, tp };
                 }
 
-                // Leaf Line 중간점 → tp 구간을 Fence 경로로 사용
-                var mid = new Point3d((s.X + e.X) / 2.0, (s.Y + e.Y) / 2.0, (s.Z + e.Z) / 2.0);
-
-                ed.WriteMessage($"\n  [MapLeaf] Leaf#{leafIdx} h={leafHandle} mid=({mid.X:F1},{mid.Y:F1}) tp=({tp.X:F1},{tp.Y:F1})");
-
-                var fence = new Point3dCollection { mid, tp };
                 PromptSelectionResult psr;
                 try
                 {
@@ -197,7 +246,7 @@ namespace PipeLoad2
         }
 
         /// <summary>BFS 로 Tree 구성 + Leaf Line 하위에 Block 노드 부착. blockToLine 은 사전 매핑 주입.</summary>
-        public DuctNode BuildTree(Line rootLine, List<Line> allLines, List<BlockReference> allBlocks,
+        public DuctNode BuildTree(Line rootLine, List<Curve> allLines, List<BlockReference> allBlocks,
                                   Dictionary<string, string> blockToLine)
         {
             var lineMap     = allLines .ToDictionary(l => l.Handle.ToString(), l => l);
@@ -220,13 +269,15 @@ namespace PipeLoad2
             while (queue.Count > 0)
             {
                 var cur = queue.Dequeue();
+                if (cur.IsPoly) continue;   // Poly 는 Leaf 전용 — 뒤로 이어가지 않음
                 if (!connections.TryGetValue(cur.Handle, out var adj)) continue;
                 foreach (var h in adj)
                 {
                     if (!visited.Add(h)) continue;
                     var child = new DuctNode
                     {
-                        Line   = lineMap[h],
+                        Line   = lineMap[h] as Line,
+                        IsPoly = lineMap[h] is Polyline,
                         Handle = h,
                         Parent = cur,
                         Level  = cur.Level + 1
@@ -337,13 +388,13 @@ namespace PipeLoad2
         {
             if (node.Type != DuctNodeType.Block)
             {
-                Line? line = null;
+                Entity? line = null;   // Line 또는 Poly Leaf
                 try
                 {
                     var handle = new Handle(Convert.ToInt64(node.Handle, 16));
                     var id     = db.GetObjectId(false, handle, 0);
                     if (id != ObjectId.Null)
-                        line = tr.GetObject(id, OpenMode.ForWrite) as Line;
+                        line = tr.GetObject(id, OpenMode.ForWrite) as Entity;
                 }
                 catch { }
 

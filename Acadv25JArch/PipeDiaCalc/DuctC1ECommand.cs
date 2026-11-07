@@ -71,7 +71,8 @@ namespace PipeLoad2
         /// 검증 실패 시 false 반환(엔티티 생성 없음, Transaction 은 변경 없음), 성공 시 true + 결과 메시지.
         /// </summary>
         public bool TryApply(Transaction tr, Database db, Line aa, Line bb, Line cc,
-                             bool bbSlant, bool ccSlant, out string message)
+                             bool bbSlant, bool ccSlant, out string message,
+                             bool splitBb = true, bool splitCc = true)
         {
             message = "";
 
@@ -202,8 +203,8 @@ namespace PipeLoad2
             tr.CreateLayer(OutlineLayer, Yellow, LineWeight.ByLayer);
 
             // bb/cc 분리 (신규 Line 2개 + 원본 X측 끝점 이동), XData/속성 승계
-            SplitBranch(tr, btr, db, bb, X, b1, b2);
-            SplitBranch(tr, btr, db, cc, X, c1, c2);
+            if (splitBb) SplitBranch(tr, btr, db, bb, X, b1, b2);
+            if (splitCc) SplitBranch(tr, btr, db, cc, X, c1, c2);
 
             // aa 외곽선(Yellow) 9개 — 연속 수직 2 + 하부 수평 1 + Tab 3선 x 2
             int created = 0;

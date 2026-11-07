@@ -67,7 +67,7 @@ namespace PipeLoad2
         /// 대화형 선택 없이 Line 객체를 직접 받아 검증~계산~생성까지 처리 — DuctTreeOutlineCommand 등에서 재사용.
         /// 검증 실패 시 false 반환(엔티티 생성 없음, Transaction 은 변경 없음), 성공 시 true + 결과 메시지.
         /// </summary>
-        public bool TryApply(Transaction tr, Database db, Line a, Line b, out string message)
+        public bool TryApply(Transaction tr, Database db, Line a, Line b, out string message, bool splitBranch = true)
         {
             message = "";
 
@@ -162,7 +162,7 @@ namespace PipeLoad2
             CreateBranchSegment(tr, btr, db, X, a1, a);
 
             // [7장] b 3분할 (신규 X–b1, b1–b2 + 원본 X측 끝점 b2 이동, b 승계)
-            SplitBranch(tr, btr, db, b, X, b1, b2);
+            if (splitBranch) SplitBranch(tr, btr, db, b, X, b1, b2);
 
             // [8장] a 외곽선(Yellow) 6선
             int created = 0;
