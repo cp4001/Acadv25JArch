@@ -16,6 +16,6 @@
 | 확정 규칙 | DuctTree Poly 는 Leaf 전용, Root 와 같은 레이어만 추적. Root/Mid 는 Line 만 |
 | 설치파일 | `JArchitecture_Setup_11_07.exe` (17:25) = F-008~F-011 포함, F-007 제외 |
 | AddinManager | 잠금 수정판으로 번들 교체 (fork `cp4001/CadAddinManager` `jarch-acad2025`). XData 쓰는 명령은 실행 전 `(arxload "C:/Jarch25/JArchXData.arx")` 필요 |
-| 브랜치 | `master` 가 최신. `F-008` 은 병합 완료(삭제 가능), `F-007` 은 유지 |
+| 브랜치 | `master` 가 최신. `F-008` 은 병합 후 로컬·원격 삭제(2026-11-07), `F-007` 은 유지 |
 
 **재개 프롬프트:** "/devlog resume" (F-007 이어서 하려면 "F-007 재개")
