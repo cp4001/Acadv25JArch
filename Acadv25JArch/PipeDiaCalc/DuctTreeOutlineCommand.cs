@@ -175,6 +175,15 @@ namespace PipeLoad2
         {
             var plan = new JunctionPlan { Node = node };
 
+            // 외곽선 명령은 Line 전용이고 분기를 분할하므로 Poly Leaf 가 달린 접합부는 대상에서 제외한다.
+            var polyChild = lineChildren.FirstOrDefault(c => c.IsPoly);
+            if (polyChild != null)
+            {
+                plan.Pattern = OutlinePattern.Unsupported;
+                plan.Reason = $"Poly Leaf[{polyChild.Handle}] 가 달린 접합부 — 외곽선 미지원, 수동 처리.";
+                return plan;
+            }
+
             Line? nodeLine = GetLine(tr, db, node, OpenMode.ForRead);
             if (nodeLine == null)
             {

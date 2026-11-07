@@ -128,8 +128,11 @@ return rb != null;
 ### `DrawPolyCfm`
 `DrawBlockDisp` 와 동일 구조 — `JXdata.GetXdata(pl, "CFM")` 조회 → `pl.GeometricExtents` 중심 → `MText` (`"{cfm} CFM"`, TextHeight = `shortSide × 0.1`, ACI 4) → `mtext.WorldDraw(wd)`.
 
+### `DrawPolyTree` (2026-11-07, F-008)
+`_polyTreeInstance`(`Mode.PolyTree`, `SetXDataFilter("Tree")`) 전용. `Tree == "Leaf"` 인 DUCTTREE Poly Leaf 만 처리 — `SubEntityTraits` 를 Leaf 색상·LineWeight 로 바꾼 뒤 `base.WorldDraw` 로 곡선까지 그대로 렌더, trait 원복 후 Poly 길이 중앙(`GetPointAtDist`)에 `"Disp"` 라벨(`DrawLabelAt`, 방향은 접선).
+
 ### Unregister
-- 세 인스턴스 모두 `RemoveOverrule` + `SetXDataFilter(null)` + 필드 null 화
+- 모든 인스턴스 `RemoveOverrule` + `SetXDataFilter(null)` + 필드 null 화
 - `Editor.Regen()`
 
 ---
@@ -194,6 +197,7 @@ return rb != null;
 
 ## 8. 변경 이력
 
+- **2026-11-07** DUCTTREE Poly Leaf 표시 (F-008) — `_polyTreeInstance`/`Mode.PolyTree`/`DrawPolyTree` 추가, `DrawCenterLabel` 의 라벨 렌더를 `DrawLabelAt` 으로 분리.
 - **2026-09-19** Polyline `"CFM"` 오버룰 추가 — `_polyInstance` 신설(`AddOverrule(Polyline)` + `SetXDataFilter("CFM")`), `DrawPolyCfm`, `RegisterRegApp("CFM")`. `bool _isBlockMode` → `enum Mode { Line, Block, Poly }` 교체. `Polyline` using 별칭 추가. 짝 명령 `To_RoomCFM` 은 같은 날 `RoomCalc.cs` 에 신설. 문서 원본을 Obsidian → `Acadv25JArch\Overrule\TreeOverrule.md` 로 이관.
 - **2026-05-20** DuctTree `Disp` 포맷 갱신(`{a}x{b}` → `{a}x{b}[{Total_CMH}]`) — `TreeOverrule` 코드 변경 없이 새 포맷 자동 반영 (Disp 값 그대로 사용). 예시 라벨 `"600x400[1234.5]"`.
 - **2026-05-19** Line `"Disp"` 라벨 최우선 분기 추가 — `DrawLineTree` 라벨 합성 직전에 `JXdata.GetXdata(line, "Disp")` 검사 → non-empty 면 그 값을 그대로 사용 (DuctTree 의 `"{a}x{b}"` 사이즈 표시용). 기존 `15A`/`Total15A` 분기는 그대로 보존 (LineTree/FCU 는 Line `Disp` 미기록이라 충돌 없음).

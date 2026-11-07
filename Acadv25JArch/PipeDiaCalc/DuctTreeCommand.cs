@@ -29,17 +29,18 @@ namespace PipeLoad2
 
             try
             {
-                // 1. Line + Block 통합 선택 (필터: LINE, INSERT)
+                // 1. Line + Leaf Poly + Block 통합 선택 (필터: LINE, LWPOLYLINE, INSERT)
                 TypedValue[] filter =
                 {
                     new TypedValue((int)DxfCode.Operator, "<OR"),
                     new TypedValue((int)DxfCode.Start,    "LINE"),
+                    new TypedValue((int)DxfCode.Start,    "LWPOLYLINE"),
                     new TypedValue((int)DxfCode.Start,    "INSERT"),
                     new TypedValue((int)DxfCode.Operator, "OR>")
                 };
                 var selFilter = new SelectionFilter(filter);
                 var selOpts   = new PromptSelectionOptions
-                { MessageForAdding = "\nLine + 디퓨져 Block 들을 선택하세요: " };
+                { MessageForAdding = "\nLine(Leaf 는 Poly 가능) + 디퓨져 Block 들을 선택하세요: " };
                 var psr = ed.GetSelection(selOpts, selFilter);
                 if (psr.Status != PromptStatus.OK) return;
 
@@ -54,6 +55,7 @@ namespace PipeLoad2
                 string rootLayer;
                 string rootHandle;
                 var lineEndpoints   = new List<(string handle, Point3d s, Point3d e)>();
+                var polyPaths       = new Dictionary<string, Point3dCollection>();
                 var cmhBlockHandles = new HashSet<string>();
                 using (var trPre = db.TransactionManager.StartTransaction())
                 {
@@ -65,15 +67,19 @@ namespace PipeLoad2
                     foreach (var id in psr.Value.GetObjectIds())
                     {
                         var ent = trPre.GetObject(id, OpenMode.ForRead) as Entity;
-                        if (ent is Line ln && ln.Layer == rootLayer)
-                            lineEndpoints.Add((ln.Handle.ToString(), ln.StartPoint, ln.EndPoint));
+                        if (ent is Curve c && DuctTreeBuilder.IsDuctCurve(c) && c.Layer == rootLayer)
+                        {
+                            lineEndpoints.Add((c.Handle.ToString(), c.StartPoint, c.EndPoint));
+                            if (c is Polyline pl)
+                                polyPaths[pl.Handle.ToString()] = DuctTreeBuilder.GetPolyPath(pl);
+                        }
                         else if (ent is BlockReference br && DuctTreeBuilder.HasCmh(br))
                             cmhBlockHandles.Add(br.Handle.ToString());
                     }
                     trPre.Commit();
                 }
 
-                ed.WriteMessage($"\n[Pre] rootLayer={rootLayer}, lines={lineEndpoints.Count}, CMH blocks={cmhBlockHandles.Count}");
+                ed.WriteMessage($"\n[Pre] rootLayer={rootLayer}, lines={lineEndpoints.Count - polyPaths.Count}, polys={polyPaths.Count}, CMH blocks={cmhBlockHandles.Count}");
 
                 // 3.5. Zoom fit — 선택 Entity 전체가 화면에 보이도록
                 // (SelectFence 가 뷰포트 범위 기준이므로 분석 전 필수)
@@ -81,7 +87,7 @@ namespace PipeLoad2
 
                 // 4. Tree 분석 → Leaf Line 중간점~tp 구간 Fence 로 CMH Block 매핑
                 var blockToLine = DuctTreeBuilder.MapLeafTerminalsToCmhBlocks(
-                    ed, rootHandle, lineEndpoints, cmhBlockHandles);
+                    ed, rootHandle, lineEndpoints, polyPaths, cmhBlockHandles);
 
                 // 5. Main Transaction — Entity 재취득 (CMH 없는 Block 은 제외)
                 using (var tr = db.TransactionManager.StartTransaction())
@@ -91,8 +97,8 @@ namespace PipeLoad2
 
                     var lines = psr.Value.GetObjectIds()
                         .Select(id => tr.GetObject(id, OpenMode.ForRead) as Entity)
-                        .OfType<Line>()
-                        .Where(l => l.Layer == rootLine.Layer)
+                        .OfType<Curve>()
+                        .Where(c => DuctTreeBuilder.IsDuctCurve(c) && c.Layer == rootLine.Layer)
                         .ToList();
 
                     var blocks = psr.Value.GetObjectIds()
@@ -111,6 +117,8 @@ namespace PipeLoad2
                     int totalDiffuser = builder.CountBlockNodes(rootNode);
                     int totalLines    = builder.CountLineNodes(rootNode);
                     ed.WriteMessage($"\n[DuctTree] Line: {totalLines}개, Diffuser: {totalDiffuser}개, Root 총 풍량: {rootNode.Load:F1} CMH");
+                    if (totalLines < lines.Count)
+                        ed.WriteMessage($"\n[DuctTree] ⚠ 트리에 포함되지 않은 Line/Poly {lines.Count - totalLines}개 (Poly 뒤에 이어진 선은 탐색하지 않음)");
 
                     tr.Commit();
 

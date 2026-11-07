@@ -17,13 +17,15 @@ namespace PipeLoad2
     /// Line: XData "Tree" (Root/Mid/Leaf) → 색상/LineWeight + 라벨 오버레이.
     /// BlockReference: XData "Disp" → 블록 Geo 센터에 짧은변/2 크기 Red 텍스트.
     /// Polyline: XData "CFM" → 폴리 Geo 센터에 풍량 텍스트.
-    /// 세 인스턴스(Line용, Block용, Poly용)를 각자 SetXDataFilter 와 함께 등록.
+    /// Polyline: XData "Tree" (Leaf) → Leaf 색상/LineWeight + "Disp" 라벨 (DUCTTREE Poly Leaf).
+    /// 네 인스턴스(Line용, Block용, Poly CFM용, Poly Tree용)를 각자 SetXDataFilter 와 함께 등록.
     /// </summary>
     public class TreeDrawOverrule : DrawableOverrule
     {
         private static TreeDrawOverrule? _lineInstance;
         private static TreeDrawOverrule? _blockInstance;
         private static TreeDrawOverrule? _polyInstance;
+        private static TreeDrawOverrule? _polyTreeInstance;
 
         private const string XDATA_TREE_NAME = "Tree";
         private const string XDATA_DISP_NAME = "Disp";
@@ -39,9 +41,9 @@ namespace PipeLoad2
         private const double LABEL_TEXT_HEIGHT = 30.0;
         private const short  LABEL_COLOR_ACI   = 7;  // White
 
-        public static bool IsRegistered => _lineInstance != null || _blockInstance != null || _polyInstance != null;
+        public static bool IsRegistered => _lineInstance != null || _blockInstance != null || _polyInstance != null || _polyTreeInstance != null;
 
-        private enum Mode { Line, Block, Poly }
+        private enum Mode { Line, Block, Poly, PolyTree }
         private readonly Mode _mode;
 
         private TreeDrawOverrule(Mode mode) { _mode = mode; }
@@ -62,6 +64,10 @@ namespace PipeLoad2
             Overrule.AddOverrule(RXObject.GetClass(typeof(Polyline)), _polyInstance, false);
             _polyInstance.SetXDataFilter(XDATA_CFM_NAME);
 
+            _polyTreeInstance = new TreeDrawOverrule(Mode.PolyTree);
+            Overrule.AddOverrule(RXObject.GetClass(typeof(Polyline)), _polyTreeInstance, false);
+            _polyTreeInstance.SetXDataFilter(XDATA_TREE_NAME);
+
             Overrule.Overruling = true;
 
             var doc = Application.DocumentManager.MdiActiveDocument;
@@ -72,6 +78,7 @@ namespace PipeLoad2
                 doc.Editor.WriteMessage($"\n✓ Line   (XData \"{XDATA_TREE_NAME}\") → Root/Mid/Leaf 색상 + 라벨");
                 doc.Editor.WriteMessage($"\n✓ Block  (XData \"{XDATA_DISP_NAME}\") → Geo 센터 Red 텍스트(짧은변/2)");
                 doc.Editor.WriteMessage($"\n✓ Poly   (XData \"{XDATA_CFM_NAME}\") → Geo 센터 Cyan 풍량 텍스트");
+                doc.Editor.WriteMessage($"\n✓ Poly   (XData \"{XDATA_TREE_NAME}\") → Leaf 색상 + 라벨");
                 doc.Editor.WriteMessage("\n========================================");
             }
         }
@@ -96,6 +103,12 @@ namespace PipeLoad2
                 _polyInstance.SetXDataFilter(null);
                 _polyInstance = null;
             }
+            if (_polyTreeInstance != null)
+            {
+                Overrule.RemoveOverrule(RXObject.GetClass(typeof(Polyline)), _polyTreeInstance);
+                _polyTreeInstance.SetXDataFilter(null);
+                _polyTreeInstance = null;
+            }
 
             var doc = Application.DocumentManager.MdiActiveDocument;
             doc?.Editor.WriteMessage("\n[TreeOverrule] 제거됨");
@@ -111,7 +124,7 @@ namespace PipeLoad2
             {
                 Mode.Block => XDATA_DISP_NAME,
                 Mode.Poly  => XDATA_CFM_NAME,
-                _          => XDATA_TREE_NAME
+                _          => XDATA_TREE_NAME   // Line, PolyTree
             };
             try
             {
@@ -127,8 +140,40 @@ namespace PipeLoad2
             {
                 Mode.Block => DrawBlockDisp(drawable, wd),
                 Mode.Poly  => DrawPolyCfm(drawable, wd),
+                Mode.PolyTree => DrawPolyTree(drawable, wd),
                 _          => DrawLineTree(drawable, wd)
             };
+        }
+
+        /// <summary>DUCTTREE Poly Leaf — 본체는 Leaf trait 으로 base 렌더(곡선 구간 유지) + 길이 중앙에 "Disp" 라벨.</summary>
+        private bool DrawPolyTree(Drawable drawable, WorldDraw wd)
+        {
+            if (drawable is not Polyline pl || JXdata.GetXdata(pl, XDATA_TREE_NAME) != "Leaf")
+                return base.WorldDraw(drawable, wd);
+
+            short origColor = wd.SubEntityTraits.Color;
+            LineWeight origLW = wd.SubEntityTraits.LineWeight;
+
+            wd.SubEntityTraits.Color      = COLOR_LEAF;
+            wd.SubEntityTraits.LineWeight = LineWeight.LineWeight050;
+            bool result = base.WorldDraw(drawable, wd);
+
+            // trait 원복 — 라벨 실패/다음 Entity 로 누수 방지
+            wd.SubEntityTraits.Color      = origColor;
+            wd.SubEntityTraits.LineWeight = origLW;
+
+            try
+            {
+                string? disp = JXdata.GetXdata(pl, XDATA_DISP_NAME);
+                if (!string.IsNullOrEmpty(disp))
+                {
+                    Point3d center = pl.GetPointAtDist(pl.Length * 0.5);
+                    DrawLabelAt(center, pl.GetFirstDerivative(center), disp, LABEL_COLOR_ACI, wd);
+                }
+            }
+            catch { }
+
+            return result;
         }
 
         private bool DrawLineTree(Drawable drawable, WorldDraw wd)
@@ -314,14 +359,19 @@ namespace PipeLoad2
         {
             Point3d sp = line.StartPoint;
             Point3d ep = line.EndPoint;
-            Vector3d dir = ep - sp;
-            if (dir.Length < 1e-6) return;
-            dir = dir.GetNormal();
 
             Point3d center = new Point3d(
                 (sp.X + ep.X) * 0.5,
                 (sp.Y + ep.Y) * 0.5,
                 (sp.Z + ep.Z) * 0.5);
+
+            DrawLabelAt(center, ep - sp, text, aciColor, wd);
+        }
+
+        private static void DrawLabelAt(Point3d center, Vector3d dir, string text, short aciColor, WorldDraw wd)
+        {
+            if (dir.Length < 1e-6) return;
+            dir = dir.GetNormal();
 
             // 거꾸로 읽히지 않도록 ±90° 범위로 정규화
             double angle = System.Math.Atan2(dir.Y, dir.X);
