@@ -17,6 +17,7 @@ AutoCAD 2025 .NET 플러그인 — 건축 실·면적 집계, 급수/FCU 배관 
 | [F-004](features/F-004-Insert_Duct_Size.md) | Insert_Duct_Size — Tree Line 중앙에 axb 사이즈 Text | S | 2026-10-29 | 2026-10-29 | 완료 |
 | [F-005](features/F-005-Duct_tag.md) | Duct_tag — 지시선 + 덕트 사이즈 Text 태그 | S | 2026-10-29 | 2026-10-29 | 완료 |
 | [F-006](features/F-006-Duct_tag-크기조정.md) | Duct_tag — 글자 0.8a, 수평 꺾은선 a/2, 글자 앞 공백 | S | 2026-10-29 | 2026-10-29 | 완료 |
+| F-007 (브랜치 `F-007` 의 `docs/dev/features/F-007-Duct_ToRevit.md`) | AutoCAD → Revit 덕트 생성 (Duct_ToRevit) | M | 2026-11-06 | | 보류 (브랜치 `F-007`) |
 | [F-008](features/F-008-DuctTree-Poly-Leaf.md) | DuctTree Leaf 단 Polyline 지원 | M | 2026-11-07 | 2026-11-07 | 완료 |
 | [F-009](features/F-009-To_Group-Poly.md) | To_Group — Poly 지원, 미리 선택 반영 | S | 2026-11-07 | 2026-11-07 | 완료 |
 | [F-010](features/F-010-Duct-Size-Group.md) | Insert_Duct_Size·Duct_tag — XData Group 표시 | S | 2026-11-07 | 2026-11-07 | 완료 |
