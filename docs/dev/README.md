@@ -20,6 +20,7 @@ AutoCAD 2025 .NET 플러그인 — 건축 실·면적 집계, 급수/FCU 배관 
 | [F-008](features/F-008-DuctTree-Poly-Leaf.md) | DuctTree Leaf 단 Polyline 지원 | M | 2026-11-07 | | 진행중 |
 | [F-009](features/F-009-To_Group-Poly.md) | To_Group — Poly 지원, 미리 선택 반영 | S | 2026-11-07 | 2026-11-07 | 완료 |
 | [F-010](features/F-010-Duct-Size-Group.md) | Insert_Duct_Size·Duct_tag — XData Group 표시 | S | 2026-11-07 | 2026-11-07 | 완료 |
+| [F-011](features/F-011-To_Group-Tree필터.md) | To_Group — XData Tree 선택 필터 | S | 2026-11-07 | 2026-11-07 | 완료 |
 
 ## 이관 전 이력
 

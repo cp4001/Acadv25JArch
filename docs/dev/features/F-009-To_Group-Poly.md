@@ -23,7 +23,7 @@
 | "Rag Group" 의 뜻 | XData RegApp `"Group"` (기존 `To_Group` 과 같은 키) |
 | GG 신규 명령 | 만들지 않음 — `To_Group` 수정으로 대체 (사용자 요청) |
 | "poly" 범위 | `LWPOLYLINE` (구형 `POLYLINE` 제외). 프로젝트 Poly 처리와 동일 |
-| Tree XData 조건 | 없음 — 추가 요청에 조건 없고 기존 `To_Group` 도 없음 |
+| Tree XData 조건 | 없음 — 추가 요청에 조건 없고 기존 `To_Group` 도 없음 (잘못된 해석, [F-011](F-011-To_Group-Tree필터.md) 에서 Tree 필터 추가) |
 
 ## 범위
 

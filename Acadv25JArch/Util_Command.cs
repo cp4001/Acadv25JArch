@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AcadFunction;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -487,22 +488,23 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                 PromptSelectionResult psr = ed.SelectImplied();
                 if (psr.Status == PromptStatus.OK)
                 {
-                    // 미리 선택된 개체 중 Line/Poly 만
+                    // 미리 선택된 개체 중 XData Tree 가 있는 Line/Poly 만
+                    using var rtr = db.TransactionManager.StartTransaction();
                     ids = psr.Value.GetObjectIds()
-                        .Where(id => id.ObjectClass.DxfName is "LINE" or "LWPOLYLINE")
+                        .Where(id => id.ObjectClass.DxfName is "LINE" or "LWPOLYLINE"
+                                     && JXdata.GetXdata(rtr.GetObject(id, OpenMode.ForRead), "Tree") != null)
                         .ToArray();
                     if (ids.Length == 0)
                     {
-                        ed.WriteMessage("\n미리 선택된 개체에 Line/Poly 가 없습니다.");
+                        ed.WriteMessage("\n미리 선택된 개체에 XData Tree 가 있는 Line/Poly 가 없습니다.");
                         return;
                     }
                 }
                 else
                 {
-                    // 필터: LINE, LWPOLYLINE (지정 전이므로 XData 조건 없음)
-                    TypedValue[] tvs = [new((int)DxfCode.Start, "LINE,LWPOLYLINE")];
-                    var sf = new SelectionFilter(tvs);
-                    var pso = new PromptSelectionOptions { MessageForAdding = "\nGroup 지정할 Line/Poly 선택: " };
+                    // 필터: XData Tree 가 있는 LINE, LWPOLYLINE
+                    SelectionFilter sf = JSelFilter.MakeFilterTypesRegs("LINE,LWPOLYLINE", "Tree");
+                    var pso = new PromptSelectionOptions { MessageForAdding = "\nGroup 지정할 Tree Line/Poly 선택: " };
 
                     psr = ed.GetSelection(pso, sf);
                     if (psr.Status != PromptStatus.OK) return;

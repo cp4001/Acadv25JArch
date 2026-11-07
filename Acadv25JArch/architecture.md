@@ -291,7 +291,7 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | `GXD` | CadFunction.cs | XData 목록 조회 |
 | `BP1` | CadFunction.cs | 블럭 포인트 리셋 |
 | `ChangeXdataName` | ChangeXdataNameCommand.cs | 선택 객체 XData RegName 변경 |
-| `To_Group` | Util_Command.cs | 선택 Line/Poly(`LWPOLYLINE`) 에 입력 문자열을 XData `"Group"` 으로 기록. 미리 선택이 있으면 그중 Line/Poly 만 대상, 없으면 선택 요청 (2026-11-07 Poly·미리 선택 추가, F-009) |
+| `To_Group` | Util_Command.cs | XData `Tree` 가 있는 Line/Poly(`LWPOLYLINE`) 에 입력 문자열을 XData `"Group"` 으로 기록. 미리 선택이 있으면 그중 해당 개체만 대상, 없으면 선택 요청 (2026-11-07 Poly·미리 선택 F-009, Tree 필터 F-011) |
 | `TTG` | Overrule/TreeOverrule.cs | Tree XData 시각화 토글 (Line 색상/라벨 + Block `"Disp"` 텍스트 + Poly `"CFM"` 텍스트 — 2026-09-19 Poly 추가) |
 
 ---
