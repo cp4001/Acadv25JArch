@@ -8,3 +8,4 @@
 | 2026-10-29 | `Insert_Duct_Size` 재실행 시 기존 사이즈 Text 중복 검사/갱신 (Text XData `DuctSize` 로 식별) | F-004 |
 | 2026-10-29 | (보류 — 현 상태 유지 결정) 라이선스 우회 XData 기록 경로 정리: `XdataCopy`(`jCadExtention.cs:242` — `Duct_C1/C1E/C2/C2E/EE` 분할선·`SCL`·`DuctOutLine` 버튼), `.XData =` 직접 대입(`Duct_E` 중심 Arc, `To_Duct/To_Pipe/To_Group`, `ArchOverrule`, `ChangeXdataName` 등). 막을 땐 `JXdata.SetXdata` 경로로 바꾸거나 명령 입구 `MyPlugin.IsLicenseValid`. `Duct_tag` 는 XData 없어 만료와 무관 | 대화 (보안 점검) |
 | 2026-11-07 | `Insert_Duct_Size`·`Duct_tag`·`Insert_UpDn`·`Duct_ToRevit` Poly Leaf 대응 (현재 Line 전용) | F-008 |
+| 2026-11-07 | `RoomAA` 장비 탭 (실명 콤보 · 장비 종류 RPD/RAD/SPD/SAD · 시스템 타입 SA/RA/EA/OA · +ADD) — 사양 대기 | F-012 |

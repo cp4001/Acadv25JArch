@@ -46,6 +46,7 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | `Room_text_delete` | RoomCalc.cs | 룸 텍스트 제거 |
 | `To_RoomText` | RoomCalc.cs | 선택 TEXT → 룸 텍스트 지정 (XData `Arch=RoomText` / `RoomText` / `Disp=__`). 2026-09-19 RegApp 오타 `Archi`→`Arch` 수정 — `ArchOverrule`·`Room_text_delete` 필터와 동일 규약 |
 | `To_RoomCFM` | RoomCalc.cs | 선택 **닫힌** 폴리에 풍량 XData `"CFM"` 기록 (`PromptDoubleOptions` 입력값을 문자열로, `To_CeilingHeight` 패턴). `TTG` 가 폴리 중앙에 Cyan `"{값} CFM"` 으로 표시 (2026-09-19 신규) |
+| `RoomAA` | RoomEquip/RoomAACommand.cs | Room Poly(XData `Room`) 다중 선택 → 실/장비 탭 Form(모델리스). 실 탭 그리드: Room No(선택 순번) · 실명(Poly 안 `RoomText`, 여럿이면 최상단) · 난방부하 `HeatLoad` · 냉방부하 `CoolLoad` · 총풍량 `RoomQ` · 비고 `Etc`. 없는 XData 는 `" "` 로 생성, 있으면 읽어 표시. 상단 「저장」 → 4열 값을 각 Poly XData 에 기록(빈 칸 `" "`, 되읽기 검증, 잠긴 레이어·삭제 Poly 건너뜀). 장비 탭은 후속 (2026-11-07 F-012) |
 | `To_CeilingHeight` | RoomCalc.cs | 천장고 지정 |
 | `To_FloorHeight` | RoomCalc.cs | 바닥높이 지정 |
 | `To_Floor` | RoomCalc.cs | 바닥 지정 |

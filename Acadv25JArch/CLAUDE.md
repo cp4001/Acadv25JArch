@@ -62,6 +62,7 @@ AutoCAD 2025 .NET 플러그인 — 건축/배관 자동화 (급수배관 Tree �
 - Insert_Diffuser_Bypoly, Cmd_InsertDiffuserByPoly, PlaceRow, SelectSpec, SpecText, PolyCenter, IsInsidePoly, ray casting, 내부 판정, RowGap, RowStartFromLeft, 좌측 끝 기준, Room Poly, SelectAll, 배치 계획, Poly 센터, 다중 선택
 - Diffuser_Summary, DiffuserSummaryCommand, Cmd_DiffuserSummary, 덕트기구일람표, 디퓨저 집계, 일람표, RoomSum, TypeInfo, 원형디퓨져, 각형디퓨져, PAN TYPE, ANEMO TYPE, FormatSize, %%c, 실별 집계
 - Diffuser_Spec, Cmd_DiffuserSpec, TryParseSpec, Spec Text, 2400,RPD,RA,3, 형식 검증, 필드 4개, 쉼표 구분, Diffuser XData, SpecColorIndex, SpecObliqueDeg, ColorIndex 41, Oblique, 기울기, 라디안 변환
+- RoomAA, RoomAACommand, RoomEquipForm, 실/장비 탭, HeatLoad, CoolLoad, RoomQ, Etc, 난방부하, 냉방부하, 총풍량, dgvRoom, btnSave
 - RoomCalc, PolyRoomSet, To_RoomPoly, To_RoomText, To_RoomCFM, Cmd_Poly_Set_CFM, To_CeilingHeight, To_FloorHeight, Room_text_delete, Arch RegApp, Archi 오타, RoomText XData, CFM XData
 - DiaNote, DiaTree, DiaNoteVer, DiaNoteVer1, DiaNoteHor, DiaNoteHor1, SetDiaNoteBase, BaseLen, SusPipe, susDia
 - SupplyDiaCalc, ReturnDiaCalc, CalcMode, 관경결정, 관균등표법, 급수배관, 환탕, 순환탕수, 누적체적, H-W 공식, Hazen-Williams
