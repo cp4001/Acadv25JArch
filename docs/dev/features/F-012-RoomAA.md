@@ -47,6 +47,7 @@
 |---|---|
 | `Acadv25JArch/RoomEquip/RoomAACommand.cs` | 신규 — `RoomAA` 명령, `RoomRow`, `LoadKeys`. 명령창에 「기존 읽음 N / 생성 M」 출력 |
 | `Acadv25JArch/RoomEquip/RoomEquipForm.cs` / `.Designer.cs` | 신규 — TabControl(실/장비) + 상단 `pnlRoomTop`/`btnSave` + `dgvRoom` 6열(4열 편집). 저장: `LockDocument` + Handle 재획득 → XData 기록 → 되읽기 검증(arx 라이선스 차단 시 조용히 미기록되므로) |
+| `Acadv25JArch/RoomEquip/RoomEquipForm.resx` · `Acadv25JArch.csproj` | (2026-11-13) VS Designer 편집용 — `SubType Form`·`DependentUpon`·빈 resx 등록, Designer 주석 머리 정리 |
 | `Acadv25JArch/architecture.md` | §2 `RoomAA` 행 |
 | `Acadv25JArch/CLAUDE.md` | QMD 키워드 |
 | Confluence `131081` | §2 `RoomAA` 행 추가 (v19, 원본과 대조 완료) |

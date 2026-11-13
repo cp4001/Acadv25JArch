@@ -109,6 +109,15 @@
     <EmbeddedResource Update="PipeDiaCalc\DuctTreeForm.resx">
       <DependentUpon>DuctTreeForm.cs</DependentUpon>
     </EmbeddedResource>
+    <Compile Update="RoomEquip\RoomEquipForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="RoomEquip\RoomEquipForm.Designer.cs">
+      <DependentUpon>RoomEquipForm.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="RoomEquip\RoomEquipForm.resx">
+      <DependentUpon>RoomEquipForm.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
