@@ -69,7 +69,7 @@ namespace PipeLoad2
             new("SAD", "620x620", 375, 1250, 2000, 3300),
         };
 
-        private static readonly string[] Types = { "RPD", "SPD", "RAD", "SAD" };
+        internal static readonly string[] Types = { "RPD", "SPD", "RAD", "SAD" };
 
         // 급기(Supply) / 환기(Return) / 배기(Exhaust) / 외기(Outdoor Air)
         internal static readonly string[] SystemTypes = { "SA", "RA", "EA", "OA" };
@@ -81,11 +81,11 @@ namespace PipeLoad2
         private const double RowStartFromLeft = 800.0; // Bypoly: Poly 좌측 끝에서 이 거리부터 배치 시작
 
         /// <summary>Spec Text "2400,RPD,RA,3" 을 파싱한 결과.</summary>
-        private record SpecText(double Cfm, string Type, string SystemType, int Count);
+        internal record SpecText(double Cfm, string Type, string SystemType, int Count);
 
-        // Diffuser_Spec 지정 성공 시 Text 에 적용하는 표시 스타일
-        private const short SpecColorIndex = 41;      // ACI
-        private const double SpecObliqueDeg = 5.0;    // 기울기(도)
+        // Diffuser_Spec 지정 성공 시 Text 에 적용하는 표시 스타일 (RoomAA 장비 탭과 공유)
+        internal const short SpecColorIndex = 41;      // ACI
+        internal const double SpecObliqueDeg = 5.0;    // 기울기(도)
 
         [CommandMethod("Insert_Diffuser")]
         public void Cmd_InsertDiffuser()
@@ -249,7 +249,7 @@ namespace PipeLoad2
         /// "2400,RPD,RA,3" 을 검증해 CFM / Type / SystemType / 개수를 돌려준다.
         /// Type / SystemType 은 대소문자를 구분하지 않고 표준 표기(대문자)로 정규화한다.
         /// </summary>
-        private static bool TryParseSpec(string text, out SpecText? spec, out string reason)
+        internal static bool TryParseSpec(string text, out SpecText? spec, out string reason)
         {
             spec = null;
             reason = "";
