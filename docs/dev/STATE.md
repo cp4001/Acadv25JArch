@@ -12,7 +12,6 @@
 
 | 후보 | 출처 | 메모 |
 |---|---|---|
-| `RoomAA` 장비 그리드 행 삭제 → 도면 Spec Text 삭제 | F-013 backlog | 지금은 그리드 행에 Text Handle 이 없음 → `LoadEquip`/`btnEqAdd_Click` 에서 `Row.Tag` 에 Text Handle 저장부터 |
 | `RoomAA` 장비 종류 확장 (디퓨져 외 FCU 등) | F-013 후속 | `txtEqKind` 는 ReadOnly "디퓨져" 고정 |
 | `Insert_Diffuser_Bypoly` 로 RoomAA 가 만든 Text 배치 확인 | F-013 | 미확인 — 형식은 `Diffuser_Spec` 과 같아 동작 예상 |
 | Poly Leaf 대응 (`Insert_Duct_Size`·`Duct_tag`·`Insert_UpDn`·`Duct_ToRevit`) | F-008 backlog | |
