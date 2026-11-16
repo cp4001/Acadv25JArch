@@ -29,10 +29,10 @@ Duct/Pipe 계열 XData를 가진 엔티티(Line, Arc, LWPolyline) 1개를 선택
 | 항목 | 값 |
 |------|-----|
 | 엔티티 타입 | `LINE, ARC, LWPOLYLINE` |
-| XData RegAppName | `Duct, Pipe, MainPipe, FirePipe` |
+| XData RegAppName | 조건 없음 (2026-11-16 F-016 에서 제거 — 이전: `Duct, Pipe, MainPipe, FirePipe`) |
 | CommandFlags | `UsePickSet` (사전 선택 지원) |
 
-- 두 조건은 AND 결합: 해당 타입이면서 지정 RegApp XData를 가진 엔티티만 대상
+- 해당 타입이면 XData 유무와 관계없이 대상
 - 체인 추적 시 발견되는 엔티티도 동일 필터 조건을 만족해야 함
 
 ---

@@ -55,14 +55,19 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
 
             try
             {
-                // 필터: LINE/ARC/LWPOLYLINE + Pipe 계열 XData (AND 결합)
+                // 필터: LINE/ARC/LWPOLYLINE (XData 조건 없음 — F-016)
                 TypedValue[] tvs =
                 [
-                    new((int)DxfCode.Start, "LINE,ARC,LWPOLYLINE"),
-                    new((int)DxfCode.ExtendedDataRegAppName, PIPE_REGAPPS)
+                    new((int)DxfCode.Start, "LINE,ARC,LWPOLYLINE")
                 ];
                 var sf = new SelectionFilter(tvs);
-                var pso = new PromptSelectionOptions { MessageForAdding = "\n시작 Entity 선택: " };
+                // SingleOnly: 1회 선택 후 Enter 없이 바로 진행
+                var pso = new PromptSelectionOptions
+                {
+                    MessageForAdding = "\n시작 Entity 선택: ",
+                    SingleOnly = true,
+                    SinglePickInSpace = true
+                };
 
                 PromptSelectionResult psr = ed.GetSelection(pso, sf);
                 if (psr.Status != PromptStatus.OK) return;
