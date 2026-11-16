@@ -25,6 +25,7 @@ AutoCAD 2025 .NET 플러그인 — 건축 실·면적 집계, 급수/FCU 배관 
 | [F-012](features/F-012-RoomAA.md) | RoomAA — 실/장비 탭 Form (실 탭) | M | 2026-11-07 | 2026-11-07 | 완료 |
 | [F-013](features/F-013-RoomAA-장비탭.md) | RoomAA 장비 탭 — +ADD 로 Diffuser Spec Text 생성 | M | 2026-11-13 | 2026-11-13 | 완료 |
 | [F-014](features/F-014-RoomAA-층열.md) | RoomAA 실 탭 — 층(colFloor) 열, XData Floor 읽기 전용 | S | 2026-11-16 | 2026-11-16 | 완료 |
+| [F-015](features/F-015-RoomAA-실명클릭-Pan.md) | RoomAA 실 탭 — 실명 클릭 시 Poly 화면 중앙 이동(배율 유지) | S | 2026-11-16 | 2026-11-16 | 완료 |
 
 ## 이관 전 이력
 

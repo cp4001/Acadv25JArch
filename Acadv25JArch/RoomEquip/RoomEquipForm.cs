@@ -38,6 +38,30 @@ namespace PipeLoad2
             cmbEqType.SelectedIndex = 0;
             cmbEqSys.SelectedIndex = 0;
             LoadEquip();
+            dgvRoom.CellClick += dgvRoom_CellClick;
+        }
+
+        /// <summary>실명 셀 클릭 → 해당 Poly 를 화면 중앙으로 (배율 유지).</summary>
+        private void dgvRoom_CellClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex != colName.Index) return;
+            if (dgvRoom.Rows[e.RowIndex].Tag is not string h) return;
+            Database db = _doc.Database;
+            if (!db.TryGetObjectId(new Handle(Convert.ToInt64(h, 16)), out ObjectId id) || id.IsErased)
+            {
+                MessageBox.Show(this, "실 Poly 를 찾을 수 없습니다 (삭제됨).", "실 / 장비", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            Point3d center;
+            using (Transaction tr = db.TransactionManager.StartOpenCloseTransaction())
+            {
+                if (tr.GetObject(id, OpenMode.ForRead) is not Polyline pl) return;
+                Extents3d ext = pl.GeometricExtents;
+                center = ext.MinPoint + (ext.MaxPoint - ext.MinPoint) / 2;
+            }
+            using (_doc.LockDocument())
+                _doc.Editor.ZoomCenter(center);
+            _doc.Editor.UpdateScreen();
         }
 
         /// <summary>폼 열 때 각 실 Poly 안 기존 Spec Text(XData Diffuser) → dgvEquip (실 순서, 위→아래).</summary>
