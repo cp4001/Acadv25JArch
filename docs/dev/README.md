@@ -27,6 +27,8 @@ AutoCAD 2025 .NET 플러그인 — 건축 실·면적 집계, 급수/FCU 배관 
 | [F-014](features/F-014-RoomAA-층열.md) | RoomAA 실 탭 — 층(colFloor) 열, XData Floor 읽기 전용 | S | 2026-11-16 | 2026-11-16 | 완료 |
 | [F-015](features/F-015-RoomAA-실명클릭-Pan.md) | RoomAA 실 탭 — 실명 클릭 시 Poly 화면 중앙 이동(배율 유지) | S | 2026-11-16 | 2026-11-16 | 완료 |
 | [F-016](features/F-016-CSS-XData필터제거.md) | CSS — XData 필터 제거, 1개 선택 후 바로 진행 | S | 2026-11-16 | 2026-11-16 | 완료 |
+| [F-017](features/F-017-CSS-레이어제한.md) | CSS — 시작 Entity 와 같은 레이어만 추적 | S | 2026-11-16 | 2026-11-16 | 완료 |
+| [F-018](features/F-018-CSS-전체탐색-양방향T분기.md) | CSS — 화면 밖 체인 추적(SelectAll) + T분기 양방향 | S | 2026-11-16 | 2026-11-16 | 완료 |
 
 ## 이관 전 이력
 

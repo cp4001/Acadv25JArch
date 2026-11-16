@@ -20,9 +20,8 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
     public class CommandUtil
     {
         // ===== CSS 상수 =====
-        private const double CHAIN_END_TOL = 1.0;      // 끝점 일치 허용오차
-        private const double CHAIN_NEAR_TOL = 1.0;     // 근접(T분기) 허용 거리
-        private const double CHAIN_SEARCH_BOX = 10.0;  // 접속점 주변 검색 박스 반경
+        private const double CHAIN_END_TOL = 1.0;      // 끝점 일치 허용오차 (EC 등 공용)
+        private const double CHAIN_NEAR_TOL = 1.0;     // CSS 접속 허용 거리 (끝점이 상대 몸통/끝점에서 이 값 이내)
 
         // ===== ss2 상수 =====
         private const double SEARCH_WIDTH = 1.0;       // 검색/접촉/스냅 폭 ScaleFactor (offset 1: 실제 닿는 접속만)
@@ -72,62 +71,57 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                 PromptSelectionResult psr = ed.GetSelection(pso, sf);
                 if (psr.Status != PromptStatus.OK) return;
 
+                // 후보 전체 수집 — SelectAll 은 뷰포트 무관이라 화면 밖 체인도 추적 (F-018, Zoom 불필요)
+                // Editor 선택은 Transaction 밖에서 호출
+                PromptSelectionResult allRes = ed.SelectAll(sf);
+                if (allRes.Status != PromptStatus.OK) return;
+
                 var visited = new HashSet<ObjectId>();  // 방문(선택) 집합 — 순환 방지
-                var stack = new Stack<Point3d>();       // 탐색할 접속점 (Stack 기반 반복)
+                var queue = new Queue<(Curve c, Extents3d ext)>();  // 탐색할 Entity (반복 BFS)
+                var layers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);  // 시작 Entity 레이어 — 같은 레이어만 추적 (F-017)
+                var owners = new HashSet<ObjectId>();   // 시작 Entity 공간(모델/배치) — 다른 공간 제외
 
                 using var tr = db.TransactionManager.StartTransaction();
 
-                // 시작 Entity 등록 + 양 끝점 push
-                // Line/Arc/Polyline 모두 Curve 상속 → StartPoint/EndPoint 공통 사용
+                // 시작 Entity 등록 (Line/Arc/Polyline 모두 Curve 상속)
                 foreach (SelectedObject sObj in psr.Value)
                 {
                     if (tr.GetObject(sObj.ObjectId, OpenMode.ForRead) is not Curve startCurve)
                         continue;
+                    if (!TryExtents(startCurve, out Extents3d ext)) continue;
                     if (!visited.Add(sObj.ObjectId)) continue;
-
-                    stack.Push(startCurve.StartPoint);
-                    stack.Push(startCurve.EndPoint);
+                    layers.Add(startCurve.Layer);
+                    owners.Add(startCurve.OwnerId);
+                    queue.Enqueue((startCurve, ext));
                 }
 
-                // Stack 기반 반복 탐색 (재귀 대신 — 긴 체인 StackOverflow 방지)
-                while (stack.Count > 0)
+                // 같은 레이어·같은 공간 후보만 메모리에 보관
+                var cands = new List<(ObjectId id, Curve c, Extents3d ext)>();
+                foreach (ObjectId id in allRes.Value.GetObjectIds())
                 {
-                    Point3d pt = stack.Pop();
+                    if (visited.Contains(id)) continue;
+                    if (tr.GetObject(id, OpenMode.ForRead) is not Curve c) continue;
+                    if (!layers.Contains(c.Layer) || !owners.Contains(c.OwnerId)) continue;  // 레이어 다르면 제외
+                    if (!TryExtents(c, out Extents3d ext)) continue;
+                    cands.Add((id, c, ext));
+                }
 
-                    // 접속점 주변 후보 검색 (Crossing Window)
-                    var pLow = new Point3d(pt.X - CHAIN_SEARCH_BOX, pt.Y - CHAIN_SEARCH_BOX, 0.0);
-                    var pHigh = new Point3d(pt.X + CHAIN_SEARCH_BOX, pt.Y + CHAIN_SEARCH_BOX, 0.0);
+                // Entity 단위 BFS — 연결 판정 양방향 (F-018):
+                //   ① 현재 Entity 끝점이 후보 몸통 위 (끝점-끝점 포함, 현재 → 후보 T분기)
+                //   ② 후보 끝점이 현재 Entity 몸통 위 (주관 중간·Poly 꼭짓점에 붙은 분기)
+                while (queue.Count > 0)
+                {
+                    var (cur, curExt) = queue.Dequeue();
 
-                    PromptSelectionResult res = ed.SelectCrossingWindow(pLow, pHigh, sf);
-                    if (res.Status != PromptStatus.OK) continue;
-
-                    foreach (SelectedObject so in res.Value)
+                    foreach (var k in cands)
                     {
-                        if (visited.Contains(so.ObjectId)) continue;
-                        if (tr.GetObject(so.ObjectId, OpenMode.ForRead) is not Curve cand)
-                            continue;
+                        if (visited.Contains(k.id)) continue;
+                        if (!ExtentsNear(curExt, k.ext, CHAIN_NEAR_TOL)) continue;  // bbox 선필터
 
-                        // 1) 끝점-끝점 일치 → 반대편 끝점으로 계속 진행
-                        if (cand.StartPoint.DistanceTo(pt) <= CHAIN_END_TOL)
+                        if (EndOnBody(cur, k.c) || EndOnBody(k.c, cur))
                         {
-                            visited.Add(so.ObjectId);
-                            stack.Push(cand.EndPoint);
-                        }
-                        else if (cand.EndPoint.DistanceTo(pt) <= CHAIN_END_TOL)
-                        {
-                            visited.Add(so.ObjectId);
-                            stack.Push(cand.StartPoint);
-                        }
-                        // 2) 근접 접속(T분기): 접속점 → 후보 몸통 수직 투영 (구간 내, extend=false)
-                        else
-                        {
-                            Point3d proj = cand.GetClosestPointTo(pt, false);
-                            if (proj.DistanceTo(pt) <= CHAIN_NEAR_TOL)
-                            {
-                                visited.Add(so.ObjectId);
-                                stack.Push(cand.StartPoint);  // T분기는 양 끝점 모두 진행
-                                stack.Push(cand.EndPoint);
-                            }
+                            visited.Add(k.id);
+                            queue.Enqueue((k.c, k.ext));
                         }
                     }
                 }
@@ -143,6 +137,23 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
             {
                 ed.WriteMessage($"\n오류 발생: {ex.Message}");
             }
+        }
+
+        // CSS — a 의 끝점(Start/End) 중 하나가 b 몸통에서 CHAIN_NEAR_TOL 이내인가 (구간 내, extend=false)
+        private static bool EndOnBody(Curve a, Curve b) =>
+            b.GetClosestPointTo(a.StartPoint, false).DistanceTo(a.StartPoint) <= CHAIN_NEAR_TOL ||
+            b.GetClosestPointTo(a.EndPoint, false).DistanceTo(a.EndPoint) <= CHAIN_NEAR_TOL;
+
+        // CSS — 두 bbox 가 XY 에서 tol 이내로 겹치는가
+        private static bool ExtentsNear(Extents3d a, Extents3d b, double tol) =>
+            a.MinPoint.X - tol <= b.MaxPoint.X && b.MinPoint.X - tol <= a.MaxPoint.X &&
+            a.MinPoint.Y - tol <= b.MaxPoint.Y && b.MinPoint.Y - tol <= a.MaxPoint.Y;
+
+        // CSS — GeometricExtents (길이 0 등 퇴화 Entity 는 예외 → false)
+        private static bool TryExtents(Entity e, out Extents3d ext)
+        {
+            try { ext = e.GeometricExtents; return true; }
+            catch (Autodesk.AutoCAD.Runtime.Exception) { ext = default; return false; }
         }
 
         // CSS — 명령 종료 후 Idle 시점 선택 핸들러 (1회 실행 후 자기 해제)

@@ -1,6 +1,6 @@
 # CSS 커맨드 사양서 — Duct/Pipe 체인 선택 (SelectChain)
 
-- **문서 버전**: v1.1 (확정)
+- **문서 버전**: v1.2 (2026-11-16 — §8 변경 사항 참조, §4 의 SelectCrossingWindow·단방향 서술은 v1.1 기록)
 - **작성일**: 2026-07-06
 - **커맨드명**: `CSS`
 - **네임스페이스**: PipeLoad2 (프로젝트에 맞게 조정)
@@ -34,6 +34,7 @@ Duct/Pipe 계열 XData를 가진 엔티티(Line, Arc, LWPolyline) 1개를 선택
 
 - 해당 타입이면 XData 유무와 관계없이 대상
 - 체인 추적 시 발견되는 엔티티도 동일 필터 조건을 만족해야 함
+- **레이어**: 시작 엔티티와 같은 레이어(대소문자 무시)만 추적, 다르면 제외 (2026-11-16 F-017). 시작 엔티티가 여러 개면 그 레이어들 전체
 
 ---
 
@@ -121,15 +122,25 @@ CSS 실행
 |------|--------|---------------|
 | Q1 | 1안 | 끝점 일치 허용오차 `CHAIN_END_TOL = 1.0` |
 | Q2 | 1안 | 근접(T분기) 허용 거리 = 끝점 허용오차와 동일 `CHAIN_NEAR_TOL = 1.0` |
-| Q3 | 1안 | 단방향 — 접속점 → 후보 몸통 수직 투영 `GetClosestPointTo(pt, false)` |
-| Q4 | 1안 | `SelectCrossingWindow` — 접속점 중심 박스 검색 `CHAIN_SEARCH_BOX = 10.0` |
+| Q3 | ~~1안~~ → **2안** (v1.2) | 양방향 — 내 끝점 → 후보 몸통, 후보 끝점 → 내 몸통 모두 인정 |
+| Q4 | ~~1안~~ → **변경** (v1.2) | `SelectAll` 로 후보 전체 수집 후 메모리에서 bbox 선필터 + 판정 (`CHAIN_SEARCH_BOX` 삭제) |
 | Q5 | 2안 | 다중 시작 엔티티 허용 (각 체인 모두 선택) |
-| Q6 | 2안 | Stack 기반 반복 (재귀 대신 — 긴 체인 StackOverflow 방지) |
+| Q6 | 2안 → v1.2 Queue | Entity 단위 Queue BFS (재귀 없음) |
 
 - 추가 확정: Line/Arc/Polyline 을 `Curve` 로 통합 처리 (`is Curve` 패턴 매칭)
-- T분기 연결 시 후보의 양 끝점 모두 탐색 스택에 push (양방향 진행)
-- 알려진 제약: `SelectCrossingWindow` 는 현재 화면에 보이는 영역만 검색
-  (AutoCAD 선택 API 공통 제약) → 실행 전 Zoom Extents 권장
+- ~~알려진 제약: `SelectCrossingWindow` 는 현재 화면에 보이는 영역만 검색 → 실행 전 Zoom Extents 권장~~ — v1.2 에서 해소
+
+## 8. v1.2 변경 (2026-11-16, F-016~F-018)
+
+| 항목 | 내용 |
+|---|---|
+| XData 필터 | 제거 — `LINE,ARC,LWPOLYLINE` 이면 대상 (F-016) |
+| 시작 선택 | `SingleOnly`+`SinglePickInSpace` — 1회 선택 후 Enter 없이 진행 (F-016) |
+| 레이어 | 시작 엔티티 레이어(대소문자 무시)만 추적 (F-017) |
+| 후보 수집 | `ed.SelectAll(sf)` 1회 (Transaction 밖, 뷰포트 무관) → 화면 밖 체인도 추적, Zoom 불필요. 시작 엔티티와 같은 레이어·같은 공간(`OwnerId`)만 보관 (F-018) |
+| 연결 판정 | `EndOnBody(cur, k) \|\| EndOnBody(k, cur)` — 한쪽 끝점이 상대 몸통에서 `CHAIN_NEAR_TOL(1.0)` 이내 (`GetClosestPointTo(pt, false)`). 끝점-끝점·T분기·주관 중간/Poly 꼭짓점에 붙은 분기 모두 포함 (F-018) |
+| 선필터 | `GeometricExtents` XY bbox 가 tol 이내로 겹칠 때만 판정. extents 예외(퇴화 엔티티)는 제외 |
+| 성능 | 후보 N × 체인 M bbox 비교 — 같은 레이어 엔티티가 매우 많으면 느려질 수 있음 |
 
 ### 이하 원 질문 기록 (참고용)
 

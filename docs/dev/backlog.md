@@ -8,5 +8,4 @@
 | 2026-10-29 | `Insert_Duct_Size` 재실행 시 기존 사이즈 Text 중복 검사/갱신 (Text XData `DuctSize` 로 식별) | F-004 |
 | 2026-10-29 | (보류 — 현 상태 유지 결정) 라이선스 우회 XData 기록 경로 정리: `XdataCopy`(`jCadExtention.cs:242` — `Duct_C1/C1E/C2/C2E/EE` 분할선·`SCL`·`DuctOutLine` 버튼), `.XData =` 직접 대입(`Duct_E` 중심 Arc, `To_Duct/To_Pipe/To_Group`, `ArchOverrule`, `ChangeXdataName` 등). 막을 땐 `JXdata.SetXdata` 경로로 바꾸거나 명령 입구 `MyPlugin.IsLicenseValid`. `Duct_tag` 는 XData 없어 만료와 무관 | 대화 (보안 점검) |
 | 2026-11-07 | `Insert_Duct_Size`·`Duct_tag`·`Insert_UpDn`·`Duct_ToRevit` Poly Leaf 대응 (현재 Line 전용) | F-008 |
-| 2026-11-16 | `CSS` — `SelectCrossingWindow` 전 Zoom fit 없음(화면 밖으로 이어진 체인 끊김) | F-016 분석 |
-| 2026-11-16 | `CSS` — T분기 한 방향만 감지: 선택된 선/Poly 꼭짓점·중간에 끝점이 붙은 분기 누락 | F-016 분석 |
+| 2026-11-16 | `CSS` 대형 도면 속도 확인 (같은 레이어 후보 N × 체인 M bbox 비교) | F-018 |
