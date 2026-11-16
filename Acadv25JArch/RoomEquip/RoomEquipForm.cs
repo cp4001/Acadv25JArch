@@ -26,7 +26,7 @@ namespace PipeLoad2
             _rooms = rows;
             foreach (var r in rows)
             {
-                int i = dgvRoom.Rows.Add(r.No, r.Name, r.Heat, r.Cool, r.RoomQ, r.Etc);
+                int i = dgvRoom.Rows.Add(r.No, r.Name, r.Floor, r.Heat, r.Cool, r.RoomQ, r.Etc);
                 dgvRoom.Rows[i].Tag = r.Handle;
             }
 
@@ -198,7 +198,7 @@ namespace PipeLoad2
                         pl.UpgradeOpen();
                         for (int i = 0; i < RoomAACommand.LoadKeys.Length; i++)
                         {
-                            string v = Convert.ToString(row.Cells[i + 2].Value)?.Trim() ?? "";
+                            string v = Convert.ToString(row.Cells[colHeat.Index + i].Value)?.Trim() ?? "";
                             if (v.Length == 0) v = " ";
                             JXdata.SetXdata(pl, RoomAACommand.LoadKeys[i], v);
                             // arx 는 라이선스 차단 시 기록 없이 성공 반환 → 되읽어 확인

@@ -22,6 +22,7 @@ namespace PipeLoad2
             dgvRoom = new DataGridView();
             colNo = new DataGridViewTextBoxColumn();
             colName = new DataGridViewTextBoxColumn();
+            colFloor = new DataGridViewTextBoxColumn();
             colHeat = new DataGridViewTextBoxColumn();
             colCool = new DataGridViewTextBoxColumn();
             colRoomQ = new DataGridViewTextBoxColumn();
@@ -90,7 +91,7 @@ namespace PipeLoad2
             dgvRoom.AllowUserToAddRows = false;
             dgvRoom.AllowUserToDeleteRows = false;
             dgvRoom.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvRoom.Columns.AddRange(new DataGridViewColumn[] { colNo, colName, colHeat, colCool, colRoomQ, colEtc });
+            dgvRoom.Columns.AddRange(new DataGridViewColumn[] { colNo, colName, colFloor, colHeat, colCool, colRoomQ, colEtc });
             dgvRoom.Dock = DockStyle.Fill;
             dgvRoom.Location = new Point(4, 65);
             dgvRoom.Margin = new Padding(4, 5, 4, 5);
@@ -116,6 +117,14 @@ namespace PipeLoad2
             colName.Name = "colName";
             colName.ReadOnly = true;
             colName.Width = 180;
+            //
+            // colFloor
+            //
+            colFloor.HeaderText = "층";
+            colFloor.MinimumWidth = 8;
+            colFloor.Name = "colFloor";
+            colFloor.ReadOnly = true;
+            colFloor.Width = 80;
             // 
             // colHeat
             // 
@@ -394,6 +403,7 @@ namespace PipeLoad2
         private System.Windows.Forms.DataGridView dgvRoom;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNo;
         private System.Windows.Forms.DataGridViewTextBoxColumn colName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colFloor;
         private System.Windows.Forms.DataGridViewTextBoxColumn colHeat;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCool;
         private System.Windows.Forms.DataGridViewTextBoxColumn colRoomQ;

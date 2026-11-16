@@ -18,7 +18,7 @@ namespace PipeLoad2
     /// </summary>
     public class RoomAACommand
     {
-        public record RoomRow(int No, string Name, string Heat, string Cool, string RoomQ, string Etc, string Handle);
+        public record RoomRow(int No, string Name, string Floor, string Heat, string Cool, string RoomQ, string Etc, string Handle);
 
         internal static readonly string[] LoadKeys = { "HeatLoad", "CoolLoad", "RoomQ", "Etc" };
 
@@ -77,7 +77,9 @@ namespace PipeLoad2
                         vals[i] = v ?? "";
                     }
 
-                    rows.Add(new RoomRow(no++, name, vals[0], vals[1], vals[2], vals[3], pl.Handle.ToString()));
+                    // Floor 는 읽기만 (없으면 빈칸, 생성 안 함)
+                    string floor = JXdata.GetXdata(pl, "Floor") ?? "";
+                    rows.Add(new RoomRow(no++, name, floor, vals[0], vals[1], vals[2], vals[3], pl.Handle.ToString()));
                 }
                 tr.Commit();
             }
