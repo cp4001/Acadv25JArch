@@ -1,7 +1,7 @@
 # SS1 커맨드 사양서 — Base Line 교차 분할 + Target 끝점 스냅 (MultiLineSplit)
 
-- **문서 버전**: v2.0 (2026-07-08 커밋 "ss2 교차점 수정" 반영 — §9 참고)
-- **작성일**: 2026-07-06 (v2.0: 2026-07-09)
+- **문서 버전**: v2.1 (2026-11-17 F-019 — Target 후보 `SelectAll` 전체 수집, §8 참고)
+- **작성일**: 2026-07-06 (v2.0: 2026-07-09, v2.1: 2026-11-17)
 - **커맨드명**: `ss1` (**v1.x 당시 `ss2`에서 변경** — 커맨드명/메서드명 모두 "ss1" 계열로 통일, "CommandUtil 명령어 정리" 커밋)
 - **구성**: `SS1_MultiLineSplit_v2` 단일 메서드 (v2.0 — 별도 `InterPointsMLiness2` 함수는 제거되고 계획/적용 로직이 인라인화, `SplitBaseAt`/`CopyLineProperties`/`IsPointOnLineSegment` 헬퍼로 분리)
 - **대상 환경**: AutoCAD 2025 (.NET 8.0), Windows 11
@@ -85,12 +85,14 @@ Pipe/Duct 계열 Target Line을 찾아 다음 두 가지를 수행한다.
 ss1 실행
  ├─ 1. 검색 폭 = SEARCH_WIDTH 상수 (1.0, v2.0)
  ├─ 2. Base Line 선택 (GetSelection + sfBase, XData 조건 없음)
+ ├─ 2.5 Target 후보 전체 수집: SelectAll(sfTarget) — Transaction 밖, 뷰포트 무관 (v2.1)
  ├─ 3. 단일 Transaction 시작
+ │    ├─ Target 목록 (id, Line, GeometricExtents) 작성
  │    ├─ ── 1단계: 계획 수집 (도면 미변경) ──
  │    │    Base Line 별 루프:
- │    │    ├─ 수직 벡터 계산: (E-S).CrossProduct(Normal).GetNormal() × scaleFactor
- │    │    ├─ 폴리곤 4점 생성 (S±offset, E±offset) → SelectCrossingPolygon(sfTarget)
- │    │    │    └─ Status != OK → continue (다음 Base)
+ │    │    ├─ 후보 거르기 (v2.1 — 구 SelectCrossingPolygon 폭 2×scaleFactor 대체):
+ │    │    │    같은 OwnerId(공간) → bbox ±scaleFactor 겹침(ExtentsNear) →
+ │    │    │    LinesTouch: 구간끼리 교차 또는 끝점~상대 구간 거리 ≤ scaleFactor
  │    │    ├─ Target 후보별:
  │    │    │    ├─ IntersectWith(ExtendBoth) 교차점 계산 (1개 아니면 skip — 평행/공선)
  │    │    │    ├─ 교차점이 Base 구간 위인지 확인(IsPointOnLineSegment) — 아니면 skip
@@ -232,6 +234,7 @@ private static bool IsPointOnLineSegment(Line line, Point3d pt)
 | v1.1 | 2026-07-06 | Q1~Q6 전 항목 확정 (Q3=false). 커맨드명 ss2, 함수명 InterPointsMLiness2 로 확정. 구현 진행 가능 |
 | v1.2 | 2026-07-06 | 신규 시스템 전환 — 외부 유틸 의존 제거. 검색 폭 상수 SEARCH_WIDTH=300.0, 속성+XData 복사 자체 구현(CopyLineProperties), 방향 정규화 제거. Util_Command.cs 구현 완료 |
 | v2.0 | 2026-07-09 | 2026-07-08 커밋("ss2 교차점 수정") 반영. **커맨드명 `ss2`→`ss1`로 변경**(§9 없이 헤더에서 바로 반영). 구조를 "1단계 계획 수집(도면 미변경) → 2단계 적용" 으로 재작성해 `InterPointsMLiness2` 별도 함수 제거(인라인화) + `SplitBaseAt` 헬퍼 분리. `SEARCH_WIDTH` 300.0→1.0(실제 접촉만 인정). `THROUGH_EXCLUDE_DIST`(관통 제외) 신규 추가 |
+| v2.1 | 2026-11-17 | F-019. `SelectCrossingPolygon`(뷰포트 기준 — 화면 밖 Base 는 Target 0건)을 없애고 Transaction 밖 `SelectAll(sfTarget)` 1회 + Base 별 `ExtentsNear`·`LinesTouch` 기하 판정으로 대체. Editor 선택이 Transaction 안에 있던 규칙 위반 해소. 판정 영역은 직사각형 → 선분 거리(끝 쪽 반원만큼 넓음)이나 이후 "교차점이 Base 구간 위" 조건은 동일 |
 
 ---
 

@@ -167,8 +167,8 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         }
 
         // =====================================================================
-        // ss2 — Base Line 교차 분할 + Target 끝점 스냅 (SS1.md v1.1)
-        // Base 주변 폭(2×ScaleFactor) 내 접촉 Target 을 교차점 스냅 후 Base 분할
+        // ss1 — Base Line 교차 분할 + Target 끝점 스냅 (SS1.md v2.1)
+        // Base 에서 ScaleFactor 이내로 닿는 Target 을 교차점 스냅 후 Base 분할
         // =====================================================================
         [CommandMethod("ss1", CommandFlags.UsePickSet)]
         public static void SS1_MultiLineSplit_v2()
@@ -196,12 +196,25 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                 PromptSelectionResult basePsr = ed.GetSelection(pso, sfBase);
                 if (basePsr.Status != PromptStatus.OK) return;
 
+                // Target 후보 전체 수집 — SelectAll 은 뷰포트 무관이라 화면 밖 Base 도 처리 (F-019)
+                // Editor 선택은 Transaction 밖에서 호출
+                PromptSelectionResult tgtRes = ed.SelectAll(sfTarget);
+                ObjectId[] tgtIds = tgtRes.Status == PromptStatus.OK ? tgtRes.Value.GetObjectIds() : [];
+
                 using var tr = db.TransactionManager.StartTransaction();
 
                 var baseLines = basePsr.Value.GetObjectIds()
                     .Select(id => tr.GetObject(id, OpenMode.ForWrite))
                     .OfType<Line>()
                     .ToList();
+
+                var targets = new List<(ObjectId id, Line line, Extents3d ext)>();
+                foreach (ObjectId id in tgtIds)
+                {
+                    if (tr.GetObject(id, OpenMode.ForRead) is not Line t) continue;
+                    if (!TryExtents(t, out Extents3d ext)) continue;
+                    targets.Add((id, t, ext));
+                }
 
                 // ── 1단계: 계획 수집 (도면 미변경) — 원본 geometry 기준으로 분할점·스냅 대상만 모음
                 //   이 단계에서 아무것도 Erase/생성하지 않으므로 SelectCrossingPolygon 이 항상 원본 상태를 봄
@@ -212,29 +225,17 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                 foreach (var baseLine in baseLines)
                 {
                     if (baseLine.Length < ON_LINE_TOL) continue;
-
-                    // Base 수직 방향 검색 폴리곤 (폭 2 × scaleFactor)
-                    Vector3d perp = (baseLine.EndPoint - baseLine.StartPoint)
-                        .CrossProduct(baseLine.Normal).GetNormal();
-                    Vector3d offset = perp * scaleFactor;
-
-                    var polyPts = new Point3dCollection
-                    {
-                        baseLine.StartPoint + offset,
-                        baseLine.StartPoint - offset,
-                        baseLine.EndPoint - offset,
-                        baseLine.EndPoint + offset
-                    };
-
-                    PromptSelectionResult psr2 = ed.SelectCrossingPolygon(polyPts, sfTarget);
-                    if (psr2.Status != PromptStatus.OK) continue;  // 후보 없음 → 다음 Base
+                    if (!TryExtents(baseLine, out Extents3d baseExt)) continue;
 
                     var basePts = new List<Point3d>();
 
-                    foreach (SelectedObject so in psr2.Value)
+                    foreach (var (tid, ssl, tExt) in targets)
                     {
-                        if (so.ObjectId == baseLine.ObjectId) continue;
-                        if (tr.GetObject(so.ObjectId, OpenMode.ForRead) is not Line ssl) continue;
+                        if (tid == baseLine.ObjectId) continue;
+                        if (ssl.OwnerId != baseLine.OwnerId) continue;  // 다른 공간(모델/배치) 제외
+                        if (!ExtentsNear(baseExt, tExt, scaleFactor)) continue;  // bbox 선필터
+                        // Base 에서 scaleFactor 이내로 닿는 Target 만 (구 SelectCrossingPolygon 폭 2×scaleFactor 대체)
+                        if (!LinesTouch(baseLine, ssl, scaleFactor)) continue;
 
                         // 교차점 계산 (양쪽 연장 포함)
                         var pts = new Point3dCollection();
@@ -265,7 +266,7 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
                         double moveDist = snapStart ? tS : tE;
                         if (moveDist > SNAP_SKIP_TOL && moveDist <= scaleFactor)
                         {
-                            var key = (so.ObjectId, snapStart);
+                            var key = (tid, snapStart);
                             if (!snapPlan.TryGetValue(key, out var cur) || moveDist < cur.dist)
                                 snapPlan[key] = (inters, moveDist);
                         }
@@ -382,6 +383,18 @@ namespace PipeLoad2   // ※ Util_Command 프로젝트 네임스페이스에 맞
         {
             Point3d proj = line.GetClosestPointTo(pt, false);
             return proj.DistanceTo(pt) < ON_LINE_TOL;
+        }
+
+        // ss1 — 두 선분이 tol 이내로 닿는가 (구간끼리 교차 또는 한쪽 끝점이 상대 구간에서 tol 이내)
+        private static bool LinesTouch(Line a, Line b, double tol)
+        {
+            var pts = new Point3dCollection();
+            a.IntersectWith(b, Intersect.OnBothOperands, pts, IntPtr.Zero, IntPtr.Zero);
+            if (pts.Count > 0) return true;
+            return a.GetClosestPointTo(b.StartPoint, false).DistanceTo(b.StartPoint) <= tol ||
+                   a.GetClosestPointTo(b.EndPoint, false).DistanceTo(b.EndPoint) <= tol ||
+                   b.GetClosestPointTo(a.StartPoint, false).DistanceTo(a.StartPoint) <= tol ||
+                   b.GetClosestPointTo(a.EndPoint, false).DistanceTo(a.EndPoint) <= tol;
         }
 
         // =====================================================================
