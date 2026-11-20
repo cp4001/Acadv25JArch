@@ -13,3 +13,4 @@
 | 2026-11-17 | `ss1` 레이어 조건 없음 — 다른 레이어 Pipe 선도 분할·스냅 | F-019 (분석 4번) |
 | 2026-11-17 | `ss1` Arc/Polyline Base·Target 지원 | F-019 (분석 9번) |
 | 2026-11-17 | `ss1` 대형 도면 속도 (Base M × Target N bbox 비교) | F-019 |
+| 2026-11-20 | `Duct_Edit` 후 이미 그려진 외곽선·`Insert_Duct_Size` Text·`Duct_tag` 자동 갱신 (현재는 재실행 필요) | F-020 |

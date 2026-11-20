@@ -134,6 +134,90 @@ namespace PipeLoad2
         }
 
         /// <summary>
+        /// DUCTTREE 가 만든 덕트 Line/Poly 1개를 선택해 XData "a"/"b" 를 수정 (F-020).
+        /// 선택 필터: LINE·LWPOLYLINE + XData "a". 1개 선택 즉시 a → b 입력 (기본값 = 현재 값).
+        /// "Disp" 가 있으면 "{a}x{b}" 부분만 바꾸고 "[Total_CMH]" 꼬리는 유지 (TTG 라벨 갱신).
+        /// </summary>
+        [CommandMethod("Duct_Edit")]
+        public void Cmd_DuctEdit()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db  = doc.Database;
+            Editor   ed  = doc.Editor;
+
+            try
+            {
+                // 1. 선택 — Editor 선택은 Transaction 밖, 1개 선택 즉시 진행
+                var pso = new PromptSelectionOptions
+                {
+                    MessageForAdding = "\n수정할 덕트 Line 선택: ",
+                    SingleOnly = true,
+                    SinglePickInSpace = true
+                };
+                PromptSelectionResult psr = ed.GetSelection(pso, JSelFilter.MakeFilterTypesRegs("LINE,LWPOLYLINE", "a"));
+                if (psr.Status != PromptStatus.OK) return;
+                ObjectId id = psr.Value.GetObjectIds()[0];
+
+                // 2. 현재 값 읽기
+                string? curA, curB, disp;
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    var ent = (Entity)tr.GetObject(id, OpenMode.ForRead);
+                    curA = JXdata.GetXdata(ent, "a");
+                    curB = JXdata.GetXdata(ent, "b");
+                    disp = JXdata.GetXdata(ent, "Disp");
+                    tr.Commit();
+                }
+                ed.WriteMessage($"\n현재: a={curA ?? "-"}, b={curB ?? "-"}");
+
+                // 3. 입력 (Transaction 밖)
+                int? a = PromptSize(ed, "a(폭)", curA);
+                if (a == null) return;
+                int? b = PromptSize(ed, "b(높이)", curB);
+                if (b == null) return;
+
+                // 4. 기록
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    tr.CheckRegName("a");
+                    tr.CheckRegName("b");
+                    var ent = (Entity)tr.GetObject(id, OpenMode.ForWrite);
+                    JXdata.SetXdata(ent, "a", a.Value.ToString());
+                    JXdata.SetXdata(ent, "b", b.Value.ToString());
+                    if (!string.IsNullOrEmpty(disp))
+                    {
+                        int k = disp.IndexOf('[');
+                        string tail = k >= 0 ? disp.Substring(k) : "";
+                        JXdata.SetXdata(ent, "Disp", $"{a}x{b}{tail}");
+                    }
+                    tr.Commit();
+                }
+                ed.WriteMessage($"\nDuct_Edit: a={a}, b={b} 수정 완료");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\n오류: {ex.Message}");
+            }
+        }
+
+        /// <summary>양의 정수 입력. 현재 값이 숫자면 기본값(Enter=유지). Esc → null.</summary>
+        private static int? PromptSize(Editor ed, string label, string? cur)
+        {
+            var pio = new PromptIntegerOptions($"\n{label} 입력: ")
+            {
+                AllowNegative = false,
+                AllowZero = false
+            };
+            if (int.TryParse(cur, out int def))
+            {
+                pio.DefaultValue = def;
+                pio.UseDefaultValue = true;
+            }
+            var pr = ed.GetInteger(pio);
+            return pr.Status == PromptStatus.OK ? pr.Value : null;
+        }
+
+        /// <summary>
         /// 선택한 Line 들에 걸쳐진 Text(덕트 폭)를 읽어 각 Line 의 "a" XData 로 기록.
         /// 대상 Text 는 Line 에 걸쳐(straddle) 있는 TEXT/MTEXT 중 Line 중심선에 가장 가까운 것.
         /// 값은 숫자 파싱 없이 TextString 을 그대로 string 으로 저장.

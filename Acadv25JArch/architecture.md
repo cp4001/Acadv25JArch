@@ -369,6 +369,7 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | `LINETREE_STATS` | PipeDiaCalc/LineTreeBuilder.cs | LineTree 통계 |
 | `FCULINETREE` | PipeDiaCalc/FcuLineTreeFormCommand.cs | FCU Tree 분석 + Form (H-W 공식, Leaf tp CrossingWindow) |
 | `DUCTTREE` | PipeDiaCalc/DuctTreeCommand.cs | Duct Tree 분석 + Form (CMH 누적 → `Total_CMH`, Mode D 사이즈 산정 → `a`/`b`/`Disp`, Supply/Return·b 최소/최대 입력, `DuctOutLine` 버튼으로 외곽선 일괄 적용) ([[DuctTreeTechNote]]) |
+| `Duct_Edit` | PipeDiaCalc/DuctTreeCommand.cs | 덕트 Line/Poly 1개 선택(XData `a` 필터) → `a`·`b` 정수 입력(기본값 = 현재 값) → `a`/`b` 기록 + `Disp` 의 `{a}x{b}` 갱신(`[Total_CMH]` 유지). 외곽선·사이즈 Text 는 갱신 안 함 (F-020) |
 
 ### Leaf Block 부하 입력
 
