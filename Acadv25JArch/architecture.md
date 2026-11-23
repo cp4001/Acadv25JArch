@@ -470,7 +470,7 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | 명령어 | 파일 | 설명 |
 |--------|------|------|
 | `POLYVIEW` | PolyView/PolyViewCommand.cs | 닫힌 Poly 하나를 이름·내용과 함께 PolyView 로 등록/수정 |
-| `PLVM` | PolyView/PolyViewCommand.cs | PolyView 관리 팔레트(TreeView) 표시 |
+| `PLVM` | PolyView/PolyViewCommand.cs | PolyView 관리 팔레트(TreeView) 표시 — 노드 클릭 시 해당 Poly 확대 (2026-11-23 F-021: `TARGET`·`VIEWTWIST` 도면에서 줌 어긋남 수정) |
 
 도면 위 닫힌 Polyline 을 **이름 있는 영역 북마크**로 만들고, 도킹 팔레트의 TreeView 에서 그룹으로 분류·탐색한다. 노드를 클릭하면 해당 Poly 영역으로 즉시 확대된다.
 
