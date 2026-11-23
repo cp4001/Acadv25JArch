@@ -226,7 +226,8 @@ namespace Acadv25JArch.PolyView
         private void TreeView_NodeMouseClick(object? sender, TreeNodeMouseClickEventArgs e)
         {
             if (_building) return;
-            if (!e.Node.Bounds.Contains(e.Location)) return;   // +/- 클릭은 무시
+            // +/- 버튼만 무시 (글자 오른쪽 빈 곳 클릭도 반응하도록)
+            if (treeView.HitTest(e.Location).Location == TreeViewHitTestLocations.PlusMinus) return;
 
             treeView.SelectedNode = e.Node;
 

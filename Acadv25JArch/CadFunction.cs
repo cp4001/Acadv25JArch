@@ -2889,13 +2889,16 @@ namespace AcadFunction
 
             if (!initialized) return;
 
-            double w = ext.MaxPoint.X - ext.MinPoint.X;
-            double h = ext.MaxPoint.Y - ext.MinPoint.Y;
-            if (w <= 0) w = 1;
-            if (h <= 0) h = 1;
-
             using (ViewTableRecord view = ed.GetCurrentView())
             {
+                // CenterPoint/Width/Height 는 DCS 기준 — TARGET ≠ 0 이나 VIEWTWIST ≠ 0 이면 WCS 그대로 쓰면 어긋난다
+                ext.TransformBy(view.WorldToEye());
+
+                double w = ext.MaxPoint.X - ext.MinPoint.X;
+                double h = ext.MaxPoint.Y - ext.MinPoint.Y;
+                if (w <= 0) w = 1;
+                if (h <= 0) h = 1;
+
                 view.Width       = w * padding;
                 view.Height      = h * padding;
                 view.CenterPoint = new Point2d(
