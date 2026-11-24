@@ -181,9 +181,14 @@ namespace PipeLoad2
                 {
                     tr.CheckRegName("a");
                     tr.CheckRegName("b");
+                    tr.CheckRegName("Duct");
+                    tr.CheckRegName("Spec");
                     var ent = (Entity)tr.GetObject(id, OpenMode.ForWrite);
                     JXdata.SetXdata(ent, "a", a.Value.ToString());
                     JXdata.SetXdata(ent, "b", b.Value.ToString());
+                    // DUCTTREE Apply 와 같은 형식 (F-022)
+                    JXdata.SetXdata(ent, "Duct", "D");
+                    JXdata.SetXdata(ent, "Spec", $"{a}*{b}");
                     if (!string.IsNullOrEmpty(disp))
                     {
                         int k = disp.IndexOf('[');

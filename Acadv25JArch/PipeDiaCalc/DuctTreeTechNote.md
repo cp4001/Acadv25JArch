@@ -109,7 +109,7 @@ FCU 와 동일한 **Pre → Zoom → Map → Main + ShowModelessDialog** 4-Phase
 - `Application.ShowModelessDialog(new DuctTreeForm(...))`
 
 ### Phase 4: Form "누적 적용" → `ApplyTotalCmh(node, db, DuctType)`
-- Transaction 열고 RegName 5개 등록: `"Tree"` / `"Total_CMH"` / `"a"` / `"b"` / `"Disp"`
+- Transaction 열고 RegName 7개 등록: `"Tree"` / `"Total_CMH"` / `"a"` / `"b"` / `"Disp"` / `"Duct"` / `"Spec"`
 - 재귀적으로 Line 노드(Block 제외)마다:
   - `"Tree"` XData = `node.TreeType` — **독립 try**
   - `"Total_CMH"` XData = `node.Load.ToString("0.##", InvariantCulture)` — **독립 try**
@@ -139,7 +139,7 @@ public static Dictionary<string, string> MapLeafTerminalsToCmhBlocks(
 반환: `Dictionary<blockHandle, leafLineHandle>` — `BuildTree` 에 주입.
 
 ### `DuctTreeBuilder.ApplyTotalCmh(DuctNode root, Database db, DuctType ductType, int bMin, int bMax)`
-별도 Transaction 으로 모든 Line 노드에 `"Tree"` / `"Total_CMH"` 기록 + `Load > 0` 시 Mode D 사이즈(`"a"`/`"b"`/`"Disp"`) 기록. `ductType` / `bMin` / `bMax` 는 Form 의 `pnlMode` 컨트롤에서 결정.
+별도 Transaction 으로 모든 Line 노드에 `"Tree"` / `"Total_CMH"` 기록 + `Load > 0` 시 Mode D 사이즈(`"a"`/`"b"`/`"Disp"`/`"Duct"`="D"/`"Spec"`="{a}*{b}") 기록. `ductType` / `bMin` / `bMax` 는 Form 의 `pnlMode` 컨트롤에서 결정.
 
 Mode D 입력은 4개 중 2개만 코드 상수, 2개는 Form 입력:
 
@@ -258,7 +258,7 @@ Mode D 입력은 4개 중 2개만 코드 상수, 2개는 Form 입력:
 
 1. **CMH 명령** (`Cmd_Block_SetCMH`) — 디퓨져 Block 의 BBox 안 Text/MText 에서 풍량값 추출 → `"CMH"` + `"Disp"` XData 동시 기록. [[CMH]] / [[LPM]] 와 동일 패턴.
 2. **DUCTTREE 명령** — Line + 디퓨져 Block 선택 → Root Line 지정 → 분석 → Form 표시
-3. **Form Supply/Return 선택 + "누적 적용"** → 각 Line 에 `"Tree"` / `"Total_CMH"` + (Load>0 시) `"a"` / `"b"` / `"Disp"` XData 기록
+3. **Form Supply/Return 선택 + "누적 적용"** → 각 Line 에 `"Tree"` / `"Total_CMH"` + (Load>0 시) `"a"` / `"b"` / `"Disp"` / `"Duct"` / `"Spec"` XData 기록
 4. **Form `DuctOutLine` 버튼** (선택) — 트리 전체 접합부를 위상 판정해 `Duct_C1`/`Duct_C2`/`Duct_E`/`Duct_EE` 외곽선 일괄 생성 (§8). Apply 로 `"a"` 가 기록된 뒤에 눌러야 의미가 있다.
 5. **TTG 명령** (선택) — `"Tree"` XData 기반 Line 색상/LineWeight 오버레이 + Line `"Disp"` 를 중앙 라벨로 표시 + 디퓨져 Block 의 `"Disp"` 값을 geo 센터에 Red 표시
 
@@ -304,6 +304,7 @@ Mode D 입력은 4개 중 2개만 코드 상수, 2개는 Form 입력:
 
 ## 14. 변경 이력
 
+- **2026-11-24** XData `"Duct"`="D"·`"Spec"`="{a}*{b}" 추가 (F-022, BricsCAD `DuctSolution` 형식) — Apply·`Duct_Edit` 가 a·b 와 함께 기록. `DuctOutLine` Duct_E 엘보 중심선 Arc 는 원본 Line XData 전체 승계(전엔 `a` 만).
 - **2026-11-07** Leaf 단 Polyline 지원 (F-008) — 열린 LWPOLYLINE 을 Leaf 로 인식, 전체 경로 Fence, Line 과 같은 XData 기록, `DuctOutLine` 은 수직 가상 Line 기준으로 외곽선 생성(Poly 미변경, `Duct_EE`/`C2E`/`C1E` 의 `TryApply` 에 분할 끄기 옵션 추가), `TTG` Leaf 색상·라벨 표시. Root/Mid 는 Line 전용. 미포함 Line/Poly 개수 경고 추가.
 - **2026-09-09** `Duct_C1E` 신규 (`DuctC1ECommand.cs`) — `Duct_C1` 의 Tab 상단 마감을 **분기별로** 고르는 변형. **Leaf 분기는 45° 사선 없이 90° 직선**, Mid 분기는 기존대로 45° 사선(사용자 확정). 정점 `PB`/`PK` 의 높이만 `H+Δ` ↔ `H` 로 갈리며 `[E07]` aa 길이 요건도 같이 완화. `TryApply(…, bbSlant, ccSlant, …)` 로 좌우 독립 지정 — 한쪽만 Leaf 인 혼합 형상도 처리한다. `DuctTreeOutlineCommand` 는 좌우 반대측 직각 분기 2개에서 **둘 다 Mid 면 `Duct_C1`, 하나라도 Leaf 면 `Duct_C1E`** 로 분기(구: 한쪽이라도 Leaf 면 `Unsupported` — 수동 처리로 빠지던 두 케이스가 자동 적용 대상이 됨). `JunctionPlan.BranchASlant`/`BranchBSlant` 는 판정 시점에 확정.
 - **2026-09-09** `Duct_EE` 컬러 상류측 마감을 45° 사선 → **90° 수직**으로 변경 (`DuctEndElbowCommand.cs`). b 가 트리에서 항상 Leaf 라 플레어가 불필요하다는 사용자 확정 — 정점 `S1` 을 `X−dirA·(H_b+L_col)+up·H_a` → `X−dirA·H_b+up·H_a` 로, `[E06]` a 길이 요건을 `H_b+L_col` → `H_b` 로 완화. 6선 구성/판정 로직은 불변. 사양서 `Duct_End_Elbow.md` v1.2.

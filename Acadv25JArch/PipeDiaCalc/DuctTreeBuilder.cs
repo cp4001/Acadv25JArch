@@ -369,7 +369,7 @@ namespace PipeLoad2
         private const double ModeD_Alpha     = 1.0;
         private const double ModeD_AspectMax = 1.5;
 
-        /// <summary>각 Line 노드에 "Total_CMH"/"Tree"/"a"/"b"/"Disp" XData 를 저장.
+        /// <summary>각 Line 노드에 "Total_CMH"/"Tree"/"a"/"b"/"Disp"/"Duct"/"Spec" XData 를 저장.
         /// "a"(장변)/"b"(단변)/"Disp"=$"{a}x{b}[{Total_CMH}]" 는 Mode D 결과 (Load > 0 일 때만).
         /// bMin/bMax 는 Form 의 NumericUpDown 에서 전달.</summary>
         public void ApplyTotalCmh(DuctNode node, Database db, DuctType ductType, int bMin, int bMax)
@@ -380,6 +380,8 @@ namespace PipeLoad2
             tr.CheckRegName("a");
             tr.CheckRegName("b");
             tr.CheckRegName("Disp");
+            tr.CheckRegName("Duct");
+            tr.CheckRegName("Spec");
             ApplyRecursive(node, tr, db, ductType, bMin, bMax);
             tr.Commit();
         }
@@ -432,6 +434,10 @@ namespace PipeLoad2
                                     combo.B.ToString(CultureInfo.InvariantCulture));
                                 JXdata.SetXdata(line, "Disp",
                                     $"{combo.A}x{combo.B}[{totalCmhStr}]");
+                                // BricsCAD DuctSolution 과 같은 형식 — "Duct"="D", "Spec"="{a}*{b}"
+                                JXdata.SetXdata(line, "Duct", "D");
+                                JXdata.SetXdata(line, "Spec",
+                                    $"{combo.A}*{combo.B}");
                             }
                         }
                         catch { }

@@ -15,3 +15,4 @@
 | 2026-11-17 | `ss1` Arc/Polyline Base·Target 지원 | F-019 (분석 9번) |
 | 2026-11-17 | `ss1` 대형 도면 속도 (Base M × Target N bbox 비교) | F-019 |
 | 2026-11-20 | `Duct_Edit` 후 이미 그려진 외곽선·`Insert_Duct_Size` Text·`Duct_tag` 자동 갱신 (현재는 재실행 필요) | F-020 |
+| 2026-11-24 | F-022 AutoCAD 실행 확인 — Apply·`Duct_Edit`·엘보 중심선 Arc 의 `Duct`·`Spec` XData | F-022 |

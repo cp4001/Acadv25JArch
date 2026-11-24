@@ -1,12 +1,12 @@
-# 현재 상태 (2026-11-23)
+# 현재 상태 (2026-11-24)
 
 | 항목 | 내용 |
 |---|---|
 | 진행 중 | 없음. F-007 은 **보류** — 브랜치 `F-007` |
-| 마지막 한 일 | 2026-11-23: F-021 PLVM 줌 수정 완료 (`ZoomToEntities` DCS 변환 + 노드 클릭 판정, 설치파일 `JArchitecture_Setup_11_23.exe`, 실행 확인 완료). 2026-11-20: F-020 `Duct_Edit` 완료 (`DuctTreeCommand.cs`, 설치파일 `JArchitecture_Setup_11_20.exe`, 실행 결과 기록 없음). 2026-11-17: `ss1` F-019 (SelectAll 전체 탐색 + Editor 선택 Transaction 밖, 설치파일 `JArchitecture_Setup_11_17.exe`). 2026-11-16: `RoomAA` F-014·F-015 (실행 확인 완료), `CSS` F-016~018. F-016~019 는 설치까지, 실행 결과 기록 없음 |
+| 마지막 한 일 | 2026-11-24: F-022 DUCTTREE XData `Duct`="D"·`Spec`="{a}*{b}" 완료 (Apply·`Duct_Edit`·엘보 중심선 Arc 전체 승계, 설치파일 `JArchitecture_Setup_11_24.exe`, 실행 결과 기록 없음). 2026-11-23: F-021 PLVM 줌 수정 완료 (`ZoomToEntities` DCS 변환 + 노드 클릭 판정, 설치파일 `JArchitecture_Setup_11_23.exe`, 실행 확인 완료). 2026-11-20: F-020 `Duct_Edit` 완료 (`DuctTreeCommand.cs`, 설치파일 `JArchitecture_Setup_11_20.exe`, 실행 결과 기록 없음). 2026-11-17: `ss1` F-019 (SelectAll 전체 탐색 + Editor 선택 Transaction 밖, 설치파일 `JArchitecture_Setup_11_17.exe`). 2026-11-16: `RoomAA` F-014·F-015 (실행 확인 완료), `CSS` F-016~018. F-016~019 는 설치까지, 실행 결과 기록 없음 |
 | 다음 할 일 | 사용자 지시 대기. 후보는 아래 「다음 후보」·backlog (`ss1` XData·레이어·Arc/Poly, `CSS`/`ss1` 대형 도면 속도) |
 | 막힌 점 | 없음 |
-| 커밋 상태 | 모두 커밋·푸시 완료 (`master` 최신, F-021 `b61624a`), Confluence `131081` v24 (F-021 까지) · F-016 페이지 `13074433` (131081 하위) · F-017 `13107201` · F-018 `13139969`. F-019 `13238273` · F-020 `14516226` · F-021 `15237121` · PolyViewManager `66058` v4 |
+| 커밋 상태 | F-022 미커밋. 그 외 커밋·푸시 완료 (F-021 `b61624a`), Confluence `131081` v24 (F-021 까지) · F-016 페이지 `13074433` (131081 하위) · F-017 `13107201` · F-018 `13139969`. F-019 `13238273` · F-020 `14516226` · F-021 `15237121` · PolyViewManager `66058` v4 |
 
 ## 다음 후보
 
@@ -47,7 +47,7 @@
 | 테스트 절차 | AutoCAD 종료 → `dotnet build Acadv25JArch\Acadv25JArch.csproj -c Release` → `ISCC JArchitecture_Setup\JArchitecture_Setup.iss` → 설치 → 실행 |
 | Confluence 갱신 | `131081` 은 본문이 커서 html 결과가 파일로 저장됨 → 스크립트로 해당 `data-local-id` 문단 추출·수정 → `replaceNode` → markdown 으로 다시 받아 원본 행과 대조. RoomAA 문단 id `749e001c7fc6` |
 | F-012 리셋 이슈 | 재실행 시 값이 `" "` 로 덮이던 현상 — 원인 미확정, 이후 재발 없음. 재발 시 XData 원본 덤프 진단부터 (F-012 「참고」) |
-| 설치파일 | `JArchitecture_Setup_11_17.exe` = F-008~F-019 포함, F-007 제외 |
+| 설치파일 | `JArchitecture_Setup_11_24.exe` = F-008~F-022 포함, F-007 제외 |
 | F-007 재개 | `git switch F-007` → `git merge master` (README·STATE 충돌 예상). 문서는 그 브랜치의 `docs/dev/features/F-007-Duct_ToRevit.md` 「재개 방법」. JRevit 쪽은 `240716New` 브랜치 |
 | 확정 규칙 | DuctTree Poly 는 Leaf 전용, Root 와 같은 레이어만 추적. Root/Mid 는 Line 만. RoomAA 장비 행 삭제 기능은 만들지 않음 |
 | AddinManager | XData 쓰는 명령은 실행 전 `(arxload "C:/Jarch25/JArchXData.arx")` 필요 |

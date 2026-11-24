@@ -32,6 +32,7 @@ AutoCAD 2025 .NET 플러그인 — 건축 실·면적 집계, 급수/FCU 배관 
 | [F-019](features/F-019-ss1-전체탐색-Transaction밖선택.md) | ss1 — 화면 밖 Base 처리(SelectAll) + Editor 선택 Transaction 밖 | S | 2026-11-17 | 2026-11-17 | 완료 |
 | [F-020](features/F-020-Duct_Edit.md) | Duct_Edit — 덕트 Line 1개 선택 후 a·b 수정 | S | 2026-11-20 | 2026-11-20 | 완료 |
 | [F-021](features/F-021-PLVM-줌-수정.md) | PLVM 줌 수정 — ZoomToEntities DCS 변환 + 노드 클릭 판정 확대 | S | 2026-11-23 | 2026-11-23 | 완료 |
+| [F-022](features/F-022-DuctTree-Duct-Spec-XData.md) | DUCTTREE Apply — XData `Duct`="D"·`Spec`="{a}*{b}" 추가 | S | 2026-11-23 | 2026-11-24 | 완료 |
 
 ## 이관 전 이력
 

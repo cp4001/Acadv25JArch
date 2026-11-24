@@ -543,10 +543,7 @@ namespace PipeLoad2
             arc.Color = source.Color;
             arc.Linetype = source.Linetype;
             arc.LineWeight = source.LineWeight;
-            using (ResultBuffer rb = source.GetXDataForApplication("a"))
-            {
-                if (rb != null) arc.XData = rb;   // RegApp "a" 는 source 가 이미 사용 중이므로 등록되어 있음
-            }
+            source.XdataCopy(arc);   // 전체 승계 (Tree·Total_CMH·a·b·Disp·Duct·Spec 등, F-022) — RegApp 은 source 가 이미 사용 중이라 등록되어 있음
         }
 
         /// <summary>a→b Yellow 외곽선 Line 을 "Duct_OutLine" 레이어에 생성.</summary>
