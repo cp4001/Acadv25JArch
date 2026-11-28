@@ -1415,24 +1415,19 @@ namespace Acadv25JArch
             // 3. 사용자로부터 입력 받기
             PromptResult pr = ed.GetString(pso);
             // 4. 입력 결과 확인 및 출력
-            string userInput = "Defalut Floor";
-            if (pr.Status == PromptStatus.OK)
-            {
-                // 입력받은 문자열 가져오기
-                userInput = pr.StringResult;
-                // Command Line에 출력 (줄바꿈을 위해 \n 사용)
-                ed.WriteMessage($"\n[결과] 입력하신 내용은: {userInput}\n");
-            }
-            else
+            if (pr.Status != PromptStatus.OK || string.IsNullOrWhiteSpace(pr.StringResult))
             {
                 ed.WriteMessage("\n입력이 취소되었습니다.\n");
+                return;
             }
+            string userInput = pr.StringResult.Trim();
+            ed.WriteMessage($"\n[결과] 입력하신 내용은: {userInput}\n");
 
-
+            int written = 0, locked = 0;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                List<Entity> targets = JEntityFunc.GetEntityByTpye<Entity>("WIndow or Door 대상  Block 를  선택 하세요?", JSelFilter.MakeFilterTypes("INSERT,LWPOLYLINE"));
-                if (targets == null) return;
+                List<Entity> targets = JEntityFunc.GetEntityByTpye<Entity>("Room Poly 또는 Block 을 선택하세요 (여러 개 가능)", JSelFilter.MakeFilterTypes("INSERT,LWPOLYLINE"));
+                if (targets == null || targets.Count == 0) return;
                 var btr = tr.GetModelSpaceBlockTableRecord(db);
                 //사용할 XData 미리 Check
                 tr.ChecRegNames(db, "Floor");
@@ -1446,12 +1441,14 @@ namespace Acadv25JArch
                     {
                         acEnt.UpgradeOpen();
                         JXdata.SetXdata(acEnt, "Floor", $"{userInput}");
+                        written++;
                         //Get Disp value
                         //var disp = JXdata.GetXdata(acEnt, "Disp") ?? "";
                         //JXdata.SetXdata(acEnt, "Disp", $" {disp}:H{userValue.ToString()}");
                         //JXdata.SetXdata(pl, "Disp", $"Ceiling:{userValue.ToString()}");
                         //JXdata.SetXdata(pl, "Mat", "Hidden");
                     }
+                    else locked++;
 
 
 
@@ -1461,6 +1458,7 @@ namespace Acadv25JArch
                 // Save the new object to the database
                 tr.Commit();
             }
+            ed.WriteMessage($"\n[To_Floor] Floor=\"{userInput}\" — {written}개 기록, 잠긴 레이어 {locked}개 건너뜀.\n");
         }
 
         #endregion

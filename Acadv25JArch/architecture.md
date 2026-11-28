@@ -49,7 +49,7 @@ AutoCAD 2025용 건축 설계 자동화 플러그인 (C# .NET)
 | `RoomAA` | RoomEquip/RoomAACommand.cs | Room Poly(XData `Room`) 다중 선택 → 실/장비 탭 Form(모델리스). 실 탭 그리드: Room No(선택 순번) · 실명(Poly 안 `RoomText`, 여럿이면 최상단) · 층(Poly XData `Floor`, ReadOnly·읽기만, 없어도 생성 안 함 — 2026-11-16 F-014) · 난방부하 `HeatLoad` · 냉방부하 `CoolLoad` · 총풍량 `RoomQ` · 비고 `Etc`. 실명 셀 클릭 → 해당 Poly 를 배율 유지한 채 화면 중앙으로 이동(2026-11-16 F-015). 없는 XData 는 `" "` 로 생성, 있으면 읽어 표시. 상단 「저장」 → 4열 값을 각 Poly XData 에 기록(빈 칸 `" "`, 되읽기 검증, 잠긴 레이어·삭제 Poly 건너뜀) (2026-11-07 F-012). **장비 탭**: 실명 콤보 · 장비 종류 "디퓨져"(고정) · 설비 타입 `RPD/SPD/RAD/SAD` · 시스템 타입 `SA/RA/EA/OA` · 풍량 · 개수 → 「+ADD」 시 해당 실 Poly 안 RoomText(기존 Spec Text 가 있으면 그 아래) 밑에 `Diffuser_Spec` 형식 Text `"CFM,Type,SystemType,개수"` 생성(ACI 41, 기울기 5°, 높이·스타일은 RoomText, 줄 간격 높이×1.8, XData `Diffuser`=Type) → `Insert_Diffuser_Bypoly` 입력으로 사용. 폼 열 때 실 안 기존 Spec Text 를 그리드에 다시 불러옴. 그리드 행 삭제 → Text 삭제는 미지원 (2026-11-13 F-013) |
 | `To_CeilingHeight` | RoomCalc.cs | 천장고 지정 |
 | `To_FloorHeight` | RoomCalc.cs | 바닥높이 지정 |
-| `To_Floor` | RoomCalc.cs | 바닥 지정 |
+| `To_Floor` | RoomCalc.cs | 층 이름 입력(취소·빈 값이면 중단) → Room Poly·Block 다중 선택 → XData `Floor` 기록, 기록·잠긴 레이어 개수 출력 (2026-11-28 F-023). `RoomAA` 층 열이 이 값을 읽음 |
 | `HH` | RoomCalc.cs | 높이 지정 |
 | `OutWall` | RoomCalc.cs | 외벽 지정 |
 | `room_Dir_Cus` | RoomCalc.cs | 룸 방위 커스텀 분석 |
